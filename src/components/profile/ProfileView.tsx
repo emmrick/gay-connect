@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfileStats } from '@/hooks/useProfileStats';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Settings, MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight } from 'lucide-react';
+import { MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
+import SettingsDialog from './SettingsDialog';
 
 interface ProfileViewProps {
   onSignOut: () => void;
@@ -16,9 +18,13 @@ interface ProfileViewProps {
   isAdmin?: boolean;
 }
 
+type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
+
 const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps) => {
   const { profile } = useAuth();
+  const { data: stats, isLoading: statsLoading } = useProfileStats();
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [settingsType, setSettingsType] = useState<SettingsType | null>(null);
 
   if (!profile) {
     return (
@@ -30,15 +36,23 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
 
   const menuItems = [
     { icon: Edit2, label: 'Modifier le profil', action: () => setShowEditDialog(true) },
-    { icon: Bell, label: 'Notifications', action: () => {} },
-    { icon: Moon, label: 'Apparence', action: () => {} },
-    { icon: Shield, label: 'Confidentialité', action: () => {} },
-    { icon: HelpCircle, label: 'Aide & Support', action: () => {} },
+    { icon: Bell, label: 'Notifications', action: () => setSettingsType('notifications') },
+    { icon: Moon, label: 'Apparence', action: () => setSettingsType('appearance') },
+    { icon: Shield, label: 'Confidentialité', action: () => setSettingsType('privacy') },
+    { icon: HelpCircle, label: 'Aide & Support', action: () => setSettingsType('help') },
   ];
 
   return (
     <div className="animate-fade-in pb-8">
       <ProfileEditDialog open={showEditDialog} onOpenChange={setShowEditDialog} />
+      
+      {settingsType && (
+        <SettingsDialog 
+          open={!!settingsType} 
+          onOpenChange={(open) => !open && setSettingsType(null)}
+          type={settingsType}
+        />
+      )}
 
       {/* Profile Header */}
       <div className="relative">
@@ -66,7 +80,10 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
 
             {/* Name & info */}
             <div className="mt-4 text-center">
-              <h1 className="text-2xl font-bold font-display">{profile.username}</h1>
+              <h1 className="text-2xl font-bold font-display">
+                {profile.username}
+                {profile.age && <span className="text-muted-foreground font-normal">, {profile.age} ans</span>}
+              </h1>
               <div className="flex items-center justify-center gap-2 mt-2 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
                 <span className="text-sm">{profile.region}</span>
@@ -106,19 +123,31 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
       <div className="grid grid-cols-3 gap-3 px-4 mt-6">
         <Card className="bg-secondary/50">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-primary">0</p>
+            {statsLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />
+            ) : (
+              <p className="text-2xl font-bold text-primary">{stats?.messagesCount || 0}</p>
+            )}
             <p className="text-xs text-muted-foreground">Messages</p>
           </CardContent>
         </Card>
         <Card className="bg-secondary/50">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-primary">0</p>
+            {statsLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />
+            ) : (
+              <p className="text-2xl font-bold text-primary">{stats?.conversationsCount || 0}</p>
+            )}
             <p className="text-xs text-muted-foreground">Conversations</p>
           </CardContent>
         </Card>
         <Card className="bg-secondary/50">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-primary">0</p>
+            {statsLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />
+            ) : (
+              <p className="text-2xl font-bold text-primary">{stats?.reactionsCount || 0}</p>
+            )}
             <p className="text-xs text-muted-foreground">Réactions</p>
           </CardContent>
         </Card>

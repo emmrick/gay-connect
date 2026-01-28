@@ -1,11 +1,27 @@
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Users, Shield, MapPin } from 'lucide-react';
+import { useTotalMemberCount } from '@/hooks/useTotalMemberCount';
 
 interface HeroProps {
   onGetStarted: () => void;
+  onLearnMore?: () => void;
 }
 
-const Hero = ({ onGetStarted }: HeroProps) => {
+const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
+  const { data: memberCount } = useTotalMemberCount();
+
+  const handleLearnMore = () => {
+    if (onLearnMore) {
+      onLearnMore();
+    } else {
+      // Scroll to features section
+      const featuresSection = document.querySelector('#features');
+      if (featuresSection) {
+        featuresSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background gradient effects */}
@@ -18,7 +34,11 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border mb-8 animate-slide-up">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm text-muted-foreground">+5000 membres actifs</span>
+            <span className="text-sm text-muted-foreground">
+              {memberCount && memberCount > 0 
+                ? `+${memberCount.toLocaleString('fr-FR')} membres actifs`
+                : 'Rejoins la communauté'}
+            </span>
           </div>
           
           {/* Heading */}
@@ -39,17 +59,17 @@ const Hero = ({ onGetStarted }: HeroProps) => {
               <MessageCircle className="w-5 h-5" />
               Rejoindre maintenant
             </Button>
-            <Button variant="outline" size="xl">
+            <Button variant="outline" size="xl" onClick={handleLearnMore}>
               En savoir plus
             </Button>
           </div>
           
           {/* Features grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+          <div id="features" className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: '0.4s' }}>
             <FeatureCard 
               icon={<MapPin className="w-6 h-6" />}
               title="Par région"
-              description="Groupes par code postal"
+              description="Groupes par département"
             />
             <FeatureCard 
               icon={<Users className="w-6 h-6" />}
