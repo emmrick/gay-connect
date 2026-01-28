@@ -6,23 +6,23 @@ import ChatRoom from '@/components/chat/ChatRoom';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileEditDialog from '@/components/profile/ProfileEditDialog';
+import BottomNavBar from '@/components/navigation/BottomNavBar';
 import { useChatRooms, useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { LogOut, User, MessageCircle, Users, Shield, Settings } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LogOut, User, Shield } from 'lucide-react';
 
-type AppView = 'landing' | 'regions' | 'chat' | 'private';
+type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'profile' | 'chat' | 'private';
+type NavTab = 'home' | 'groups' | 'messages' | 'profile';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<AppView>('landing');
+  const [activeTab, setActiveTab] = useState<NavTab>('home');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'groups' | 'private'>('groups');
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const { user, profile, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
@@ -36,7 +36,22 @@ const Index = () => {
     if (!user) {
       navigate('/auth');
     } else {
-      setCurrentView('regions');
+      setCurrentView('home');
+      setActiveTab('home');
+    }
+  };
+
+  const handleTabChange = (tab: NavTab) => {
+    setActiveTab(tab);
+    if (tab === 'profile') {
+      setShowProfileEdit(true);
+    } else if (tab === 'messages') {
+      setSelectedPrivateUserId(null);
+      setCurrentView('messages');
+    } else if (tab === 'groups') {
+      setCurrentView('groups');
+    } else {
+      setCurrentView('home');
     }
   };
 
@@ -51,12 +66,14 @@ const Index = () => {
 
   const handleBackToRegions = () => {
     setSelectedRegion(null);
-    setCurrentView('regions');
+    setCurrentView('groups');
+    setActiveTab('groups');
   };
 
   const handleSignOut = async () => {
     await signOut();
     setCurrentView('landing');
+    setActiveTab('home');
   };
 
   // Start private chat from member list in group chat
@@ -65,6 +82,7 @@ const Index = () => {
       await getOrCreateConversation.mutateAsync(userId);
       setSelectedPrivateUserId(userId);
       setCurrentView('private');
+      setActiveTab('messages');
     } catch (error) {
       console.error('Error starting private chat:', error);
     }
@@ -79,6 +97,7 @@ const Index = () => {
 
   const handleBackFromPrivateChat = () => {
     setSelectedPrivateUserId(null);
+    setCurrentView('messages');
   };
 
   // Get member count from database
@@ -111,6 +130,8 @@ const Index = () => {
     );
   }
 
+  const showBottomNav = user && currentView !== 'landing' && currentView !== 'chat' && currentView !== 'private';
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header for authenticated users */}
@@ -133,24 +154,6 @@ const Index = () => {
                 </Button>
               )}
               
-              <button
-                onClick={() => setShowProfileEdit(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-semibold overflow-hidden">
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt={profile.username}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    profile?.username?.charAt(0).toUpperCase() || <User className="w-4 h-4" />
-                  )}
-                </div>
-                <span className="text-sm font-medium">{profile?.username}</span>
-                <Settings className="w-4 h-4 text-muted-foreground" />
-              </button>
               <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="w-5 h-5" />
               </Button>
@@ -162,52 +165,39 @@ const Index = () => {
       {/* Profile Edit Dialog */}
       <ProfileEditDialog open={showProfileEdit} onOpenChange={setShowProfileEdit} />
 
+      {/* Landing page */}
       {currentView === 'landing' && (
         <Hero onGetStarted={handleGetStarted} />
       )}
       
-      {currentView === 'regions' && (
-        <div className="flex flex-col h-[calc(100vh-4rem)]">
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) => setActiveTab(v as 'groups' | 'private')}
-            className="flex flex-col h-full"
-          >
-            <TabsList className="mx-4 mt-4 grid grid-cols-2">
-              <TabsTrigger value="groups" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Groupes
-              </TabsTrigger>
-              <TabsTrigger value="private" className="flex items-center gap-2 relative">
-                <MessageCircle className="w-4 h-4" />
-                Messages
-                {getTotalUnreadCount() > 0 && (
-                  <Badge className="h-5 min-w-5 px-1.5 flex items-center justify-center text-xs ml-1">
-                    {getTotalUnreadCount()}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="groups" className="flex-1 overflow-hidden mt-0">
-              <RegionSelector onSelectRegion={handleSelectRegion} />
-            </TabsContent>
-
-            <TabsContent value="private" className="flex-1 overflow-hidden mt-0">
-              {selectedPrivateUserId ? (
-                <PrivateChatRoom
-                  otherUserId={selectedPrivateUserId}
-                  onBack={handleBackFromPrivateChat}
-                />
-              ) : (
-                <PrivateChatList
-                  onSelectConversation={handleSelectConversation}
-                  selectedUserId={null}
-                />
-              )}
-            </TabsContent>
-          </Tabs>
+      {/* Home view */}
+      {(currentView === 'home' || currentView === 'groups') && (
+        <div className="pb-24">
+          <RegionSelector onSelectRegion={handleSelectRegion} />
         </div>
+      )}
+
+      {/* Messages view */}
+      {currentView === 'messages' && (
+        <div className="h-[calc(100vh-4rem)] pb-24">
+          <PrivateChatList
+            onSelectConversation={(userId) => {
+              handleSelectConversation(userId);
+              setSelectedPrivateUserId(userId);
+              setCurrentView('private');
+            }}
+            selectedUserId={null}
+          />
+        </div>
+      )}
+
+      {/* Bottom Navigation Bar */}
+      {showBottomNav && (
+        <BottomNavBar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          unreadCount={getTotalUnreadCount()}
+        />
       )}
     </div>
   );
