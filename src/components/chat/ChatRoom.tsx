@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMessages } from '@/hooks/useMessages';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { useMessageReactions } from '@/hooks/useMessageReactions';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
@@ -49,6 +50,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   
   const { messages, searchResults, isLoading, sendMessage } = useMessages(roomId, searchQuery);
   const { typingUsers, startTyping, stopTyping } = useTypingIndicator(roomId);
+  const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
   
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [showMembers, setShowMembers] = useState(false);
@@ -128,6 +130,10 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
 
   const handleAvatarClick = (userId: string) => {
     setPreviewUserId(userId);
+  };
+
+  const handleToggleReaction = (messageId: string, emoji: string) => {
+    toggleReaction.mutate({ messageId, emoji });
   };
 
   return (
@@ -276,8 +282,10 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
               }}
               isOwn={message.sender_id === user?.id}
               isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
+              reactions={getReactionsForMessage(message.id)}
               onReply={handleReply}
               onAvatarClick={handleAvatarClick}
+              onToggleReaction={handleToggleReaction}
             />
           ))}
 
