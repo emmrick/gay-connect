@@ -16,6 +16,7 @@ interface EphemeralMediaData {
   src: string;
   senderName: string;
   duration: number;
+  mediaId?: string;
 }
 
 interface ChatRoomProps {
@@ -62,6 +63,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           src={viewingMedia.src}
           senderName={viewingMedia.senderName}
           duration={viewingMedia.duration}
+          mediaId={viewingMedia.mediaId}
           onClose={() => setViewingMedia(null)}
           onViewed={() => console.log('Media viewed')}
         />

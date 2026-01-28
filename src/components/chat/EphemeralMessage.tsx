@@ -114,6 +114,7 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: Ephemer
           src={media.signedUrl}
           senderName={senderName}
           duration={media.view_duration}
+          mediaId={media.id}
           onClose={handleClose}
           onViewed={handleViewed}
         />
