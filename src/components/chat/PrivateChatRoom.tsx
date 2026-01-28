@@ -53,9 +53,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg flex-shrink-0">
+    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
+      {/* Header - fixed at top */}
+      <div className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-20">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -130,8 +130,8 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         />
       )}
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 p-4">
+      {/* Messages - scrollable middle section */}
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4">
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -203,7 +203,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             <div ref={scrollRef} />
           </div>
         )}
-      </ScrollArea>
+      </div>
 
       {/* Input - fixed at bottom */}
       <div className="flex-shrink-0">
