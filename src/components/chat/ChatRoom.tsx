@@ -137,8 +137,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Ephemeral media viewer */}
+    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
+      {/* Fixed container to prevent keyboard shift */}
       {viewingMedia && (
         <EphemeralMedia
           type={viewingMedia.type}
@@ -168,8 +168,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
         </div>
       )}
 
-      {/* Header */}
-      <header className="flex items-center gap-4 px-4 py-3 border-b border-border bg-card/80 backdrop-blur-lg">
+      {/* Header - fixed at top */}
+      <header className="flex-shrink-0 flex items-center gap-4 px-4 py-3 border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-20">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -240,9 +240,9 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
         onNavigate={handleSearchNavigate}
       />
       
-      {/* Messages area */}
-      <ScrollArea 
-        className="flex-1 p-4" 
+      {/* Messages area - scrollable middle section */}
+      <div 
+        className="flex-1 overflow-y-auto overscroll-contain p-4" 
         ref={scrollRef}
         onScroll={handleScroll}
       >
@@ -292,7 +292,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           {/* Typing indicator */}
           <TypingIndicator typingUsers={typingUsers} />
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Scroll to bottom button */}
       {showScrollButton && (
@@ -308,19 +308,23 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
 
       {/* Reply preview */}
       {replyTo && (
-        <MessageReply
-          replyTo={replyTo}
-          onCancelReply={() => setReplyTo(null)}
-        />
+        <div className="flex-shrink-0">
+          <MessageReply
+            replyTo={replyTo}
+            onCancelReply={() => setReplyTo(null)}
+          />
+        </div>
       )}
-      
-      {/* Input */}
-      <ChatInput 
-        onSendMessage={handleSendMessage} 
-        chatRoomId={roomId}
-        isPrivate={false}
-        onTyping={handleTyping}
-      />
+
+      {/* Input - fixed at bottom */}
+      <div className="flex-shrink-0">
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          chatRoomId={roomId}
+          isPrivate={false}
+          onTyping={handleTyping}
+        />
+      </div>
     </div>
   );
 };
