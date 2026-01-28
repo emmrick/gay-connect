@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Reply, CornerUpLeft } from 'lucide-react';
 import EphemeralMessage from './EphemeralMessage';
+import EmojiReactionPicker from './EmojiReactionPicker';
+import MessageReactions from './MessageReactions';
 import { Button } from '@/components/ui/button';
 
 interface ReplyToMessage {
@@ -11,15 +13,31 @@ interface ReplyToMessage {
   senderUsername: string;
 }
 
+interface Reaction {
+  emoji: string;
+  count: number;
+  hasReacted: boolean;
+}
+
 interface ChatMessageProps {
   message: Message & { replyToMessage?: ReplyToMessage | null };
   isOwn: boolean;
   isHighlighted?: boolean;
+  reactions?: Reaction[];
   onReply?: (message: { id: string; content: string; senderName: string }) => void;
   onAvatarClick?: (userId: string) => void;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
 }
 
-const ChatMessage = ({ message, isOwn, isHighlighted, onReply, onAvatarClick }: ChatMessageProps) => {
+const ChatMessage = ({ 
+  message, 
+  isOwn, 
+  isHighlighted, 
+  reactions = [],
+  onReply, 
+  onAvatarClick,
+  onToggleReaction,
+}: ChatMessageProps) => {
   const isEphemeral = message.type === 'image' || message.type === 'video';
 
   const handleReply = () => {
@@ -32,6 +50,10 @@ const ChatMessage = ({ message, isOwn, isHighlighted, onReply, onAvatarClick }: 
 
   const handleAvatarClick = () => {
     onAvatarClick?.(message.senderId);
+  };
+
+  const handleReaction = (emoji: string) => {
+    onToggleReaction?.(message.id, emoji);
   };
 
   return (
@@ -77,7 +99,14 @@ const ChatMessage = ({ message, isOwn, isHighlighted, onReply, onAvatarClick }: 
         )}
         
         {/* Message content */}
-        <div className="relative">
+        <div className="relative flex items-center gap-1">
+          {/* Action buttons - left side for own messages */}
+          {isOwn && !isEphemeral && (
+            <div className="flex items-center gap-1">
+              <EmojiReactionPicker onSelect={handleReaction} />
+            </div>
+          )}
+
           {isEphemeral ? (
             <EphemeralMessage
               messageId={message.id}
@@ -91,18 +120,28 @@ const ChatMessage = ({ message, isOwn, isHighlighted, onReply, onAvatarClick }: 
             </div>
           )}
 
-          {/* Reply button - only show on hover for non-ephemeral messages */}
-          {!isEphemeral && !isOwn && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`absolute -right-10 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity`}
-              onClick={handleReply}
-            >
-              <Reply className="w-4 h-4" />
-            </Button>
+          {/* Action buttons - right side for received messages */}
+          {!isOwn && !isEphemeral && (
+            <div className="flex items-center gap-1">
+              <EmojiReactionPicker onSelect={handleReaction} />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={handleReply}
+              >
+                <Reply className="w-4 h-4" />
+              </Button>
+            </div>
           )}
         </div>
+
+        {/* Reactions */}
+        <MessageReactions
+          reactions={reactions}
+          onToggleReaction={handleReaction}
+          isOwn={isOwn}
+        />
         
         {/* Timestamp */}
         <span className="text-[10px] text-muted-foreground mt-1 px-1">
