@@ -5,6 +5,7 @@ import RegionSelector from '@/components/landing/RegionSelector';
 import ChatRoom from '@/components/chat/ChatRoom';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
+import ProfileEditDialog from '@/components/profile/ProfileEditDialog';
 import { useChatRooms, useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -12,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, User, MessageCircle, Users, Shield } from 'lucide-react';
+import { LogOut, User, MessageCircle, Users, Shield, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type AppView = 'landing' | 'regions' | 'chat' | 'private';
@@ -22,6 +23,7 @@ const Index = () => {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'groups' | 'private'>('groups');
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
   const { user, profile, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { data: rooms } = useChatRooms();
@@ -131,12 +133,24 @@ const Index = () => {
                 </Button>
               )}
               
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-semibold">
-                  {profile?.username?.charAt(0).toUpperCase() || <User className="w-4 h-4" />}
+              <button
+                onClick={() => setShowProfileEdit(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-semibold overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.username}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    profile?.username?.charAt(0).toUpperCase() || <User className="w-4 h-4" />
+                  )}
                 </div>
                 <span className="text-sm font-medium">{profile?.username}</span>
-              </div>
+                <Settings className="w-4 h-4 text-muted-foreground" />
+              </button>
               <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="w-5 h-5" />
               </Button>
@@ -144,6 +158,9 @@ const Index = () => {
           </div>
         </header>
       )}
+
+      {/* Profile Edit Dialog */}
+      <ProfileEditDialog open={showProfileEdit} onOpenChange={setShowProfileEdit} />
 
       {currentView === 'landing' && (
         <Hero onGetStarted={handleGetStarted} />
