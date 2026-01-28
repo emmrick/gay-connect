@@ -128,7 +128,7 @@ const Auth = () => {
                       id="region"
                       value={region}
                       onChange={(e) => setRegion(e.target.value)}
-                      className="w-full pl-11 pr-4 h-12 rounded-lg bg-secondary border-none text-foreground appearance-none cursor-pointer"
+                      className="w-full pl-11 pr-10 h-12 rounded-lg bg-secondary border-none text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     >
                       <option value="">Choisis ta région</option>
@@ -138,6 +138,11 @@ const Auth = () => {
                         </option>
                       ))}
                     </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </>
