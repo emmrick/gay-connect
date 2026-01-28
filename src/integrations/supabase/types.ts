@@ -115,6 +115,7 @@ export type Database = {
           is_private: boolean | null
           message_type: string
           recipient_id: string | null
+          reply_to_id: string | null
           sender_id: string
         }
         Insert: {
@@ -125,6 +126,7 @@ export type Database = {
           is_private?: boolean | null
           message_type?: string
           recipient_id?: string | null
+          reply_to_id?: string | null
           sender_id: string
         }
         Update: {
@@ -135,6 +137,7 @@ export type Database = {
           is_private?: boolean | null
           message_type?: string
           recipient_id?: string | null
+          reply_to_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -143,6 +146,13 @@ export type Database = {
             columns: ["chat_room_id"]
             isOneToOne: false
             referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -286,6 +296,38 @@ export type Database = {
             columns: ["media_id"]
             isOneToOne: false
             referencedRelation: "ephemeral_media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      typing_indicators: {
+        Row: {
+          chat_room_id: string | null
+          id: string
+          started_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          chat_room_id?: string | null
+          id?: string
+          started_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          chat_room_id?: string | null
+          id?: string
+          started_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "typing_indicators_chat_room_id_fkey"
+            columns: ["chat_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
         ]
