@@ -1,11 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMessages } from '@/hooks/useMessages';
+import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import EphemeralMedia from './EphemeralMedia';
 import MembersList from './MembersList';
-import { ArrowLeft, Users, MoreVertical, Image, Loader2, X } from 'lucide-react';
+import TypingIndicator from './TypingIndicator';
+import MessageReply from './MessageReply';
+import MessageSearch from './MessageSearch';
+import UserProfilePreview from './UserProfilePreview';
+import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
@@ -19,6 +24,12 @@ interface EphemeralMediaData {
   mediaId?: string;
 }
 
+interface ReplyMessage {
+  id: string;
+  content: string;
+  senderName: string;
+}
+
 interface ChatRoomProps {
   roomId: string;
   regionCode: string;
@@ -29,29 +40,94 @@ interface ChatRoomProps {
 }
 
 const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStartPrivateChat }: ChatRoomProps) => {
-  const { messages, isLoading, sendMessage } = useMessages(roomId);
   const { user } = useAuth();
+  
+  // Search state
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchIndex, setSearchIndex] = useState(0);
+  
+  const { messages, searchResults, isLoading, sendMessage } = useMessages(roomId, searchQuery);
+  const { typingUsers, startTyping, stopTyping } = useTypingIndicator(roomId);
+  
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [previewUserId, setPreviewUserId] = useState<string | null>(null);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const { isSuspended, getSuspensionTimeLeft } = useScreenshotProtection();
 
+  // Scroll to bottom on new messages
   useEffect(() => {
-    // Scroll to bottom on new messages
+    if (scrollRef.current && !searchQuery) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, searchQuery]);
+
+  // Handle scroll to show/hide scroll button
+  const handleScroll = useCallback(() => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+    }
+  }, []);
+
+  // Scroll to search result
+  useEffect(() => {
+    if (searchResults.length > 0 && searchQuery) {
+      const messageId = searchResults[searchIndex];
+      const el = document.getElementById(`message-${messageId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [searchIndex, searchResults, searchQuery]);
+
+  const scrollToBottom = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  };
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
-      sendMessage.mutate({ content, messageType: 'text' });
+      sendMessage.mutate({ 
+        content, 
+        messageType: 'text',
+        replyToId: replyTo?.id,
+      });
+      setReplyTo(null);
+      stopTyping();
+    }
+  };
+
+  const handleTyping = () => {
+    startTyping();
+  };
+
+  const handleSearchNavigate = (direction: 'prev' | 'next') => {
+    if (searchResults.length === 0) return;
+    
+    if (direction === 'next') {
+      setSearchIndex((prev) => (prev + 1) % searchResults.length);
+    } else {
+      setSearchIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
     }
   };
 
   const handleStartPrivateChat = (userId: string) => {
     setShowMembers(false);
+    setPreviewUserId(null);
     onStartPrivateChat(userId);
+  };
+
+  const handleReply = (message: ReplyMessage) => {
+    setReplyTo(message);
+  };
+
+  const handleAvatarClick = (userId: string) => {
+    setPreviewUserId(userId);
   };
 
   return (
@@ -68,6 +144,14 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           onViewed={() => console.log('Media viewed')}
         />
       )}
+
+      {/* User profile preview */}
+      <UserProfilePreview
+        userId={previewUserId}
+        isOpen={!!previewUserId}
+        onClose={() => setPreviewUserId(null)}
+        onStartPrivateChat={handleStartPrivateChat}
+      />
 
       {/* Suspension banner */}
       {isSuspended && (
@@ -95,8 +179,16 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Users className="w-4 h-4" />
             <span>{memberCount} membres</span>
+            {typingUsers.length > 0 && (
+              <span className="text-primary animate-pulse">• en train d'écrire...</span>
+            )}
           </div>
         </div>
+
+        {/* Search button */}
+        <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
+          <Search className="w-5 h-5" />
+        </Button>
         
         <Sheet open={showMembers} onOpenChange={setShowMembers}>
           <SheetTrigger asChild>
@@ -123,13 +215,31 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
         <Button variant="ghost" size="icon">
           <Image className="w-5 h-5" />
         </Button>
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="w-5 h-5" />
-        </Button>
       </header>
+
+      {/* Search bar */}
+      <MessageSearch
+        isOpen={searchOpen}
+        onClose={() => {
+          setSearchOpen(false);
+          setSearchQuery('');
+          setSearchIndex(0);
+        }}
+        onSearch={(query) => {
+          setSearchQuery(query);
+          setSearchIndex(0);
+        }}
+        resultCount={searchResults.length}
+        currentIndex={searchIndex}
+        onNavigate={handleSearchNavigate}
+      />
       
       {/* Messages area */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea 
+        className="flex-1 p-4" 
+        ref={scrollRef}
+        onScroll={handleScroll}
+      >
         <div className="space-y-4 pb-4">
           {/* Welcome message */}
           <div className="text-center py-8">
@@ -162,18 +272,46 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
                 senderName: message.senderUsername || 'Anonyme',
                 timestamp: new Date(message.created_at),
                 type: message.message_type as 'text' | 'image',
+                replyToMessage: message.replyToMessage,
               }}
               isOwn={message.sender_id === user?.id}
+              isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
+              onReply={handleReply}
+              onAvatarClick={handleAvatarClick}
             />
           ))}
+
+          {/* Typing indicator */}
+          <TypingIndicator typingUsers={typingUsers} />
         </div>
       </ScrollArea>
+
+      {/* Scroll to bottom button */}
+      {showScrollButton && (
+        <Button
+          variant="secondary"
+          size="icon"
+          className="absolute bottom-24 right-4 rounded-full shadow-lg z-10"
+          onClick={scrollToBottom}
+        >
+          <ChevronDown className="w-5 h-5" />
+        </Button>
+      )}
+
+      {/* Reply preview */}
+      {replyTo && (
+        <MessageReply
+          replyTo={replyTo}
+          onCancelReply={() => setReplyTo(null)}
+        />
+      )}
       
       {/* Input */}
       <ChatInput 
         onSendMessage={handleSendMessage} 
         chatRoomId={roomId}
         isPrivate={false}
+        onTyping={handleTyping}
       />
     </div>
   );

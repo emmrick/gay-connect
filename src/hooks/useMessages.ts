@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -9,9 +9,14 @@ type Message = Tables<'messages'>;
 interface MessageWithProfile extends Message {
   senderUsername?: string;
   senderAvatar?: string | null;
+  replyToMessage?: {
+    id: string;
+    content: string;
+    senderUsername: string;
+  } | null;
 }
 
-export const useMessages = (chatRoomId: string | null) => {
+export const useMessages = (chatRoomId: string | null, searchQuery?: string) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -28,7 +33,7 @@ export const useMessages = (chatRoomId: string | null) => {
         .eq('chat_room_id', chatRoomId)
         .eq('is_private', false)
         .order('created_at', { ascending: true })
-        .limit(100);
+        .limit(200);
 
       if (error) throw error;
       if (!messages) return [];
@@ -45,14 +50,47 @@ export const useMessages = (chatRoomId: string | null) => {
       // Map profiles to messages
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
       
-      return messages.map(msg => ({
-        ...msg,
-        senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
-        senderAvatar: profileMap.get(msg.sender_id)?.avatar_url,
-      }));
+      // Create message map for replies
+      const messageMap = new Map(messages.map(m => [m.id, m]));
+      
+      return messages.map(msg => {
+        const replyTo = msg.reply_to_id ? messageMap.get(msg.reply_to_id) : null;
+        return {
+          ...msg,
+          senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
+          senderAvatar: profileMap.get(msg.sender_id)?.avatar_url,
+          replyToMessage: replyTo ? {
+            id: replyTo.id,
+            content: replyTo.content || '',
+            senderUsername: profileMap.get(replyTo.sender_id)?.username || 'Anonyme',
+          } : null,
+        };
+      });
     },
     enabled: !!chatRoomId,
   });
+
+  // Filter messages based on search query
+  const filteredMessages = useMemo(() => {
+    if (!searchQuery || !query.data) return query.data || [];
+    const lowerQuery = searchQuery.toLowerCase();
+    return query.data.filter(msg => 
+      msg.content?.toLowerCase().includes(lowerQuery) ||
+      msg.senderUsername?.toLowerCase().includes(lowerQuery)
+    );
+  }, [query.data, searchQuery]);
+
+  // Get search result indices
+  const searchResults = useMemo(() => {
+    if (!searchQuery || !query.data) return [];
+    const lowerQuery = searchQuery.toLowerCase();
+    return query.data
+      .map((msg, index) => ({ msg, index }))
+      .filter(({ msg }) => 
+        msg.content?.toLowerCase().includes(lowerQuery)
+      )
+      .map(({ msg }) => msg.id);
+  }, [query.data, searchQuery]);
 
   // Real-time subscription
   useEffect(() => {
@@ -97,7 +135,7 @@ export const useMessages = (chatRoomId: string | null) => {
 
   // Send message mutation
   const sendMessage = useMutation({
-    mutationFn: async ({ content, messageType }: { content: string; messageType: 'text' | 'image' | 'video' }) => {
+    mutationFn: async ({ content, messageType, replyToId }: { content: string; messageType: 'text' | 'image' | 'video'; replyToId?: string }) => {
       if (!user || !chatRoomId) throw new Error('Not authenticated or no room');
 
       const { data, error } = await supabase
@@ -108,6 +146,7 @@ export const useMessages = (chatRoomId: string | null) => {
           content,
           message_type: messageType,
           is_private: false,
+          reply_to_id: replyToId || null,
         })
         .select()
         .single();
@@ -119,6 +158,8 @@ export const useMessages = (chatRoomId: string | null) => {
 
   return {
     messages: query.data || [],
+    filteredMessages,
+    searchResults,
     isLoading: query.isLoading,
     error: query.error,
     sendMessage,

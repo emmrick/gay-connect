@@ -9,9 +9,10 @@ interface ChatInputProps {
   chatRoomId?: string;
   recipientId?: string;
   isPrivate?: boolean;
+  onTyping?: () => void;
 }
 
-const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, onTyping }: ChatInputProps) => {
   const [message, setMessage] = useState('');
 
   const handleSend = () => {
@@ -26,6 +27,11 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false }
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+    onTyping?.();
   };
 
   return (
@@ -50,7 +56,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false }
         {/* Message input */}
         <Input
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleChange}
           onKeyPress={handleKeyPress}
           placeholder="Écris ton message..."
           className="flex-1 bg-secondary border-none h-11"

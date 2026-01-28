@@ -1,46 +1,108 @@
 import { Message } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Reply, CornerUpLeft } from 'lucide-react';
 import EphemeralMessage from './EphemeralMessage';
+import { Button } from '@/components/ui/button';
 
-interface ChatMessageProps {
-  message: Message;
-  isOwn: boolean;
+interface ReplyToMessage {
+  id: string;
+  content: string;
+  senderUsername: string;
 }
 
-const ChatMessage = ({ message, isOwn }: ChatMessageProps) => {
+interface ChatMessageProps {
+  message: Message & { replyToMessage?: ReplyToMessage | null };
+  isOwn: boolean;
+  isHighlighted?: boolean;
+  onReply?: (message: { id: string; content: string; senderName: string }) => void;
+  onAvatarClick?: (userId: string) => void;
+}
+
+const ChatMessage = ({ message, isOwn, isHighlighted, onReply, onAvatarClick }: ChatMessageProps) => {
   const isEphemeral = message.type === 'image' || message.type === 'video';
 
+  const handleReply = () => {
+    onReply?.({
+      id: message.id,
+      content: message.content,
+      senderName: message.senderName,
+    });
+  };
+
+  const handleAvatarClick = () => {
+    onAvatarClick?.(message.senderId);
+  };
+
   return (
-    <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'} animate-slide-up`}>
+    <div 
+      className={`group flex gap-3 ${isOwn ? 'flex-row-reverse' : 'flex-row'} animate-slide-up ${
+        isHighlighted ? 'bg-primary/10 -mx-4 px-4 py-2 rounded-lg' : ''
+      }`}
+      id={`message-${message.id}`}
+    >
       {/* Avatar */}
       {!isOwn && (
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+        <button
+          onClick={handleAvatarClick}
+          className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 hover:scale-105 transition-transform cursor-pointer"
+        >
           {message.senderName.charAt(0).toUpperCase()}
-        </div>
+        </button>
       )}
       
-      <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+      <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[75%]`}>
         {/* Sender name */}
         {!isOwn && (
           <span className="text-xs text-muted-foreground mb-1 px-1">
             {message.senderName}
           </span>
         )}
-        
-        {/* Message content */}
-        {isEphemeral ? (
-          <EphemeralMessage
-            messageId={message.id}
-            messageType={message.type as 'image' | 'video'}
-            senderName={message.senderName}
-            isOwn={isOwn}
-          />
-        ) : (
-          <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
-            <p className="text-sm leading-relaxed">{message.content}</p>
+
+        {/* Reply reference */}
+        {message.replyToMessage && (
+          <div 
+            className={`flex items-center gap-1 text-xs text-muted-foreground mb-1 px-2 py-1 rounded bg-secondary/50 border-l-2 border-primary cursor-pointer hover:bg-secondary/80 transition-colors ${
+              isOwn ? 'ml-auto' : ''
+            }`}
+            onClick={() => {
+              const el = document.getElementById(`message-${message.replyToMessage?.id}`);
+              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }}
+          >
+            <CornerUpLeft className="w-3 h-3" />
+            <span className="font-medium">{message.replyToMessage.senderUsername}</span>
+            <span className="truncate max-w-[150px]">{message.replyToMessage.content}</span>
           </div>
         )}
+        
+        {/* Message content */}
+        <div className="relative">
+          {isEphemeral ? (
+            <EphemeralMessage
+              messageId={message.id}
+              messageType={message.type as 'image' | 'video'}
+              senderName={message.senderName}
+              isOwn={isOwn}
+            />
+          ) : (
+            <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+            </div>
+          )}
+
+          {/* Reply button - only show on hover for non-ephemeral messages */}
+          {!isEphemeral && !isOwn && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`absolute -right-10 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity`}
+              onClick={handleReply}
+            >
+              <Reply className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
         
         {/* Timestamp */}
         <span className="text-[10px] text-muted-foreground mt-1 px-1">
