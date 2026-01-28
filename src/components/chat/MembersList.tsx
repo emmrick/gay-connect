@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import ReportUserDialog from './ReportUserDialog';
+import ProfileDetailDialog from '@/components/profile/ProfileDetailDialog';
 
 type Profile = Tables<'profiles'>;
 
@@ -79,10 +80,18 @@ const MemberCard = ({
   onStartChat: () => void;
 }) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+
+  const handleCardClick = () => {
+    setShowProfileDialog(true);
+  };
 
   return (
     <>
-      <div className="flex items-center gap-3 p-3 rounded-xl bg-card hover:bg-secondary/50 transition-colors group">
+      <button
+        onClick={handleCardClick}
+        className="w-full flex items-center gap-3 p-3 rounded-xl bg-card hover:bg-secondary/50 transition-colors group text-left"
+      >
         {/* Avatar */}
         <div className="relative">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold overflow-hidden">
@@ -140,7 +149,18 @@ const MemberCard = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </button>
+
+      <ProfileDetailDialog
+        profile={profile}
+        open={showProfileDialog}
+        onOpenChange={setShowProfileDialog}
+        onStartChat={onStartChat}
+        onReport={() => {
+          setShowProfileDialog(false);
+          setShowReportDialog(true);
+        }}
+      />
 
       <ReportUserDialog
         open={showReportDialog}
