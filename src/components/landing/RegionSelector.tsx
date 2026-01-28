@@ -1,8 +1,7 @@
+import { useChatRooms } from '@/hooks/useChatRooms';
 import { useState } from 'react';
-import { regions } from '@/data/mockData';
-import { MapPin, Users, ArrowRight, Search } from 'lucide-react';
+import { MapPin, Users, ArrowRight, Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 
 interface RegionSelectorProps {
   onSelectRegion: (regionCode: string) => void;
@@ -10,11 +9,20 @@ interface RegionSelectorProps {
 
 const RegionSelector = ({ onSelectRegion }: RegionSelectorProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { data: rooms, isLoading } = useChatRooms();
   
-  const filteredRegions = regions.filter(region => 
-    region.code.includes(searchQuery) || 
-    region.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRegions = rooms?.filter(room => 
+    room.region_code.includes(searchQuery) || 
+    room.region_name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
+  if (isLoading) {
+    return (
+      <section className="py-20 px-4 flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 px-4">
@@ -42,23 +50,23 @@ const RegionSelector = ({ onSelectRegion }: RegionSelectorProps) => {
         
         {/* Regions grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredRegions.map((region, index) => (
+          {filteredRegions.map((room, index) => (
             <button
-              key={region.code}
-              onClick={() => onSelectRegion(region.code)}
+              key={room.id}
+              onClick={() => onSelectRegion(room.region_code)}
               className="glass-card rounded-xl p-4 text-left hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 group animate-slide-up"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white">
-                  {region.code}
+                  {room.region_code}
                 </div>
                 <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
               </div>
-              <h3 className="font-semibold text-foreground mb-1 line-clamp-1">{region.name}</h3>
+              <h3 className="font-semibold text-foreground mb-1 line-clamp-1">{room.region_name}</h3>
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Users className="w-4 h-4" />
-                <span>{region.memberCount} membres</span>
+                <span>Rejoindre</span>
               </div>
             </button>
           ))}

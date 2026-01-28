@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Message } from '@/types';
-import { mockMessages } from '@/data/mockData';
+import { useMessages } from '@/hooks/useMessages';
+import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import EphemeralMedia from './EphemeralMedia';
-import { ArrowLeft, Users, MoreVertical, Image } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Image, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
@@ -17,17 +17,18 @@ interface EphemeralMediaData {
 }
 
 interface ChatRoomProps {
+  roomId: string;
   regionCode: string;
   regionName: string;
   memberCount: number;
   onBack: () => void;
 }
 
-const ChatRoom = ({ regionCode, regionName, memberCount, onBack }: ChatRoomProps) => {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack }: ChatRoomProps) => {
+  const { messages, isLoading, sendMessage } = useMessages(roomId);
+  const { user, profile } = useAuth();
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const currentUserId = '1'; // Simulated current user
   const { isSuspended, getSuspensionTimeLeft } = useScreenshotProtection();
 
   useEffect(() => {
@@ -37,42 +38,13 @@ const ChatRoom = ({ regionCode, regionName, memberCount, onBack }: ChatRoomProps
     }
   }, [messages]);
 
-  const handleSendMessage = (content: string, type: 'text' | 'image' | 'video', file?: File, duration?: number) => {
-    if (type === 'text') {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        content,
-        senderId: currentUserId,
-        senderName: 'Vous',
-        timestamp: new Date(),
-        type: 'text',
-      };
-      setMessages([...messages, newMessage]);
+  const handleSendMessage = async (content: string, type: 'text' | 'image' | 'video', file?: File, duration?: number) => {
+    if (type === 'text' && content.trim()) {
+      sendMessage.mutate({ content, messageType: 'text' });
     } else if (file) {
-      // For demo: create object URL
-      const mediaUrl = URL.createObjectURL(file);
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        content: `📸 ${type === 'image' ? 'Photo' : 'Vidéo'} éphémère (${duration}s)`,
-        senderId: currentUserId,
-        senderName: 'Vous',
-        timestamp: new Date(),
-        type: 'image',
-        imageUrl: mediaUrl,
-      };
-      setMessages([...messages, newMessage]);
-    }
-  };
-
-  // Demo: simulate receiving ephemeral media
-  const handleMediaClick = (message: Message) => {
-    if (message.imageUrl && message.senderId !== currentUserId) {
-      setViewingMedia({
-        type: 'image',
-        src: message.imageUrl,
-        senderName: message.senderName,
-        duration: 10,
-      });
+      // TODO: Upload file to storage and create ephemeral media
+      const mediaContent = `📸 ${type === 'image' ? 'Photo' : 'Vidéo'} éphémère (${duration}s)`;
+      sendMessage.mutate({ content: mediaContent, messageType: type });
     }
   };
 
@@ -142,15 +114,28 @@ const ChatRoom = ({ regionCode, regionName, memberCount, onBack }: ChatRoomProps
               {regionName} • {memberCount} membres actifs
             </p>
           </div>
+
+          {/* Loading state */}
+          {isLoading && (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          )}
           
           {/* Messages */}
           {messages.map((message) => (
-            <div key={message.id} onClick={() => handleMediaClick(message)} className="cursor-pointer">
-              <ChatMessage
-                message={message}
-                isOwn={message.senderId === currentUserId}
-              />
-            </div>
+            <ChatMessage
+              key={message.id}
+              message={{
+                id: message.id,
+                content: message.content || '',
+                senderId: message.sender_id,
+                senderName: message.senderUsername || 'Anonyme',
+                timestamp: new Date(message.created_at),
+                type: message.message_type as 'text' | 'image',
+              }}
+              isOwn={message.sender_id === user?.id}
+            />
           ))}
         </div>
       </ScrollArea>
