@@ -53,9 +53,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg">
+      <div className="flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg flex-shrink-0">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -205,12 +205,14 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         )}
       </ScrollArea>
 
-      {/* Input */}
-      <ChatInput 
-        onSendMessage={handleSendMessage} 
-        recipientId={otherUserId}
-        isPrivate={true}
-      />
+      {/* Input - fixed at bottom */}
+      <div className="flex-shrink-0">
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          recipientId={otherUserId}
+          isPrivate={true}
+        />
+      </div>
     </div>
   );
 };

@@ -9,13 +9,15 @@ import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
+import MemberSearch from '@/components/chat/MemberSearch';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'profile' | 'chat' | 'private';
@@ -58,6 +60,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
+  const [showMemberSearch, setShowMemberSearch] = useState(false);
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
@@ -303,32 +306,57 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col relative"
           >
-            <div className="px-5 py-5 border-b border-border/50">
-              <motion.h2 
-                className="font-display text-2xl font-bold text-foreground mb-1"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+            {/* Header with search button */}
+            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
+              <div>
+                <motion.h2 
+                  className="font-display text-2xl font-bold text-foreground mb-1"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  Messages
+                </motion.h2>
+                <motion.p 
+                  className="text-sm text-muted-foreground"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  Tes conversations privées
+                </motion.p>
+              </div>
+              <Button
+                onClick={() => setShowMemberSearch(true)}
+                size="icon"
+                className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
               >
-                Messages
-              </motion.h2>
-              <motion.p 
-                className="text-sm text-muted-foreground"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.15 }}
-              >
-                Tes conversations privées
-              </motion.p>
+                <Plus className="w-5 h-5" />
+              </Button>
             </div>
+            
+            {/* Conversation list */}
             <ScrollArea className="flex-1">
               <PrivateChatList
                 onSelectConversation={handleSelectConversation}
                 selectedUserId={null}
               />
             </ScrollArea>
+
+            {/* Member Search Overlay */}
+            <AnimatePresence>
+              {showMemberSearch && (
+                <MemberSearch
+                  onSelectUser={(userId) => {
+                    handleStartPrivateChat(userId);
+                    setShowMemberSearch(false);
+                  }}
+                  onClose={() => setShowMemberSearch(false)}
+                />
+              )}
+            </AnimatePresence>
           </motion.div>
         );
 
