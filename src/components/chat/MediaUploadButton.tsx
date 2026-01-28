@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Image, Video, Camera, X, Send, Clock, Loader2 } from 'lucide-react';
+import { Image, Video, Camera, X, Send, Clock, Loader2, Aperture } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useEphemeralMediaUpload } from '@/hooks/useEphemeralMediaUpload';
 import { toast } from 'sonner';
+import CameraCapture from './CameraCapture';
 
 interface MediaUploadButtonProps {
   chatRoomId?: string;
@@ -21,6 +22,7 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [viewDuration, setViewDuration] = useState(10);
+  const [showCamera, setShowCamera] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
@@ -166,6 +168,15 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
 
   return (
     <>
+      {/* Camera capture component */}
+      <CameraCapture
+        isOpen={showCamera}
+        onClose={() => setShowCamera(false)}
+        chatRoomId={chatRoomId}
+        recipientId={recipientId}
+        isPrivate={isPrivate}
+      />
+
       <input 
         type="file" 
         ref={imageInputRef} 
@@ -192,6 +203,10 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuItem onClick={() => setShowCamera(true)}>
+            <Aperture className="w-4 h-4 mr-2" />
+            Prendre une photo/vidéo
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
             <Image className="w-4 h-4 mr-2" />
             Envoyer une photo

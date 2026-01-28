@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMessages } from '@/hooks/useMessages';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { useMessageReactions } from '@/hooks/useMessageReactions';
+import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
@@ -42,6 +43,9 @@ interface ChatRoomProps {
 
 const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStartPrivateChat }: ChatRoomProps) => {
   const { user } = useAuth();
+  
+  // Mobile back navigation
+  useMobileNavigation({ onBack, enabled: true });
   
   // Search state
   const [searchOpen, setSearchOpen] = useState(false);

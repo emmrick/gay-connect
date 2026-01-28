@@ -5,6 +5,7 @@ import { ArrowLeft, MoreVertical, Flag } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,6 +32,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { markAsRead } = useUnreadMessages();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
+
+  // Mobile back navigation
+  useMobileNavigation({ onBack, enabled: true });
 
   // Mark messages as read when entering the conversation
   useEffect(() => {
