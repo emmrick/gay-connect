@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -12,6 +12,7 @@ interface GeolocationState {
 
 export const useGeolocation = () => {
   const { user } = useAuth();
+  const isMountedRef = useRef(true);
   const [state, setState] = useState<GeolocationState>({
     latitude: null,
     longitude: null,
@@ -26,9 +27,11 @@ export const useGeolocation = () => {
     
     try {
       const result = await navigator.permissions.query({ name: 'geolocation' });
+      if (!isMountedRef.current) return;
       setState(prev => ({ ...prev, permissionState: result.state }));
       
       result.onchange = () => {
+        if (!isMountedRef.current) return;
         setState(prev => ({ ...prev, permissionState: result.state }));
       };
     } catch (err) {
@@ -46,38 +49,57 @@ export const useGeolocation = () => {
       return false;
     }
 
+    if (!isMountedRef.current) return false;
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     return new Promise((resolve) => {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          setState(prev => ({
-            ...prev,
-            latitude,
-            longitude,
-            loading: false,
-            error: null,
-          }));
+        (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            if (!isMountedRef.current) return;
 
-          // Update profile with location
-          if (user) {
-            try {
-              await supabase
-                .from('profiles')
-                .update({
-                  latitude,
-                  longitude,
-                  location_updated_at: new Date().toISOString(),
-                })
-                .eq('user_id', user.id);
-            } catch (err) {
-              console.error('Error updating location:', err);
+            setState(prev => ({
+              ...prev,
+              latitude,
+              longitude,
+              loading: false,
+              error: null,
+            }));
+
+            // Fire-and-forget DB update (avoid unhandled rejections from async callbacks)
+            if (user) {
+              void (async () => {
+                try {
+                  const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({
+                      latitude,
+                      longitude,
+                      location_updated_at: new Date().toISOString(),
+                    })
+                    .eq('user_id', user.id);
+
+                  if (updateError) {
+                    console.error('[geolocation] Error updating location:', updateError);
+                  }
+                } catch (err) {
+                  console.error('[geolocation] Unexpected error updating location:', err);
+                }
+              })();
             }
-          }
 
-          resolve(true);
+            resolve(true);
+          } catch (err) {
+            console.error('[geolocation] Unexpected success callback error:', err);
+            if (!isMountedRef.current) return;
+            setState(prev => ({
+              ...prev,
+              loading: false,
+              error: 'Erreur inattendue lors de la récupération de ta position',
+            }));
+            resolve(false);
+          }
         },
         (error) => {
           let errorMessage = 'Impossible d\'obtenir ta position';
@@ -94,6 +116,7 @@ export const useGeolocation = () => {
               break;
           }
 
+          if (!isMountedRef.current) return;
           setState(prev => ({
             ...prev,
             loading: false,
@@ -102,8 +125,10 @@ export const useGeolocation = () => {
           resolve(false);
         },
         {
-          enableHighAccuracy: true,
-          timeout: 10000,
+          // High accuracy can be unstable/heavy on some Android devices.
+          // We prefer a stable fix first; distance calc does not require GPS-level precision.
+          enableHighAccuracy: false,
+          timeout: 12000,
           maximumAge: 5 * 60 * 1000, // 5 minutes
         }
       );
@@ -112,7 +137,11 @@ export const useGeolocation = () => {
 
   // Check permission on mount
   useEffect(() => {
+    isMountedRef.current = true;
     checkPermission();
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [checkPermission]);
 
   return {
