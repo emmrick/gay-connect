@@ -131,40 +131,44 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
     );
   }
 
-  // Build the final profiles list with current user first
-  const allProfiles: any[] = [];
-  
-  // Add current user profile first
-  if (currentUserProfile) {
-    allProfiles.push({
-      id: currentUserProfile.id,
-      user_id: currentUserProfile.user_id,
-      username: currentUserProfile.username,
-      avatar_url: currentUserProfile.avatar_url,
-      age: currentUserProfile.age,
-      is_online: currentUserProfile.is_online,
-      last_seen: currentUserProfile.last_seen,
-      distance_km: null,
-      bio: currentUserProfile.bio,
-      region: currentUserProfile.region,
-      sexual_position: (currentUserProfile as any).sexual_position,
-      isCurrentUser: true,
-    });
-  }
-  
-  // Add other profiles
-  if (profiles) {
-    profiles.forEach(p => {
-      allProfiles.push({
-        ...p,
-        sexual_position: null, // Not returned by nearby profiles query
-        isCurrentUser: false,
+  // Build the final profiles list with current user first - use useMemo to avoid issues
+  const allProfiles = useMemo(() => {
+    const result: any[] = [];
+    
+    // Add current user profile first
+    if (currentUserProfile) {
+      result.push({
+        id: currentUserProfile.id,
+        user_id: currentUserProfile.user_id,
+        username: currentUserProfile.username,
+        avatar_url: currentUserProfile.avatar_url,
+        age: currentUserProfile.age,
+        is_online: currentUserProfile.is_online,
+        last_seen: currentUserProfile.last_seen,
+        distance_km: null,
+        bio: currentUserProfile.bio,
+        region: currentUserProfile.region,
+        sexual_position: (currentUserProfile as any).sexual_position,
+        isCurrentUser: true,
       });
-    });
-  }
+    }
+    
+    // Add other profiles
+    if (profiles) {
+      profiles.forEach(p => {
+        result.push({
+          ...p,
+          sexual_position: null, // Not returned by nearby profiles query
+          isCurrentUser: false,
+        });
+      });
+    }
+    
+    return result;
+  }, [currentUserProfile, profiles]);
 
-  // Get user IDs for premium check
-  const userIds = useMemo(() => allProfiles.map(p => p.user_id), [allProfiles.length]);
+  // Get user IDs for premium check - stable dependency
+  const userIds = useMemo(() => allProfiles.map(p => p.user_id), [allProfiles]);
   const { data: premiumMap = {} } = usePremiumUsers(userIds);
 
   return (
