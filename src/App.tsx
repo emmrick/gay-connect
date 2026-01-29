@@ -8,6 +8,7 @@ import BlockedUserGuard from "@/components/BlockedUserGuard";
 import VerificationGuard from "@/components/verification/VerificationGuard";
 import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
 import { AgeConfirmationModal } from "@/components/AgeConfirmationModal";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
@@ -18,31 +19,33 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <BlockedUserGuard>
-        <VerificationGuard>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/legal" element={<Legal />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-            <InstallPWAPrompt />
-            <AgeConfirmationModal />
-          </TooltipProvider>
-        </VerificationGuard>
-      </BlockedUserGuard>
-    </AuthProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BlockedUserGuard>
+          <VerificationGuard>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/legal" element={<Legal />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+              <InstallPWAPrompt />
+              <AgeConfirmationModal />
+            </TooltipProvider>
+          </VerificationGuard>
+        </BlockedUserGuard>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
