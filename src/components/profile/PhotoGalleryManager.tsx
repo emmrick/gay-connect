@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Plus, X, Star, Loader2, ImagePlus, GripVertical } from 'lucide-react';
+import { X, Star, Loader2, ImagePlus, Check } from 'lucide-react';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ const PhotoGalleryManager = () => {
   const { photos, isLoading, uploadPhoto, deletePhoto, setPrimaryPhoto, canAddMore } = useProfilePhotos();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,10 +46,22 @@ const PhotoGalleryManager = () => {
   const handleDelete = async (photoId: string) => {
     await deletePhoto.mutateAsync(photoId);
     setDeleteConfirm(null);
+    setSelectedPhotoId(null);
   };
 
   const handleSetPrimary = async (photoId: string) => {
     await setPrimaryPhoto.mutateAsync(photoId);
+    setSelectedPhotoId(null);
+  };
+
+  const handlePhotoTap = (photoId: string, isPrimary: boolean) => {
+    if (isPrimary) {
+      // Already primary, just toggle selection for delete
+      setSelectedPhotoId(selectedPhotoId === photoId ? null : photoId);
+    } else {
+      // Not primary, toggle selection
+      setSelectedPhotoId(selectedPhotoId === photoId ? null : photoId);
+    }
   };
 
   if (isLoading) {
@@ -65,7 +78,7 @@ const PhotoGalleryManager = () => {
         <div>
           <h3 className="font-semibold">Mes photos</h3>
           <p className="text-sm text-muted-foreground">
-            {photos.length}/6 photos • Faites glisser pour réorganiser
+            {photos.length}/6 photos • Touche pour sélectionner
           </p>
         </div>
       </div>
@@ -80,51 +93,50 @@ const PhotoGalleryManager = () => {
 
       <div className="grid grid-cols-3 gap-3">
         {/* Existing photos */}
-        {photos.map((photo, index) => (
-          <div
-            key={photo.id}
-            className="relative aspect-square rounded-xl overflow-hidden group bg-secondary"
-          >
-            <img
-              src={photo.photo_url}
-              alt={`Photo ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
-            
-            {/* Primary badge */}
-            {photo.is_primary && (
-              <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                <Star className="w-3 h-3 fill-current" />
-                Principal
-              </div>
-            )}
-
-            {/* Actions overlay */}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              {!photo.is_primary && (
-                <button
-                  onClick={() => handleSetPrimary(photo.id)}
-                  className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
-                  title="Définir comme principale"
-                >
-                  <Star className="w-4 h-4 text-white" />
-                </button>
+        {photos.map((photo, index) => {
+          const isSelected = selectedPhotoId === photo.id;
+          
+          return (
+            <div
+              key={photo.id}
+              onClick={() => handlePhotoTap(photo.id, photo.is_primary)}
+              className={cn(
+                "relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200",
+                "bg-secondary border-2",
+                isSelected 
+                  ? "border-primary ring-2 ring-primary/30 scale-[0.98]" 
+                  : "border-transparent",
+                photo.is_primary && !isSelected && "border-primary/50"
               )}
-              <button
-                onClick={() => setDeleteConfirm(photo.id)}
-                className="p-2 bg-red-500/80 hover:bg-red-500 rounded-full transition-colors"
-                title="Supprimer"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-            </div>
+            >
+              <img
+                src={photo.photo_url}
+                alt={`Photo ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Primary badge */}
+              {photo.is_primary && (
+                <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                  <Star className="w-3 h-3 fill-current" />
+                  Profil
+                </div>
+              )}
 
-            {/* Drag handle indicator */}
-            <div className="absolute bottom-2 right-2 p-1 bg-black/30 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              <GripVertical className="w-4 h-4 text-white" />
+              {/* Selection indicator */}
+              {isSelected && (
+                <div className="absolute top-2 right-2 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+                  <Check className="w-4 h-4" />
+                </div>
+              )}
+
+              {/* Darken overlay when selected */}
+              {isSelected && (
+                <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Add photo button */}
         {canAddMore && (
@@ -150,13 +162,56 @@ const PhotoGalleryManager = () => {
         )}
       </div>
 
+      {/* Action buttons when photo is selected */}
+      {selectedPhotoId && (
+        <div className="flex gap-2 pt-2">
+          {/* Set as primary button - only show if not already primary */}
+          {!photos.find(p => p.id === selectedPhotoId)?.is_primary && (
+            <Button
+              variant="default"
+              size="sm"
+              className="flex-1"
+              onClick={() => handleSetPrimary(selectedPhotoId)}
+              disabled={setPrimaryPhoto.isPending}
+            >
+              {setPrimaryPhoto.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Star className="w-4 h-4 mr-2" />
+              )}
+              Photo de profil
+            </Button>
+          )}
+          
+          {/* Delete button */}
+          <Button
+            variant="destructive"
+            size="sm"
+            className={photos.find(p => p.id === selectedPhotoId)?.is_primary ? "flex-1" : ""}
+            onClick={() => setDeleteConfirm(selectedPhotoId)}
+          >
+            <X className="w-4 h-4 mr-2" />
+            Supprimer
+          </Button>
+          
+          {/* Cancel button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelectedPhotoId(null)}
+          >
+            Annuler
+          </Button>
+        </div>
+      )}
+
       {/* Tips */}
       <div className="bg-secondary/50 rounded-lg p-3 text-sm text-muted-foreground">
         <p>💡 <strong>Conseils :</strong></p>
         <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
-          <li>Ajoutez jusqu'à 6 photos pour augmenter vos chances</li>
-          <li>La première photo sera votre photo de profil principale</li>
-          <li>Les photos claires et bien éclairées attirent plus l'attention</li>
+          <li>Touche une photo pour la sélectionner</li>
+          <li>Définis ta photo de profil en appuyant sur "Photo de profil"</li>
+          <li>Ajoute jusqu'à 6 photos pour augmenter tes chances</li>
         </ul>
       </div>
 
