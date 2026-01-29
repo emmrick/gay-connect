@@ -28,7 +28,6 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const revokePreviewUrl = (url: string | null) => {
     if (!url) return;
@@ -43,8 +42,11 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
 
   const startCamera = async () => {
     try {
+      const facingMode: ConstrainDOMString =
+        step === 'selfie' ? 'user' : { ideal: 'environment' };
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' },
+        video: { facingMode } as MediaTrackConstraints,
         audio: false 
       });
       streamRef.current = stream;
@@ -84,10 +86,6 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     setIdBackFile(null);
     setIdBackPreview(null);
     setStep('intro');
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   }, [open, stopCamera, selfiePreview, idFrontPreview, idBackPreview]);
 
   const capturePhoto = () => {
@@ -121,13 +119,6 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     } else if (step === 'id_back') {
       setIdBackFile(file);
       setIdBackPreview(preview);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileCapture(file);
     }
   };
 
@@ -290,24 +281,10 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
       ) : (
         <div className="aspect-[4/3] bg-secondary/50 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-4">
           <Camera className="w-12 h-12 text-muted-foreground" />
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={startCamera}>
-              <Camera className="w-4 h-4 mr-2" />
-              Prendre une photo
-            </Button>
-            <Button variant="ghost" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />
-              Importer
-            </Button>
-          </div>
-          <input 
-            ref={fileInputRef}
-            type="file" 
-            accept="image/*" 
-            capture="environment"
-            className="hidden" 
-            onChange={handleFileSelect}
-          />
+          <Button variant="outline" onClick={startCamera}>
+            <Camera className="w-4 h-4 mr-2" />
+            Prendre une photo
+          </Button>
         </div>
       )}
 

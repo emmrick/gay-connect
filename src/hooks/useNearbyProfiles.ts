@@ -33,7 +33,8 @@ export const useNearbyProfiles = (
   const query = useQuery({
     queryKey: ['nearby-profiles', latitude, longitude, maxDistance, effectiveLimit, isPremium],
     queryFn: async (): Promise<NearbyProfile[]> => {
-      if (!latitude || !longitude) {
+      // Use explicit null/undefined checks (0 is a valid coordinate).
+      if (latitude == null || longitude == null) {
         // Fallback: get all online profiles if no location
         const { data, error } = await supabase
           .from('profiles')

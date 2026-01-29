@@ -18,8 +18,10 @@ interface NearbyMembersGridProps {
 const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProps) => {
   const { profile: currentUserProfile } = useAuth();
   const { latitude, longitude, loading: locationLoading, error: locationError, requestLocation, permissionState } = useGeolocation();
-  const { data: profiles, isLoading: profilesLoading, refetch, maxProfilesAllowed, isPremium, isLimited } = useNearbyProfiles(latitude, longitude);
+  const { data: profiles, isLoading: profilesLoading, error: profilesError, refetch, maxProfilesAllowed, isPremium, isLimited } = useNearbyProfiles(latitude, longitude);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  const hasLocation = latitude != null && longitude != null;
 
   const handleRequestLocation = async () => {
     await requestLocation();
@@ -60,7 +62,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
   };
 
   // Show location permission request
-  if (!latitude && !locationLoading && (permissionState === 'prompt' || !permissionState)) {
+  if (!hasLocation && !locationLoading && (permissionState === 'prompt' || !permissionState)) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -111,6 +113,32 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
           {locationError || 'Active la géolocalisation dans les paramètres de ton navigateur'}
         </p>
         <Button variant="outline" onClick={handleRequestLocation}>
+          Réessayer
+        </Button>
+      </motion.div>
+    );
+  }
+
+  // Show query error (e.g. RPC fails / network issues)
+  if (profilesError) {
+    const message = (profilesError as any)?.message || 'Erreur lors du chargement des profils.';
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl bg-secondary/50 border border-border/50 p-6 text-center"
+      >
+        <RefreshCw className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+        <h3 className="font-medium text-foreground mb-2">Chargement impossible</h3>
+        <p className="text-sm text-muted-foreground mb-4">{message}</p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            // Re-try location first (if available), then refetch query.
+            void requestLocation();
+            void refetch();
+          }}
+        >
           Réessayer
         </Button>
       </motion.div>
@@ -178,7 +206,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary" />
           <span className="text-sm text-muted-foreground">
-            {(profiles?.length || 0) + (currentUserProfile ? 1 : 0)} membres{latitude ? ' à proximité' : ''}
+            {(profiles?.length || 0) + (currentUserProfile ? 1 : 0)} membres{hasLocation ? ' à proximité' : ''}
           </span>
           {!isPremium && (
             <span className="text-xs text-amber-600 flex items-center gap-1">
@@ -191,8 +219,8 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
           variant="ghost" 
           size="sm" 
           onClick={() => {
-            requestLocation();
-            refetch();
+            void requestLocation();
+            void refetch();
           }}
           className="text-xs"
         >
