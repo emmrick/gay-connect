@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
 import { useIsAdmin } from '@/hooks/useAdmin';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight, Loader2, Crown } from 'lucide-react';
+import { MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight, Loader2, Crown, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
@@ -49,6 +50,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
+  const { isPremium, subscriptionEnd, openCustomerPortal } = useSubscription();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [settingsType, setSettingsType] = useState<SettingsType | null>(null);
 
@@ -235,6 +237,44 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
         ))}
+
+        {/* Premium status */}
+        {isPremium ? (
+          <button
+            onClick={openCustomerPortal}
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 transition-colors border border-amber-500/30"
+          >
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+              <Crown className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-amber-500">Premium actif</span>
+                <Sparkles className="w-4 h-4 text-amber-500" />
+              </div>
+              {subscriptionEnd && (
+                <span className="text-xs text-muted-foreground">
+                  Renouvellement le {format(new Date(subscriptionEnd), 'dd MMM yyyy', { locale: fr })}
+                </span>
+              )}
+            </div>
+            <ChevronRight className="w-5 h-5 text-amber-500" />
+          </button>
+        ) : (
+          <button
+            onClick={() => {/* Navigate to premium handled by parent */}}
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/5 to-orange-500/5 hover:from-amber-500/15 hover:to-orange-500/15 transition-colors border border-amber-500/20"
+          >
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 flex items-center justify-center">
+              <Crown className="w-5 h-5 text-amber-500" />
+            </div>
+            <div className="flex-1 text-left">
+              <span className="font-medium text-amber-500">Passer à Premium</span>
+              <p className="text-xs text-muted-foreground">4,50 €/mois - Débloquez tout</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-amber-500" />
+          </button>
+        )}
 
         {/* Admin button */}
         {isAdmin && onNavigateToAdmin && (

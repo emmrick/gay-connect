@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      album_media: {
+        Row: {
+          album_id: string
+          created_at: string
+          id: string
+          media_type: string
+          media_url: string
+        }
+        Insert: {
+          album_id: string
+          created_at?: string
+          id?: string
+          media_type?: string
+          media_url: string
+        }
+        Update: {
+          album_id?: string
+          created_at?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_media_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "user_albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rooms: {
         Row: {
           created_at: string
@@ -561,6 +593,36 @@ export type Database = {
           },
         ]
       }
+      user_albums: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_private: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_blocks: {
         Row: {
           blocked_at: string
@@ -619,6 +681,57 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_usage: {
+        Row: {
+          albums_count: number
+          conversations_last_reset: string | null
+          conversations_started: number
+          created_at: string
+          ephemeral_media_count: number
+          ephemeral_media_last_reset: string | null
+          id: string
+          nearby_profiles_last_reset: string | null
+          nearby_profiles_viewed: number
+          profile_photos_last_reset: string | null
+          profile_photos_viewed: number
+          saved_messages_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          albums_count?: number
+          conversations_last_reset?: string | null
+          conversations_started?: number
+          created_at?: string
+          ephemeral_media_count?: number
+          ephemeral_media_last_reset?: string | null
+          id?: string
+          nearby_profiles_last_reset?: string | null
+          nearby_profiles_viewed?: number
+          profile_photos_last_reset?: string | null
+          profile_photos_viewed?: number
+          saved_messages_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          albums_count?: number
+          conversations_last_reset?: string | null
+          conversations_started?: number
+          created_at?: string
+          ephemeral_media_count?: number
+          ephemeral_media_last_reset?: string | null
+          id?: string
+          nearby_profiles_last_reset?: string | null
+          nearby_profiles_viewed?: number
+          profile_photos_last_reset?: string | null
+          profile_photos_viewed?: number
+          saved_messages_count?: number
           updated_at?: string
           user_id?: string
         }
