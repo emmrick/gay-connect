@@ -7,6 +7,7 @@ import ChatRoom from '@/components/chat/ChatRoom';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';
+import PremiumPage from '@/components/premium/PremiumPage';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import MemberSearch from '@/components/chat/MemberSearch';
 import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
@@ -18,6 +19,7 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
 import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,11 +27,11 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'profile' | 'chat' | 'private';
-type NavTab = 'home' | 'groups' | 'messages' | 'profile';
+type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'premium' | 'profile' | 'chat' | 'private';
+type NavTab = 'home' | 'groups' | 'messages' | 'premium' | 'profile';
 
 // Tab order for determining animation direction
-const tabOrder: NavTab[] = ['home', 'groups', 'messages', 'profile'];
+const tabOrder: NavTab[] = ['home', 'groups', 'messages', 'premium', 'profile'];
 
 // Animation variants for page transitions
 const pageVariants = {
@@ -70,6 +72,7 @@ const Index = () => {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
+  const { isPremium } = useSubscription();
   const { verification, isLoading: verificationLoading } = useIdentityVerification();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
   const { total: memberCount } = useRegionMemberCount(selectedRegion || '');
@@ -146,6 +149,8 @@ const Index = () => {
       setCurrentView('messages');
     } else if (tab === 'groups') {
       setCurrentView('groups');
+    } else if (tab === 'premium') {
+      setCurrentView('premium');
     } else {
       setCurrentView('home');
     }
@@ -420,6 +425,24 @@ const Index = () => {
           </motion.div>
         ) : null;
 
+      case 'premium':
+        return user ? (
+          <motion.div
+            key="premium"
+            custom={direction}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
+            className="flex-1"
+          >
+            <ScrollArea className="h-full">
+              <PremiumPage />
+            </ScrollArea>
+          </motion.div>
+        ) : null;
+
       default:
         return null;
     }
@@ -450,6 +473,7 @@ const Index = () => {
               activeTab={activeTab}
               onTabChange={handleTabChange}
               unreadCount={getTotalUnreadCount()}
+              isPremium={isPremium}
             />
           </motion.div>
         )}

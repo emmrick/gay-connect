@@ -1,13 +1,14 @@
-import { Users, MessageCircle, User, Home } from 'lucide-react';
+import { Users, MessageCircle, User, Home, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavBarProps {
-  activeTab: 'home' | 'groups' | 'messages' | 'profile';
-  onTabChange: (tab: 'home' | 'groups' | 'messages' | 'profile') => void;
+  activeTab: 'home' | 'groups' | 'messages' | 'premium' | 'profile';
+  onTabChange: (tab: 'home' | 'groups' | 'messages' | 'premium' | 'profile') => void;
   unreadCount?: number;
+  isPremium?: boolean;
 }
 
-const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0 }: BottomNavBarProps) => {
+const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0, isPremium = false }: BottomNavBarProps) => {
   // Only show badge if there are unread messages (> 0)
   const messageBadge = unreadCount > 0 ? unreadCount : undefined;
   
@@ -15,6 +16,7 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0 }: BottomNavBarP
     { id: 'home' as const, icon: Home, label: 'Accueil' },
     { id: 'groups' as const, icon: Users, label: 'Groupes' },
     { id: 'messages' as const, icon: MessageCircle, label: 'Messages', badge: messageBadge },
+    { id: 'premium' as const, icon: Crown, label: 'Premium', premium: true },
     { id: 'profile' as const, icon: User, label: 'Profil' },
   ];
 
@@ -35,15 +37,19 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0 }: BottomNavBarP
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-0.5 w-16 h-14 rounded-xl transition-all duration-200",
+                    "relative flex flex-col items-center justify-center gap-0.5 w-14 h-14 rounded-xl transition-all duration-200",
                     isActive
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? tab.premium ? "text-amber-500" : "text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                    tab.premium && !isActive && "text-amber-500/60"
                   )}
                 >
                   {/* Active background indicator */}
                   {isActive && (
-                    <div className="absolute inset-1 bg-primary/10 rounded-lg" />
+                    <div className={cn(
+                      "absolute inset-1 rounded-lg",
+                      tab.premium ? "bg-amber-500/10" : "bg-primary/10"
+                    )} />
                   )}
                   
                   <div className="relative z-10 flex items-center justify-center">
@@ -62,14 +68,19 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0 }: BottomNavBarP
                   
                   <span className={cn(
                     "relative z-10 text-[10px] font-medium leading-tight mt-0.5",
-                    isActive ? "text-primary" : "text-muted-foreground"
+                    isActive 
+                      ? tab.premium ? "text-amber-500" : "text-primary" 
+                      : tab.premium ? "text-amber-500/60" : "text-muted-foreground"
                   )}>
                     {tab.label}
                   </span>
                   
                   {/* Active dot indicator */}
                   {isActive && (
-                    <span className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-primary" />
+                    <span className={cn(
+                      "absolute -bottom-0.5 w-1 h-1 rounded-full",
+                      tab.premium ? "bg-amber-500" : "bg-primary"
+                    )} />
                   )}
                 </button>
               );
