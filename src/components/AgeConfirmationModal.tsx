@@ -13,15 +13,15 @@ import { Shield, Users } from 'lucide-react';
 const AGE_CONFIRMED_KEY = 'age_confirmed';
 
 export const AgeConfirmationModal = () => {
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState<boolean | null>(null); // null = checking
 
   useEffect(() => {
-    // localStorage peut être indisponible dans certains contextes (mode privé, restrictions navigateur)
-    // -> on évite un crash qui peut conduire à un écran noir.
+    // Wrap in try-catch to avoid crashing if localStorage is blocked
     try {
       const isConfirmed = window.localStorage.getItem(AGE_CONFIRMED_KEY);
-      if (!isConfirmed) setShowModal(true);
+      setShowModal(!isConfirmed);
     } catch {
+      // Cannot read, default to showing modal
       setShowModal(true);
     }
   }, []);
@@ -30,7 +30,7 @@ export const AgeConfirmationModal = () => {
     try {
       window.localStorage.setItem(AGE_CONFIRMED_KEY, 'true');
     } catch {
-      // Même si on ne peut pas persister, on laisse l'utilisateur entrer.
+      // Ignore, let user through even if storage fails
     }
     setShowModal(false);
   };
@@ -39,8 +39,13 @@ export const AgeConfirmationModal = () => {
     window.location.href = 'https://www.google.com';
   };
 
+  // Don't render anything until we've checked localStorage, prevents overlay flash
+  if (showModal === null || showModal === false) {
+    return null;
+  }
+
   return (
-    <AlertDialog open={showModal}>
+    <AlertDialog open={showModal} onOpenChange={() => {}}>
       <AlertDialogContent className="max-w-md border-0 bg-transparent p-0 shadow-none">
         <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card shadow-2xl">
           {/* Gradient background effect */}
@@ -82,30 +87,32 @@ export const AgeConfirmationModal = () => {
                 Vérification d'âge requise
               </AlertDialogTitle>
               
-              <AlertDialogDescription className="mt-4 space-y-4 text-center">
-                <p className="text-base text-muted-foreground">
-                  Ce site est réservé aux personnes de{' '}
-                  <strong className="text-primary">18 ans et plus</strong>.
-                </p>
-                
-                <div className="rounded-xl border border-border/50 bg-secondary/30 p-4 text-left">
-                  <p className="text-sm text-muted-foreground">
-                    En cliquant sur <strong className="text-foreground">"Entrer"</strong>, vous confirmez :
+              <AlertDialogDescription className="mt-4 space-y-4 text-center" asChild>
+                <div>
+                  <p className="text-base text-muted-foreground">
+                    Ce site est réservé aux personnes de{' '}
+                    <strong className="text-primary">18 ans et plus</strong>.
                   </p>
-                  <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Avoir 18 ans ou plus
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Accepter les conditions d'utilisation
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Comprendre la nature du contenu
-                    </li>
-                  </ul>
+                  
+                  <div className="rounded-xl border border-border/50 bg-secondary/30 p-4 text-left">
+                    <p className="text-sm text-muted-foreground">
+                      En cliquant sur <strong className="text-foreground">"Entrer"</strong>, vous confirmez :
+                    </p>
+                    <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        Avoir 18 ans ou plus
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        Accepter les conditions d'utilisation
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        Comprendre la nature du contenu
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
