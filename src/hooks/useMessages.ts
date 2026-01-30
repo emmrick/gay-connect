@@ -32,6 +32,7 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
         .select('*')
         .eq('chat_room_id', chatRoomId)
         .eq('is_private', false)
+        .is('deleted_at', null) // Exclude soft-deleted messages
         .order('created_at', { ascending: true })
         .limit(200);
 

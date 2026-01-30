@@ -25,6 +25,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         .from('messages')
         .select('*')
         .eq('is_private', true)
+        .is('deleted_at', null) // Exclude soft-deleted messages
         .or(
           `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
         )

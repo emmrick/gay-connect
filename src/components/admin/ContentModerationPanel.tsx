@@ -56,6 +56,8 @@ interface Message {
   message_type: string;
   created_at: string;
   is_private: boolean | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
   sender?: {
     username: string;
     avatar_url: string | null;
@@ -91,9 +93,10 @@ const useRecentMessages = (search: string) => {
   return useQuery({
     queryKey: ['admin-messages', search],
     queryFn: async (): Promise<Message[]> => {
+      // Admin sees ALL messages including deleted ones
       let query = supabase
         .from('messages')
-        .select('id, sender_id, content, message_type, created_at, is_private')
+        .select('id, sender_id, content, message_type, created_at, is_private, deleted_at, deleted_by')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -336,7 +339,11 @@ const ContentModerationPanel = () => {
                 {messages?.map((msg) => (
                   <div
                     key={msg.id}
-                    className="p-3 rounded-lg border border-border bg-card hover:bg-secondary/30 transition-colors"
+                    className={`p-3 rounded-lg border transition-colors ${
+                      msg.deleted_at 
+                        ? 'border-orange-500/30 bg-orange-500/5' 
+                        : 'border-border bg-card hover:bg-secondary/30'
+                    }`}
                   >
                     <div className="flex items-start gap-3">
                       <Avatar className="w-8 h-8">
@@ -346,7 +353,7 @@ const ContentModerationPanel = () => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-sm">{msg.sender?.username || 'Inconnu'}</span>
                           <span className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: fr })}
@@ -354,19 +361,26 @@ const ContentModerationPanel = () => {
                           {msg.is_private && (
                             <Badge variant="outline" className="text-xs">Privé</Badge>
                           )}
+                          {msg.deleted_at && (
+                            <Badge variant="secondary" className="text-xs bg-orange-500/20 text-orange-500">
+                              Supprimé par l'utilisateur
+                            </Badge>
+                          )}
                         </div>
-                        <p className="text-sm text-muted-foreground truncate mt-1">
+                        <p className={`text-sm mt-1 truncate ${msg.deleted_at ? 'text-orange-500/80 italic' : 'text-muted-foreground'}`}>
                           {msg.content || `[${msg.message_type}]`}
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => confirmDelete('message', msg.id, msg.content || 'message')}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {!msg.deleted_at && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => confirmDelete('message', msg.id, msg.content || 'message')}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

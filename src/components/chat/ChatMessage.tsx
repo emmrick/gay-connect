@@ -2,13 +2,23 @@ import { useState } from 'react';
 import { Message } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Reply, CornerUpLeft, Flag } from 'lucide-react';
+import { Reply, CornerUpLeft, Flag, Trash2, Loader2 } from 'lucide-react';
 import EphemeralMessage from './EphemeralMessage';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import ReportMessageDialog from './ReportMessageDialog';
 import { Button } from '@/components/ui/button';
-
+import { useDeleteMessage } from '@/hooks/useDeleteMessage';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 interface ReplyToMessage {
   id: string;
   content: string;
@@ -41,6 +51,8 @@ const ChatMessage = ({
   onToggleReaction,
 }: ChatMessageProps) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { deleteMessage, isDeleting } = useDeleteMessage();
   const isEphemeral = message.type === 'image' || message.type === 'video';
 
   const handleReply = () => {
@@ -53,6 +65,11 @@ const ChatMessage = ({
 
   const handleAvatarClick = () => {
     onAvatarClick?.(message.senderId);
+  };
+
+  const handleDelete = async () => {
+    await deleteMessage(message.id);
+    setShowDeleteDialog(false);
   };
 
   const handleReaction = (emoji: string) => {
@@ -107,6 +124,20 @@ const ChatMessage = ({
             {/* Action buttons - left side for own messages */}
             {isOwn && !isEphemeral && (
               <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                  title="Supprimer ce message"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </Button>
                 <EmojiReactionPicker onSelect={handleReaction} />
               </div>
             )}
@@ -172,6 +203,32 @@ const ChatMessage = ({
         senderId={message.senderId}
         senderUsername={message.senderName}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce message ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le message sera supprimé de la conversation. Pour des raisons de sécurité, 
+              il restera accessible aux modérateurs en cas de signalement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
