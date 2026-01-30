@@ -222,10 +222,23 @@ const useRequestVerification = () => {
         }, { onConflict: 'user_id' });
 
       if (error) throw error;
+
+      // Create notification for the user
+      const { error: notifError } = await supabase.from('notifications').insert({
+        user_id: userId,
+        type: 'verification_request',
+        title: 'Vérification d\'identité requise',
+        message: 'Un modérateur vous demande de vérifier votre identité. Veuillez soumettre vos documents pour continuer à utiliser l\'application.',
+        action_url: '/profile',
+      });
+
+      if (notifError) {
+        console.error('Error creating notification:', notifError);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-verification-status'] });
-      toast.success('Demande de vérification envoyée');
+      toast.success('Demande de vérification envoyée avec notification');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erreur lors de l\'envoi de la demande');

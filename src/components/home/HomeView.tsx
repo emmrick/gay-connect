@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesMembers from './FavoritesMembers';
+import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 
 interface HomeViewProps {
   onNavigateToGroups: () => void;
@@ -73,18 +74,21 @@ const HomeView = ({
               </div>
             </div>
             
-            {/* Notification indicator */}
-            {getTotalUnreadCount() > 0 && (
-              <button 
-                onClick={onNavigateToMessages}
-                className="relative p-3 rounded-xl bg-secondary/80 backdrop-blur-sm border border-border/50 hover:border-primary/50 transition-all animate-scale-in"
-              >
-                <MessageCircle className="w-5 h-5 text-foreground" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-bold animate-pulse">
-                  {getTotalUnreadCount() > 9 ? '9+' : getTotalUnreadCount()}
-                </span>
-              </button>
-            )}
+            {/* Notifications and Messages */}
+            <div className="flex items-center gap-2">
+              <NotificationsDropdown />
+              {getTotalUnreadCount() > 0 && (
+                <button 
+                  onClick={onNavigateToMessages}
+                  className="relative p-3 rounded-xl bg-secondary/80 backdrop-blur-sm border border-border/50 hover:border-primary/50 transition-all animate-scale-in"
+                >
+                  <MessageCircle className="w-5 h-5 text-foreground" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-bold animate-pulse">
+                    {getTotalUnreadCount() > 9 ? '9+' : getTotalUnreadCount()}
+                  </span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Live Stats Banner */}
