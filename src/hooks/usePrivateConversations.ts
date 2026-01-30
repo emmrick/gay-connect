@@ -34,7 +34,7 @@ export const usePrivateConversations = () => {
     isPremium 
   } = useUserUsage();
 
-  // Fetch conversation statuses
+  // Fetch conversation statuses - with robust error handling
   const statusQuery = useQuery({
     queryKey: ['private-conversation-status', user?.id],
     queryFn: async () => {
@@ -45,10 +45,17 @@ export const usePrivateConversations = () => {
         .select('*')
         .eq('user_id', user.id);
       
-      if (error) throw error;
+      // Return empty array on error instead of throwing - statuses are optional
+      if (error) {
+        console.warn('Failed to fetch conversation status:', error);
+        return [];
+      }
       return data || [];
     },
     enabled: !!user,
+    staleTime: 30000, // 30 seconds cache
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1, // Only retry once
   });
 
   const query = useQuery({
@@ -272,7 +279,8 @@ export const usePrivateConversations = () => {
     conversations: activeConversations,
     archivedConversations,
     deletedConversations,
-    isLoading: query.isLoading || statusQuery.isLoading,
+    // Only wait for main conversations query - status is optional enhancement
+    isLoading: query.isLoading,
     error: query.error,
     getOrCreateConversation,
     canStartNewConversation: canStartConversation(),
