@@ -94,7 +94,16 @@ const MemberProfileCard = ({
   };
 
   const getLastSeenText = () => {
-    if (profile?.is_online === true) return 'En ligne maintenant';
+    // Respect VIP privacy settings
+    const hideOnlineStatus = (extendedProfile as any)?.hide_online_status;
+    const hideLastSeen = (extendedProfile as any)?.hide_last_seen;
+    
+    if (hideOnlineStatus && hideLastSeen) return ''; // Hide everything
+    
+    if (!hideOnlineStatus && profile?.is_online === true) return 'En ligne maintenant';
+    
+    if (hideLastSeen) return hideOnlineStatus ? '' : 'Hors ligne';
+    
     if (!profile?.last_seen) return 'Hors ligne';
     
     const diff = Date.now() - new Date(profile.last_seen).getTime();
@@ -106,6 +115,11 @@ const MemberProfileCard = ({
     if (minutes < 60) return `Vu il y a ${minutes} min`;
     if (hours < 24) return `Vu il y a ${hours}h`;
     return `Vu il y a ${days}j`;
+  };
+  
+  const shouldShowOnlineStatus = () => {
+    const hideOnlineStatus = (extendedProfile as any)?.hide_online_status;
+    return !hideOnlineStatus && profile?.is_online === true;
   };
 
   const modal = (
@@ -196,7 +210,7 @@ const MemberProfileCard = ({
                 </Button>
 
                 {/* Online status */}
-                {profile?.is_online === true && (
+                {shouldShowOnlineStatus() && (
                   <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     En ligne
@@ -236,9 +250,11 @@ const MemberProfileCard = ({
                     </div>
 
                     {/* Status */}
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {getLastSeenText()}
-                    </p>
+                    {getLastSeenText() && (
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {getLastSeenText()}
+                      </p>
+                    )}
 
                     {/* Quick info pills */}
                     <div className="flex flex-wrap gap-2 mb-4">

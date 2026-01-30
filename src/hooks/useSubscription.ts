@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export interface SubscriptionStatus {
   subscribed: boolean;
   isPremium: boolean;
+  isVip: boolean;
   productId: string | null;
   subscriptionEnd: string | null;
   isLoading: boolean;
@@ -43,6 +44,7 @@ export const useSubscription = () => {
   const [status, setStatus] = useState<SubscriptionStatus>({
     subscribed: false,
     isPremium: false,
+    isVip: false,
     productId: null,
     subscriptionEnd: null,
     isLoading: true,
@@ -54,6 +56,7 @@ export const useSubscription = () => {
       setStatus({
         subscribed: false,
         isPremium: false,
+        isVip: false,
         productId: null,
         subscriptionEnd: null,
         isLoading: false,
@@ -72,12 +75,15 @@ export const useSubscription = () => {
       const subscriptionData = subscriptionResult.data;
       const isAdmin = adminResult.data === true;
 
-      // Admin users get premium features by default
-      const isPremium = isAdmin || subscriptionData?.is_premium || false;
+      // VIP users have VIP + Premium features
+      const isVip = isAdmin || subscriptionData?.is_vip || false;
+      // Admin users get premium features by default, VIP also includes Premium
+      const isPremium = isAdmin || isVip || subscriptionData?.is_premium || false;
 
       setStatus({
         subscribed: subscriptionData?.subscribed || false,
         isPremium,
+        isVip,
         productId: subscriptionData?.product_id || null,
         subscriptionEnd: subscriptionData?.subscription_end || null,
         isLoading: false,
@@ -97,7 +103,7 @@ export const useSubscription = () => {
     return () => clearInterval(interval);
   }, [checkSubscription]);
 
-  const startCheckout = async (promoCode?: string) => {
+  const startCheckout = async (tier: 'premium' | 'vip' = 'premium', promoCode?: string) => {
     if (!user) {
       toast.error('Veuillez vous connecter pour souscrire');
       return;
@@ -105,7 +111,7 @@ export const useSubscription = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: promoCode ? { promoCode } : undefined,
+        body: { tier, promoCode: promoCode || undefined },
       });
       
       if (error) throw error;
