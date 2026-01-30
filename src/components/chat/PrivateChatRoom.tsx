@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, Circle, CheckCheck } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -349,10 +349,22 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       </div>
                     )}
 
-                    {/* Timestamp */}
-                    <span className="text-[10px] text-muted-foreground mt-1 px-1">
-                      {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
-                    </span>
+                    {/* Timestamp and read status */}
+                    <div className={`flex items-center gap-1 mt-1 px-1 ${isOwn ? 'justify-end' : ''}`}>
+                      <span className="text-[10px] text-muted-foreground">
+                        {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+                      </span>
+                      {/* Read status indicator - only for own messages */}
+                      {isOwn && (
+                        <span className="flex items-center">
+                          {message.read_at ? (
+                            <CheckCheck className="w-3.5 h-3.5 text-primary" />
+                          ) : (
+                            <CheckCheck className="w-3.5 h-3.5 text-muted-foreground" />
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
