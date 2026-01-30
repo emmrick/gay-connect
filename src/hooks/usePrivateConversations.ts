@@ -71,42 +71,67 @@ export const usePrivateConversations = () => {
         conv.user1_id === user.id ? conv.user2_id : conv.user1_id
       );
 
+      // De-duplicate to keep query strings small and avoid redundant work
+      const uniqueOtherUserIds = Array.from(new Set(otherUserIds));
+
       // Fetch profiles for other users
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, username, avatar_url, is_online, last_seen')
-        .in('user_id', otherUserIds);
+        .in('user_id', uniqueOtherUserIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      // Fetch last message for each conversation
-      const conversationsWithData = await Promise.all(
-        conversations.map(async (conv) => {
-          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
-          
-          // Get last message
-          const { data: lastMsg } = await supabase
-            .from('messages')
-            .select('content, created_at, message_type')
-            .eq('is_private', true)
-            .or(`and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      // Fetch last messages for ALL conversations in a single query (prevents N+1 requests)
+      const lastMessageMap = new Map<string, { content: string | null; created_at: string; message_type: string }>();
 
-          return {
-            ...conv,
-            otherUser: profileMap.get(otherUserId) || {
-              user_id: otherUserId,
-              username: 'Utilisateur',
-              avatar_url: null,
-              is_online: false,
-              last_seen: null,
-            },
-            lastMessage: lastMsg || undefined,
-          };
-        })
-      );
+      if (uniqueOtherUserIds.length > 0) {
+        const inList = uniqueOtherUserIds.join(',');
+        const limit = Math.min(500, Math.max(50, uniqueOtherUserIds.length * 12));
+
+        const { data: recentMsgs, error: recentMsgsError } = await supabase
+          .from('messages')
+          .select('sender_id, recipient_id, content, created_at, message_type')
+          .eq('is_private', true)
+          .is('deleted_at', null)
+          .or(
+            `and(sender_id.eq.${user.id},recipient_id.in.(${inList})),and(recipient_id.eq.${user.id},sender_id.in.(${inList}))`
+          )
+          .order('created_at', { ascending: false })
+          .limit(limit);
+
+        if (recentMsgsError) throw recentMsgsError;
+
+        for (const msg of recentMsgs || []) {
+          const otherId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
+          if (!otherId) continue;
+          if (!lastMessageMap.has(otherId)) {
+            lastMessageMap.set(otherId, {
+              content: msg.content,
+              created_at: msg.created_at,
+              message_type: msg.message_type,
+            });
+          }
+          // Early exit once we've found one last message per conversation partner
+          if (lastMessageMap.size >= uniqueOtherUserIds.length) break;
+        }
+      }
+
+      const conversationsWithData: ConversationWithProfile[] = conversations.map((conv) => {
+        const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+
+        return {
+          ...conv,
+          otherUser: profileMap.get(otherUserId) || {
+            user_id: otherUserId,
+            username: 'Utilisateur',
+            avatar_url: null,
+            is_online: false,
+            last_seen: null,
+          },
+          lastMessage: lastMessageMap.get(otherUserId) || undefined,
+        };
+      });
 
       // Sort by last message date (most recent first), fallback to conversation created_at
       return conversationsWithData.sort((a, b) => {
@@ -116,6 +141,8 @@ export const usePrivateConversations = () => {
       });
     },
     enabled: !!user,
+    staleTime: 10000,
+    gcTime: 2 * 60 * 1000,
   });
 
   // Filter conversations based on status
