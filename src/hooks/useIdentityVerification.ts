@@ -303,6 +303,40 @@ export const useAdminVerifications = () => {
   };
 };
 
+// Hook for pending verification requests (awaiting user submission)
+export const usePendingVerificationRequests = () => {
+  return useQuery({
+    queryKey: ['pending-verification-requests'],
+    queryFn: async () => {
+      // Get verifications that are pending but have no documents submitted yet
+      const { data: verifications, error: verError } = await supabase
+        .from('identity_verifications')
+        .select('*')
+        .eq('status', 'pending')
+        .is('submitted_at', null)
+        .order('created_at', { ascending: false });
+
+      if (verError) throw verError;
+      if (!verifications || verifications.length === 0) return [];
+
+      // Get profiles for those users
+      const userIds = verifications.map(v => v.user_id);
+      const { data: profiles, error: profError } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url, age, region')
+        .in('user_id', userIds);
+
+      if (profError) throw profError;
+
+      // Combine data
+      return verifications.map(v => ({
+        ...v,
+        profiles: profiles?.find(p => p.user_id === v.user_id) || null
+      }));
+    },
+  });
+};
+
 // Hook for verification history (all statuses)
 export const useVerificationHistory = (status?: 'pending' | 'approved' | 'rejected') => {
   return useQuery({

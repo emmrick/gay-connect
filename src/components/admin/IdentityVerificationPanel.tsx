@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAdminVerifications } from '@/hooks/useIdentityVerification';
+import { useAdminVerifications, usePendingVerificationRequests } from '@/hooks/useIdentityVerification';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +45,9 @@ interface VerificationWithProfile {
 }
 
 const IdentityVerificationPanel = () => {
+  const queryClient = useQueryClient();
   const { pendingVerifications, isLoading, markAsViewed, reportScreenshot, approveVerification, rejectVerification } = useAdminVerifications();
+  const { data: awaitingSubmission, isLoading: isLoadingAwaiting } = usePendingVerificationRequests();
   const [selectedVerification, setSelectedVerification] = useState<VerificationWithProfile | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -256,65 +260,133 @@ const IdentityVerificationPanel = () => {
         <div>
           <h2 className="font-display text-lg font-semibold">Vérifications d'identité</h2>
           <p className="text-sm text-muted-foreground">
-            {pendingVerifications?.length || 0} demande(s) en attente
+            {pendingVerifications?.length || 0} à examiner • {awaitingSubmission?.length || 0} en attente de soumission
           </p>
         </div>
       </div>
 
-      {pendingVerifications && pendingVerifications.length > 0 ? (
-        <div className="space-y-3">
-          {pendingVerifications.map((verification) => (
-            <div 
-              key={verification.id}
-              className="glass-card rounded-xl p-4 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={verification.profiles?.avatar_url || ''} />
-                  <AvatarFallback>
-                    <User className="w-6 h-6" />
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">{verification.profiles?.username || 'Utilisateur'}</p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{verification.profiles?.age || '?'} ans</span>
-                    <span>•</span>
-                    <span>{verification.profiles?.region}</span>
+      <Tabs defaultValue="pending" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="pending" className="gap-2">
+            <Eye className="w-4 h-4" />
+            À examiner ({pendingVerifications?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="awaiting" className="gap-2">
+            <Clock className="w-4 h-4" />
+            En attente ({awaitingSubmission?.length || 0})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pending" className="mt-4">
+          {pendingVerifications && pendingVerifications.length > 0 ? (
+            <div className="space-y-3">
+              {pendingVerifications.map((verification) => (
+                <div 
+                  key={verification.id}
+                  className="glass-card rounded-xl p-4 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={verification.profiles?.avatar_url || ''} />
+                      <AvatarFallback>
+                        <User className="w-6 h-6" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{verification.profiles?.username || 'Utilisateur'}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{verification.profiles?.age || '?'} ans</span>
+                        <span>•</span>
+                        <span>{verification.profiles?.region}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="text-right mr-2">
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {verification.submitted_at && formatDistanceToNow(new Date(verification.submitted_at), { 
+                          addSuffix: true, 
+                          locale: fr 
+                        })}
+                      </Badge>
+                      {verification.admin_viewed_at && (
+                        <p className="text-xs text-muted-foreground mt-1">Déjà consulté</p>
+                      )}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleViewVerification(verification as VerificationWithProfile)}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      Examiner
+                    </Button>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="text-right mr-2">
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {verification.submitted_at && formatDistanceToNow(new Date(verification.submitted_at), { 
-                      addSuffix: true, 
-                      locale: fr 
-                    })}
-                  </Badge>
-                  {verification.admin_viewed_at && (
-                    <p className="text-xs text-muted-foreground mt-1">Déjà consulté</p>
-                  )}
-                </div>
-                <Button 
-                  size="sm" 
-                  onClick={() => handleViewVerification(verification as VerificationWithProfile)}
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  Examiner
-                </Button>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 text-muted-foreground">
-          <Shield className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>Aucune demande de vérification en attente</p>
-        </div>
-      )}
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <Shield className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Aucune demande de vérification à examiner</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="awaiting" className="mt-4">
+          {awaitingSubmission && awaitingSubmission.length > 0 ? (
+            <div className="space-y-3">
+              {awaitingSubmission.map((verification) => (
+                <div 
+                  key={verification.id}
+                  className="glass-card rounded-xl p-4 flex items-center justify-between border-l-4 border-l-blue-500"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={verification.profiles?.avatar_url || ''} />
+                      <AvatarFallback>
+                        <User className="w-6 h-6" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{verification.profiles?.username || 'Utilisateur'}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{verification.profiles?.age || '?'} ans</span>
+                        <span>•</span>
+                        <span>{verification.profiles?.region}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="text-right mr-2">
+                      <Badge variant="outline" className="flex items-center gap-1 border-blue-500/50 text-blue-500">
+                        <Clock className="w-3 h-3" />
+                        Demande envoyée
+                      </Badge>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(verification.created_at), { 
+                          addSuffix: true, 
+                          locale: fr 
+                        })}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      En attente de l'utilisateur
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Aucune demande en attente de soumission</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* View Verification Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
