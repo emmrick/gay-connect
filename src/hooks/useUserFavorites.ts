@@ -71,6 +71,13 @@ export const useUserFavorites = () => {
     mutationFn: async (favoriteUserId: string) => {
       if (!user) throw new Error('Not authenticated');
 
+      // Get current user's profile for the notification
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       const { data, error } = await supabase
         .from('user_favorites')
         .insert({
@@ -86,6 +93,16 @@ export const useUserFavorites = () => {
         }
         throw error;
       }
+
+      // Send notification to the favorited user
+      await supabase.from('notifications').insert({
+        user_id: favoriteUserId,
+        type: 'favorite',
+        title: '⭐ Nouveau favori !',
+        message: `${userProfile?.username || 'Quelqu\'un'} t'a ajouté à ses favoris`,
+        action_url: `/profile/${user.id}`,
+      });
+
       return data;
     },
     onSuccess: () => {
