@@ -41,7 +41,7 @@ interface PrivateChatRoomProps {
 const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
-  const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
+  const { messages, isLoading, error, refetch, sendMessage } = usePrivateMessages(otherUserId);
   const { markAsRead } = useUnreadMessages();
   const { markConversationAsRead } = useMessageReadStatus(otherUserId);
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
@@ -337,6 +337,15 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 <Skeleton className="h-16 w-48 rounded-2xl" />
               </div>
             ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full text-center py-12">
+            <p className="text-sm text-destructive mb-4">
+              Impossible de charger cette conversation.
+            </p>
+            <Button variant="secondary" onClick={() => refetch()}>
+              Réessayer
+            </Button>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">

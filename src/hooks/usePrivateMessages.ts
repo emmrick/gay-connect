@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRecordEarning } from '@/hooks/useModeratorEarnings';
+import { withTimeout } from '@/lib/withTimeout';
 
 type Message = Tables<'messages'>;
 
@@ -23,26 +24,36 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     queryFn: async (): Promise<PrivateMessageWithProfile[]> => {
       if (!user || !otherUserId) return [];
 
-      // Fetch messages
-      const { data: messages, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('is_private', true)
-        .is('deleted_at', null)
-        .or(
-          `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
-        )
-        .order('created_at', { ascending: true })
-        .limit(50);
+      // Fetch messages with timeout to prevent infinite loading
+      const { data: messages, error } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from('messages')
+            .select('*')
+            .eq('is_private', true)
+            .is('deleted_at', null)
+            .or(
+              `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
+            )
+            .order('created_at', { ascending: true })
+            .limit(50)
+        ),
+        12000
+      );
 
       if (error) throw error;
       if (!messages || messages.length === 0) return [];
 
       // Get profiles for both users in single request
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, username, avatar_url')
-        .in('user_id', [user.id, otherUserId]);
+      const { data: profiles } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from('profiles')
+            .select('user_id, username, avatar_url')
+            .in('user_id', [user.id, otherUserId])
+        ),
+        12000
+      );
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
@@ -164,6 +175,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     messages: query.data || [],
     isLoading: query.isLoading,
     error: query.error,
+    refetch: query.refetch,
     sendMessage,
   };
 };
