@@ -4,9 +4,27 @@ import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { usePremiumUsers } from '@/hooks/usePremiumUsers';
+import { useConversationStatus } from '@/hooks/useConversationStatus';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageCircle, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { MessageCircle, ChevronRight, MoreVertical, Archive, Trash2, ArchiveRestore } from 'lucide-react';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import UserProfilePreview from './UserProfilePreview';
 import { cn } from '@/lib/utils';
@@ -14,23 +32,54 @@ import { cn } from '@/lib/utils';
 interface PrivateChatListProps {
   onSelectConversation: (userId: string) => void;
   selectedUserId: string | null;
+  showArchived?: boolean;
 }
 
-const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatListProps) => {
-  const { conversations, isLoading } = usePrivateConversations();
+const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = false }: PrivateChatListProps) => {
+  const { conversations, archivedConversations, isLoading } = usePrivateConversations();
   const { getUnreadCount } = useUnreadMessages();
+  const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
   const [profilePreviewUserId, setProfilePreviewUserId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+
+  // Use archived or active conversations based on prop
+  const displayConversations = showArchived ? archivedConversations : conversations;
 
   // Get user IDs for premium check
   const userIds = useMemo(
-    () => conversations.map(conv => conv.otherUser.user_id),
-    [conversations]
+    () => displayConversations.map(conv => conv.otherUser.user_id),
+    [displayConversations]
   );
   const { data: premiumMap = {} } = usePremiumUsers(userIds);
 
   const handleAvatarClick = (e: React.MouseEvent, userId: string) => {
     e.stopPropagation();
     setProfilePreviewUserId(userId);
+  };
+
+  const handleArchive = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    archiveConversation.mutate(conversationId);
+  };
+
+  const handleUnarchive = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    unarchiveConversation.mutate(conversationId);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation();
+    setConversationToDelete(conversationId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (conversationToDelete) {
+      deleteConversation.mutate(conversationToDelete);
+      setConversationToDelete(null);
+      setDeleteDialogOpen(false);
+    }
   };
 
   if (isLoading) {
@@ -49,23 +98,33 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
     );
   }
 
-  if (conversations.length === 0) {
+  if (displayConversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-6">
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5">
-          <MessageCircle className="w-10 h-10 text-primary" />
+          {showArchived ? (
+            <Archive className="w-10 h-10 text-primary" />
+          ) : (
+            <MessageCircle className="w-10 h-10 text-primary" />
+          )}
         </div>
-        <h3 className="font-display font-semibold text-foreground text-lg mb-2">Aucune conversation</h3>
+        <h3 className="font-display font-semibold text-foreground text-lg mb-2">
+          {showArchived ? 'Aucune archive' : 'Aucune conversation'}
+        </h3>
         <p className="text-sm text-muted-foreground max-w-xs">
-          Utilise le bouton + ci-dessus pour rechercher et démarrer une conversation
+          {showArchived 
+            ? 'Vos conversations archivées apparaîtront ici'
+            : 'Utilise le bouton + ci-dessus pour rechercher et démarrer une conversation'
+          }
         </p>
       </div>
     );
   }
 
   return (
+    <>
     <div className="px-4 pb-6 space-y-2">
-      {conversations.map((conv, index) => {
+      {displayConversations.map((conv, index) => {
         const unreadCount = getUnreadCount(conv.otherUser.user_id);
         const hasUnread = unreadCount > 0;
         const isPremium = premiumMap[conv.otherUser.user_id] || false;
@@ -158,6 +217,35 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
                 )}
               </div>
             </div>
+
+            {/* Actions dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {showArchived ? (
+                  <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
+                    <ArchiveRestore className="w-4 h-4 mr-2" />
+                    Restaurer
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={(e) => handleArchive(e, conv.id)}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archiver
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem 
+                  onClick={(e) => handleDeleteClick(e, conv.id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Supprimer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </button>
         );
       })}
@@ -173,6 +261,25 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId }: PrivateChatLi
         }}
       />
     </div>
+
+    {/* Delete Confirmation Dialog */}
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Supprimer cette conversation ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            La conversation sera supprimée de votre liste. Les messages resteront visibles pour l'autre utilisateur.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 
