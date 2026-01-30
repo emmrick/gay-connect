@@ -729,7 +729,8 @@ const UserCard = ({
                       )}
                       Vérifier manuellement
                     </DropdownMenuItem>
-                    {verificationStatus?.status !== 'pending' && (
+                    {/* Show request verification if no pending with submitted docs */}
+                    {(verificationStatus?.status !== 'pending' || !verificationStatus.submitted_at) && (
                       <DropdownMenuItem
                         onClick={handleRequestVerification}
                         disabled={requestVerification.isPending}
@@ -740,7 +741,9 @@ const UserCard = ({
                         ) : (
                           <Send className="w-4 h-4 mr-2" />
                         )}
-                        Demander vérification
+                        {verificationStatus?.status === 'pending' && !verificationStatus.submitted_at 
+                          ? 'Renvoyer la demande' 
+                          : 'Demander vérification'}
                       </DropdownMenuItem>
                     )}
                   </>
