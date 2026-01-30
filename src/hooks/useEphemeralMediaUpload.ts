@@ -139,7 +139,7 @@ export const useEphemeralMediaUpload = () => {
     onError: (error: Error) => {
       if (error.message === 'LIMIT_REACHED') {
         toast.error(
-          `Limite atteinte ! Vous avez utilisé ${ephemeralMediaCount}/${limits.ephemeralMediaPerWeek} média éphémère cette semaine.`,
+          `Limite atteinte ! Vous avez utilisé ${ephemeralMediaCount}/${limits.ephemeralMediaPerDay} média éphémère aujourd'hui.`,
           {
             action: isPremium ? undefined : {
               label: 'Passer Premium',
@@ -161,6 +161,6 @@ export const useEphemeralMediaUpload = () => {
     isUploading,
     progress,
     canSend: canSendEphemeralMedia(),
-    remainingCount: Math.max(0, limits.ephemeralMediaPerWeek - ephemeralMediaCount),
+    remainingCount: Math.max(0, limits.ephemeralMediaPerDay - ephemeralMediaCount),
   };
 };

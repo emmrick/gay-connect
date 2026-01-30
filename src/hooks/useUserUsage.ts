@@ -73,10 +73,10 @@ export const useUserUsage = () => {
     return isAfter(dayStart, new Date(lastReset));
   };
 
-  // Get current ephemeral media count (reset weekly)
+  // Get current ephemeral media count (reset daily)
   const getEphemeralMediaCount = (): number => {
     if (!query.data) return 0;
-    if (shouldResetWeekly(query.data.ephemeral_media_last_reset)) {
+    if (shouldResetDaily(query.data.ephemeral_media_last_reset)) {
       return 0;
     }
     return query.data.ephemeral_media_count;
@@ -112,7 +112,7 @@ export const useUserUsage = () => {
   // Check limits
   const canSendEphemeralMedia = (): boolean => {
     if (isPremium) return true;
-    return getEphemeralMediaCount() < limits.ephemeralMediaPerWeek;
+    return getEphemeralMediaCount() < limits.ephemeralMediaPerDay;
   };
 
   const canStartConversation = (): boolean => {
@@ -140,7 +140,7 @@ export const useUserUsage = () => {
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
 
-      const resetNeeded = shouldResetWeekly(query.data?.ephemeral_media_last_reset || null);
+      const resetNeeded = shouldResetDaily(query.data?.ephemeral_media_last_reset || null);
       const newCount = resetNeeded ? 1 : (query.data?.ephemeral_media_count || 0) + 1;
 
       const { error } = await supabase

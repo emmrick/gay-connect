@@ -15,7 +15,7 @@ export interface SubscriptionStatus {
 
 // Limites pour les utilisateurs gratuits
 export const FREE_LIMITS = {
-  ephemeralMediaPerWeek: 1,
+  ephemeralMediaPerDay: 1,
   profilePhotosPerDay: 10,
   maxGroups: 3,
   nearbyProfiles: 30,
@@ -28,7 +28,7 @@ export const FREE_LIMITS = {
 
 // Limites pour les utilisateurs premium
 export const PREMIUM_LIMITS = {
-  ephemeralMediaPerWeek: Infinity,
+  ephemeralMediaPerDay: Infinity,
   profilePhotosPerDay: Infinity,
   maxGroups: 101, // Tous les départements
   nearbyProfiles: Infinity,
