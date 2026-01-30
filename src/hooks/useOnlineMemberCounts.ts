@@ -1,7 +1,37 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useOnlineMemberCounts = () => {
+  const queryClient = useQueryClient();
+
+  // Subscribe to realtime changes on profiles table
+  useEffect(() => {
+    const channel = supabase
+      .channel('online-status-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          // Listen for changes to is_online or last_seen columns
+        },
+        (payload) => {
+          const { old: oldData, new: newData } = payload;
+          // Only invalidate if online status or last_seen changed
+          if (oldData?.is_online !== newData?.is_online || oldData?.last_seen !== newData?.last_seen) {
+            queryClient.invalidateQueries({ queryKey: ['online-member-counts'] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['online-member-counts'],
     queryFn: async (): Promise<Record<string, number>> => {
@@ -25,7 +55,7 @@ export const useOnlineMemberCounts = () => {
 
       return counts;
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000, // Fallback refresh every 30 seconds
     refetchOnMount: 'always',
     staleTime: 0,
   });
