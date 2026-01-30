@@ -14,6 +14,7 @@ import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
 import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
 import IdentityVerificationDialog from '@/components/verification/IdentityVerificationDialog';
 import VerificationReminderBanner from '@/components/verification/VerificationReminderBanner';
+import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -317,13 +318,16 @@ const Index = () => {
                   {joinedGroups.length}/{maxGroups} groupes rejoints
                 </motion.p>
               </div>
-              <Button
-                onClick={() => setShowGroupPicker(true)}
-                size="icon"
-                className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <NotificationsDropdown />
+                <Button
+                  onClick={() => setShowGroupPicker(true)}
+                  size="icon"
+                  className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                >
+                  <Plus className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
             
             {/* Groups list */}
@@ -372,13 +376,16 @@ const Index = () => {
                   Tes conversations privées
                 </motion.p>
               </div>
-              <Button
-                onClick={() => setShowMemberSearch(true)}
-                size="icon"
-                className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <NotificationsDropdown />
+                <Button
+                  onClick={() => setShowMemberSearch(true)}
+                  size="icon"
+                  className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                >
+                  <Plus className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
             
             {/* Conversation list */}
