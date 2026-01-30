@@ -1,5 +1,6 @@
 import { Users, MessageCircle, User, Home, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface BottomNavBarProps {
   activeTab: 'home' | 'groups' | 'messages' | 'premium' | 'profile';
@@ -20,69 +21,76 @@ const BottomNavBar = ({ activeTab, onTabChange, unreadCount = 0, isPremium = fal
     { id: 'profile' as const, icon: User, label: 'Profil' },
   ];
 
+  const handleTabClick = (tabId: typeof activeTab) => {
+    // Trigger haptic feedback if available
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+    onTabChange(tabId);
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none safe-area-bottom">
       {/* Gradient fade for content behind */}
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none" />
       
-      <nav className="relative pointer-events-auto mx-auto max-w-md">
-        <div className="bg-secondary/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl shadow-black/30">
-          <div className="flex items-center justify-around h-16 px-2">
+      <nav className="relative pointer-events-auto px-3 pb-2">
+        <div className="mx-auto max-w-md bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl shadow-black/20">
+          <div className="flex items-center justify-around h-[68px] px-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               
               return (
-                <button
+                <motion.button
                   key={tab.id}
-                  onClick={() => onTabChange(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
+                  whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-0.5 w-14 h-14 rounded-xl transition-all duration-200",
+                    "relative flex flex-col items-center justify-center gap-1 flex-1 h-full py-2 transition-colors duration-200",
                     isActive
                       ? tab.premium ? "text-amber-500" : "text-primary"
-                      : "text-muted-foreground hover:text-foreground",
-                    tab.premium && !isActive && "text-amber-500/60"
+                      : "text-muted-foreground active:text-foreground",
+                    tab.premium && !isActive && "text-amber-500/50"
                   )}
                 >
-                  {/* Active background indicator */}
+                  {/* Active background pill */}
                   {isActive && (
-                    <div className={cn(
-                      "absolute inset-1 rounded-lg",
-                      tab.premium ? "bg-amber-500/10" : "bg-primary/10"
-                    )} />
+                    <motion.div 
+                      layoutId="activeTab"
+                      className={cn(
+                        "absolute inset-x-2 inset-y-1 rounded-xl",
+                        tab.premium ? "bg-amber-500/15" : "bg-primary/15"
+                      )}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
                   )}
                   
                   <div className="relative z-10 flex items-center justify-center">
                     <Icon className={cn(
-                      "w-5 h-5 transition-transform duration-200",
+                      "w-6 h-6 transition-all duration-200",
                       isActive && "scale-110"
-                    )} />
+                    )} strokeWidth={isActive ? 2.5 : 2} />
                     
                     {/* Badge - only show when there are unread messages */}
                     {tab.badge !== undefined && tab.badge > 0 && (
-                      <span className="absolute -top-2 -right-3 min-w-[16px] h-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center shadow-md">
+                      <motion.span 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center shadow-lg"
+                      >
                         {tab.badge > 99 ? '99+' : tab.badge}
-                      </span>
+                      </motion.span>
                     )}
                   </div>
                   
                   <span className={cn(
-                    "relative z-10 text-[10px] font-medium leading-tight mt-0.5",
-                    isActive 
-                      ? tab.premium ? "text-amber-500" : "text-primary" 
-                      : tab.premium ? "text-amber-500/60" : "text-muted-foreground"
+                    "relative z-10 text-[11px] font-medium leading-tight",
+                    isActive && "font-semibold"
                   )}>
                     {tab.label}
                   </span>
-                  
-                  {/* Active dot indicator */}
-                  {isActive && (
-                    <span className={cn(
-                      "absolute -bottom-0.5 w-1 h-1 rounded-full",
-                      tab.premium ? "bg-amber-500" : "bg-primary"
-                    )} />
-                  )}
-                </button>
+                </motion.button>
               );
             })}
           </div>
