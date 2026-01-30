@@ -209,7 +209,10 @@ export const useProfilePhotos = (userId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile-photos', user?.id] });
-      toast.success('Photo principale mise à jour');
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      // Force refresh auth context profile
+      queryClient.invalidateQueries({ queryKey: ['auth-profile'] });
+      toast.success('Photo de profil mise à jour !');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erreur');
