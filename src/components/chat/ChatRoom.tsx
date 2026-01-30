@@ -14,11 +14,12 @@ import MessageReply from './MessageReply';
 import MessageSearch from './MessageSearch';
 import UserProfilePreview from './UserProfilePreview';
 import MediaGallerySheet from './MediaGallerySheet';
-import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Users, Search, Image, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import MessagesSkeleton from './MessagesSkeleton';
 
 interface EphemeralMediaData {
   type: 'image' | 'video';
@@ -305,11 +306,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           </div>
 
           {/* Loading state */}
-          {isLoading && (
-            <div className="flex justify-center py-4">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          )}
+          {isLoading && <MessagesSkeleton />}
           
           {/* Messages */}
           {messages.map((message) => (

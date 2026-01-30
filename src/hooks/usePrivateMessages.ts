@@ -23,22 +23,22 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     queryFn: async (): Promise<PrivateMessageWithProfile[]> => {
       if (!user || !otherUserId) return [];
 
-      // Get messages between the two users
+      // Fetch messages
       const { data: messages, error } = await supabase
         .from('messages')
         .select('*')
         .eq('is_private', true)
-        .is('deleted_at', null) // Exclude soft-deleted messages
+        .is('deleted_at', null)
         .or(
           `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
         )
         .order('created_at', { ascending: true })
-        .limit(100);
+        .limit(50);
 
       if (error) throw error;
-      if (!messages) return [];
+      if (!messages || messages.length === 0) return [];
 
-      // Get profiles for both users
+      // Get profiles for both users in single request
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, username, avatar_url')
@@ -54,6 +54,8 @@ export const usePrivateMessages = (otherUserId: string | null) => {
       }));
     },
     enabled: !!user && !!otherUserId,
+    staleTime: 10000, // Cache for 10 seconds
+    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
   });
 
   // Real-time subscription for new messages
