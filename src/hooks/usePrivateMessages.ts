@@ -114,6 +114,13 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     mutationFn: async ({ content, messageType }: { content: string; messageType: 'text' | 'image' | 'video' }) => {
       if (!user || !otherUserId) throw new Error('Not authenticated or no recipient');
 
+      // Get sender's profile for the notification
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -127,6 +134,16 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         .single();
 
       if (error) throw error;
+
+      // Send notification to the recipient
+      await supabase.from('notifications').insert({
+        user_id: otherUserId,
+        type: 'message',
+        title: '💬 Nouveau message',
+        message: `${senderProfile?.username || 'Quelqu\'un'} t'a envoyé un message`,
+        action_url: `/profile/${user.id}`,
+      });
+
       return data;
     },
     onSuccess: () => {

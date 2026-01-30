@@ -234,6 +234,13 @@ export const useAlbums = (userId?: string) => {
     }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
+      // Get current user's profile for the notification
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       let expiresAt: string | null = null;
       if (duration && duration !== 'unlimited') {
         const now = new Date();
@@ -291,6 +298,15 @@ export const useAlbums = (userId?: string) => {
         console.error('Failed to create album share message:', msgError);
         // Don't throw - the share was created successfully
       }
+
+      // Send notification to the recipient
+      await supabase.from('notifications').insert({
+        user_id: sharedWithUserId,
+        type: 'album_share',
+        title: '📁 Album partagé !',
+        message: `${userProfile?.username || 'Quelqu\'un'} a partagé l'album "${album?.name || 'Album'}" avec toi`,
+        action_url: `/profile/${user.id}`,
+      });
 
       return shareData;
     },
