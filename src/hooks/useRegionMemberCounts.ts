@@ -1,48 +1,37 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { withTimeout } from '@/lib/withTimeout';
 
-interface RegionMemberCount {
-  region: string;
-  total: number;
-  online: number;
-}
+// Lightweight count for a specific region (avoids scanning all profiles every 30s)
+export const useRegionMemberCount = (regionCode?: string | null, enabled = true) => {
+  const query = useQuery({
+    queryKey: ['region-member-count', regionCode],
+    queryFn: async (): Promise<number> => {
+      if (!regionCode) return 0;
 
-export const useRegionMemberCounts = () => {
-  return useQuery({
-    queryKey: ['region-member-counts'],
-    queryFn: async (): Promise<Record<string, RegionMemberCount>> => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('region, is_online');
+      const { count, error } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from('profiles')
+            .select('id', { count: 'exact', head: true })
+            .eq('region', regionCode)
+        ),
+        12000
+      );
 
       if (error) throw error;
-
-      // Count members per region
-      const counts: Record<string, RegionMemberCount> = {};
-      data?.forEach((profile) => {
-        if (!counts[profile.region]) {
-          counts[profile.region] = { region: profile.region, total: 0, online: 0 };
-        }
-        counts[profile.region].total += 1;
-        if (profile.is_online === true) {
-          counts[profile.region].online += 1;
-        }
-      });
-
-      return counts;
+      return count ?? 0;
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 15000,
+    enabled: enabled && !!regionCode,
+    staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
   });
-};
 
-// Get count for a specific region
-export const useRegionMemberCount = (regionCode: string) => {
-  const { data: counts, isLoading } = useRegionMemberCounts();
-  
   return {
-    total: counts?.[regionCode]?.total || 0,
-    online: counts?.[regionCode]?.online || 0,
-    isLoading,
+    total: query.data ?? 0,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
   };
 };

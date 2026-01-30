@@ -79,7 +79,8 @@ const Index = () => {
   const { isPremium } = useSubscription();
   const { verification, isLoading: verificationLoading } = useIdentityVerification();
   const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
-  const { total: memberCount } = useRegionMemberCount(selectedRegion || '');
+  const shouldFetchMemberCount = !!user && currentView === 'chat' && !!selectedRegion;
+  const { total: memberCount } = useRegionMemberCount(selectedRegion, shouldFetchMemberCount);
   const { getOrCreateConversation, conversations, archivedConversations, deletedConversations } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const { joinedGroups, joinGroup, remainingSlots, maxGroups } = useJoinedGroups();
