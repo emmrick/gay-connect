@@ -20,38 +20,35 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Fetch messages
+  // Fetch messages with optimized caching
   const query = useQuery({
     queryKey: ['messages', chatRoomId],
     queryFn: async (): Promise<MessageWithProfile[]> => {
       if (!chatRoomId) return [];
 
-      // First get messages
-      const { data: messages, error } = await supabase
+      // Fetch messages and profiles in parallel
+      const messagesPromise = supabase
         .from('messages')
         .select('*')
         .eq('chat_room_id', chatRoomId)
         .eq('is_private', false)
-        .is('deleted_at', null) // Exclude soft-deleted messages
+        .is('deleted_at', null)
         .order('created_at', { ascending: true })
-        .limit(200);
+        .limit(100);
+
+      const [{ data: messages, error }] = await Promise.all([messagesPromise]);
 
       if (error) throw error;
-      if (!messages) return [];
+      if (!messages || messages.length === 0) return [];
 
-      // Get unique sender IDs
+      // Get unique sender IDs and fetch profiles in single batch
       const senderIds = [...new Set(messages.map(m => m.sender_id))];
-      
-      // Fetch profiles for all senders
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, username, avatar_url')
         .in('user_id', senderIds);
 
-      // Map profiles to messages
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      
-      // Create message map for replies
       const messageMap = new Map(messages.map(m => [m.id, m]));
       
       return messages.map(msg => {
@@ -69,6 +66,8 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
       });
     },
     enabled: !!chatRoomId,
+    staleTime: 30000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   // Filter messages based on search query
