@@ -54,7 +54,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   const [searchQuery, setSearchQuery] = useState('');
   const [searchIndex, setSearchIndex] = useState(0);
   
-  const { messages, searchResults, isLoading, sendMessage } = useMessages(roomId, searchQuery);
+  const { messages, searchResults, isLoading, error, refetch, sendMessage } = useMessages(roomId, searchQuery);
   const { typingUsers, startTyping, stopTyping } = useTypingIndicator(roomId);
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
   
@@ -299,7 +299,19 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
 
           {/* Loading state */}
           {isLoading && <MessagesSkeleton />}
-          
+
+          {/* Error state */}
+          {error && !isLoading && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-center">
+              <p className="text-sm text-destructive mb-3">
+                Impossible de charger les messages.
+              </p>
+              <Button variant="secondary" size="sm" onClick={() => refetch()}>
+                Réessayer
+              </Button>
+            </div>
+          )}
+
           {/* Messages */}
           {messages.map((message) => (
             <ChatMessage
