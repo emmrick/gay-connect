@@ -304,6 +304,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
               isOwn={message.sender_id === user?.id}
               isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
               reactions={getReactionsForMessage(message.id)}
+              chatRoomId={roomId}
               onReply={handleReply}
               onAvatarClick={handleAvatarClick}
               onToggleReaction={handleToggleReaction}

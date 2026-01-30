@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Image, Video, Camera, X, Send, Clock, Loader2, Aperture, Lock, Crown, ShieldOff, ImagePlus, VideoIcon } from 'lucide-react';
+import { Image, Video, Camera, X, Send, Clock, Loader2, Aperture, Lock, Crown, ShieldOff, ImagePlus, VideoIcon, Infinity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -163,7 +163,7 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
     action();
   };
 
-  const durations = [5, 10, 15, 30];
+  const durations = [5, 10, 15, 30, 0]; // 0 = unlimited
 
   // Ephemeral media preview
   if (previewUrl) {
@@ -200,8 +200,8 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
             <Clock className="w-4 h-4" />
             Durée d'affichage
           </p>
-          <div className="flex gap-2 mb-4">
-            {durations.map((d) => (
+          <div className="flex gap-2 mb-2">
+            {durations.filter(d => d > 0).map((d) => (
               <button
                 key={d}
                 onClick={() => setViewDuration(d)}
@@ -216,9 +216,27 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setViewDuration(0)}
+            disabled={isUploading}
+            className={`w-full py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+              viewDuration === 0 
+                ? 'bg-green-500 text-white' 
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+            } disabled:opacity-50`}
+          >
+            <Infinity className="w-4 h-4" />
+            Illimité (enregistrable)
+          </button>
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            {viewDuration === 0 
+              ? '✓ Le destinataire pourra enregistrer ce média' 
+              : '🔒 Le média disparaîtra après visionnage'}
+          </p>
+        </div>
 
           {isUploading && (
-            <div className="mb-4">
+            <div className="p-4 pt-0">
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
@@ -231,26 +249,27 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
             </div>
           )}
           
-          <Button 
-            variant="hero" 
-            size="lg" 
-            className="w-full" 
-            onClick={handleSend}
-            disabled={isUploading}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Envoi...
-              </>
-            ) : (
-              <>
-                <Send className="w-5 h-5" />
-                Envoyer
-              </>
-            )}
-          </Button>
-        </div>
+          <div className="p-4 pt-0">
+            <Button 
+              variant="hero" 
+              size="lg" 
+              className="w-full" 
+              onClick={handleSend}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Envoi...
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  Envoyer
+                </>
+              )}
+            </Button>
+          </div>
       </div>
     );
   }

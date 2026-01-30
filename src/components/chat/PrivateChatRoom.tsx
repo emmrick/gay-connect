@@ -234,6 +234,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                         messageType={message.message_type as 'image' | 'video'}
                         senderName={message.senderUsername}
                         isOwn={isOwn}
+                        recipientId={otherUserId}
                       />
                     ) : isRegularMedia ? (
                       <RegularMediaMessage
