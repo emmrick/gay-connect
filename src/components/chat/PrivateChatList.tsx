@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { AnimatePresence } from 'framer-motion';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { usePremiumUsers } from '@/hooks/usePremiumUsers';
@@ -29,6 +30,7 @@ import { MessageCircle, ChevronRight, MoreVertical, Archive, Trash2, ArchiveRest
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import UserProfilePreview from './UserProfilePreview';
 import SwipeableConversationItem from './SwipeableConversationItem';
+import SwipeHintOverlay from './SwipeHintOverlay';
 import { cn } from '@/lib/utils';
 
 type ViewMode = 'active' | 'archived' | 'deleted';
@@ -48,6 +50,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [permanentDeleteDialogOpen, setPermanentDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
 
   // Use the appropriate conversations based on viewMode
   const displayConversations = viewMode === 'deleted' 
@@ -55,6 +58,25 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
     : viewMode === 'archived' 
       ? archivedConversations 
       : conversations;
+
+  // Show swipe hint for new users on mobile
+  useEffect(() => {
+    if (isMobile && displayConversations.length > 0 && viewMode === 'active') {
+      const hasSeenSwipeHint = localStorage.getItem('hasSeenSwipeHint');
+      if (!hasSeenSwipeHint) {
+        // Small delay to let the list render first
+        const timer = setTimeout(() => {
+          setShowSwipeHint(true);
+        }, 800);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isMobile, displayConversations.length, viewMode]);
+
+  const handleDismissSwipeHint = () => {
+    setShowSwipeHint(false);
+    localStorage.setItem('hasSeenSwipeHint', 'true');
+  };
 
   // Get user IDs for premium check
   const userIds = useMemo(
@@ -199,7 +221,13 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
 
   return (
     <>
-    <div className="px-4 pb-6 space-y-2">
+    <div className="relative px-4 pb-6 space-y-2">
+      {/* Swipe hint overlay for new users */}
+      <AnimatePresence>
+        {showSwipeHint && isMobile && (
+          <SwipeHintOverlay onDismiss={handleDismissSwipeHint} />
+        )}
+      </AnimatePresence>
       {displayConversations.map((conv, index) => {
         const unreadCount = getUnreadCount(conv.otherUser.user_id);
         const hasUnread = unreadCount > 0;
