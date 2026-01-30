@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Message } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Reply, CornerUpLeft, Flag, Trash2, Loader2 } from 'lucide-react';
+import { Reply, CornerUpLeft, Flag, Trash2, Loader2, Crown } from 'lucide-react';
 import EphemeralMessage from './EphemeralMessage';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import ReportMessageDialog from './ReportMessageDialog';
 import { Button } from '@/components/ui/button';
 import { useDeleteMessage } from '@/hooks/useDeleteMessage';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +38,7 @@ interface ChatMessageProps {
   isHighlighted?: boolean;
   reactions?: Reaction[];
   chatRoomId?: string;
+  isPremium?: boolean;
   onReply?: (message: { id: string; content: string; senderName: string }) => void;
   onAvatarClick?: (userId: string) => void;
   onToggleReaction?: (messageId: string, emoji: string) => void;
@@ -48,6 +50,7 @@ const ChatMessage = ({
   isHighlighted, 
   reactions = [],
   chatRoomId,
+  isPremium = false,
   onReply, 
   onAvatarClick,
   onToggleReaction,
@@ -88,12 +91,22 @@ const ChatMessage = ({
       >
         {/* Avatar */}
         {!isOwn && (
-          <button
-            onClick={handleAvatarClick}
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 hover:scale-105 transition-transform cursor-pointer"
-          >
-            {message.senderName.charAt(0).toUpperCase()}
-          </button>
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={handleAvatarClick}
+              className={cn(
+                "w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm hover:scale-105 transition-transform cursor-pointer",
+                isPremium && "ring-2 ring-amber-500 shadow-lg shadow-amber-500/30"
+              )}
+            >
+              {message.senderName.charAt(0).toUpperCase()}
+            </button>
+            {isPremium && (
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
+                <Crown className="w-2.5 h-2.5 text-white" />
+              </div>
+            )}
+          </div>
         )}
         
         <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[75%]`}>
