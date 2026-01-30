@@ -39,22 +39,24 @@ serve(async (req) => {
     const user = userData.user;
     if (!user) throw new Error("User not authenticated");
 
-    // Check if user is admin
-    const { data: isAdmin } = await supabaseClient.rpc('has_role', { 
-      _user_id: user.id, 
-      _role: 'admin' 
-    });
-    
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required");
-    }
-
-    logStep("Admin verified", { userId: user.id });
-
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const { action, ...params } = await req.json();
 
-    logStep("Action requested", { action, params });
+    logStep("Action requested", { action, params, userId: user.id });
+
+    // "validate" action is available to all authenticated users
+    // Other actions require admin role
+    if (action !== "validate") {
+      const { data: isAdmin } = await supabaseClient.rpc('has_role', { 
+        _user_id: user.id, 
+        _role: 'admin' 
+      });
+      
+      if (!isAdmin) {
+        throw new Error("Unauthorized: Admin access required");
+      }
+      logStep("Admin verified", { userId: user.id });
+    }
 
     let result;
 
