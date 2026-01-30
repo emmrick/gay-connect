@@ -30,13 +30,18 @@ export const useNearbyProfiles = (
     ? limit 
     : Math.min(limit, FREE_LIMITS.nearbyProfiles);
 
+  // Calculate offline threshold based on subscription status
+  // Premium users can see members offline up to 24 hours, free users only 1 hour
+  const getOfflineThreshold = () => {
+    return isPremium 
+      ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 24 hours for Premium
+      : new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour for free
+  };
+
   const query = useQuery({
     queryKey: ['nearby-profiles', latitude, longitude, maxDistance, effectiveLimit, isPremium],
     queryFn: async (): Promise<NearbyProfile[]> => {
-      // Premium users can see members offline up to 24 hours, free users only 1 hour
-      const offlineThreshold = isPremium 
-        ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 24 hours for Premium
-        : new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour for free
+      const offlineThreshold = getOfflineThreshold();
 
       // Use explicit null/undefined checks (0 is a valid coordinate).
       if (latitude == null || longitude == null) {
@@ -79,8 +84,12 @@ export const useNearbyProfiles = (
       return filteredData;
     },
     enabled: !!user,
-    refetchInterval: 300000, // Refresh every 5 minutes
-    staleTime: 60000, // Consider data stale after 1 minute
+    // Force refetch on mount/focus to ensure fresh data
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000, // Refresh every minute for fresher data
+    staleTime: 0, // Always consider data stale to re-filter with current time
+    gcTime: 60000, // Keep in cache for 1 minute only
   });
 
   const maxProfilesAllowed = isPremium 
