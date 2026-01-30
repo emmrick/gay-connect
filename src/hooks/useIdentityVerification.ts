@@ -95,21 +95,26 @@ export const useIdentityVerification = () => {
     }) => {
       if (!user) throw new Error('Not authenticated');
 
-      // First, reset the status to pending (in case of resubmission after rejection)
-      // This is needed because RLS only allows updates when status = 'pending'
+      // Check current verification status
       const { data: currentVerification } = await supabase
         .from('identity_verifications')
-        .select('status')
+        .select('id, status')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (currentVerification?.status === 'rejected') {
-        // Delete the old record and create a new one
-        await supabase
+        // Delete the old rejected record first (RLS allows this)
+        const { error: deleteError } = await supabase
           .from('identity_verifications')
           .delete()
           .eq('user_id', user.id);
           
+        if (deleteError) {
+          console.error('Delete error:', deleteError);
+          throw deleteError;
+        }
+          
+        // Create a new record
         const { error: insertError } = await supabase
           .from('identity_verifications')
           .insert({
@@ -121,9 +126,12 @@ export const useIdentityVerification = () => {
             status: 'pending',
           });
 
-        if (insertError) throw insertError;
-      } else {
-        // Normal update for pending or new submissions
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
+      } else if (currentVerification) {
+        // Update existing pending record
         const { error } = await supabase
           .from('identity_verifications')
           .update({
@@ -135,7 +143,27 @@ export const useIdentityVerification = () => {
           })
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
+      } else {
+        // No existing record, create a new one
+        const { error: insertError } = await supabase
+          .from('identity_verifications')
+          .insert({
+            user_id: user.id,
+            selfie_url: selfieUrl,
+            id_front_url: idFrontUrl,
+            id_back_url: idBackUrl,
+            submitted_at: new Date().toISOString(),
+            status: 'pending',
+          });
+
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
       }
     },
     onSuccess: () => {

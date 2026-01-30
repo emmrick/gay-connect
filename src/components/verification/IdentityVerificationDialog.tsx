@@ -129,7 +129,12 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
 
   const handleNext = async () => {
     if (step === 'intro') {
-      if (!verification) {
+      // For resubmission after rejection, we need to refetch to get fresh state
+      // and the new record will be created in submitVerification
+      if (!verification || verification.status === 'rejected') {
+        // Don't create verification here, it will be created in submit
+        // Just move to the next step
+      } else if (!verification) {
         await createVerification.mutateAsync();
       }
       setStep('selfie');
