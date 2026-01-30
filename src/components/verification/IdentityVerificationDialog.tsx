@@ -492,25 +492,53 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
           </div>
           <div>
             <h3 className="font-display text-xl font-semibold mb-2">Vérification refusée</h3>
+            {verification.rejection_reason && (
+              <div className="bg-destructive/10 rounded-xl p-3 border border-destructive/20 mb-4">
+                <p className="text-sm text-destructive font-medium">Raison du refus :</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {verification.rejection_reason}
+                </p>
+              </div>
+            )}
             <p className="text-muted-foreground text-sm">
-              {verification.rejection_reason || 'Ta demande n\'a pas pu être validée.'}
+              Tu peux soumettre une nouvelle demande avec des documents plus clairs.
             </p>
           </div>
-          <Button 
-            variant="hero" 
-            className="w-full" 
-            onClick={() => {
-              setSelfieFile(null);
-              setSelfiePreview(null);
-              setIdFrontFile(null);
-              setIdFrontPreview(null);
-              setIdBackFile(null);
-              setIdBackPreview(null);
-              setStep('selfie');
-            }}
-          >
-            Réessayer
-          </Button>
+          
+          <div className="bg-primary/10 rounded-xl p-4 text-left border border-primary/20">
+            <h4 className="font-semibold text-sm text-primary mb-2">Conseils pour réussir ta vérification :</h4>
+            <ul className="text-xs text-muted-foreground space-y-1.5">
+              <li>• Assure-toi que la photo est bien éclairée</li>
+              <li>• Le document doit être entièrement visible</li>
+              <li>• Les informations doivent être lisibles</li>
+              <li>• Évite les reflets sur le document</li>
+            </ul>
+          </div>
+
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              onClick={() => onOpenChange(false)}
+            >
+              Fermer
+            </Button>
+            <Button 
+              variant="hero" 
+              className="flex-1" 
+              onClick={() => {
+                setSelfieFile(null);
+                setSelfiePreview(null);
+                setIdFrontFile(null);
+                setIdFrontPreview(null);
+                setIdBackFile(null);
+                setIdBackPreview(null);
+                setStep('intro');
+              }}
+            >
+              Nouvelle demande
+            </Button>
+          </div>
         </div>
       );
     }
