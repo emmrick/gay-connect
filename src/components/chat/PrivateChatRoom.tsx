@@ -49,25 +49,35 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, [otherUserId]);
 
+  // Track if this is the initial load
+  const isInitialLoad = useRef(true);
+
   // Auto-scroll to bottom on new messages or when conversation opens
   useEffect(() => {
-    const scrollToBottom = () => {
+    const scrollToBottom = (instant: boolean = false) => {
       if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+        scrollRef.current.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' });
       }
     };
     
-    // Immediate scroll for initial load
-    scrollToBottom();
-    
-    // Delayed scroll to handle media loading
-    const timeoutId = setTimeout(scrollToBottom, 100);
-    const timeoutId2 = setTimeout(scrollToBottom, 300);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      clearTimeout(timeoutId2);
-    };
+    // On initial load, scroll instantly without animation
+    if (isInitialLoad.current) {
+      scrollToBottom(true);
+      // Delayed instant scroll to handle media loading
+      const timeoutId = setTimeout(() => scrollToBottom(true), 100);
+      const timeoutId2 = setTimeout(() => {
+        scrollToBottom(true);
+        isInitialLoad.current = false;
+      }, 300);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        clearTimeout(timeoutId2);
+      };
+    } else {
+      // For new messages, use smooth scroll
+      scrollToBottom(false);
+    }
   }, [messages]);
 
   // Scroll to bottom when input is focused (keyboard opens)
