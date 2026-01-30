@@ -89,38 +89,40 @@ export const usePrivateConversations = () => {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      // Fetch last messages for ALL conversations in a single query (prevents N+1 requests)
+      // Fetch last messages - simpler approach to avoid query issues
       const lastMessageMap = new Map<string, { content: string | null; created_at: string; message_type: string }>();
 
       if (uniqueOtherUserIds.length > 0) {
-        // Build OR conditions for each conversation partner
-        const orConditions = uniqueOtherUserIds.map(otherId => 
-          `and(sender_id.eq.${user.id},recipient_id.eq.${otherId}),and(sender_id.eq.${otherId},recipient_id.eq.${user.id})`
-        ).join(',');
-
+        // Fetch recent messages where current user is involved
+        // This is more reliable than complex OR conditions
         const { data: recentMsgs, error: recentMsgsError } = await supabase
           .from('messages')
           .select('sender_id, recipient_id, content, created_at, message_type')
           .eq('is_private', true)
           .is('deleted_at', null)
-          .or(orConditions)
+          .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
           .order('created_at', { ascending: false })
-          .limit(Math.min(500, uniqueOtherUserIds.length * 5));
+          .limit(200);
 
-        if (recentMsgsError) throw recentMsgsError;
-
-        for (const msg of recentMsgs || []) {
-          const otherId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
-          if (!otherId) continue;
-          if (!lastMessageMap.has(otherId)) {
-            lastMessageMap.set(otherId, {
-              content: msg.content,
-              created_at: msg.created_at,
-              message_type: msg.message_type,
-            });
+        if (recentMsgsError) {
+          console.warn('Failed to fetch recent messages:', recentMsgsError);
+          // Continue without last messages - don't block the whole query
+        } else {
+          for (const msg of recentMsgs || []) {
+            const otherId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
+            if (!otherId) continue;
+            // Only track messages from our conversation partners
+            if (!uniqueOtherUserIds.includes(otherId)) continue;
+            if (!lastMessageMap.has(otherId)) {
+              lastMessageMap.set(otherId, {
+                content: msg.content,
+                created_at: msg.created_at,
+                message_type: msg.message_type,
+              });
+            }
+            // Early exit once we've found one last message per conversation partner
+            if (lastMessageMap.size >= uniqueOtherUserIds.length) break;
           }
-          // Early exit once we've found one last message per conversation partner
-          if (lastMessageMap.size >= uniqueOtherUserIds.length) break;
         }
       }
 
