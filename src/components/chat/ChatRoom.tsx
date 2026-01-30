@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useMessages } from '@/hooks/useMessages';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { useMessageReactions } from '@/hooks/useMessageReactions';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
+import { usePremiumUsers } from '@/hooks/usePremiumUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
@@ -56,6 +57,14 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   const { messages, searchResults, isLoading, sendMessage } = useMessages(roomId, searchQuery);
   const { typingUsers, startTyping, stopTyping } = useTypingIndicator(roomId);
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
+  
+  // Get unique sender IDs for premium check
+  const senderIds = useMemo(() => {
+    const ids = new Set<string>();
+    messages.forEach(msg => ids.add(msg.sender_id));
+    return Array.from(ids);
+  }, [messages]);
+  const { data: premiumMap = {} } = usePremiumUsers(senderIds);
   
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [showMembers, setShowMembers] = useState(false);
@@ -319,6 +328,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
               isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
               reactions={getReactionsForMessage(message.id)}
               chatRoomId={roomId}
+              isPremium={premiumMap[message.sender_id] || false}
               onReply={handleReply}
               onAvatarClick={handleAvatarClick}
               onToggleReaction={handleToggleReaction}

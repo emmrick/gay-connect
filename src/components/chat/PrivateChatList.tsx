@@ -257,7 +257,8 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
             >
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden",
-                "bg-gradient-to-br from-primary to-accent"
+                "bg-gradient-to-br from-primary to-accent",
+                isPremium && "ring-2 ring-amber-500 shadow-lg shadow-amber-500/30"
               )}>
                 {conv.otherUser.avatar_url ? (
                   <img

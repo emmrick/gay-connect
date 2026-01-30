@@ -87,9 +87,11 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
                 <div className={cn(
                   "relative w-20 h-24 rounded-xl overflow-hidden",
                   "border-2 transition-all duration-200",
-                  isUserTrulyOnline(profile) 
-                    ? "border-green-500 shadow-lg shadow-green-500/20" 
-                    : "border-border/30"
+                  premiumMap[profile.user_id]
+                    ? "border-amber-500 shadow-lg shadow-amber-500/20 ring-2 ring-amber-500/30"
+                    : isUserTrulyOnline(profile) 
+                      ? "border-green-500 shadow-lg shadow-green-500/20" 
+                      : "border-border/30"
                 )}>
                   {/* Avatar/Photo */}
                   {profile.avatar_url ? (

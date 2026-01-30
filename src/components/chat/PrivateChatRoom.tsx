@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, ChevronDown } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, ChevronDown, Crown } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useMessageReadStatus, getMessageStatus } from '@/hooks/useMessageReadStatus';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { useIsPremiumUser } from '@/hooks/usePremiumUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHasBlockedUser, useUnblockUserAction } from '@/hooks/useUserBlock';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +45,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { markAsRead } = useUnreadMessages();
   const { markConversationAsRead } = useMessageReadStatus(otherUserId);
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
+  const { isPremium: isOtherUserPremium } = useIsPremiumUser(otherUserId);
   const unblockUser = useUnblockUserAction();
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -191,7 +195,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               onClick={() => setShowProfilePreview(true)}
               className="relative cursor-pointer hover:scale-105 transition-transform"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
+              <div className={cn(
+                "w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold",
+                isOtherUserPremium && "ring-2 ring-amber-500 shadow-lg shadow-amber-500/30"
+              )}>
                 {otherUserProfile?.avatar_url ? (
                   <img
                     src={otherUserProfile.avatar_url}
@@ -205,15 +212,28 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               {isUserTrulyOnline(otherUserProfile) && (
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
               )}
+              {isOtherUserPremium && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
+                  <Crown className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
             </button>
 
             <button
               onClick={() => setShowProfilePreview(true)}
               className="flex-1 text-left cursor-pointer hover:opacity-80 transition-opacity"
             >
-              <h2 className="font-semibold text-foreground">
-                {otherUserProfile?.username}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold text-foreground">
+                  {otherUserProfile?.username}
+                </h2>
+                {isOtherUserPremium && (
+                  <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-sm text-[10px] px-1.5 py-0">
+                    <Crown className="w-2.5 h-2.5 mr-0.5" />
+                    Premium
+                  </Badge>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {isUserTrulyOnline(otherUserProfile) ? (
                   <span className="text-green-500">En ligne</span>

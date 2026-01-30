@@ -2,11 +2,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useChatRooms } from '@/hooks/useChatRooms';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
-import { Users, MessageCircle, MapPin } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
+import { Users, MessageCircle, MapPin, Crown } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesMembers from './FavoritesMembers';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
+import { cn } from '@/lib/utils';
 
 interface HomeViewProps {
   onNavigateToGroups: () => void;
@@ -26,6 +28,7 @@ const HomeView = ({
   const { profile } = useAuth();
   const { data: rooms } = useChatRooms();
   const { data: onlineCounts } = useOnlineMemberCounts();
+  const { isPremium } = useSubscription();
   const { getTotalUnreadCount } = useUnreadMessages();
 
   // Get total online users
@@ -54,12 +57,22 @@ const HomeView = ({
           <div className="flex items-center justify-between">
             {/* User info - compact */}
             <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 ring-2 ring-primary/30">
-                <AvatarImage src={profile?.avatar_url || ''} />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white font-semibold">
-                  {profile?.username?.charAt(0).toUpperCase() || '?'}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className={cn(
+                  "w-10 h-10 ring-2",
+                  isPremium ? "ring-amber-500 shadow-lg shadow-amber-500/30" : "ring-primary/30"
+                )}>
+                  <AvatarImage src={profile?.avatar_url || ''} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white font-semibold">
+                    {profile?.username?.charAt(0).toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+                {isPremium && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
+                    <Crown className="w-2.5 h-2.5 text-white" />
+                  </div>
+                )}
+              </div>
               <div>
                 <p className="text-xs text-muted-foreground">{greeting()}</p>
                 <h1 className="font-display text-base font-bold text-foreground leading-tight">
