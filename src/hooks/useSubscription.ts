@@ -9,6 +9,7 @@ export interface SubscriptionStatus {
   productId: string | null;
   subscriptionEnd: string | null;
   isLoading: boolean;
+  isAdmin: boolean;
 }
 
 // Limites pour les utilisateurs gratuits
@@ -45,6 +46,7 @@ export const useSubscription = () => {
     productId: null,
     subscriptionEnd: null,
     isLoading: true,
+    isAdmin: false,
   });
 
   const checkSubscription = useCallback(async () => {
@@ -55,21 +57,31 @@ export const useSubscription = () => {
         productId: null,
         subscriptionEnd: null,
         isLoading: false,
+        isAdmin: false,
       });
       return;
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      
-      if (error) throw error;
+      // Check both subscription and admin status in parallel
+      const [subscriptionResult, adminResult] = await Promise.all([
+        supabase.functions.invoke('check-subscription'),
+        supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+      ]);
+
+      const subscriptionData = subscriptionResult.data;
+      const isAdmin = adminResult.data === true;
+
+      // Admin users get premium features by default
+      const isPremium = isAdmin || subscriptionData?.is_premium || false;
 
       setStatus({
-        subscribed: data?.subscribed || false,
-        isPremium: data?.is_premium || false,
-        productId: data?.product_id || null,
-        subscriptionEnd: data?.subscription_end || null,
+        subscribed: subscriptionData?.subscribed || false,
+        isPremium,
+        productId: subscriptionData?.product_id || null,
+        subscriptionEnd: subscriptionData?.subscription_end || null,
         isLoading: false,
+        isAdmin,
       });
     } catch (error) {
       console.error('Error checking subscription:', error);
