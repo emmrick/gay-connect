@@ -157,7 +157,25 @@ export const usePrivateMessages = (otherUserId: string | null) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (newMessage) => {
+      // Immediately add message to cache for instant UI feedback
+      if (newMessage) {
+        const messageWithProfile: PrivateMessageWithProfile = {
+          ...newMessage,
+          senderUsername: 'Moi',
+          senderAvatar: null,
+        };
+        
+        queryClient.setQueryData<PrivateMessageWithProfile[]>(
+          ['private-messages', user?.id, otherUserId],
+          (old) => {
+            // Avoid duplicates if realtime already added it
+            if (old?.some(m => m.id === newMessage.id)) return old;
+            return [...(old || []), messageWithProfile];
+          }
+        );
+      }
+      
       // Record earning for admin/moderator when sending private message
       if (otherUserId) {
         recordEarning.mutate({

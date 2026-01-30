@@ -99,20 +99,38 @@ export const useUnreadMessages = () => {
     mutationFn: async (partnerId: string) => {
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
+      const now = new Date().toISOString();
+
+      // Update message_read_status table
+      const { error: statusError } = await supabase
         .from('message_read_status')
         .upsert({
           user_id: user.id,
           conversation_partner_id: partnerId,
-          last_read_at: new Date().toISOString(),
+          last_read_at: now,
         }, {
           onConflict: 'user_id,conversation_partner_id',
         });
 
-      if (error) throw error;
+      if (statusError) throw statusError;
+
+      // CRITICAL: Also update read_at on actual messages for UI indicators
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .update({ read_at: now })
+        .eq('is_private', true)
+        .eq('sender_id', partnerId)
+        .eq('recipient_id', user.id)
+        .is('read_at', null);
+
+      if (messagesError) {
+        console.error('Error updating message read_at:', messagesError);
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_, partnerId) => {
       queryClient.invalidateQueries({ queryKey: ['unread-messages', user?.id] });
+      // Force immediate refetch of private messages to update UI
+      queryClient.invalidateQueries({ queryKey: ['private-messages', user?.id, partnerId] });
     },
   });
 
