@@ -2,10 +2,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useChatRooms } from '@/hooks/useChatRooms';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
-import { Users, MessageCircle, MapPin, Sparkles, Zap, Heart, Camera } from 'lucide-react';
+import { Users, MessageCircle, MapPin, Sparkles, Zap, Heart, Camera, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NearbyMembersGrid from './NearbyMembersGrid';
+import FavoritesMembers from './FavoritesMembers';
 
 interface HomeViewProps {
   onNavigateToGroups: () => void;
@@ -128,6 +129,11 @@ const HomeView = ({
             color="destructive"
             onClick={onNavigateToMessages}
           />
+        </div>
+
+        {/* Favorites Section */}
+        <div className="animate-fade-in" style={{ animationDelay: '0.18s' }}>
+          <FavoritesMembers onStartChat={handleStartChat} />
         </div>
 
         {/* Nearby Members Section - Like Grindr */}

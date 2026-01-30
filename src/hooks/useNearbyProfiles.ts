@@ -33,13 +33,18 @@ export const useNearbyProfiles = (
   const query = useQuery({
     queryKey: ['nearby-profiles', latitude, longitude, maxDistance, effectiveLimit, isPremium],
     queryFn: async (): Promise<NearbyProfile[]> => {
+      // Calculate 2 hours ago for filtering offline users
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+
       // Use explicit null/undefined checks (0 is a valid coordinate).
       if (latitude == null || longitude == null) {
         // Fallback: get all online profiles if no location
+        // Filter: either online OR last_seen within 2 hours
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .neq('user_id', user?.id || '')
+          .or(`is_online.eq.true,last_seen.gte.${twoHoursAgo}`)
           .order('is_online', { ascending: false })
           .order('last_seen', { ascending: false })
           .limit(effectiveLimit);
@@ -62,11 +67,19 @@ export const useNearbyProfiles = (
         });
 
       if (error) throw error;
-      return data || [];
+      
+      // Filter out users who are offline for more than 2 hours
+      const filteredData = (data || []).filter(profile => {
+        if (profile.is_online) return true;
+        if (!profile.last_seen) return false;
+        return new Date(profile.last_seen) >= new Date(twoHoursAgo);
+      });
+      
+      return filteredData;
     },
     enabled: !!user,
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 15000,
+    refetchInterval: 300000, // Refresh every 5 minutes
+    staleTime: 60000, // Consider data stale after 1 minute
   });
 
   const maxProfilesAllowed = isPremium 

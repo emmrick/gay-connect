@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
+import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfilePhotoCarousel from '@/components/chat/ProfilePhotoCarousel';
@@ -11,6 +12,7 @@ import ReportUserDialog from '@/components/chat/ReportUserDialog';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
@@ -82,6 +84,7 @@ const MemberProfile = () => {
 
   const { data: profile, isLoading } = useProfile(userId || '');
   const { photos } = useProfilePhotos(userId || '');
+  const { isFavorite, toggleFavorite, isToggling } = useUserFavorites();
 
   const extendedProfile = profile as any;
 
@@ -353,11 +356,27 @@ const MemberProfile = () => {
         <div className="flex gap-3 max-w-lg mx-auto">
           <Button
             variant="outline"
-            className="flex-1 text-destructive hover:text-destructive"
+            size="icon"
+            className="text-destructive hover:text-destructive flex-shrink-0"
             onClick={() => setShowReportDialog(true)}
           >
-            <Flag className="w-4 h-4 mr-2" />
-            Signaler
+            <Flag className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "flex-shrink-0 transition-colors",
+              isFavorite(userId || '') && "bg-amber-500/20 border-amber-500 text-amber-500 hover:bg-amber-500/30 hover:text-amber-600"
+            )}
+            onClick={() => userId && toggleFavorite(userId)}
+            disabled={isToggling}
+          >
+            {isToggling ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Star className={cn("w-4 h-4", isFavorite(userId || '') && "fill-current")} />
+            )}
           </Button>
           <Button
             className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
