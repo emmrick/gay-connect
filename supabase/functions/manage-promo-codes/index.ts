@@ -161,13 +161,15 @@ serve(async (req) => {
           code: params.code.toUpperCase(),
           active: true,
           limit: 1,
+          expand: ['data.coupon'], // Expand coupon data directly
         });
 
         if (promoCodes.data.length === 0) {
           result = { valid: false, message: "Code promo invalide ou expiré" };
         } else {
           const pc = promoCodes.data[0];
-          const coupon = await stripe.coupons.retrieve(pc.coupon as string);
+          // pc.coupon is already expanded as a Stripe.Coupon object
+          const coupon = pc.coupon as Stripe.Coupon;
           
           // Check if max redemptions reached
           if (pc.max_redemptions && pc.times_redeemed >= pc.max_redemptions) {
