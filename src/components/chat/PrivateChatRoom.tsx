@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useLoadingTimeout } from '@/hooks/useLoadingTimeout';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +43,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const { messages, isLoading, error, refetch, sendMessage } = usePrivateMessages(otherUserId);
+  const loadingTimedOut = useLoadingTimeout(isLoading, 15000);
   const { markAsRead } = useUnreadMessages();
   const { markConversationAsRead } = useMessageReadStatus(otherUserId);
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
@@ -329,7 +331,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
       {/* Messages - scrollable middle section */}
       <div className="flex-1 overflow-y-auto overscroll-contain p-4 relative" ref={messagesContainerRef} onScroll={handleScroll}>
-        {isLoading ? (
+        {isLoading && !loadingTimedOut ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className={`flex gap-3 ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}>
@@ -338,10 +340,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               </div>
             ))}
           </div>
-        ) : error ? (
+        ) : error || loadingTimedOut ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
             <p className="text-sm text-destructive mb-4">
-              Impossible de charger cette conversation.
+              {loadingTimedOut
+                ? 'Connexion trop lente : impossible de charger cette conversation.'
+                : 'Impossible de charger cette conversation.'}
             </p>
             <Button variant="secondary" onClick={() => refetch()}>
               Réessayer
