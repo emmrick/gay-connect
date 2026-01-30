@@ -20,6 +20,7 @@ import {
 import ChatInput from './ChatInput';
 import EphemeralMessage from './EphemeralMessage';
 import RegularMediaMessage from './RegularMediaMessage';
+import SharedAlbumMessage from './SharedAlbumMessage';
 import ReportUserDialog from './ReportUserDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import UserProfilePreview from './UserProfilePreview';
@@ -227,6 +228,17 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                                        message.content && !message.content.startsWith('http');
               const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && 
                                      message.content && message.content.startsWith('http');
+              const isAlbumShare = message.message_type === 'album_share';
+
+              // Parse album share data if applicable
+              let albumShareData: { shareId: string; albumId: string; albumName: string; expiresAt: string | null } | null = null;
+              if (isAlbumShare && message.content) {
+                try {
+                  albumShareData = JSON.parse(message.content);
+                } catch {
+                  console.error('Failed to parse album share data');
+                }
+              }
 
               return (
                 <div
@@ -253,7 +265,16 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
                   <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                     {/* Message content */}
-                    {isEphemeralMedia ? (
+                    {isAlbumShare && albumShareData ? (
+                      <SharedAlbumMessage
+                        shareId={albumShareData.shareId}
+                        albumId={albumShareData.albumId}
+                        albumName={albumShareData.albumName}
+                        expiresAt={albumShareData.expiresAt}
+                        sharedByUserId={message.sender_id}
+                        isOwn={isOwn}
+                      />
+                    ) : isEphemeralMedia ? (
                       <EphemeralMessage
                         messageId={message.id}
                         messageType={message.message_type as 'image' | 'video'}
