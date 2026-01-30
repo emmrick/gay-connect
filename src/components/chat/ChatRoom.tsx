@@ -12,6 +12,7 @@ import TypingIndicator from './TypingIndicator';
 import MessageReply from './MessageReply';
 import MessageSearch from './MessageSearch';
 import UserProfilePreview from './UserProfilePreview';
+import MediaGallerySheet from './MediaGallerySheet';
 import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -58,6 +59,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [previewUserId, setPreviewUserId] = useState<string | null>(null);
@@ -229,10 +231,18 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           </SheetContent>
         </Sheet>
 
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" onClick={() => setShowMediaGallery(true)}>
           <Image className="w-5 h-5" />
         </Button>
       </header>
+
+      {/* Media Gallery */}
+      <MediaGallerySheet
+        roomId={roomId}
+        regionCode={regionCode}
+        isOpen={showMediaGallery}
+        onClose={() => setShowMediaGallery(false)}
+      />
 
       {/* Search bar */}
       <MessageSearch
