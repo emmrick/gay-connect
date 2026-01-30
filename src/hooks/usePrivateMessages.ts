@@ -10,6 +10,7 @@ type Message = Tables<'messages'>;
 interface PrivateMessageWithProfile extends Message {
   senderUsername: string;
   senderAvatar: string | null;
+  read_at: string | null;
 }
 
 export const usePrivateMessages = (otherUserId: string | null) => {
@@ -49,6 +50,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         ...msg,
         senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
         senderAvatar: profileMap.get(msg.sender_id)?.avatar_url || null,
+        read_at: (msg as unknown as { read_at: string | null }).read_at ?? null,
       }));
     },
     enabled: !!user && !!otherUserId,
@@ -87,6 +89,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
               ...newMsg,
               senderUsername: profile?.username || 'Anonyme',
               senderAvatar: profile?.avatar_url || null,
+              read_at: (newMsg as unknown as { read_at: string | null }).read_at ?? null,
             };
 
             queryClient.setQueryData<PrivateMessageWithProfile[]>(
