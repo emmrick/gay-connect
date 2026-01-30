@@ -59,6 +59,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import UserProfileDialog from './UserProfileDialog';
 import {
   useSuspendUser,
   useBlockUser,
@@ -530,6 +531,7 @@ const UserCard = ({
   onAction: (user: UserProfile, action: 'suspend' | 'ban' | 'delete') => void;
   onUnblock: (userId: string, username: string) => void;
 }) => {
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { data: isBlocked } = useIsUserBlocked(user.user_id);
   const { data: verificationStatus } = useUserVerificationStatus(user.user_id);
   const manualVerification = useManualVerification();
@@ -663,12 +665,9 @@ const UserCard = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <a href={`/profile/${user.user_id}`} target="_blank" rel="noopener noreferrer">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Voir le profil
-                    <ExternalLink className="w-3 h-3 ml-auto" />
-                  </a>
+                <DropdownMenuItem onClick={() => setProfileDialogOpen(true)}>
+                  <Eye className="w-4 h-4 mr-2" />
+                  Voir le profil
                 </DropdownMenuItem>
                 
                 {/* Verification actions - only for non-verified users */}
@@ -732,6 +731,13 @@ const UserCard = ({
           )}
         </div>
       </div>
+
+      {/* Profile Dialog */}
+      <UserProfileDialog
+        user={user}
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
+      />
     </div>
   );
 };
