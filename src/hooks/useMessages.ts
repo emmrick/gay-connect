@@ -3,14 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { withTimeout } from '@/lib/withTimeout';
 
 type Message = Tables<'messages'>;
 
 interface MessageWithProfile extends Message {
   senderUsername?: string;
   senderAvatar?: string | null;
-  senderIsPremium?: boolean;
   replyToMessage?: {
     id: string;
     content: string;
@@ -22,53 +20,46 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Fetch messages with optimized caching
+  // Fetch messages
   const query = useQuery({
     queryKey: ['messages', chatRoomId],
     queryFn: async (): Promise<MessageWithProfile[]> => {
       if (!chatRoomId) return [];
 
-      // Fetch messages first
-      const { data: messages, error } = await withTimeout(
-        Promise.resolve(
-          supabase
-            .from('messages')
-            .select('*')
-            .eq('chat_room_id', chatRoomId)
-            .eq('is_private', false)
-            .is('deleted_at', null)
-            .order('created_at', { ascending: true })
-            .limit(100)
-        ),
-        12000
-      );
+      // First get messages
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_room_id', chatRoomId)
+        .eq('is_private', false)
+        .is('deleted_at', null) // Exclude soft-deleted messages
+        .order('created_at', { ascending: true })
+        .limit(200);
 
       if (error) throw error;
-      if (!messages || messages.length === 0) return [];
+      if (!messages) return [];
 
-      // Get unique sender IDs and fetch profiles with premium status
+      // Get unique sender IDs
       const senderIds = [...new Set(messages.map(m => m.sender_id))];
-      const { data: profiles } = await withTimeout(
-        Promise.resolve(
-          supabase
-            .from('profiles')
-            .select('user_id, username, avatar_url, is_premium')
-            .in('user_id', senderIds)
-        ),
-        12000
-      );
+      
+      // Fetch profiles for all senders
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url')
+        .in('user_id', senderIds);
 
+      // Map profiles to messages
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      
+      // Create message map for replies
       const messageMap = new Map(messages.map(m => [m.id, m]));
       
       return messages.map(msg => {
-        const profile = profileMap.get(msg.sender_id);
         const replyTo = msg.reply_to_id ? messageMap.get(msg.reply_to_id) : null;
         return {
           ...msg,
-          senderUsername: profile?.username || 'Anonyme',
-          senderAvatar: profile?.avatar_url,
-          senderIsPremium: profile?.is_premium || false,
+          senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
+          senderAvatar: profileMap.get(msg.sender_id)?.avatar_url,
           replyToMessage: replyTo ? {
             id: replyTo.id,
             content: replyTo.content || '',
@@ -78,8 +69,6 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
       });
     },
     enabled: !!chatRoomId,
-    staleTime: 30000,
-    gcTime: 5 * 60 * 1000,
   });
 
   // Filter messages based on search query
@@ -174,7 +163,6 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
     searchResults,
     isLoading: query.isLoading,
     error: query.error,
-    refetch: query.refetch,
     sendMessage,
   };
 };

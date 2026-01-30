@@ -10,9 +10,6 @@ import {
   MessageSquare,
   AlertTriangle,
   Info,
-  Star,
-  Heart,
-  FolderOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,14 +39,6 @@ const getNotificationIcon = (type: string) => {
       return <AlertTriangle className="w-4 h-4 text-destructive" />;
     case 'message':
       return <MessageSquare className="w-4 h-4 text-primary" />;
-    case 'favorite':
-      return <Star className="w-4 h-4 text-amber-500" />;
-    case 'profile_reaction':
-      return <Heart className="w-4 h-4 text-pink-500" />;
-    case 'album_share':
-      return <FolderOpen className="w-4 h-4 text-purple-500" />;
-    case 'welcome':
-      return <Info className="w-4 h-4 text-primary" />;
     default:
       return <Info className="w-4 h-4 text-muted-foreground" />;
   }

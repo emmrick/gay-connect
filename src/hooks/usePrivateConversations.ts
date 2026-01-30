@@ -5,7 +5,6 @@ import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserUsage } from './useUserUsage';
 import { toast } from 'sonner';
-import { supabaseQueryWithTimeout } from '@/lib/supabaseWithAbort';
 
 type PrivateConversation = Tables<'private_conversations'>;
 
@@ -35,31 +34,21 @@ export const usePrivateConversations = () => {
     isPremium 
   } = useUserUsage();
 
-  // Fetch conversation statuses - with robust error handling
+  // Fetch conversation statuses
   const statusQuery = useQuery({
     queryKey: ['private-conversation-status', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      const result = await supabaseQueryWithTimeout(
-        supabase
-          .from('private_conversation_status')
-          .select('*')
-          .eq('user_id', user.id),
-        8000
-      );
+      const { data, error } = await supabase
+        .from('private_conversation_status')
+        .select('*')
+        .eq('user_id', user.id);
       
-      // Return empty array on error instead of throwing - statuses are optional
-      if (result.error) {
-        console.warn('Failed to fetch conversation status:', result.error);
-        return [];
-      }
-      return result.data || [];
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!user,
-    staleTime: 30000,
-    gcTime: 5 * 60 * 1000,
-    retry: 0,
   });
 
   const query = useQuery({
@@ -67,89 +56,59 @@ export const usePrivateConversations = () => {
     queryFn: async (): Promise<ConversationWithProfile[]> => {
       if (!user) return [];
 
-      // Get all conversations for the current user with timeout
-      const convResult = await supabaseQueryWithTimeout(
-        supabase
-          .from('private_conversations')
-          .select('*')
-          .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-          .order('created_at', { ascending: false }),
-        10000
-      );
+      // Get all conversations for the current user
+      const { data: conversations, error } = await supabase
+        .from('private_conversations')
+        .select('*')
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
 
-      if (convResult.error) throw new Error(convResult.error.message);
-      
-      const conversations = convResult.data || [];
-      if (conversations.length === 0) return [];
+      if (error) throw error;
+      if (!conversations) return [];
 
       // Get other user IDs
       const otherUserIds = conversations.map(conv => 
         conv.user1_id === user.id ? conv.user2_id : conv.user1_id
       );
 
-      // De-duplicate to keep query strings small and avoid redundant work
-      const uniqueOtherUserIds = Array.from(new Set(otherUserIds));
+      // Fetch profiles for other users
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url, is_online, last_seen')
+        .in('user_id', otherUserIds);
 
-      // Fetch profiles and messages in parallel
-      const [profilesResult, messagesResult] = await Promise.all([
-        supabaseQueryWithTimeout(
-          supabase
-            .from('profiles')
-            .select('user_id, username, avatar_url, is_online, last_seen')
-            .in('user_id', uniqueOtherUserIds),
-          8000
-        ),
-        supabaseQueryWithTimeout(
-          supabase
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      // Fetch last message for each conversation
+      const conversationsWithData = await Promise.all(
+        conversations.map(async (conv) => {
+          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+          
+          // Get last message
+          const { data: lastMsg } = await supabase
             .from('messages')
-            .select('sender_id, recipient_id, content, created_at, message_type')
+            .select('content, created_at, message_type')
             .eq('is_private', true)
-            .is('deleted_at', null)
-            .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+            .or(`and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`)
             .order('created_at', { ascending: false })
-            .limit(200),
-          8000
-        ),
-      ]);
+            .limit(1)
+            .maybeSingle();
 
-      const profileMap = new Map((profilesResult.data || []).map(p => [p.user_id, p]));
+          return {
+            ...conv,
+            otherUser: profileMap.get(otherUserId) || {
+              user_id: otherUserId,
+              username: 'Utilisateur',
+              avatar_url: null,
+              is_online: false,
+              last_seen: null,
+            },
+            lastMessage: lastMsg || undefined,
+          };
+        })
+      );
 
-      // Build last message map
-      const lastMessageMap = new Map<string, { content: string | null; created_at: string; message_type: string }>();
-      
-      if (!messagesResult.error && messagesResult.data) {
-        for (const msg of messagesResult.data) {
-          const otherId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
-          if (!otherId) continue;
-          if (!uniqueOtherUserIds.includes(otherId)) continue;
-          if (!lastMessageMap.has(otherId)) {
-            lastMessageMap.set(otherId, {
-              content: msg.content,
-              created_at: msg.created_at,
-              message_type: msg.message_type,
-            });
-          }
-          if (lastMessageMap.size >= uniqueOtherUserIds.length) break;
-        }
-      }
-
-      const conversationsWithData: ConversationWithProfile[] = conversations.map((conv) => {
-        const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
-
-        return {
-          ...conv,
-          otherUser: profileMap.get(otherUserId) || {
-            user_id: otherUserId,
-            username: 'Utilisateur',
-            avatar_url: null,
-            is_online: false,
-            last_seen: null,
-          },
-          lastMessage: lastMessageMap.get(otherUserId) || undefined,
-        };
-      });
-
-      // Sort by last message date (most recent first)
+      // Sort by last message date (most recent first), fallback to conversation created_at
       return conversationsWithData.sort((a, b) => {
         const aTime = a.lastMessage?.created_at || a.created_at;
         const bTime = b.lastMessage?.created_at || b.created_at;
@@ -157,9 +116,6 @@ export const usePrivateConversations = () => {
       });
     },
     enabled: !!user,
-    staleTime: 10000,
-    gcTime: 2 * 60 * 1000,
-    retry: 0,
   });
 
   // Filter conversations based on status
@@ -171,7 +127,7 @@ export const usePrivateConversations = () => {
   // Active conversations: not archived and not deleted
   const activeConversations = allConversations.filter(conv => {
     const status = statusMap.get(conv.id);
-    if (!status) return true;
+    if (!status) return true; // No status = active
     return !status.is_archived && !status.is_deleted;
   });
   
@@ -180,13 +136,6 @@ export const usePrivateConversations = () => {
     const status = statusMap.get(conv.id);
     if (!status) return false;
     return status.is_archived && !status.is_deleted;
-  });
-
-  // Deleted conversations: marked as deleted but NOT permanently deleted
-  const deletedConversations = allConversations.filter(conv => {
-    const status = statusMap.get(conv.id);
-    if (!status) return false;
-    return status.is_deleted && !status.is_archived;
   });
 
   // Real-time subscription for new conversations AND new messages
@@ -215,6 +164,7 @@ export const usePrivateConversations = () => {
           filter: `is_private=eq.true`,
         },
         (payload) => {
+          // Refresh conversations when a new private message is sent/received
           const msg = payload.new as { sender_id: string; recipient_id: string };
           if (msg.sender_id === user.id || msg.recipient_id === user.id) {
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
@@ -287,8 +237,7 @@ export const usePrivateConversations = () => {
   return {
     conversations: activeConversations,
     archivedConversations,
-    deletedConversations,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || statusQuery.isLoading,
     error: query.error,
     getOrCreateConversation,
     canStartNewConversation: canStartConversation(),

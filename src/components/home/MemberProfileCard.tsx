@@ -2,15 +2,12 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageCircle, Eye, MapPin, Calendar, User, Ruler, Weight, Heart, Flame, ChevronLeft, ChevronRight, Crown } from 'lucide-react';
+import { X, MessageCircle, Eye, MapPin, Calendar, User, Ruler, Weight, Heart, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
-import { useIsPremiumUser } from '@/hooks/usePremiumUsers';
 import { Skeleton } from '@/components/ui/skeleton';
-import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
-import { cn } from '@/lib/utils';
 
 interface MemberProfileCardProps {
   userId: string;
@@ -73,7 +70,6 @@ const MemberProfileCard = ({
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const { data: profile, isLoading } = useProfile(userId);
   const { photos: userPhotos } = useProfilePhotos(userId);
-  const { isPremium } = useIsPremiumUser(userId);
 
   // iOS/Safari quirk: a `position: fixed` element inside a transformed ancestor
   // (e.g., page transitions / motion wrappers) can become offset.
@@ -149,10 +145,7 @@ const MemberProfileCard = ({
           >
             <div className="bg-card rounded-t-3xl border-t border-x border-border shadow-2xl overflow-hidden safe-area-pb min-h-full">
               {/* Header with photo carousel */}
-              <div className={cn(
-                "relative h-64 bg-gradient-to-br from-primary/30 to-accent/30",
-                isPremium && "ring-4 ring-inset ring-amber-500/50"
-              )}>
+              <div className="relative h-64 bg-gradient-to-br from-primary/30 to-accent/30">
                 {isLoading ? (
                   <Skeleton className="w-full h-full" />
                 ) : allPhotos.length > 0 ? (
@@ -216,16 +209,13 @@ const MemberProfileCard = ({
                   <X className="w-5 h-5" />
                 </Button>
 
-                {/* Online status and Premium badge */}
-                <div className="absolute top-4 left-4 flex items-center gap-2">
-                  {shouldShowOnlineStatus() && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                      En ligne
-                    </div>
-                  )}
-                  {isPremium && <PremiumUserBadge size="md" />}
-                </div>
+                {/* Online status */}
+                {shouldShowOnlineStatus() && (
+                  <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    En ligne
+                  </div>
+                )}
 
                 {/* Position badge */}
                 {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && (

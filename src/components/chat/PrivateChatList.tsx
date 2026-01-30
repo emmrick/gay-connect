@@ -1,14 +1,11 @@
-import { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { AnimatePresence } from 'framer-motion';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { usePremiumUsers } from '@/hooks/usePremiumUsers';
 import { useConversationStatus } from '@/hooks/useConversationStatus';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,56 +26,25 @@ import {
 } from '@/components/ui/alert-dialog';
 import { MessageCircle, ChevronRight, MoreVertical, Archive, Trash2, ArchiveRestore } from 'lucide-react';
 import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
-
-import SwipeableConversationItem from './SwipeableConversationItem';
-import SwipeHintOverlay from './SwipeHintOverlay';
+import UserProfilePreview from './UserProfilePreview';
 import { cn } from '@/lib/utils';
-
-type ViewMode = 'active' | 'archived' | 'deleted';
 
 interface PrivateChatListProps {
   onSelectConversation: (userId: string) => void;
   selectedUserId: string | null;
-  viewMode?: ViewMode;
+  showArchived?: boolean;
 }
 
-const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'active' }: PrivateChatListProps) => {
-  const navigate = useNavigate();
-  const { conversations, archivedConversations, deletedConversations, isLoading } = usePrivateConversations();
+const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = false }: PrivateChatListProps) => {
+  const { conversations, archivedConversations, isLoading } = usePrivateConversations();
   const { getUnreadCount } = useUnreadMessages();
-  const { archiveConversation, unarchiveConversation, deleteConversation, restoreConversation, permanentlyDeleteConversation } = useConversationStatus();
-  const isMobile = useIsMobile();
-  
+  const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
+  const [profilePreviewUserId, setProfilePreviewUserId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [permanentDeleteDialogOpen, setPermanentDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
-  const [showSwipeHint, setShowSwipeHint] = useState(false);
 
-  // Use the appropriate conversations based on viewMode
-  const displayConversations = viewMode === 'deleted' 
-    ? deletedConversations 
-    : viewMode === 'archived' 
-      ? archivedConversations 
-      : conversations;
-
-  // Show swipe hint for new users on mobile
-  useEffect(() => {
-    if (isMobile && displayConversations.length > 0 && viewMode === 'active') {
-      const hasSeenSwipeHint = localStorage.getItem('hasSeenSwipeHint');
-      if (!hasSeenSwipeHint) {
-        // Small delay to let the list render first
-        const timer = setTimeout(() => {
-          setShowSwipeHint(true);
-        }, 800);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isMobile, displayConversations.length, viewMode]);
-
-  const handleDismissSwipeHint = () => {
-    setShowSwipeHint(false);
-    localStorage.setItem('hasSeenSwipeHint', 'true');
-  };
+  // Use archived or active conversations based on prop
+  const displayConversations = showArchived ? archivedConversations : conversations;
 
   // Get user IDs for premium check
   const userIds = useMemo(
@@ -89,7 +55,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
 
   const handleAvatarClick = (e: React.MouseEvent, userId: string) => {
     e.stopPropagation();
-    navigate(`/profile/${userId}`);
+    setProfilePreviewUserId(userId);
   };
 
   const handleArchive = (e: React.MouseEvent, conversationId: string) => {
@@ -116,25 +82,6 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
     }
   };
 
-  const handlePermanentDeleteClick = (e: React.MouseEvent, conversationId: string) => {
-    e.stopPropagation();
-    setConversationToDelete(conversationId);
-    setPermanentDeleteDialogOpen(true);
-  };
-
-  const confirmPermanentDelete = () => {
-    if (conversationToDelete) {
-      permanentlyDeleteConversation.mutate(conversationToDelete);
-      setConversationToDelete(null);
-      setPermanentDeleteDialogOpen(false);
-    }
-  };
-
-  const handleRestore = (e: React.MouseEvent, conversationId: string) => {
-    e.stopPropagation();
-    restoreConversation.mutate(conversationId);
-  };
-
   if (isLoading) {
     return (
       <div className="p-4 space-y-3">
@@ -152,94 +99,42 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
   }
 
   if (displayConversations.length === 0) {
-    const emptyConfig = {
-      active: {
-        icon: <MessageCircle className="w-10 h-10 text-primary" />,
-        title: 'Aucune conversation',
-        description: 'Utilise le bouton + ci-dessus pour rechercher et démarrer une conversation',
-      },
-      archived: {
-        icon: <Archive className="w-10 h-10 text-primary" />,
-        title: 'Aucune archive',
-        description: 'Vos conversations archivées apparaîtront ici',
-      },
-      deleted: {
-        icon: <Trash2 className="w-10 h-10 text-muted-foreground" />,
-        title: 'Aucune suppression',
-        description: 'Les conversations supprimées apparaîtront ici. Vous pourrez les restaurer ou les supprimer définitivement.',
-      },
-    };
-    
-    const config = emptyConfig[viewMode];
-    
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-6">
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5">
-          {config.icon}
+          {showArchived ? (
+            <Archive className="w-10 h-10 text-primary" />
+          ) : (
+            <MessageCircle className="w-10 h-10 text-primary" />
+          )}
         </div>
         <h3 className="font-display font-semibold text-foreground text-lg mb-2">
-          {config.title}
+          {showArchived ? 'Aucune archive' : 'Aucune conversation'}
         </h3>
         <p className="text-sm text-muted-foreground max-w-xs">
-          {config.description}
+          {showArchived 
+            ? 'Vos conversations archivées apparaîtront ici'
+            : 'Utilise le bouton + ci-dessus pour rechercher et démarrer une conversation'
+          }
         </p>
       </div>
     );
   }
 
-  // Determine swipe actions based on view mode
-  const getSwipeActions = (convId: string) => {
-    if (viewMode === 'deleted') {
-      return {
-        leftAction: 'restore' as const,
-        rightAction: 'restore' as const,
-        onSwipeLeft: () => restoreConversation.mutate(convId),
-        onSwipeRight: () => restoreConversation.mutate(convId),
-      };
-    } else if (viewMode === 'archived') {
-      return {
-        leftAction: 'restore' as const,
-        rightAction: 'delete' as const,
-        onSwipeLeft: () => unarchiveConversation.mutate(convId),
-        onSwipeRight: () => {
-          setConversationToDelete(convId);
-          setDeleteDialogOpen(true);
-        },
-      };
-    } else {
-      return {
-        leftAction: 'archive' as const,
-        rightAction: 'delete' as const,
-        onSwipeLeft: () => archiveConversation.mutate(convId),
-        onSwipeRight: () => {
-          setConversationToDelete(convId);
-          setDeleteDialogOpen(true);
-        },
-      };
-    }
-  };
-
   return (
     <>
-    <div className="relative px-4 pb-6 space-y-2">
-      {/* Swipe hint overlay for new users */}
-      <AnimatePresence>
-        {showSwipeHint && isMobile && (
-          <SwipeHintOverlay onDismiss={handleDismissSwipeHint} />
-        )}
-      </AnimatePresence>
+    <div className="px-4 pb-6 space-y-2">
       {displayConversations.map((conv, index) => {
         const unreadCount = getUnreadCount(conv.otherUser.user_id);
         const hasUnread = unreadCount > 0;
         const isPremium = premiumMap[conv.otherUser.user_id] || false;
-        const swipeActions = getSwipeActions(conv.id);
         
-        const conversationContent = (
+        return (
           <button
+            key={conv.id}
             onClick={() => onSelectConversation(conv.otherUser.user_id)}
             className={cn(
-              "w-full flex items-center gap-3 p-3 transition-all duration-200 text-left group",
-              !isMobile && "rounded-xl",
+              "w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left group",
               "bg-secondary/30 border border-transparent",
               "hover:bg-secondary hover:border-border",
               "active:scale-[0.98]",
@@ -255,8 +150,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
             >
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden",
-                "bg-gradient-to-br from-primary to-accent",
-                isPremium && "ring-2 ring-amber-500 shadow-lg shadow-amber-500/30"
+                "bg-gradient-to-br from-primary to-accent"
               )}>
                 {conv.otherUser.avatar_url ? (
                   <img
@@ -328,80 +222,48 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
               </div>
             </div>
 
-            {/* Actions dropdown - only show on desktop */}
-            {!isMobile && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                  {viewMode === 'deleted' ? (
-                    <>
-                      <DropdownMenuItem onClick={(e) => handleRestore(e, conv.id)}>
-                        <ArchiveRestore className="w-4 h-4 mr-2" />
-                        Restaurer
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={(e) => handlePermanentDeleteClick(e, conv.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Supprimer définitivement
-                      </DropdownMenuItem>
-                    </>
-                  ) : viewMode === 'archived' ? (
-                    <>
-                      <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
-                        <ArchiveRestore className="w-4 h-4 mr-2" />
-                        Restaurer
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={(e) => handleDeleteClick(e, conv.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </>
-                  ) : (
-                    <>
-                      <DropdownMenuItem onClick={(e) => handleArchive(e, conv.id)}>
-                        <Archive className="w-4 h-4 mr-2" />
-                        Archiver
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={(e) => handleDeleteClick(e, conv.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            {/* Actions dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {showArchived ? (
+                  <DropdownMenuItem onClick={(e) => handleUnarchive(e, conv.id)}>
+                    <ArchiveRestore className="w-4 h-4 mr-2" />
+                    Restaurer
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={(e) => handleArchive(e, conv.id)}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archiver
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem 
+                  onClick={(e) => handleDeleteClick(e, conv.id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Supprimer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </button>
         );
-        
-        return isMobile ? (
-          <SwipeableConversationItem
-            key={conv.id}
-            onSwipeLeft={swipeActions.onSwipeLeft}
-            onSwipeRight={swipeActions.onSwipeRight}
-            leftAction={swipeActions.leftAction}
-            rightAction={swipeActions.rightAction}
-          >
-            {conversationContent}
-          </SwipeableConversationItem>
-        ) : (
-          <div key={conv.id} className="rounded-xl overflow-hidden">
-            {conversationContent}
-          </div>
-        );
       })}
+
+      {/* User Profile Preview */}
+      <UserProfilePreview
+        userId={profilePreviewUserId}
+        isOpen={!!profilePreviewUserId}
+        onClose={() => setProfilePreviewUserId(null)}
+        onStartPrivateChat={(userId) => {
+          setProfilePreviewUserId(null);
+          onSelectConversation(userId);
+        }}
+      />
     </div>
 
     {/* Delete Confirmation Dialog */}
@@ -417,24 +279,6 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, viewMode = 'act
           <AlertDialogCancel>Annuler</AlertDialogCancel>
           <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
             Supprimer
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-
-    {/* Permanent Delete Confirmation Dialog */}
-    <AlertDialog open={permanentDeleteDialogOpen} onOpenChange={setPermanentDeleteDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer définitivement ?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Cette action est irréversible. La conversation sera complètement retirée de votre liste.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={confirmPermanentDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            Supprimer définitivement
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

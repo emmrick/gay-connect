@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -10,7 +10,6 @@ export interface SubscriptionStatus {
   productId: string | null;
   subscriptionEnd: string | null;
   isLoading: boolean;
-  isVerifying: boolean; // Background verification in progress
   isAdmin: boolean;
 }
 
@@ -40,48 +39,19 @@ export const PREMIUM_LIMITS = {
   maxVideoSize: 1024 * 1024 * 1024, // 1 GB
 };
 
-// Cache to avoid repeated calls
-const subscriptionCache = new Map<string, { status: Omit<SubscriptionStatus, 'isLoading'>; timestamp: number }>();
-const CACHE_DURATION = 30000; // 30 seconds
-
 export const useSubscription = () => {
-  const { user, profile } = useAuth();
-  const lastCheckRef = useRef<number>(0);
-  
-  // Initialize with profile data immediately (is_premium is synced via Stripe webhook)
-  const [status, setStatus] = useState<SubscriptionStatus>(() => {
-    // Check cache first
-    if (user) {
-      const cached = subscriptionCache.get(user.id);
-      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        return { ...cached.status, isLoading: false };
-      }
-    }
-    
-    return {
-      subscribed: profile?.is_premium || false,
-      isPremium: profile?.is_premium || false,
-      isVip: false,
-      productId: null,
-      subscriptionEnd: null,
-      isLoading: true,
-      isVerifying: false,
-      isAdmin: false,
-    };
+  const { user } = useAuth();
+  const [status, setStatus] = useState<SubscriptionStatus>({
+    subscribed: false,
+    isPremium: false,
+    isVip: false,
+    productId: null,
+    subscriptionEnd: null,
+    isLoading: true,
+    isAdmin: false,
   });
 
-  // Update immediately when profile changes (webhook sync)
-  useEffect(() => {
-    if (profile) {
-      setStatus(prev => ({
-        ...prev,
-        subscribed: profile.is_premium || prev.subscribed,
-        isPremium: profile.is_premium || prev.isPremium,
-      }));
-    }
-  }, [profile?.is_premium]);
-
-  const checkSubscription = useCallback(async (force = false) => {
+  const checkSubscription = useCallback(async () => {
     if (!user) {
       setStatus({
         subscribed: false,
@@ -90,90 +60,46 @@ export const useSubscription = () => {
         productId: null,
         subscriptionEnd: null,
         isLoading: false,
-        isVerifying: false,
         isAdmin: false,
       });
       return;
     }
 
-    // Throttle: don't check more than once per 10 seconds unless forced
-    const now = Date.now();
-    if (!force && now - lastCheckRef.current < 10000) {
-      return;
-    }
-    lastCheckRef.current = now;
-
-    // Check cache
-    const cached = subscriptionCache.get(user.id);
-    if (!force && cached && now - cached.timestamp < CACHE_DURATION) {
-      setStatus({ ...cached.status, isLoading: false });
-      return;
-    }
-    // Set verifying state for background check
-    setStatus(prev => ({ ...prev, isVerifying: true }));
-
     try {
-      // Check admin status first (fast, from DB)
-      const adminResult = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      // Check both subscription and admin status in parallel
+      const [subscriptionResult, adminResult] = await Promise.all([
+        supabase.functions.invoke('check-subscription'),
+        supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+      ]);
+
+      const subscriptionData = subscriptionResult.data;
       const isAdmin = adminResult.data === true;
 
-      // If admin, set premium immediately without calling Stripe
-      if (isAdmin) {
-        const adminStatus = {
-          subscribed: true,
-          isPremium: true,
-          isVip: true,
-          productId: null,
-          subscriptionEnd: null,
-          isAdmin: true,
-          isVerifying: false,
-        };
-        subscriptionCache.set(user.id, { status: adminStatus, timestamp: now });
-        setStatus({ ...adminStatus, isLoading: false });
-        return;
-      }
+      // VIP users have VIP + Premium features
+      const isVip = isAdmin || subscriptionData?.is_vip || false;
+      // Admin users get premium features by default, VIP also includes Premium
+      const isPremium = isAdmin || isVip || subscriptionData?.is_premium || false;
 
-      // For non-admins, use profile.is_premium as initial, then verify with Stripe in background
-      if (profile?.is_premium) {
-        setStatus(prev => ({ ...prev, isPremium: true, isLoading: false }));
-      }
-
-      // Check Stripe subscription (can be slower)
-      const subscriptionResult = await supabase.functions.invoke('check-subscription');
-      const subscriptionData = subscriptionResult.data;
-
-      const isVip = subscriptionData?.is_vip || false;
-      const isPremium = isVip || subscriptionData?.is_premium || profile?.is_premium || false;
-
-      const newStatus = {
+      setStatus({
         subscribed: subscriptionData?.subscribed || false,
         isPremium,
         isVip,
         productId: subscriptionData?.product_id || null,
         subscriptionEnd: subscriptionData?.subscription_end || null,
-        isAdmin: false,
-        isVerifying: false,
-      };
-
-      subscriptionCache.set(user.id, { status: newStatus, timestamp: now });
-      setStatus({ ...newStatus, isLoading: false });
+        isLoading: false,
+        isAdmin,
+      });
     } catch (error) {
       console.error('Error checking subscription:', error);
-      // On error, still use profile.is_premium
-      setStatus(prev => ({ 
-        ...prev, 
-        isPremium: profile?.is_premium || prev.isPremium,
-        isLoading: false,
-        isVerifying: false,
-      }));
+      setStatus(prev => ({ ...prev, isLoading: false }));
     }
-  }, [user, profile?.is_premium]);
+  }, [user]);
 
   useEffect(() => {
     checkSubscription();
     
-    // Refresh every 2 minutes (not every minute to reduce load)
-    const interval = setInterval(() => checkSubscription(), 120000);
+    // Refresh every minute
+    const interval = setInterval(checkSubscription, 60000);
     return () => clearInterval(interval);
   }, [checkSubscription]);
 

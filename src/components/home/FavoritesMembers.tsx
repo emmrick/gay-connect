@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, MessageCircle } from 'lucide-react';
+import { Star, MapPin, MessageCircle } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
-import { usePremiumUsers } from '@/hooks/usePremiumUsers';
 import { isUserTrulyOnline, getLastSeenText as getOnlineStatusText } from '@/hooks/useOnlineStatus';
-import PremiumUserBadge from '@/components/premium/PremiumUserBadge';
 import { cn } from '@/lib/utils';
 
 interface FavoritesMembersProps {
@@ -33,10 +32,6 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
         return bTime - aTime;
       });
   }, [favorites]);
-
-  // Get user IDs for premium check
-  const userIds = useMemo(() => sortedFavorites.map(f => f.profile!.user_id), [sortedFavorites]);
-  const { data: premiumMap = {} } = usePremiumUsers(userIds);
 
   if (isLoading) {
     return (
@@ -87,11 +82,9 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
                 <div className={cn(
                   "relative w-20 h-24 rounded-xl overflow-hidden",
                   "border-2 transition-all duration-200",
-                  premiumMap[profile.user_id]
-                    ? "border-amber-500 shadow-lg shadow-amber-500/20 ring-2 ring-amber-500/30"
-                    : isUserTrulyOnline(profile) 
-                      ? "border-green-500 shadow-lg shadow-green-500/20" 
-                      : "border-border/30"
+                  isUserTrulyOnline(profile) 
+                    ? "border-green-500 shadow-lg shadow-green-500/20" 
+                    : "border-border/30"
                 )}>
                   {/* Avatar/Photo */}
                   {profile.avatar_url ? (
@@ -121,11 +114,8 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
                   </div>
 
                   {/* Star badge */}
-                  <div className="absolute top-1.5 left-1.5 flex items-center gap-1">
+                  <div className="absolute top-1.5 left-1.5">
                     <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                    {premiumMap[profile.user_id] && (
-                      <PremiumUserBadge size="sm" />
-                    )}
                   </div>
 
                   {/* Name */}

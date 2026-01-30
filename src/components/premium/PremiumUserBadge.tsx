@@ -22,21 +22,13 @@ const PremiumUserBadge = ({ size = 'sm', className }: PremiumUserBadgeProps) => 
   return (
     <div 
       className={cn(
-        "rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center relative overflow-hidden animate-pulse-glow",
+        "rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30",
         sizeClasses[size],
         className
       )}
       title="Membre Premium"
     >
-      {/* Shine effect overlay */}
-      <span 
-        className="absolute inset-0 w-full h-full animate-shine pointer-events-none"
-        style={{
-          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-          transform: 'skewX(-20deg)',
-        }}
-      />
-      <Crown className={cn("text-white relative z-10", iconSizes[size])} />
+      <Crown className={cn("text-white", iconSizes[size])} />
     </div>
   );
 };

@@ -12,7 +12,6 @@ import { AgeConfirmationModal } from "@/components/AgeConfirmationModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
-import NotificationPermissionBanner from "@/components/notifications/NotificationPermissionBanner";
 import { toast } from "sonner";
 
 // Lazy load pages for better initial bundle size
@@ -74,7 +73,6 @@ const AppContent = () => {
       <BlockedUserGuard>
         <VerificationGuard>
           <TooltipProvider>
-            <NotificationPermissionBanner />
             <Toaster />
             <Sonner />
             <BrowserRouter>

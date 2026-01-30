@@ -71,9 +71,16 @@ export const useIdentityVerification = () => {
 
     if (uploadError) throw uploadError;
 
-    // For private buckets, store only the file path (not signed URL)
-    // Signed URLs will be generated when admin views the documents
-    return fileName;
+    const { data: { publicUrl } } = supabase.storage
+      .from('identity-documents')
+      .getPublicUrl(fileName);
+
+    // For private buckets, we need to use signed URLs
+    const { data: signedUrlData } = await supabase.storage
+      .from('identity-documents')
+      .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
+
+    return signedUrlData?.signedUrl || fileName;
   };
 
   const submitVerification = useMutation({
@@ -88,76 +95,18 @@ export const useIdentityVerification = () => {
     }) => {
       if (!user) throw new Error('Not authenticated');
 
-      // Check current verification status
-      const { data: currentVerification } = await supabase
+      const { error } = await supabase
         .from('identity_verifications')
-        .select('id, status')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .update({
+          selfie_url: selfieUrl,
+          id_front_url: idFrontUrl,
+          id_back_url: idBackUrl,
+          submitted_at: new Date().toISOString(),
+          status: 'pending',
+        })
+        .eq('user_id', user.id);
 
-      if (currentVerification?.status === 'rejected') {
-        // Delete the old rejected record first (RLS allows this)
-        const { error: deleteError } = await supabase
-          .from('identity_verifications')
-          .delete()
-          .eq('user_id', user.id);
-          
-        if (deleteError) {
-          console.error('Delete error:', deleteError);
-          throw deleteError;
-        }
-          
-        // Create a new record
-        const { error: insertError } = await supabase
-          .from('identity_verifications')
-          .insert({
-            user_id: user.id,
-            selfie_url: selfieUrl,
-            id_front_url: idFrontUrl,
-            id_back_url: idBackUrl,
-            submitted_at: new Date().toISOString(),
-            status: 'pending',
-          });
-
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          throw insertError;
-        }
-      } else if (currentVerification) {
-        // Update existing pending record
-        const { error } = await supabase
-          .from('identity_verifications')
-          .update({
-            selfie_url: selfieUrl,
-            id_front_url: idFrontUrl,
-            id_back_url: idBackUrl,
-            submitted_at: new Date().toISOString(),
-            status: 'pending',
-          })
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Update error:', error);
-          throw error;
-        }
-      } else {
-        // No existing record, create a new one
-        const { error: insertError } = await supabase
-          .from('identity_verifications')
-          .insert({
-            user_id: user.id,
-            selfie_url: selfieUrl,
-            id_front_url: idFrontUrl,
-            id_back_url: idBackUrl,
-            submitted_at: new Date().toISOString(),
-            status: 'pending',
-          });
-
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          throw insertError;
-        }
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity-verification'] });
@@ -301,90 +250,4 @@ export const useAdminVerifications = () => {
     approveVerification,
     rejectVerification,
   };
-};
-
-// Hook for pending verification requests (awaiting user submission)
-export const usePendingVerificationRequests = () => {
-  return useQuery({
-    queryKey: ['pending-verification-requests'],
-    queryFn: async () => {
-      // Get verifications that are pending but have no documents submitted yet
-      const { data: verifications, error: verError } = await supabase
-        .from('identity_verifications')
-        .select('*')
-        .eq('status', 'pending')
-        .is('submitted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (verError) throw verError;
-      if (!verifications || verifications.length === 0) return [];
-
-      // Get profiles for those users
-      const userIds = verifications.map(v => v.user_id);
-      const { data: profiles, error: profError } = await supabase
-        .from('profiles')
-        .select('user_id, username, avatar_url, age, region')
-        .in('user_id', userIds);
-
-      if (profError) throw profError;
-
-      // Combine data
-      return verifications.map(v => ({
-        ...v,
-        profiles: profiles?.find(p => p.user_id === v.user_id) || null
-      }));
-    },
-  });
-};
-
-// Hook for verification history (all statuses)
-export const useVerificationHistory = (status?: 'pending' | 'approved' | 'rejected') => {
-  return useQuery({
-    queryKey: ['verification-history', status],
-    queryFn: async () => {
-      let query = supabase
-        .from('identity_verifications')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
-      if (status) {
-        query = query.eq('status', status);
-      }
-
-      const { data: verifications, error: verError } = await query.limit(100);
-
-      if (verError) throw verError;
-      if (!verifications || verifications.length === 0) return [];
-
-      // Get profiles for those users
-      const userIds = verifications.map(v => v.user_id);
-      const { data: profiles, error: profError } = await supabase
-        .from('profiles')
-        .select('user_id, username, avatar_url, age, region')
-        .in('user_id', userIds);
-
-      if (profError) throw profError;
-
-      // Get reviewer profiles
-      const reviewerIds = verifications
-        .filter(v => v.reviewed_by)
-        .map(v => v.reviewed_by as string);
-      
-      let reviewerProfiles: { user_id: string; username: string }[] = [];
-      if (reviewerIds.length > 0) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('user_id, username')
-          .in('user_id', reviewerIds);
-        reviewerProfiles = data || [];
-      }
-
-      // Combine data
-      return verifications.map(v => ({
-        ...v,
-        profiles: profiles?.find(p => p.user_id === v.user_id) || null,
-        reviewerProfile: reviewerProfiles?.find(p => p.user_id === v.reviewed_by) || null,
-      }));
-    },
-  });
 };

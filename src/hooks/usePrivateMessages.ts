@@ -4,14 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRecordEarning } from '@/hooks/useModeratorEarnings';
-import { supabaseQueryWithTimeout } from '@/lib/supabaseWithAbort';
 
 type Message = Tables<'messages'>;
 
 interface PrivateMessageWithProfile extends Message {
   senderUsername: string;
   senderAvatar: string | null;
-  read_at: string | null;
 }
 
 export const usePrivateMessages = (otherUserId: string | null) => {
@@ -24,58 +22,36 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     queryFn: async (): Promise<PrivateMessageWithProfile[]> => {
       if (!user || !otherUserId) return [];
 
-      // Charger messages et profils en parallèle avec timeout robuste
-      const [messagesRes, profilesRes] = await Promise.all([
-        supabaseQueryWithTimeout(
-          supabase
-            .from('messages')
-            .select('*')
-            .eq('is_private', true)
-            .is('deleted_at', null)
-            .or(
-              `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
-            )
-            .order('created_at', { ascending: true })
-            .limit(50),
-          10000 // 10s timeout
-        ),
-        supabaseQueryWithTimeout(
-          supabase
-            .from('profiles')
-            .select('user_id, username, avatar_url')
-            .in('user_id', [user.id, otherUserId]),
-          10000
-        ),
-      ]);
+      // Get messages between the two users
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('is_private', true)
+        .is('deleted_at', null) // Exclude soft-deleted messages
+        .or(
+          `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
+        )
+        .order('created_at', { ascending: true })
+        .limit(100);
 
-      // Si les messages ont échoué, on lance une erreur pour afficher le bouton Réessayer
-      if (messagesRes.error) {
-        throw new Error(messagesRes.error.message);
-      }
+      if (error) throw error;
+      if (!messages) return [];
 
-      const messages = messagesRes.data || [];
-      if (messages.length === 0) return [];
+      // Get profiles for both users
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url')
+        .in('user_id', [user.id, otherUserId]);
 
-      // On log l'erreur profiles mais on continue (fallback graceful)
-      if (profilesRes.error) {
-        console.warn('Failed to fetch profiles for private messages:', profilesRes.error);
-      }
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p]));
-
-      return messages.map((msg) => ({
+      return messages.map(msg => ({
         ...msg,
         senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
         senderAvatar: profileMap.get(msg.sender_id)?.avatar_url || null,
-        read_at: (msg as unknown as { read_at: string | null }).read_at ?? null,
       }));
     },
     enabled: !!user && !!otherUserId,
-    staleTime: 10000,
-    gcTime: 2 * 60 * 1000,
-    retry: 0, // Pas de retry auto — l'utilisateur a un bouton "Réessayer"
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
   });
 
   // Real-time subscription for new messages
@@ -111,7 +87,6 @@ export const usePrivateMessages = (otherUserId: string | null) => {
               ...newMsg,
               senderUsername: profile?.username || 'Anonyme',
               senderAvatar: profile?.avatar_url || null,
-              read_at: (newMsg as unknown as { read_at: string | null }).read_at ?? null,
             };
 
             queryClient.setQueryData<PrivateMessageWithProfile[]>(
@@ -136,13 +111,6 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     mutationFn: async ({ content, messageType }: { content: string; messageType: 'text' | 'image' | 'video' }) => {
       if (!user || !otherUserId) throw new Error('Not authenticated or no recipient');
 
-      // Get sender's profile for the notification
-      const { data: senderProfile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -156,16 +124,6 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         .single();
 
       if (error) throw error;
-
-      // Send notification to the recipient
-      await supabase.from('notifications').insert({
-        user_id: otherUserId,
-        type: 'message',
-        title: '💬 Nouveau message',
-        message: `${senderProfile?.username || 'Quelqu\'un'} t'a envoyé un message`,
-        action_url: `/profile/${user.id}`,
-      });
-
       return data;
     },
     onSuccess: () => {
@@ -184,7 +142,6 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     messages: query.data || [],
     isLoading: query.isLoading,
     error: query.error,
-    refetch: query.refetch,
     sendMessage,
   };
 };

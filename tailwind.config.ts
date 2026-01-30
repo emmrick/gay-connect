@@ -79,22 +79,11 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
-        shine: {
-          "0%": { left: "-100%", opacity: "0" },
-          "50%": { opacity: "1" },
-          "100%": { left: "100%", opacity: "0" },
-        },
-        "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 8px 2px rgba(251, 191, 36, 0.4)" },
-          "50%": { boxShadow: "0 0 16px 4px rgba(251, 191, 36, 0.6)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s infinite",
-        shine: "shine 2.5s ease-in-out infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

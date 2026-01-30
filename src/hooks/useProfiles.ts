@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
-import { supabaseQueryWithTimeout } from '@/lib/supabaseWithAbort';
 
 type Profile = Tables<'profiles'>;
 
@@ -23,26 +22,19 @@ export const useProfilesByRegion = (region: string) => {
   });
 };
 
-export const useProfile = (userId: string | null) => {
+export const useProfile = (userId: string) => {
   return useQuery({
     queryKey: ['profile', userId],
     queryFn: async (): Promise<Profile | null> => {
-      if (!userId) return null;
-      
-      const result = await supabaseQueryWithTimeout(
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle(),
-        8000 // 8s timeout for profile
-      );
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      if (result.error) throw new Error(result.error.message);
-      return result.data;
+      if (error) throw error;
+      return data;
     },
     enabled: !!userId,
-    retry: 0,
-    staleTime: 30000, // Cache 30s
   });
 };

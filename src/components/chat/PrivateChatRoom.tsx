@@ -1,22 +1,17 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, ChevronDown, Crown } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
-import { useMessageReadStatus, getMessageStatus } from '@/hooks/useMessageReadStatus';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
-import { useIsPremiumUser } from '@/hooks/usePremiumUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHasBlockedUser, useUnblockUserAction } from '@/hooks/useUserBlock';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { useLoadingTimeout } from '@/hooks/useLoadingTimeout';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +27,6 @@ import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import UserProfilePreview from './UserProfilePreview';
-import MessageStatusIndicator from './MessageStatusIndicator';
 
 interface PrivateChatRoomProps {
   otherUserId: string;
@@ -42,23 +36,16 @@ interface PrivateChatRoomProps {
 const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
-  const { messages, isLoading, error, refetch, sendMessage } = usePrivateMessages(otherUserId);
-  const loadingTimedOut = useLoadingTimeout(isLoading, 15000);
+  const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { markAsRead } = useUnreadMessages();
-  const { markConversationAsRead } = useMessageReadStatus(otherUserId);
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
-  const { isPremium: isOtherUserPremium } = useIsPremiumUser(otherUserId);
   const unblockUser = useUnblockUserAction();
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showShareAlbum, setShowShareAlbum] = useState(false);
-  const [showScrollButton, setShowScrollButton] = useState(false);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
-  const [newMessagesCount, setNewMessagesCount] = useState(0);
-  const lastMessageCountRef = useRef(0);
-  const isNearBottomRef = useRef(true);
 
   // Mobile back navigation
   useMobileNavigation({ onBack, enabled: true });
@@ -67,93 +54,39 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   useEffect(() => {
     if (otherUserId) {
       markAsRead.mutate(otherUserId);
-      markConversationAsRead();
     }
-  }, [otherUserId, markConversationAsRead]);
+  }, [otherUserId]);
 
   // Track if this is the initial load
   const isInitialLoad = useRef(true);
-  const hasScrolledInitially = useRef(false);
 
-  // Robust scroll to bottom function
-  const scrollToBottom = useCallback((instant: boolean = false) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ 
-        behavior: instant ? 'instant' : 'smooth',
-        block: 'end'
-      });
-    }
-    // Fallback: also try scrolling the container
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  }, []);
-
-  // Auto-scroll to bottom on conversation open (once messages are loaded)
+  // Auto-scroll to bottom on new messages or when conversation opens
   useEffect(() => {
-    if (!isLoading && messages.length > 0 && !hasScrolledInitially.current) {
-      // Immediate scroll
+    const scrollToBottom = (instant: boolean = false) => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' });
+      }
+    };
+    
+    // On initial load, scroll instantly without animation
+    if (isInitialLoad.current) {
       scrollToBottom(true);
+      // Delayed instant scroll to handle media loading
+      const timeoutId = setTimeout(() => scrollToBottom(true), 100);
+      const timeoutId2 = setTimeout(() => {
+        scrollToBottom(true);
+        isInitialLoad.current = false;
+      }, 300);
       
-      // Multiple delayed scrolls to handle dynamic content loading (images, etc.)
-      const timeouts = [50, 150, 300, 500].map(delay => 
-        setTimeout(() => scrollToBottom(true), delay)
-      );
-      
-      hasScrolledInitially.current = true;
-      
-      return () => timeouts.forEach(clearTimeout);
+      return () => {
+        clearTimeout(timeoutId);
+        clearTimeout(timeoutId2);
+      };
+    } else {
+      // For new messages, use smooth scroll
+      scrollToBottom(false);
     }
-  }, [isLoading, messages.length, scrollToBottom]);
-
-  // Track new messages when scrolled up
-  useEffect(() => {
-    if (hasScrolledInitially.current && messages.length > 0) {
-      const newCount = messages.length - lastMessageCountRef.current;
-      
-      if (newCount > 0 && lastMessageCountRef.current > 0) {
-        // Check if the new message is from the other user
-        const latestMessage = messages[messages.length - 1];
-        const isFromOtherUser = latestMessage?.sender_id === otherUserId;
-        
-        if (!isNearBottomRef.current && isFromOtherUser) {
-          // User is scrolled up, increment counter
-          setNewMessagesCount(prev => prev + newCount);
-        } else {
-          // User is at bottom, auto-scroll and reset counter
-          scrollToBottom(false);
-          setNewMessagesCount(0);
-        }
-      }
-      
-      lastMessageCountRef.current = messages.length;
-    } else if (messages.length > 0) {
-      lastMessageCountRef.current = messages.length;
-    }
-  }, [messages, scrollToBottom, otherUserId]);
-
-  // Reset scroll tracking when conversation changes
-  useEffect(() => {
-    hasScrolledInitially.current = false;
-    isInitialLoad.current = true;
-    lastMessageCountRef.current = 0;
-    setNewMessagesCount(0);
-  }, [otherUserId]);
-
-  // Handle scroll to show/hide scroll button and track position
-  const handleScroll = useCallback(() => {
-    if (messagesContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      isNearBottomRef.current = isNearBottom;
-      setShowScrollButton(!isNearBottom);
-      
-      // Reset counter when user scrolls to bottom
-      if (isNearBottom) {
-        setNewMessagesCount(0);
-      }
-    }
-  }, []);
+  }, [messages]);
 
   // Scroll to bottom when input is focused (keyboard opens)
   const handleInputFocus = useCallback(() => {
@@ -197,10 +130,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               onClick={() => setShowProfilePreview(true)}
               className="relative cursor-pointer hover:scale-105 transition-transform"
             >
-              <div className={cn(
-                "w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold",
-                isOtherUserPremium && "ring-2 ring-amber-500 shadow-lg shadow-amber-500/30"
-              )}>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
                 {otherUserProfile?.avatar_url ? (
                   <img
                     src={otherUserProfile.avatar_url}
@@ -214,28 +144,15 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               {isUserTrulyOnline(otherUserProfile) && (
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
               )}
-              {isOtherUserPremium && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
-                  <Crown className="w-2.5 h-2.5 text-white" />
-                </div>
-              )}
             </button>
 
             <button
               onClick={() => setShowProfilePreview(true)}
               className="flex-1 text-left cursor-pointer hover:opacity-80 transition-opacity"
             >
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-foreground">
-                  {otherUserProfile?.username}
-                </h2>
-                {isOtherUserPremium && (
-                  <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-sm text-[10px] px-1.5 py-0">
-                    <Crown className="w-2.5 h-2.5 mr-0.5" />
-                    Premium
-                  </Badge>
-                )}
-              </div>
+              <h2 className="font-semibold text-foreground">
+                {otherUserProfile?.username}
+              </h2>
               <p className="text-xs text-muted-foreground">
                 {isUserTrulyOnline(otherUserProfile) ? (
                   <span className="text-green-500">En ligne</span>
@@ -330,8 +247,8 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
       />
 
       {/* Messages - scrollable middle section */}
-      <div className="flex-1 overflow-y-auto overscroll-contain p-4 relative" ref={messagesContainerRef} onScroll={handleScroll}>
-        {isLoading && !loadingTimedOut ? (
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4" ref={messagesContainerRef}>
+        {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className={`flex gap-3 ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}>
@@ -339,17 +256,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 <Skeleton className="h-16 w-48 rounded-2xl" />
               </div>
             ))}
-          </div>
-        ) : error || loadingTimedOut ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <p className="text-sm text-destructive mb-4">
-              {loadingTimedOut
-                ? 'Connexion trop lente : impossible de charger cette conversation.'
-                : 'Impossible de charger cette conversation.'}
-            </p>
-            <Button variant="secondary" onClick={() => refetch()}>
-              Réessayer
-            </Button>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
@@ -435,24 +341,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       </div>
                     )}
 
-                    {/* Timestamp and read status */}
-                    <div className={`flex items-center gap-1 mt-1 px-1 ${isOwn ? 'flex-row-reverse' : ''}`}>
-                      <span className="text-[10px] text-muted-foreground">
-                        {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
-                      </span>
-                      {isOwn && (
-                        <MessageStatusIndicator 
-                          status={getMessageStatus(
-                            { 
-                              sender_id: message.sender_id, 
-                              read_at: (message as unknown as { read_at: string | null }).read_at, 
-                              created_at: message.created_at 
-                            }, 
-                            user?.id
-                          )} 
-                        />
-                      )}
-                    </div>
+                    {/* Timestamp */}
+                    <span className="text-[10px] text-muted-foreground mt-1 px-1">
+                      {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+                    </span>
                   </div>
                 </div>
               );
@@ -461,26 +353,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           </div>
         )}
       </div>
-
-      {/* Scroll to bottom button with new messages indicator */}
-      {showScrollButton && (
-        <Button
-          variant="secondary"
-          size="icon"
-          className="absolute bottom-24 right-4 rounded-full shadow-lg z-10 animate-fade-in"
-          onClick={() => {
-            scrollToBottom(false);
-            setNewMessagesCount(0);
-          }}
-        >
-          <ChevronDown className="w-5 h-5" />
-          {newMessagesCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center animate-bounce">
-              {newMessagesCount > 99 ? '99+' : newMessagesCount}
-            </span>
-          )}
-        </Button>
-      )}
 
       {/* Input - fixed at bottom */}
       <div className="flex-shrink-0">

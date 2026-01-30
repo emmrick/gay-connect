@@ -164,7 +164,6 @@ export const useEphemeralMediaUpload = () => {
     isUploading,
     progress,
     canSend: canSendEphemeralMedia(),
-    remainingCount: isPremium ? Infinity : Math.max(0, limits.ephemeralMediaPerDay - ephemeralMediaCount),
-    isPremium,
+    remainingCount: Math.max(0, limits.ephemeralMediaPerDay - ephemeralMediaCount),
   };
 };

@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAdminVerifications, usePendingVerificationRequests } from '@/hooks/useIdentityVerification';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAdminVerifications } from '@/hooks/useIdentityVerification';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -45,9 +43,7 @@ interface VerificationWithProfile {
 }
 
 const IdentityVerificationPanel = () => {
-  const queryClient = useQueryClient();
   const { pendingVerifications, isLoading, markAsViewed, reportScreenshot, approveVerification, rejectVerification } = useAdminVerifications();
-  const { data: awaitingSubmission, isLoading: isLoadingAwaiting } = usePendingVerificationRequests();
   const [selectedVerification, setSelectedVerification] = useState<VerificationWithProfile | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -110,41 +106,11 @@ const IdentityVerificationPanel = () => {
     try {
       const getSignedUrl = async (path: string | null) => {
         if (!path) return null;
-        
-        // If it's already a full URL (old format), extract the path
-        // Otherwise use the path directly (new format)
-        let filePath = path;
-        
-        if (path.startsWith('http')) {
-          // Extract path from URL - handle both signed and public URLs
-          try {
-            const url = new URL(path);
-            const pathParts = url.pathname.split('/');
-            // Find 'identity-documents' in path and get everything after
-            const bucketIndex = pathParts.findIndex(p => p === 'identity-documents');
-            if (bucketIndex !== -1) {
-              filePath = pathParts.slice(bucketIndex + 1).join('/');
-            }
-          } catch {
-            // If URL parsing fails, try simple extraction
-            const match = path.match(/identity-documents\/(.+?)(?:\?|$)/);
-            if (match) {
-              filePath = match[1];
-            }
-          }
-        }
-        
-        console.log('Getting signed URL for path:', filePath);
-        
-        const { data, error } = await supabase.storage
+        // Extract the file path from the URL or use as-is if it's already a path
+        const filePath = path.includes('/') ? path.split('/').slice(-2).join('/') : path;
+        const { data } = await supabase.storage
           .from('identity-documents')
           .createSignedUrl(filePath, 300); // 5 minutes
-          
-        if (error) {
-          console.error('Error creating signed URL:', error);
-          return null;
-        }
-        
         return data?.signedUrl || null;
       };
 
@@ -154,11 +120,9 @@ const IdentityVerificationPanel = () => {
         getSignedUrl(verification.id_back_url),
       ]);
 
-      console.log('Signed URLs:', { selfie: !!selfie, idFront: !!idFront, idBack: !!idBack });
       setSignedUrls({ selfie, idFront, idBack });
     } catch (error) {
       console.error('Error getting signed URLs:', error);
-      toast.error('Erreur lors du chargement des documents');
     }
 
     setViewDialogOpen(true);
@@ -260,133 +224,65 @@ const IdentityVerificationPanel = () => {
         <div>
           <h2 className="font-display text-lg font-semibold">Vérifications d'identité</h2>
           <p className="text-sm text-muted-foreground">
-            {pendingVerifications?.length || 0} à examiner • {awaitingSubmission?.length || 0} en attente de soumission
+            {pendingVerifications?.length || 0} demande(s) en attente
           </p>
         </div>
       </div>
 
-      <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="pending" className="gap-2">
-            <Eye className="w-4 h-4" />
-            À examiner ({pendingVerifications?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="awaiting" className="gap-2">
-            <Clock className="w-4 h-4" />
-            En attente ({awaitingSubmission?.length || 0})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="pending" className="mt-4">
-          {pendingVerifications && pendingVerifications.length > 0 ? (
-            <div className="space-y-3">
-              {pendingVerifications.map((verification) => (
-                <div 
-                  key={verification.id}
-                  className="glass-card rounded-xl p-4 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={verification.profiles?.avatar_url || ''} />
-                      <AvatarFallback>
-                        <User className="w-6 h-6" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{verification.profiles?.username || 'Utilisateur'}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{verification.profiles?.age || '?'} ans</span>
-                        <span>•</span>
-                        <span>{verification.profiles?.region}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="text-right mr-2">
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {verification.submitted_at && formatDistanceToNow(new Date(verification.submitted_at), { 
-                          addSuffix: true, 
-                          locale: fr 
-                        })}
-                      </Badge>
-                      {verification.admin_viewed_at && (
-                        <p className="text-xs text-muted-foreground mt-1">Déjà consulté</p>
-                      )}
-                    </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleViewVerification(verification as VerificationWithProfile)}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      Examiner
-                    </Button>
+      {pendingVerifications && pendingVerifications.length > 0 ? (
+        <div className="space-y-3">
+          {pendingVerifications.map((verification) => (
+            <div 
+              key={verification.id}
+              className="glass-card rounded-xl p-4 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={verification.profiles?.avatar_url || ''} />
+                  <AvatarFallback>
+                    <User className="w-6 h-6" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{verification.profiles?.username || 'Utilisateur'}</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{verification.profiles?.age || '?'} ans</span>
+                    <span>•</span>
+                    <span>{verification.profiles?.region}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <Shield className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucune demande de vérification à examiner</p>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="awaiting" className="mt-4">
-          {awaitingSubmission && awaitingSubmission.length > 0 ? (
-            <div className="space-y-3">
-              {awaitingSubmission.map((verification) => (
-                <div 
-                  key={verification.id}
-                  className="glass-card rounded-xl p-4 flex items-center justify-between border-l-4 border-l-blue-500"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={verification.profiles?.avatar_url || ''} />
-                      <AvatarFallback>
-                        <User className="w-6 h-6" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{verification.profiles?.username || 'Utilisateur'}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{verification.profiles?.age || '?'} ans</span>
-                        <span>•</span>
-                        <span>{verification.profiles?.region}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="text-right mr-2">
-                      <Badge variant="outline" className="flex items-center gap-1 border-blue-500/50 text-blue-500">
-                        <Clock className="w-3 h-3" />
-                        Demande envoyée
-                      </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(verification.created_at), { 
-                          addSuffix: true, 
-                          locale: fr 
-                        })}
-                      </p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      En attente de l'utilisateur
-                    </Badge>
-                  </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <div className="text-right mr-2">
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {verification.submitted_at && formatDistanceToNow(new Date(verification.submitted_at), { 
+                      addSuffix: true, 
+                      locale: fr 
+                    })}
+                  </Badge>
+                  {verification.admin_viewed_at && (
+                    <p className="text-xs text-muted-foreground mt-1">Déjà consulté</p>
+                  )}
                 </div>
-              ))}
+                <Button 
+                  size="sm" 
+                  onClick={() => handleViewVerification(verification as VerificationWithProfile)}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  Examiner
+                </Button>
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucune demande en attente de soumission</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-muted-foreground">
+          <Shield className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>Aucune demande de vérification en attente</p>
+        </div>
+      )}
 
       {/* View Verification Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
@@ -463,20 +359,10 @@ const IdentityVerificationPanel = () => {
                             alt="Selfie" 
                             className="w-full h-full object-cover pointer-events-none"
                             draggable={false}
-                            onError={(e) => {
-                              console.error('Failed to load selfie image');
-                              e.currentTarget.style.display = 'none';
-                            }}
                           />
-                        ) : selectedVerification.selfie_url ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-destructive p-2">
-                            <AlertTriangle className="w-6 h-6 mb-1" />
-                            <span className="text-xs text-center">Erreur chargement</span>
-                          </div>
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
-                            <User className="w-6 h-6 mb-1" />
-                            <span className="text-xs text-center">Non fourni</span>
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 animate-spin" />
                           </div>
                         )}
                       </div>
@@ -490,20 +376,10 @@ const IdentityVerificationPanel = () => {
                             alt="ID Recto" 
                             className="w-full h-full object-cover pointer-events-none"
                             draggable={false}
-                            onError={(e) => {
-                              console.error('Failed to load ID front image');
-                              e.currentTarget.style.display = 'none';
-                            }}
                           />
-                        ) : selectedVerification.id_front_url ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-destructive p-2">
-                            <AlertTriangle className="w-6 h-6 mb-1" />
-                            <span className="text-xs text-center">Erreur chargement</span>
-                          </div>
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
-                            <Shield className="w-6 h-6 mb-1" />
-                            <span className="text-xs text-center">Non fourni</span>
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 animate-spin" />
                           </div>
                         )}
                       </div>
@@ -517,20 +393,10 @@ const IdentityVerificationPanel = () => {
                             alt="ID Verso" 
                             className="w-full h-full object-cover pointer-events-none"
                             draggable={false}
-                            onError={(e) => {
-                              console.error('Failed to load ID back image');
-                              e.currentTarget.style.display = 'none';
-                            }}
                           />
-                        ) : selectedVerification.id_back_url ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-destructive p-2">
-                            <AlertTriangle className="w-6 h-6 mb-1" />
-                            <span className="text-xs text-center">Erreur chargement</span>
-                          </div>
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
-                            <Shield className="w-6 h-6 mb-1" />
-                            <span className="text-xs text-center">Non fourni</span>
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 animate-spin" />
                           </div>
                         )}
                       </div>

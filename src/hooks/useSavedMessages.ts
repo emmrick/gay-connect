@@ -160,7 +160,6 @@ export const useSavedMessages = () => {
     deleteMessage,
     updateMessage,
     canAddMore: canAddSavedMessage(),
-    remainingSlots: isPremium ? Infinity : Math.max(0, limits.maxSavedMessages - savedMessagesCount),
-    isPremium,
+    remainingSlots: Math.max(0, limits.maxSavedMessages - savedMessagesCount),
   };
 };

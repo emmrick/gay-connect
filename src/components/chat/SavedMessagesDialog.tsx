@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ClipboardList, Plus, Trash2, Send, X, Check, Loader2, Lock, Crown, Infinity } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Send, X, Check, Loader2, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,7 +20,7 @@ interface SavedMessagesDialogProps {
 }
 
 const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
-  const { savedMessages, isLoading, addMessage, deleteMessage, canAddMore, remainingSlots, isPremium } = useSavedMessages();
+  const { savedMessages, isLoading, addMessage, deleteMessage, canAddMore, remainingSlots } = useSavedMessages();
   const [open, setOpen] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newMessageContent, setNewMessageContent] = useState('');
@@ -105,16 +105,9 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span>Messages enregistrés</span>
-              {isPremium ? (
-                <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-600 dark:text-amber-400">
-                  <Infinity className="w-3 h-3 mr-1" />
-                  Illimité
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="text-xs">
-                  {savedMessages.length}/{remainingSlots + savedMessages.length}
-                </Badge>
-              )}
+              <Badge variant="secondary" className="text-xs">
+                {savedMessages.length}{!canAddMore && ` / ${savedMessages.length}`}
+              </Badge>
             </div>
             {!showNewForm && (
               <Button

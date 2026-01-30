@@ -324,9 +324,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                   "border-2 transition-all duration-200",
                   profile.isCurrentUser 
                     ? "border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/30" 
-                    : premiumMap[profile.user_id]
-                      ? "border-amber-500 shadow-lg shadow-amber-500/20 ring-2 ring-amber-500/30"
-                      : "border-border/30 hover:border-primary/50"
+                    : "border-border/30 hover:border-primary/50"
                 )}
               >
                 {/* Avatar/Photo */}

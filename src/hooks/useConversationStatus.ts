@@ -11,46 +11,24 @@ export const useConversationStatus = () => {
     mutationFn: async (conversationId: string) => {
       if (!user) throw new Error('Not authenticated');
 
-      // First check if a status already exists
-      const { data: existing } = await supabase
+      const { error } = await supabase
         .from('private_conversation_status')
-        .select('id')
-        .eq('conversation_id', conversationId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .upsert({
+          conversation_id: conversationId,
+          user_id: user.id,
+          is_archived: true,
+          is_deleted: false,
+        }, {
+          onConflict: 'conversation_id,user_id',
+        });
 
-      if (existing) {
-        const { error } = await supabase
-          .from('private_conversation_status')
-          .update({
-            is_archived: true,
-            is_deleted: false,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('conversation_id', conversationId)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('private_conversation_status')
-          .insert({
-            conversation_id: conversationId,
-            user_id: user.id,
-            is_archived: true,
-            is_deleted: false,
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['private-conversation-status'] });
       toast.success('Conversation archivée');
     },
-    onError: (error) => {
-      console.error('Archive error:', error);
+    onError: () => {
       toast.error('Erreur lors de l\'archivage');
     },
   });
@@ -61,23 +39,22 @@ export const useConversationStatus = () => {
 
       const { error } = await supabase
         .from('private_conversation_status')
-        .update({
+        .upsert({
+          conversation_id: conversationId,
+          user_id: user.id,
           is_archived: false,
           is_deleted: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('conversation_id', conversationId)
-        .eq('user_id', user.id);
+        }, {
+          onConflict: 'conversation_id,user_id',
+        });
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['private-conversation-status'] });
       toast.success('Conversation restaurée');
     },
-    onError: (error) => {
-      console.error('Unarchive error:', error);
+    onError: () => {
       toast.error('Erreur lors de la restauration');
     },
   });
@@ -86,48 +63,24 @@ export const useConversationStatus = () => {
     mutationFn: async (conversationId: string) => {
       if (!user) throw new Error('Not authenticated');
 
-      // First check if a status already exists
-      const { data: existing } = await supabase
+      const { error } = await supabase
         .from('private_conversation_status')
-        .select('id')
-        .eq('conversation_id', conversationId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .upsert({
+          conversation_id: conversationId,
+          user_id: user.id,
+          is_deleted: true,
+          is_archived: false,
+        }, {
+          onConflict: 'conversation_id,user_id',
+        });
 
-      if (existing) {
-        // Update existing record
-        const { error } = await supabase
-          .from('private_conversation_status')
-          .update({
-            is_deleted: true,
-            is_archived: false,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('conversation_id', conversationId)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        // Insert new record
-        const { error } = await supabase
-          .from('private_conversation_status')
-          .insert({
-            conversation_id: conversationId,
-            user_id: user.id,
-            is_deleted: true,
-            is_archived: false,
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['private-conversation-status'] });
       toast.success('Conversation supprimée');
     },
-    onError: (error) => {
-      console.error('Delete error:', error);
+    onError: () => {
       toast.error('Erreur lors de la suppression');
     },
   });
@@ -138,11 +91,7 @@ export const useConversationStatus = () => {
 
       const { error } = await supabase
         .from('private_conversation_status')
-        .update({
-          is_deleted: false,
-          is_archived: false,
-          updated_at: new Date().toISOString(),
-        })
+        .delete()
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id);
 
@@ -150,41 +99,10 @@ export const useConversationStatus = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['private-conversation-status'] });
       toast.success('Conversation restaurée');
     },
-    onError: (error) => {
-      console.error('Restore error:', error);
+    onError: () => {
       toast.error('Erreur lors de la restauration');
-    },
-  });
-
-  // Suppression définitive - marque comme permanently_deleted
-  const permanentlyDeleteConversation = useMutation({
-    mutationFn: async (conversationId: string) => {
-      if (!user) throw new Error('Not authenticated');
-
-      // Set a special flag to mark as permanently deleted
-      const { error } = await supabase
-        .from('private_conversation_status')
-        .update({
-          is_deleted: true,
-          is_archived: true, // Use both flags to mark as permanently deleted
-          updated_at: new Date().toISOString(),
-        })
-        .eq('conversation_id', conversationId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['private-conversation-status'] });
-      toast.success('Conversation supprimée définitivement');
-    },
-    onError: (error) => {
-      console.error('Permanent delete error:', error);
-      toast.error('Erreur lors de la suppression définitive');
     },
   });
 
@@ -193,6 +111,5 @@ export const useConversationStatus = () => {
     unarchiveConversation,
     deleteConversation,
     restoreConversation,
-    permanentlyDeleteConversation,
   };
 };

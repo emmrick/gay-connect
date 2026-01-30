@@ -13,12 +13,11 @@ import MessageReply from './MessageReply';
 import MessageSearch from './MessageSearch';
 import UserProfilePreview from './UserProfilePreview';
 import MediaGallerySheet from './MediaGallerySheet';
-import { ArrowLeft, Users, Search, Image, X, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import MessagesSkeleton from './MessagesSkeleton';
 
 interface EphemeralMediaData {
   type: 'image' | 'video';
@@ -54,10 +53,9 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   const [searchQuery, setSearchQuery] = useState('');
   const [searchIndex, setSearchIndex] = useState(0);
   
-  const { messages, searchResults, isLoading, error, refetch, sendMessage } = useMessages(roomId, searchQuery);
+  const { messages, searchResults, isLoading, sendMessage } = useMessages(roomId, searchQuery);
   const { typingUsers, startTyping, stopTyping } = useTypingIndicator(roomId);
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
-  
   
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [showMembers, setShowMembers] = useState(false);
@@ -298,20 +296,12 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           </div>
 
           {/* Loading state */}
-          {isLoading && <MessagesSkeleton />}
-
-          {/* Error state */}
-          {error && !isLoading && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-center">
-              <p className="text-sm text-destructive mb-3">
-                Impossible de charger les messages.
-              </p>
-              <Button variant="secondary" size="sm" onClick={() => refetch()}>
-                Réessayer
-              </Button>
+          {isLoading && (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
           )}
-
+          
           {/* Messages */}
           {messages.map((message) => (
             <ChatMessage
@@ -329,7 +319,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
               isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
               reactions={getReactionsForMessage(message.id)}
               chatRoomId={roomId}
-              isPremium={(message as any).senderIsPremium || false}
               onReply={handleReply}
               onAvatarClick={handleAvatarClick}
               onToggleReaction={handleToggleReaction}

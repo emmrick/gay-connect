@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserUsage } from '@/hooks/useUserUsage';
 import { toast } from 'sonner';
 
 interface Album {
@@ -35,7 +34,6 @@ interface AlbumShare {
 export const useAlbums = (userId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { canCreateAlbum, incrementAlbums, decrementAlbums, isPremium, remainingAlbums } = useUserUsage();
   const targetUserId = userId || user?.id;
   const isOwnAlbums = targetUserId === user?.id;
 
@@ -94,11 +92,6 @@ export const useAlbums = (userId?: string) => {
     mutationFn: async ({ name, description }: { name: string; description?: string }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      // Check album limit for non-premium users
-      if (!canCreateAlbum()) {
-        throw new Error('LIMIT_REACHED');
-      }
-
       const { data, error } = await supabase
         .from('user_albums')
         .insert({
@@ -111,10 +104,6 @@ export const useAlbums = (userId?: string) => {
         .single();
 
       if (error) throw error;
-
-      // Increment usage counter
-      await incrementAlbums();
-
       return data;
     },
     onSuccess: () => {
@@ -122,16 +111,7 @@ export const useAlbums = (userId?: string) => {
       toast.success('Album créé !');
     },
     onError: (error: Error) => {
-      if (error.message === 'LIMIT_REACHED') {
-        toast.error('Limite d\'albums atteinte ! Passez Premium pour plus d\'albums.', {
-          action: isPremium ? undefined : {
-            label: 'Premium',
-            onClick: () => window.location.href = '/?tab=premium',
-          },
-        });
-      } else {
-        toast.error(error.message || 'Erreur lors de la création');
-      }
+      toast.error(error.message || 'Erreur lors de la création');
     },
   });
 
@@ -147,9 +127,6 @@ export const useAlbums = (userId?: string) => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-
-      // Decrement usage counter
-      await decrementAlbums();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
@@ -234,13 +211,6 @@ export const useAlbums = (userId?: string) => {
     }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      // Get current user's profile for the notification
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
       let expiresAt: string | null = null;
       if (duration && duration !== 'unlimited') {
         const now = new Date();
@@ -298,15 +268,6 @@ export const useAlbums = (userId?: string) => {
         console.error('Failed to create album share message:', msgError);
         // Don't throw - the share was created successfully
       }
-
-      // Send notification to the recipient
-      await supabase.from('notifications').insert({
-        user_id: sharedWithUserId,
-        type: 'album_share',
-        title: '📁 Album partagé !',
-        message: `${userProfile?.username || 'Quelqu\'un'} a partagé l'album "${album?.name || 'Album'}" avec toi`,
-        action_url: `/profile/${user.id}`,
-      });
 
       return shareData;
     },
@@ -373,8 +334,5 @@ export const useAlbums = (userId?: string) => {
     stopSharing,
     useAlbumMedia,
     useAlbumShares,
-    canCreateAlbum: canCreateAlbum(),
-    isPremium,
-    remainingAlbums,
   };
 };
