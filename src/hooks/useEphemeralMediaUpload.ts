@@ -125,10 +125,13 @@ export const useEphemeralMediaUpload = () => {
       }
     },
     onSuccess: (data, variables) => {
-      // Invalidate relevant queries
+      // Invalidate relevant queries to refresh the conversation
       if (variables.isPrivate && variables.recipientId) {
         queryClient.invalidateQueries({ 
           queryKey: ['private-messages', user?.id, variables.recipientId] 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ['private-conversations', user?.id] 
         });
       } else if (variables.chatRoomId) {
         queryClient.invalidateQueries({ 
