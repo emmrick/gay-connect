@@ -33,6 +33,7 @@ export type AdminSection =
   | 'moderation' 
   | 'blocked' 
   | 'verification' 
+  | 'verification-history'
   | 'promo' 
   | 'history' 
   | 'premium';
@@ -69,7 +70,8 @@ const navItems: NavItem[] = [
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
   { id: 'verification', label: 'Vérifications', icon: IdCard, group: 'moderation' },
-  { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
+  { id: 'verification-history', label: 'Historique vérif.', icon: History, group: 'moderation' },
+  { id: 'history', label: 'Historique actions', icon: History, group: 'moderation' },
   
   // Paramètres
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'settings' },

@@ -302,3 +302,55 @@ export const useAdminVerifications = () => {
     rejectVerification,
   };
 };
+
+// Hook for verification history (all statuses)
+export const useVerificationHistory = (status?: 'pending' | 'approved' | 'rejected') => {
+  return useQuery({
+    queryKey: ['verification-history', status],
+    queryFn: async () => {
+      let query = supabase
+        .from('identity_verifications')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data: verifications, error: verError } = await query.limit(100);
+
+      if (verError) throw verError;
+      if (!verifications || verifications.length === 0) return [];
+
+      // Get profiles for those users
+      const userIds = verifications.map(v => v.user_id);
+      const { data: profiles, error: profError } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url, age, region')
+        .in('user_id', userIds);
+
+      if (profError) throw profError;
+
+      // Get reviewer profiles
+      const reviewerIds = verifications
+        .filter(v => v.reviewed_by)
+        .map(v => v.reviewed_by as string);
+      
+      let reviewerProfiles: { user_id: string; username: string }[] = [];
+      if (reviewerIds.length > 0) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('user_id, username')
+          .in('user_id', reviewerIds);
+        reviewerProfiles = data || [];
+      }
+
+      // Combine data
+      return verifications.map(v => ({
+        ...v,
+        profiles: profiles?.find(p => p.user_id === v.user_id) || null,
+        reviewerProfile: reviewerProfiles?.find(p => p.user_id === v.reviewed_by) || null,
+      }));
+    },
+  });
+};
