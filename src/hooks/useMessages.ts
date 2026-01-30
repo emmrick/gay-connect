@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { withTimeout } from '@/lib/withTimeout';
 
 type Message = Tables<'messages'>;
 
@@ -28,24 +29,34 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
       if (!chatRoomId) return [];
 
       // Fetch messages first
-      const { data: messages, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('chat_room_id', chatRoomId)
-        .eq('is_private', false)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: true })
-        .limit(100);
+      const { data: messages, error } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from('messages')
+            .select('*')
+            .eq('chat_room_id', chatRoomId)
+            .eq('is_private', false)
+            .is('deleted_at', null)
+            .order('created_at', { ascending: true })
+            .limit(100)
+        ),
+        12000
+      );
 
       if (error) throw error;
       if (!messages || messages.length === 0) return [];
 
       // Get unique sender IDs and fetch profiles with premium status
       const senderIds = [...new Set(messages.map(m => m.sender_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, username, avatar_url, is_premium')
-        .in('user_id', senderIds);
+      const { data: profiles } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from('profiles')
+            .select('user_id, username, avatar_url, is_premium')
+            .in('user_id', senderIds)
+        ),
+        12000
+      );
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
       const messageMap = new Map(messages.map(m => [m.id, m]));
@@ -163,6 +174,7 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
     searchResults,
     isLoading: query.isLoading,
     error: query.error,
+    refetch: query.refetch,
     sendMessage,
   };
 };
