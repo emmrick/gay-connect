@@ -271,6 +271,62 @@ const useRequestVerification = () => {
   });
 };
 
+// Hook to revoke verification and request new one (for already verified users)
+const useRevokeAndRequestVerification = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      // First, revoke the verification by updating profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ is_verified: false })
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      // Update the verification record to pending state
+      const { error: verificationError } = await supabase
+        .from('identity_verifications')
+        .update({
+          status: 'pending',
+          submitted_at: null,
+          selfie_url: null,
+          id_front_url: null,
+          id_back_url: null,
+          rejection_reason: 'Re-vérification demandée par un modérateur',
+          reviewed_at: null,
+          reviewed_by: null,
+          documents_deleted: false,
+        })
+        .eq('user_id', userId);
+
+      if (verificationError) throw verificationError;
+
+      // Create notification for the user
+      const { error: notifError } = await supabase.from('notifications').insert({
+        user_id: userId,
+        type: 'verification_request',
+        title: '⚠️ Nouvelle vérification requise',
+        message: 'Un modérateur a des doutes sur votre identité et demande une nouvelle vérification. Veuillez soumettre de nouveaux documents pour continuer à utiliser l\'application.',
+        action_url: '/profile',
+      });
+
+      if (notifError) {
+        console.error('Error creating notification:', notifError);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['user-verification-status'] });
+      toast.success('Vérification révoquée et nouvelle demande envoyée');
+    },
+    onError: () => {
+      toast.error('Erreur lors de la révocation');
+    },
+  });
+};
+
 const UserManagementPanel = () => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
@@ -579,6 +635,7 @@ const UserCard = ({
   const { data: verificationStatus } = useUserVerificationStatus(user.user_id);
   const manualVerification = useManualVerification();
   const requestVerification = useRequestVerification();
+  const revokeAndRequestVerification = useRevokeAndRequestVerification();
   const logAction = useLogModerationAction();
 
   const handleManualVerify = async () => {
@@ -596,6 +653,15 @@ const UserCard = ({
       targetUserId: user.user_id,
       actionType: 'verification_requested',
       details: `Demande de vérification envoyée à ${user.username}`,
+    });
+  };
+
+  const handleRevokeAndRequestVerification = async () => {
+    await revokeAndRequestVerification.mutateAsync(user.user_id);
+    await logAction.mutateAsync({
+      targetUserId: user.user_id,
+      actionType: 'verification_requested',
+      details: `Re-vérification demandée pour ${user.username} (utilisateur précédemment vérifié)`,
     });
   };
 
@@ -713,10 +779,10 @@ const UserCard = ({
                   Voir le profil
                 </DropdownMenuItem>
                 
-                {/* Verification actions - only for non-verified users */}
-                {!user.is_verified && (
+                {/* Verification actions */}
+                <DropdownMenuSeparator />
+                {!user.is_verified ? (
                   <>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={handleManualVerify}
                       disabled={manualVerification.isPending}
@@ -744,6 +810,19 @@ const UserCard = ({
                       </DropdownMenuItem>
                     )}
                   </>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={handleRevokeAndRequestVerification}
+                    disabled={revokeAndRequestVerification.isPending}
+                    className="text-orange-600"
+                  >
+                    {revokeAndRequestVerification.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <ShieldAlert className="w-4 h-4 mr-2" />
+                    )}
+                    Demander re-vérification
+                  </DropdownMenuItem>
                 )}
                 
                 <DropdownMenuSeparator />
