@@ -16,15 +16,23 @@ const PremiumBadge = ({ showIfNotPremium = false, className = '' }: PremiumBadge
   if (isPremium) {
     return (
       <Badge className={cn(
-        "bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg relative",
+        "bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg relative overflow-hidden animate-pulse-glow",
         className
       )}>
+        {/* Shine effect overlay */}
+        <span 
+          className="absolute inset-0 w-full h-full animate-shine"
+          style={{
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+            transform: 'skewX(-20deg)',
+          }}
+        />
         {isVerifying ? (
-          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+          <Loader2 className="w-3 h-3 mr-1 animate-spin relative z-10" />
         ) : (
-          <Crown className="w-3 h-3 mr-1" />
+          <Crown className="w-3 h-3 mr-1 relative z-10" />
         )}
-        Premium
+        <span className="relative z-10">Premium</span>
       </Badge>
     );
   }
