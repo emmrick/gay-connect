@@ -9,6 +9,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useEphemeralMediaUpload } from '@/hooks/useEphemeralMediaUpload';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
@@ -17,6 +23,7 @@ import CameraCapture from './CameraCapture';
 import RegularMediaWarningDialog from './RegularMediaWarningDialog';
 import RegularMediaPreview from './RegularMediaPreview';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface MediaUploadButtonProps {
   chatRoomId?: string;
@@ -165,131 +172,144 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
 
   const durations = [5, 10, 15, 30, 0]; // 0 = unlimited
 
-  // Ephemeral media preview
-  if (previewUrl) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-lg flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <Button variant="ghost" size="icon" onClick={handleCancel} disabled={isUploading}>
-            <X className="w-6 h-6" />
-          </Button>
-          <span className="font-display font-semibold">
-            Envoyer {mediaType === 'image' ? 'une photo' : 'une vidéo'}
-          </span>
-          <div className="w-10" />
-        </div>
+  // Ephemeral media preview - using Dialog
+  const ephemeralPreviewDialog = (
+    <Dialog open={!!previewUrl} onOpenChange={(open) => !open && handleCancel()}>
+      <DialogContent className="max-w-md max-h-[90vh] p-0 overflow-hidden">
+        <DialogHeader className="p-4 border-b border-border">
+          <DialogTitle className="text-center font-display">
+            Envoyer {mediaType === 'image' ? 'une photo' : 'une vidéo'} éphémère
+          </DialogTitle>
+        </DialogHeader>
         
-        <div className="flex-1 flex items-center justify-center p-4">
-          {mediaType === 'image' ? (
-            <img 
-              src={previewUrl} 
-              alt="Preview" 
-              className="max-w-full max-h-[60vh] object-contain rounded-2xl"
-            />
-          ) : (
-            <video 
-              src={previewUrl} 
-              className="max-w-full max-h-[60vh] object-contain rounded-2xl"
-              controls
-            />
-          )}
-        </div>
-        
-        <div className="p-4 border-t border-border">
-          <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Durée d'affichage
-          </p>
-          <div className="flex gap-2 mb-2">
-            {durations.filter(d => d > 0).map((d) => (
+        <ScrollArea className="max-h-[calc(90vh-180px)]">
+          <div className="p-4 space-y-4">
+            {/* Media preview */}
+            <div className="flex items-center justify-center bg-secondary/30 rounded-xl overflow-hidden">
+              {mediaType === 'image' ? (
+                <img 
+                  src={previewUrl || ''} 
+                  alt="Preview" 
+                  className="max-w-full max-h-[40vh] object-contain"
+                />
+              ) : (
+                <video 
+                  src={previewUrl || ''} 
+                  className="max-w-full max-h-[40vh] object-contain"
+                  controls
+                />
+              )}
+            </div>
+            
+            {/* Duration selector */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Durée d'affichage
+              </p>
+              <div className="flex gap-2 mb-2">
+                {durations.filter(d => d > 0).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setViewDuration(d)}
+                    disabled={isUploading}
+                    className={`flex-1 py-2 rounded-lg font-medium transition-all text-sm ${
+                      viewDuration === d 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    } disabled:opacity-50`}
+                  >
+                    {d}s
+                  </button>
+                ))}
+              </div>
               <button
-                key={d}
-                onClick={() => setViewDuration(d)}
+                onClick={() => setViewDuration(0)}
                 disabled={isUploading}
-                className={`flex-1 py-2 rounded-lg font-medium transition-all ${
-                  viewDuration === d 
-                    ? 'bg-primary text-primary-foreground' 
+                className={`w-full py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                  viewDuration === 0 
+                    ? 'bg-green-500 text-white' 
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 } disabled:opacity-50`}
               >
-                {d}s
+                <Infinity className="w-4 h-4" />
+                Illimité (enregistrable)
               </button>
-            ))}
-          </div>
-          <button
-            onClick={() => setViewDuration(0)}
-            disabled={isUploading}
-            className={`w-full py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-              viewDuration === 0 
-                ? 'bg-green-500 text-white' 
-                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-            } disabled:opacity-50`}
-          >
-            <Infinity className="w-4 h-4" />
-            Illimité (enregistrable)
-          </button>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            {viewDuration === 0 
-              ? '✓ Le destinataire pourra enregistrer ce média' 
-              : '🔒 Le média disparaîtra après visionnage'}
-          </p>
-        </div>
-
-          {isUploading && (
-            <div className="p-4 pt-0">
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1 text-center">
-                Envoi en cours... {progress}%
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                {viewDuration === 0 
+                  ? '✓ Le destinataire pourra enregistrer ce média' 
+                  : '🔒 Le média disparaîtra après visionnage'}
               </p>
             </div>
-          )}
-          
-          <div className="p-4 pt-0">
-            <Button 
-              variant="hero" 
-              size="lg" 
-              className="w-full" 
-              onClick={handleSend}
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Envoi...
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  Envoyer
-                </>
-              )}
-            </Button>
-          </div>
-      </div>
-    );
-  }
 
-  // Regular media preview
-  if (regularPreviewUrl) {
-    return (
-      <RegularMediaPreview
-        previewUrl={regularPreviewUrl}
-        mediaType={regularMediaType}
-        isUploading={isUploadingRegular}
-        progress={regularProgress}
-        onSend={handleSendRegular}
-        onCancel={handleCancelRegular}
-      />
-    );
-  }
+            {/* Progress bar */}
+            {isUploading && (
+              <div>
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 text-center">
+                  Envoi en cours... {progress}%
+                </p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+        
+        {/* Footer actions */}
+        <div className="p-4 border-t border-border flex gap-2">
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={handleCancel}
+            disabled={isUploading}
+          >
+            <X className="w-4 h-4 mr-2" />
+            Annuler
+          </Button>
+          <Button 
+            variant="hero" 
+            className="flex-1"
+            onClick={handleSend}
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Envoi...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 mr-2" />
+                Envoyer
+              </>
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <>
+      {/* Ephemeral media preview dialog */}
+      {ephemeralPreviewDialog}
+
+      {/* Regular media preview dialog */}
+      {regularPreviewUrl && (
+        <RegularMediaPreview
+          previewUrl={regularPreviewUrl}
+          mediaType={regularMediaType}
+          isUploading={isUploadingRegular}
+          progress={regularProgress}
+          onSend={handleSendRegular}
+          onCancel={handleCancelRegular}
+        />
+      )}
+
       {/* Camera capture component */}
       <CameraCapture
         isOpen={showCamera}
