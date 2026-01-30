@@ -228,7 +228,8 @@ export const useAlbums = (userId?: string) => {
         expiresAt = now.toISOString();
       }
 
-      const { data, error } = await supabase
+      // Create the album share record
+      const { data: shareData, error: shareError } = await supabase
         .from('album_shares')
         .insert({
           album_id: albumId,
@@ -239,11 +240,41 @@ export const useAlbums = (userId?: string) => {
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (shareError) throw shareError;
+
+      // Get album info for the message
+      const album = albums.find(a => a.id === albumId);
+      
+      // Create a message in the private conversation to notify the recipient
+      // The content contains JSON with share info that will be parsed by SharedAlbumMessage
+      const messageContent = JSON.stringify({
+        shareId: shareData.id,
+        albumId: albumId,
+        albumName: album?.name || 'Album',
+        expiresAt: expiresAt,
+      });
+
+      const { error: msgError } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: sharedWithUserId,
+          content: messageContent,
+          message_type: 'album_share',
+          is_private: true,
+        });
+
+      if (msgError) {
+        console.error('Failed to create album share message:', msgError);
+        // Don't throw - the share was created successfully
+      }
+
+      return shareData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['album-shares'] });
+      queryClient.invalidateQueries({ queryKey: ['private-messages'] });
+      queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
       toast.success('Album partagé !');
     },
     onError: (error: Error) => {

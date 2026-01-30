@@ -204,7 +204,11 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                       ? conv.lastMessage.content
                       : conv.lastMessage.message_type === 'image'
                       ? '📷 Photo'
-                      : '🎥 Vidéo'
+                      : conv.lastMessage.message_type === 'video'
+                      ? '🎥 Vidéo'
+                      : conv.lastMessage.message_type === 'album_share'
+                      ? '📁 Album partagé'
+                      : conv.lastMessage.content
                     : 'Nouvelle conversation'}
                 </p>
                 
