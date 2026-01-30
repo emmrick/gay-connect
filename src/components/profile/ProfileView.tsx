@@ -69,12 +69,13 @@ interface ProfileViewProps {
   onSignOut: () => void;
   onNavigateToAdmin?: () => void;
   onNavigateToPremium?: () => void;
+  onContactAdmin?: () => void;
   isAdmin?: boolean;
 }
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
-const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, isAdmin }: ProfileViewProps) => {
+const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onContactAdmin, isAdmin }: ProfileViewProps) => {
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
@@ -111,6 +112,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, isAdmi
           open={!!settingsType} 
           onOpenChange={(open) => !open && setSettingsType(null)}
           type={settingsType}
+          onContactAdmin={onContactAdmin}
         />
       )}
 

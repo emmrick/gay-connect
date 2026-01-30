@@ -27,6 +27,7 @@ interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: SettingsType;
+  onContactAdmin?: () => void;
 }
 
 interface SettingItemProps {
@@ -55,7 +56,7 @@ const SettingItem = ({ icon: Icon, iconColor = "text-primary", title, descriptio
   </motion.div>
 );
 
-const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
+const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDialogProps) => {
   const { toast } = useToast();
   const { settings: privacySettings, isVip, toggleHideOnlineStatus, toggleHideLastSeen } = usePrivacySettings();
   
@@ -342,15 +343,18 @@ const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-between group"
-                  onClick={() => window.open('mailto:support@gayconnect.app', '_blank')}
+                  onClick={() => {
+                    onOpenChange(false);
+                    onContactAdmin?.();
+                  }}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Mail className="w-4 h-4 text-primary" />
+                      <MessageSquare className="w-4 h-4 text-primary" />
                     </div>
-                    <span>support@gayconnect.app</span>
+                    <span>Contacter un administrateur</span>
                   </div>
-                  <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
               </div>
               
