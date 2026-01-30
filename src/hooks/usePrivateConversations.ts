@@ -34,6 +34,23 @@ export const usePrivateConversations = () => {
     isPremium 
   } = useUserUsage();
 
+  // Fetch conversation statuses
+  const statusQuery = useQuery({
+    queryKey: ['private-conversation-status', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('private_conversation_status')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
   const query = useQuery({
     queryKey: ['private-conversations', user?.id],
     queryFn: async (): Promise<ConversationWithProfile[]> => {
@@ -99,6 +116,26 @@ export const usePrivateConversations = () => {
       });
     },
     enabled: !!user,
+  });
+
+  // Filter conversations based on status
+  const allConversations = query.data || [];
+  const statuses = statusQuery.data || [];
+  
+  const statusMap = new Map(statuses.map(s => [s.conversation_id, s]));
+  
+  // Active conversations: not archived and not deleted
+  const activeConversations = allConversations.filter(conv => {
+    const status = statusMap.get(conv.id);
+    if (!status) return true; // No status = active
+    return !status.is_archived && !status.is_deleted;
+  });
+  
+  // Archived conversations: archived but not deleted
+  const archivedConversations = allConversations.filter(conv => {
+    const status = statusMap.get(conv.id);
+    if (!status) return false;
+    return status.is_archived && !status.is_deleted;
   });
 
   // Real-time subscription for new conversations AND new messages
@@ -198,8 +235,9 @@ export const usePrivateConversations = () => {
   });
 
   return {
-    conversations: query.data || [],
-    isLoading: query.isLoading,
+    conversations: activeConversations,
+    archivedConversations,
+    isLoading: query.isLoading || statusQuery.isLoading,
     error: query.error,
     getOrCreateConversation,
     canStartNewConversation: canStartConversation(),

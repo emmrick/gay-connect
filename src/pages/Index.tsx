@@ -26,7 +26,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Archive } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'premium' | 'profile' | 'chat' | 'private';
@@ -72,6 +73,7 @@ const Index = () => {
   const [showMemberSearch, setShowMemberSearch] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [showArchivedConversations, setShowArchivedConversations] = useState(false);
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { isPremium } = useSubscription();
@@ -362,6 +364,17 @@ const Index = () => {
               <div className="flex items-center gap-2">
                 <NotificationsDropdown />
                 <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowArchivedConversations(!showArchivedConversations)}
+                  className={cn(
+                    "rounded-full",
+                    showArchivedConversations && "bg-secondary"
+                  )}
+                >
+                  <Archive className="w-5 h-5" />
+                </Button>
+                <Button
                   onClick={() => setShowMemberSearch(true)}
                   size="icon"
                   className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
@@ -370,16 +383,28 @@ const Index = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Tabs for active/archived */}
+            <div className="px-4 py-2">
+              <Tabs 
+                value={showArchivedConversations ? 'archived' : 'active'} 
+                onValueChange={(v) => setShowArchivedConversations(v === 'archived')}
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="active">Conversations</TabsTrigger>
+                  <TabsTrigger value="archived">Archives</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
             
             {/* Conversation list */}
             <ScrollArea className="flex-1">
               <PrivateChatList
                 onSelectConversation={handleSelectConversation}
                 selectedUserId={null}
+                showArchived={showArchivedConversations}
               />
             </ScrollArea>
-
-            {/* Member Search Overlay */}
             <AnimatePresence>
               {showMemberSearch && (
                 <MemberSearch
