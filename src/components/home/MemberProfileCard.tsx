@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle, Eye, MapPin, Calendar, User, Ruler, Weight, Heart, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useState } from 'react';
 
 interface MemberProfileCardProps {
   userId: string;
@@ -64,6 +65,7 @@ const MemberProfileCard = ({
   onStartChat, 
   onViewProfile 
 }: MemberProfileCardProps) => {
+  const navigate = useNavigate();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const { data: profile, isLoading } = useProfile(userId);
   const { photos: userPhotos } = useProfilePhotos(userId);
@@ -306,7 +308,10 @@ const MemberProfileCard = ({
                       <Button
                         variant="outline"
                         className="flex-1"
-                        onClick={onViewProfile}
+                        onClick={() => {
+                          onClose();
+                          navigate(`/profile/${userId}`);
+                        }}
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         Voir le profil
