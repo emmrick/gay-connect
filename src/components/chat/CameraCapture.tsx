@@ -290,7 +290,7 @@ const CameraCapture = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black"
+        className="fixed inset-0 z-[100] bg-black"
       >
         <canvas ref={canvasRef} className="hidden" />
 
@@ -397,7 +397,7 @@ const CameraCapture = ({
             </div>
 
             {/* Mode toggle */}
-            <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-4">
+            <div className="absolute left-1/2 -translate-x-1/2 flex gap-4" style={{ bottom: 'calc(8rem + env(safe-area-inset-bottom, 0px))' }}>
               <Button
                 variant={mode === 'photo' ? 'default' : 'ghost'}
                 onClick={() => setMode('photo')}
@@ -419,7 +419,7 @@ const CameraCapture = ({
             </div>
 
             {/* Capture button */}
-            <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
+            <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
               {mode === 'photo' ? (
                 <button
                   onClick={takePhoto}
@@ -465,7 +465,7 @@ const CameraCapture = ({
             )}
 
             {/* Duration selector */}
-            <div className="absolute bottom-48 left-0 right-0 px-6">
+            <div className="absolute left-0 right-0 px-6" style={{ bottom: 'calc(12rem + env(safe-area-inset-bottom, 0px))' }}>
               <p className="text-sm text-white/80 mb-3 flex items-center gap-2 justify-center">
                 <Clock className="w-4 h-4" />
                 Durée d'affichage
@@ -490,7 +490,7 @@ const CameraCapture = ({
 
             {/* Progress bar */}
             {isUploading && (
-              <div className="absolute bottom-36 left-6 right-6">
+              <div className="absolute left-6 right-6" style={{ bottom: 'calc(9rem + env(safe-area-inset-bottom, 0px))' }}>
                 <div className="h-1 bg-white/20 rounded-full overflow-hidden">
                   <motion.div 
                     className="h-full bg-white"
@@ -502,7 +502,7 @@ const CameraCapture = ({
             )}
 
             {/* Action buttons */}
-            <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-8">
+            <div className="absolute left-0 right-0 flex justify-center gap-8" style={{ bottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
               <Button
                 variant="ghost"
                 size="lg"
