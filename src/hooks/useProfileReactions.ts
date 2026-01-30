@@ -88,7 +88,7 @@ export const useProfileReactions = (profileUserId: string) => {
 };
 
 export const useToggleProfileReaction = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -112,6 +112,7 @@ export const useToggleProfileReaction = () => {
           .eq('id', (existing as any).id);
         
         if (error) throw error;
+        return { action: 'removed' };
       } else {
         // Add reaction
         const { error } = await supabase
@@ -123,6 +124,21 @@ export const useToggleProfileReaction = () => {
           } as any);
         
         if (error) throw error;
+
+        // Send notification to profile owner (only if not reacting to own profile)
+        if (profileUserId !== user.id) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: profileUserId,
+              type: 'profile_reaction',
+              title: `${emoji} Nouvelle réaction !`,
+              message: `${profile?.username || 'Quelqu\'un'} a réagi à ton profil avec ${emoji}`,
+              action_url: `/profile/${user.id}`,
+            });
+        }
+
+        return { action: 'added' };
       }
     },
     onSuccess: (_, { profileUserId }) => {
