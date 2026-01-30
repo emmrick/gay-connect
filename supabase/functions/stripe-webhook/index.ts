@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 // Product IDs for determining subscription tier
-const PREMIUM_PRODUCT_ID = "prod_Tt0Vudc8OySCCG";
+const PREMIUM_PRODUCT_ID = "prod_TsdBpnQhprvorT";
 const VIP_PRODUCT_ID = "prod_Tt0WC00m6snTh0";
 
 const logStep = (step: string, details?: any) => {
