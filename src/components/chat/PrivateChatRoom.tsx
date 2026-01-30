@@ -59,34 +59,52 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   // Track if this is the initial load
   const isInitialLoad = useRef(true);
+  const hasScrolledInitially = useRef(false);
 
-  // Auto-scroll to bottom on new messages or when conversation opens
+  // Robust scroll to bottom function
+  const scrollToBottom = useCallback((instant: boolean = false) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ 
+        behavior: instant ? 'instant' : 'smooth',
+        block: 'end'
+      });
+    }
+    // Fallback: also try scrolling the container
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  // Auto-scroll to bottom on conversation open (once messages are loaded)
   useEffect(() => {
-    const scrollToBottom = (instant: boolean = false) => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' });
-      }
-    };
-    
-    // On initial load, scroll instantly without animation
-    if (isInitialLoad.current) {
+    if (!isLoading && messages.length > 0 && !hasScrolledInitially.current) {
+      // Immediate scroll
       scrollToBottom(true);
-      // Delayed instant scroll to handle media loading
-      const timeoutId = setTimeout(() => scrollToBottom(true), 100);
-      const timeoutId2 = setTimeout(() => {
-        scrollToBottom(true);
-        isInitialLoad.current = false;
-      }, 300);
       
-      return () => {
-        clearTimeout(timeoutId);
-        clearTimeout(timeoutId2);
-      };
-    } else {
+      // Multiple delayed scrolls to handle dynamic content loading (images, etc.)
+      const timeouts = [50, 150, 300, 500].map(delay => 
+        setTimeout(() => scrollToBottom(true), delay)
+      );
+      
+      hasScrolledInitially.current = true;
+      
+      return () => timeouts.forEach(clearTimeout);
+    }
+  }, [isLoading, messages.length, scrollToBottom]);
+
+  // Auto-scroll on new messages (after initial load)
+  useEffect(() => {
+    if (hasScrolledInitially.current && messages.length > 0) {
       // For new messages, use smooth scroll
       scrollToBottom(false);
     }
-  }, [messages]);
+  }, [messages, scrollToBottom]);
+
+  // Reset scroll tracking when conversation changes
+  useEffect(() => {
+    hasScrolledInitially.current = false;
+    isInitialLoad.current = true;
+  }, [otherUserId]);
 
   // Scroll to bottom when input is focused (keyboard opens)
   const handleInputFocus = useCallback(() => {
