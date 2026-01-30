@@ -1,18 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, EyeOff, AlertTriangle, Shield, Play } from 'lucide-react';
+import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity, Check } from 'lucide-react';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface EphemeralMediaViewerProps {
   isOpen: boolean;
   type: 'image' | 'video';
   src: string;
   senderName: string;
-  duration?: number;
+  duration?: number; // 0 = unlimited
   mediaId?: string;
   onClose: () => void;
   onViewed: () => void;
+  onSaveToConversation?: () => Promise<void>;
 }
 
 const EphemeralMediaViewer = ({ 
@@ -23,12 +25,16 @@ const EphemeralMediaViewer = ({
   duration = 10,
   mediaId,
   onClose, 
-  onViewed 
+  onViewed,
+  onSaveToConversation,
 }: EphemeralMediaViewerProps) => {
+  const isUnlimited = duration === 0;
   const [isViewing, setIsViewing] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(duration);
+  const [timeLeft, setTimeLeft] = useState(isUnlimited ? -1 : duration);
   const [hasEnded, setHasEnded] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
   const { 
     isSuspended, 
     isBlocked, 
@@ -44,15 +50,19 @@ const EphemeralMediaViewer = ({
   useEffect(() => {
     if (isOpen) {
       setIsViewing(false);
-      setTimeLeft(duration);
+      setTimeLeft(isUnlimited ? -1 : duration);
       setHasEnded(false);
       setIsClosing(false);
+      setIsSaving(false);
+      setHasSaved(false);
       hasCalledOnViewed.current = false;
     }
-  }, [isOpen, duration]);
+  }, [isOpen, duration, isUnlimited]);
 
-  // Timer countdown
+  // Timer countdown (only for non-unlimited media)
   useEffect(() => {
+    if (isUnlimited) return; // No countdown for unlimited
+    
     if (isViewing && timeLeft > 0 && !isSuspended && !hasEnded) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
@@ -70,7 +80,23 @@ const EphemeralMediaViewer = ({
         onClose();
       }, 400);
     }
-  }, [isViewing, timeLeft, onClose, onViewed, isSuspended, hasEnded]);
+  }, [isViewing, timeLeft, onClose, onViewed, isSuspended, hasEnded, isUnlimited]);
+
+  const handleSaveToConversation = useCallback(async () => {
+    if (!onSaveToConversation || isSaving || hasSaved) return;
+    
+    setIsSaving(true);
+    try {
+      await onSaveToConversation();
+      setHasSaved(true);
+      toast.success('Média enregistré dans la conversation !');
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Erreur lors de l\'enregistrement');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [onSaveToConversation, isSaving, hasSaved]);
 
   // Disable DevTools detection
   useEffect(() => {
@@ -257,10 +283,17 @@ const EphemeralMediaViewer = ({
                 </div>
 
                 <h3 className="font-display text-xl font-semibold mb-2 text-foreground">
-                  {type === 'image' ? 'Photo éphémère' : 'Vidéo éphémère'}
+                  {type === 'image' ? 'Photo' : 'Vidéo'} {isUnlimited ? 'partagée' : 'éphémère'}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-8">
-                  Disparaît après <span className="font-semibold text-foreground">{duration} secondes</span>
+                  {isUnlimited ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <Infinity className="w-4 h-4" />
+                      <span>Visible en illimité • <span className="text-green-500 font-medium">Enregistrable</span></span>
+                    </span>
+                  ) : (
+                    <>Disparaît après <span className="font-semibold text-foreground">{duration} secondes</span></>
+                  )}
                 </p>
 
                 {/* Actions */}
@@ -284,16 +317,31 @@ const EphemeralMediaViewer = ({
                   </Button>
                 </div>
 
-                {/* Security warning */}
+                {/* Security warning or save info */}
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="mt-6 py-3 px-4 rounded-xl bg-destructive/10 border border-destructive/20"
+                  className={`mt-6 py-3 px-4 rounded-xl ${
+                    isUnlimited 
+                      ? 'bg-green-500/10 border border-green-500/20' 
+                      : 'bg-destructive/10 border border-destructive/20'
+                  }`}
                 >
-                  <p className="text-xs text-destructive font-medium flex items-center justify-center gap-2">
-                    <Shield className="w-4 h-4" />
-                    Capture d'écran = Suspension
+                  <p className={`text-xs font-medium flex items-center justify-center gap-2 ${
+                    isUnlimited ? 'text-green-600 dark:text-green-400' : 'text-destructive'
+                  }`}>
+                    {isUnlimited ? (
+                      <>
+                        <Download className="w-4 h-4" />
+                        Tu pourras enregistrer ce média
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-4 h-4" />
+                        Capture d'écran = Suspension
+                      </>
+                    )}
                   </p>
                 </motion.div>
               </motion.div>
@@ -319,15 +367,17 @@ const EphemeralMediaViewer = ({
                 WebkitTouchCallout: 'none',
               }}
             >
-              {/* Elegant timer bar */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/10 z-10">
-                <motion.div 
-                  className="h-full bg-gradient-to-r from-primary via-accent to-primary"
-                  initial={{ width: '100%' }}
-                  animate={{ width: `${(timeLeft / duration) * 100}%` }}
-                  transition={{ duration: 1, ease: 'linear' }}
-                />
-              </div>
+              {/* Elegant timer bar - only for non-unlimited */}
+              {!isUnlimited && (
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/10 z-10">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-primary via-accent to-primary"
+                    initial={{ width: '100%' }}
+                    animate={{ width: `${(timeLeft / duration) * 100}%` }}
+                    transition={{ duration: 1, ease: 'linear' }}
+                  />
+                </div>
+              )}
               
               {/* Header with glassmorphism */}
               <div className="absolute top-0 left-0 right-0 pt-6 pb-4 px-6 z-10 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
@@ -338,13 +388,26 @@ const EphemeralMediaViewer = ({
                     </div>
                     <div>
                       <span className="font-semibold text-white block">{senderName}</span>
-                      <span className="text-white/60 text-xs">Contenu éphémère</span>
+                      <span className="text-white/60 text-xs">
+                        {isUnlimited ? 'Média enregistrable' : 'Contenu éphémère'}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {/* Timer display */}
-                    <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                      <span className="text-white font-mono text-lg font-bold">{timeLeft}s</span>
+                    {/* Timer/Unlimited display */}
+                    <div className={`backdrop-blur-md px-4 py-2 rounded-full border ${
+                      isUnlimited 
+                        ? 'bg-green-500/20 border-green-500/30' 
+                        : 'bg-white/10 border-white/10'
+                    }`}>
+                      {isUnlimited ? (
+                        <span className="text-green-400 font-medium text-sm flex items-center gap-1">
+                          <Infinity className="w-4 h-4" />
+                          Illimité
+                        </span>
+                      ) : (
+                        <span className="text-white font-mono text-lg font-bold">{timeLeft}s</span>
+                      )}
                     </div>
                     {/* Close button */}
                     <button 
@@ -416,12 +479,46 @@ const EphemeralMediaViewer = ({
                 )}
               </AnimatePresence>
               
-              {/* Footer warning */}
+              {/* Footer - Save button for unlimited or warning for ephemeral */}
               <div className="absolute bottom-0 left-0 right-0 pb-8 pt-16 px-6 z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                <p className="text-white/50 text-sm flex items-center justify-center gap-2">
-                  <EyeOff className="w-4 h-4" />
-                  Protection anti-capture activée
-                </p>
+                {isUnlimited && onSaveToConversation ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <Button
+                      onClick={handleSaveToConversation}
+                      disabled={isSaving || hasSaved}
+                      className={`${
+                        hasSaved 
+                          ? 'bg-green-500 hover:bg-green-500' 
+                          : 'bg-white/20 hover:bg-white/30 backdrop-blur-md'
+                      } text-white border border-white/20 rounded-full px-6`}
+                    >
+                      {hasSaved ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Enregistré
+                        </>
+                      ) : isSaving ? (
+                        <>
+                          <Download className="w-4 h-4 mr-2 animate-spin" />
+                          Enregistrement...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4 mr-2" />
+                          Enregistrer dans la conversation
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-white/50 text-xs">
+                      Le média sera visible en permanence
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-white/50 text-sm flex items-center justify-center gap-2">
+                    <EyeOff className="w-4 h-4" />
+                    Protection anti-capture activée
+                  </p>
+                )}
               </div>
             </motion.div>
           )}

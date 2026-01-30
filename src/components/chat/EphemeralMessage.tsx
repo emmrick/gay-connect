@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
-import { Image, Video, Eye, Loader2 } from 'lucide-react';
+import { Image, Video, Eye, Loader2, Infinity } from 'lucide-react';
 import { useEphemeralMedia } from '@/hooks/useEphemeralMedia';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 import EphemeralMediaViewer from './EphemeralMediaViewer';
 
 interface EphemeralMessageProps {
@@ -8,11 +11,17 @@ interface EphemeralMessageProps {
   messageType: 'image' | 'video';
   senderName: string;
   isOwn: boolean;
+  chatRoomId?: string;
+  recipientId?: string;
 }
 
-const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: EphemeralMessageProps) => {
+const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomId, recipientId }: EphemeralMessageProps) => {
   const [showMedia, setShowMedia] = useState(false);
   const { media, isLoading, markAsViewed } = useEphemeralMedia(messageId);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const isUnlimited = media?.view_duration === 0;
 
   const handleView = useCallback(() => {
     if (media && !media.is_viewed) {
@@ -25,10 +34,37 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: Ephemer
   }, []);
 
   const handleViewed = useCallback(async () => {
-    if (media) {
+    if (media && !isUnlimited) {
       await markAsViewed.mutateAsync(media.id);
     }
-  }, [media, markAsViewed]);
+  }, [media, markAsViewed, isUnlimited]);
+
+  // Save media to conversation (convert ephemeral to regular)
+  const handleSaveToConversation = useCallback(async () => {
+    if (!media || !user) return;
+
+    // Create a new regular message with the media URL
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        sender_id: media.message_id ? (await supabase.from('messages').select('sender_id').eq('id', messageId).single()).data?.sender_id : user.id,
+        chat_room_id: chatRoomId || null,
+        recipient_id: recipientId || null,
+        content: media.signedUrl.split('?')[0], // Get the public URL without signature
+        message_type: messageType,
+        is_private: !!recipientId,
+      });
+
+    if (error) throw error;
+
+    // Invalidate queries to refresh the message list
+    if (chatRoomId) {
+      queryClient.invalidateQueries({ queryKey: ['messages', chatRoomId] });
+    }
+    if (recipientId) {
+      queryClient.invalidateQueries({ queryKey: ['private-messages', user.id, recipientId] });
+    }
+  }, [media, user, chatRoomId, recipientId, messageType, messageId, queryClient]);
 
   if (isLoading) {
     return (
@@ -51,8 +87,8 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: Ephemer
     );
   }
 
-  // Media already viewed
-  if (media.is_viewed && !isOwn) {
+  // Media already viewed (only for non-unlimited)
+  if (media.is_viewed && !isOwn && !isUnlimited) {
     return (
       <div className="flex items-center gap-2 p-3 rounded-xl bg-secondary/30 text-muted-foreground">
         {messageType === 'image' ? (
@@ -72,17 +108,19 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: Ephemer
       {/* Media preview button */}
       <button
         onClick={handleView}
-        disabled={isOwn || media.is_viewed}
+        disabled={isOwn || (media.is_viewed && !isUnlimited)}
         className={`relative flex items-center gap-3 p-4 rounded-xl transition-all ${
           isOwn
             ? 'bg-primary/20 cursor-default'
-            : media.is_viewed
+            : (media.is_viewed && !isUnlimited)
             ? 'bg-secondary/30 cursor-default'
+            : isUnlimited
+            ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 cursor-pointer border border-green-500/20'
             : 'bg-gradient-to-br from-primary/20 to-accent/20 hover:from-primary/30 hover:to-accent/30 cursor-pointer'
         }`}
       >
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-          isOwn ? 'bg-primary/30' : 'bg-gradient-to-br from-primary to-accent'
+          isOwn ? 'bg-primary/30' : isUnlimited ? 'bg-gradient-to-br from-green-500 to-emerald-500' : 'bg-gradient-to-br from-primary to-accent'
         }`}>
           {messageType === 'image' ? (
             <Image className="w-6 h-6 text-white" />
@@ -96,13 +134,27 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: Ephemer
             {isOwn ? 'Tu as envoyé' : 'Tu as reçu'} {messageType === 'image' ? 'une photo' : 'une vidéo'}
           </p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Eye className="w-3 h-3" />
-            {isOwn 
-              ? media.is_viewed 
-                ? 'Vu' 
-                : 'Non vu'
-              : `Appuie pour voir • ${media.view_duration}s`
-            }
+            {isUnlimited ? (
+              <>
+                <Infinity className="w-3 h-3 text-green-500" />
+                <span className="text-green-500">
+                  {isOwn 
+                    ? (media.is_viewed ? 'Vu • Enregistrable' : 'Non vu • Enregistrable')
+                    : 'Appuie pour voir • Enregistrable'
+                  }
+                </span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-3 h-3" />
+                {isOwn 
+                  ? media.is_viewed 
+                    ? 'Vu' 
+                    : 'Non vu'
+                  : `Appuie pour voir • ${media.view_duration}s`
+                }
+              </>
+            )}
           </p>
         </div>
       </button>
@@ -117,6 +169,7 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn }: Ephemer
         mediaId={media.id}
         onClose={handleClose}
         onViewed={handleViewed}
+        onSaveToConversation={isUnlimited && !isOwn ? handleSaveToConversation : undefined}
       />
     </>
   );

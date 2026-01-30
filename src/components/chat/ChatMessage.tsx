@@ -36,6 +36,7 @@ interface ChatMessageProps {
   isOwn: boolean;
   isHighlighted?: boolean;
   reactions?: Reaction[];
+  chatRoomId?: string;
   onReply?: (message: { id: string; content: string; senderName: string }) => void;
   onAvatarClick?: (userId: string) => void;
   onToggleReaction?: (messageId: string, emoji: string) => void;
@@ -46,6 +47,7 @@ const ChatMessage = ({
   isOwn, 
   isHighlighted, 
   reactions = [],
+  chatRoomId,
   onReply, 
   onAvatarClick,
   onToggleReaction,
@@ -148,6 +150,7 @@ const ChatMessage = ({
                 messageType={message.type as 'image' | 'video'}
                 senderName={message.senderName}
                 isOwn={isOwn}
+                chatRoomId={chatRoomId}
               />
             ) : (
               <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
