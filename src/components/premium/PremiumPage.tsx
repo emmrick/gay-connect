@@ -98,7 +98,7 @@ const PremiumPage = () => {
     {
       feature: 'Médias éphémères',
       icon: <Camera className="w-3 h-3 text-primary" />,
-      freeValue: '1/sem',
+      freeValue: '1/jour',
       premiumValue: '∞',
       vipValue: '∞',
     },
