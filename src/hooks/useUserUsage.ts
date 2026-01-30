@@ -286,13 +286,19 @@ export const useUserUsage = () => {
     isLoading: query.isLoading,
     limits,
     isPremium,
-    // Current counts
-    ephemeralMediaCount: getEphemeralMediaCount(),
-    conversationsCount: getConversationsCount(),
-    profilePhotosCount: getProfilePhotosCount(),
-    nearbyProfilesCount: getNearbyProfilesCount(),
+    // Current counts (show Infinity for Premium users to indicate unlimited)
+    ephemeralMediaCount: isPremium ? 0 : getEphemeralMediaCount(),
+    conversationsCount: isPremium ? 0 : getConversationsCount(),
+    profilePhotosCount: isPremium ? 0 : getProfilePhotosCount(),
+    nearbyProfilesCount: isPremium ? 0 : getNearbyProfilesCount(),
     savedMessagesCount: query.data?.saved_messages_count || 0,
     albumsCount: query.data?.albums_count || 0,
+    // Remaining counts (Infinity for premium)
+    remainingEphemeralMedia: isPremium ? Infinity : Math.max(0, limits.ephemeralMediaPerDay - getEphemeralMediaCount()),
+    remainingConversations: isPremium ? Infinity : Math.max(0, limits.conversationsPerWeek - getConversationsCount()),
+    remainingNearbyProfiles: isPremium ? Infinity : Math.max(0, limits.nearbyProfiles - getNearbyProfilesCount()),
+    remainingAlbums: isPremium ? Infinity : Math.max(0, limits.maxAlbums - (query.data?.albums_count || 0)),
+    remainingSavedMessages: isPremium ? Infinity : Math.max(0, limits.maxSavedMessages - (query.data?.saved_messages_count || 0)),
     // Check functions
     canSendEphemeralMedia,
     canStartConversation,
