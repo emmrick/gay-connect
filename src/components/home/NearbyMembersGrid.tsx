@@ -87,11 +87,20 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
     return `${km.toFixed(1)}km`;
   };
 
-  const getLastSeenText = (lastSeen: string | null, isOnline: boolean | null) => {
-    if (isOnline === true) return null;
-    if (!lastSeen) return 'Hors ligne';
+  const getLastSeenText = (profile: any) => {
+    // Respect VIP privacy settings
+    const hideOnlineStatus = profile?.hide_online_status;
+    const hideLastSeen = profile?.hide_last_seen;
     
-    const diff = Date.now() - new Date(lastSeen).getTime();
+    if (hideOnlineStatus && hideLastSeen) return null;
+    
+    if (!hideOnlineStatus && profile?.is_online === true) return null;
+    
+    if (hideLastSeen) return null;
+    
+    if (!profile?.last_seen) return 'Hors ligne';
+    
+    const diff = Date.now() - new Date(profile.last_seen).getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -100,6 +109,11 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
     if (minutes < 60) return `${minutes}min`;
     if (hours < 24) return `${hours}h`;
     return `${days}j`;
+  };
+  
+  const shouldShowOnlineStatus = (profile: any) => {
+    const hideOnlineStatus = profile?.hide_online_status;
+    return !hideOnlineStatus && profile?.is_online === true;
   };
 
   // Get position label
@@ -341,11 +355,11 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
               {/* Online/Offline indicator */}
               {!profile.isCurrentUser && (
                 <div className="absolute top-2 right-2">
-                  {profile.is_online === true ? (
+                  {shouldShowOnlineStatus(profile) ? (
                     <span className="w-2.5 h-2.5 rounded-full bg-green-500 block shadow-lg shadow-green-500/50" />
-                  ) : (
+                  ) : !profile.hide_online_status ? (
                     <span className="w-2.5 h-2.5 rounded-full bg-gray-400 block" />
-                  )}
+                  ) : null}
                 </div>
               )}
 
@@ -369,7 +383,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                       <span>{formatDistance(profile.distance_km)}</span>
                     </>
                   ) : (
-                    <span>{getLastSeenText(profile.last_seen, profile.is_online)}</span>
+                    <span>{getLastSeenText(profile)}</span>
                   )}
                 </div>
               </div>

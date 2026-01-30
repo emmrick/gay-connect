@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 const PREMIUM_PRICE_ID = "price_1SuruqBtwgw553xV8OTjKSyI";
+const VIP_PRICE_ID = "price_1SvEVEBtwgw553xVgnsXKQ5G";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -27,14 +28,19 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Parse request body for optional promo code
+    // Parse request body for optional promo code and tier
     let promoCode: string | undefined;
+    let tier: 'premium' | 'vip' = 'premium';
     try {
       const body = await req.json();
       promoCode = body?.promoCode;
+      tier = body?.tier || 'premium';
     } catch {
       // No body or invalid JSON, continue without promo code
     }
+    
+    const priceId = tier === 'vip' ? VIP_PRICE_ID : PREMIUM_PRICE_ID;
+    logStep("Selected tier", { tier, priceId });
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -65,7 +71,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: PREMIUM_PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],

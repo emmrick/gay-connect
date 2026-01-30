@@ -82,9 +82,14 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
+    // VIP product ID for determining is_vip status
+    const VIP_PRODUCT_ID = "prod_Tt0WC00m6snTh0";
+    const isVip = productId === VIP_PRODUCT_ID;
+
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       is_premium: hasActiveSub,
+      is_vip: isVip,
       product_id: productId,
       subscription_end: subscriptionEnd
     }), {
