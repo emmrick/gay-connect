@@ -3,12 +3,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, ChevronRight, Loader2, Crown, Sparkles, FolderLock } from 'lucide-react';
+import { 
+  MapPin, Calendar, LogOut, Edit2, Shield, Bell, Moon, HelpCircle, 
+  ChevronRight, Loader2, Crown, Sparkles, FolderLock, Star, Heart,
+  MessageCircle, Users, Zap
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
@@ -36,22 +41,45 @@ const LOOKING_FOR_LABELS: Record<string, string> = {
   'groupe': '👥 Plan à plusieurs',
 };
 
+const BODY_TYPE_LABELS: Record<string, string> = {
+  'mince': 'Mince',
+  'moyen': 'Moyen',
+  'muscle': 'Musclé',
+  'costaud': 'Costaud',
+  'gros': 'Gros',
+  'sportif': 'Sportif',
+};
+
+const ETHNICITY_LABELS: Record<string, string> = {
+  'europeen': 'Européen',
+  'africain': 'Africain',
+  'maghrebin': 'Maghrébin',
+  'asiatique': 'Asiatique',
+  'latino': 'Latino',
+  'metis': 'Métis',
+  'autre': 'Autre',
+};
+
 const getPositionLabel = (position: string) => POSITION_LABELS[position] || position;
 const getLookingForLabel = (item: string) => LOOKING_FOR_LABELS[item] || item;
+const getBodyTypeLabel = (type: string) => BODY_TYPE_LABELS[type] || type;
+const getEthnicityLabel = (eth: string) => ETHNICITY_LABELS[eth] || eth;
 
 interface ProfileViewProps {
   onSignOut: () => void;
   onNavigateToAdmin?: () => void;
+  onNavigateToPremium?: () => void;
   isAdmin?: boolean;
 }
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
-const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps) => {
+const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, isAdmin }: ProfileViewProps) => {
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
   const { isPremium, subscriptionEnd, openCustomerPortal } = useSubscription();
+  const { favorites } = useUserFavorites();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [settingsType, setSettingsType] = useState<SettingsType | null>(null);
   const [showAlbumManager, setShowAlbumManager] = useState(false);
@@ -167,6 +195,20 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
               </div>
             )}
 
+            {/* Additional info badges */}
+            <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+              {(profile as any).body_type && (
+                <Badge variant="secondary" className="text-xs">
+                  {getBodyTypeLabel((profile as any).body_type)}
+                </Badge>
+              )}
+              {(profile as any).ethnicity && (
+                <Badge variant="secondary" className="text-xs">
+                  {getEthnicityLabel((profile as any).ethnicity)}
+                </Badge>
+              )}
+            </div>
+
             {/* Bio */}
             {profile.bio && (
               <p className="mt-4 text-center text-muted-foreground max-w-sm">
@@ -189,35 +231,41 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-3 gap-3 px-4 mt-6">
+      <div className="grid grid-cols-4 gap-2 px-4 mt-6">
         <Card className="bg-secondary/50">
           <CardContent className="p-3 text-center">
             {statsLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />
+              <Loader2 className="w-4 h-4 animate-spin mx-auto text-primary" />
             ) : (
-              <p className="text-2xl font-bold text-primary">{stats?.messagesCount || 0}</p>
+              <p className="text-xl font-bold text-primary">{stats?.messagesCount || 0}</p>
             )}
-            <p className="text-xs text-muted-foreground">Messages</p>
+            <p className="text-[10px] text-muted-foreground">Messages</p>
           </CardContent>
         </Card>
         <Card className="bg-secondary/50">
           <CardContent className="p-3 text-center">
             {statsLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />
+              <Loader2 className="w-4 h-4 animate-spin mx-auto text-primary" />
             ) : (
-              <p className="text-2xl font-bold text-primary">{stats?.conversationsCount || 0}</p>
+              <p className="text-xl font-bold text-primary">{stats?.conversationsCount || 0}</p>
             )}
-            <p className="text-xs text-muted-foreground">Conversations</p>
+            <p className="text-[10px] text-muted-foreground">Convs</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-secondary/50">
+          <CardContent className="p-3 text-center">
+            <p className="text-xl font-bold text-amber-500">{favorites.length}</p>
+            <p className="text-[10px] text-muted-foreground">Favoris</p>
           </CardContent>
         </Card>
         <Card className="bg-secondary/50">
           <CardContent className="p-3 text-center">
             {statsLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" />
+              <Loader2 className="w-4 h-4 animate-spin mx-auto text-primary" />
             ) : (
-              <p className="text-2xl font-bold text-primary">{stats?.reactionsCount || 0}</p>
+              <p className="text-xl font-bold text-pink-500">{stats?.reactionsCount || 0}</p>
             )}
-            <p className="text-xs text-muted-foreground">Réactions</p>
+            <p className="text-[10px] text-muted-foreground">Réactions</p>
           </CardContent>
         </Card>
       </div>
@@ -266,17 +314,20 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, isAdmin }: ProfileViewProps
           </button>
         ) : (
           <button
-            onClick={() => {/* Navigate to premium handled by parent */}}
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/5 to-orange-500/5 hover:from-amber-500/15 hover:to-orange-500/15 transition-colors border border-amber-500/20"
+            onClick={onNavigateToPremium}
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 transition-all border border-amber-500/30 group"
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-500/20 flex items-center justify-center">
-              <Crown className="w-5 h-5 text-amber-500" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Crown className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 text-left">
-              <span className="font-medium text-amber-500">Passer à Premium</span>
-              <p className="text-xs text-muted-foreground">4,50 €/mois - Débloquez tout</p>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-amber-500">Passer à Premium</span>
+                <Zap className="w-4 h-4 text-amber-500" />
+              </div>
+              <p className="text-xs text-muted-foreground">4,50 €/mois • Débloquez tout</p>
             </div>
-            <ChevronRight className="w-5 h-5 text-amber-500" />
+            <ChevronRight className="w-5 h-5 text-amber-500 group-hover:translate-x-1 transition-transform" />
           </button>
         )}
 

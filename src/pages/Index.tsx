@@ -420,6 +420,7 @@ const Index = () => {
               <ProfileView 
                 onSignOut={handleSignOut}
                 onNavigateToAdmin={() => navigate('/admin')}
+                onNavigateToPremium={() => handleTabChange('premium')}
                 isAdmin={isAdmin}
               />
             </ScrollArea>

@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Bell, Moon, Shield, HelpCircle, ExternalLink, Mail, MessageSquare } from 'lucide-react';
+import { 
+  Bell, Moon, Shield, HelpCircle, ExternalLink, Mail, MessageSquare, 
+  Volume2, VolumeX, Eye, EyeOff, Palette, Sparkles, ChevronRight,
+  Globe, Lock, Check
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
@@ -20,6 +26,32 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
   type: SettingsType;
 }
+
+interface SettingItemProps {
+  icon: React.ElementType;
+  iconColor?: string;
+  title: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}
+
+const SettingItem = ({ icon: Icon, iconColor = "text-primary", title, description, checked, onCheckedChange }: SettingItemProps) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+  >
+    <div className={cn("w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0", iconColor)}>
+      <Icon className="w-5 h-5" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <Label className="font-medium block">{title}</Label>
+      <p className="text-sm text-muted-foreground truncate">{description}</p>
+    </div>
+    <Switch checked={checked} onCheckedChange={onCheckedChange} />
+  </motion.div>
+);
 
 const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
   const { toast } = useToast();
@@ -77,7 +109,7 @@ const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
 
   const handleSave = () => {
     toast({
-      title: 'Paramètres enregistrés',
+      title: '✓ Paramètres enregistrés',
       description: 'Vos préférences ont été mises à jour.',
     });
     onOpenChange(false);
@@ -88,43 +120,33 @@ const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
       case 'notifications':
         return {
           title: 'Notifications',
-          description: 'Gérez vos préférences de notification',
-          icon: <Bell className="w-5 h-5 text-primary" />,
+          description: 'Personnalise tes alertes et notifications',
+          icon: <Bell className="w-6 h-6 text-primary" />,
+          gradient: 'from-blue-500/20 to-cyan-500/20',
           content: (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Notifications push</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Recevoir des notifications sur votre appareil
-                  </p>
-                </div>
-                <Switch checked={pushEnabled} onCheckedChange={setPushEnabled} />
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Sons de notification</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Jouer un son lors des nouvelles notifications
-                  </p>
-                </div>
-                <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Nouveaux messages</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Être notifié des nouveaux messages privés
-                  </p>
-                </div>
-                <Switch checked={messageNotifs} onCheckedChange={setMessageNotifs} />
-              </div>
+            <div className="space-y-3">
+              <SettingItem
+                icon={Bell}
+                title="Notifications push"
+                description="Recevoir des alertes sur ton appareil"
+                checked={pushEnabled}
+                onCheckedChange={setPushEnabled}
+              />
+              <SettingItem
+                icon={soundEnabled ? Volume2 : VolumeX}
+                iconColor={soundEnabled ? "text-green-500" : "text-muted-foreground"}
+                title="Sons de notification"
+                description="Jouer un son pour chaque notification"
+                checked={soundEnabled}
+                onCheckedChange={setSoundEnabled}
+              />
+              <SettingItem
+                icon={MessageSquare}
+                title="Nouveaux messages"
+                description="Être alerté des messages privés"
+                checked={messageNotifs}
+                onCheckedChange={setMessageNotifs}
+              />
             </div>
           ),
         };
@@ -132,31 +154,41 @@ const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
       case 'appearance':
         return {
           title: 'Apparence',
-          description: 'Personnalisez l\'apparence de l\'application',
-          icon: <Moon className="w-5 h-5 text-primary" />,
+          description: 'Personnalise le look de l\'application',
+          icon: <Palette className="w-6 h-6 text-primary" />,
+          gradient: 'from-purple-500/20 to-pink-500/20',
           content: (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Mode sombre</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Activer le thème sombre
-                  </p>
-                </div>
-                <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-              </div>
+            <div className="space-y-3">
+              <SettingItem
+                icon={Moon}
+                iconColor={darkMode ? "text-indigo-400" : "text-amber-500"}
+                title="Mode sombre"
+                description={darkMode ? "Thème sombre activé" : "Thème clair activé"}
+                checked={darkMode}
+                onCheckedChange={setDarkMode}
+              />
+              <SettingItem
+                icon={Sparkles}
+                title="Réduire les animations"
+                description="Pour une meilleure accessibilité"
+                checked={reducedMotion}
+                onCheckedChange={setReducedMotion}
+              />
               
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Réduire les animations</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Désactiver les animations pour une meilleure accessibilité
-                  </p>
+              {/* Theme preview */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-4 p-4 rounded-xl border border-border bg-gradient-to-br from-secondary/50 to-secondary/20"
+              >
+                <p className="text-sm font-medium mb-2">Aperçu du thème</p>
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="h-8 rounded-lg bg-primary" title="Primary" />
+                  <div className="h-8 rounded-lg bg-secondary" title="Secondary" />
+                  <div className="h-8 rounded-lg bg-accent" title="Accent" />
+                  <div className="h-8 rounded-lg bg-muted" title="Muted" />
                 </div>
-                <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
-              </div>
+              </motion.div>
             </div>
           ),
         };
@@ -164,31 +196,43 @@ const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
       case 'privacy':
         return {
           title: 'Confidentialité',
-          description: 'Contrôlez qui peut voir vos informations',
-          icon: <Shield className="w-5 h-5 text-primary" />,
+          description: 'Contrôle qui peut voir tes informations',
+          icon: <Shield className="w-6 h-6 text-primary" />,
+          gradient: 'from-emerald-500/20 to-teal-500/20',
           content: (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Statut en ligne</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Montrer quand vous êtes en ligne
-                  </p>
-                </div>
-                <Switch checked={showOnlineStatus} onCheckedChange={setShowOnlineStatus} />
-              </div>
+            <div className="space-y-3">
+              <SettingItem
+                icon={showOnlineStatus ? Eye : EyeOff}
+                iconColor={showOnlineStatus ? "text-green-500" : "text-muted-foreground"}
+                title="Statut en ligne"
+                description="Afficher quand tu es connecté"
+                checked={showOnlineStatus}
+                onCheckedChange={setShowOnlineStatus}
+              />
+              <SettingItem
+                icon={Globe}
+                title="Dernière connexion"
+                description="Montrer ta dernière activité"
+                checked={showLastSeen}
+                onCheckedChange={setShowLastSeen}
+              />
               
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Dernière connexion</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Montrer votre dernière date de connexion
-                  </p>
+              {/* Privacy info */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20"
+              >
+                <div className="flex gap-3">
+                  <Lock className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-amber-500">Tes données sont protégées</p>
+                    <p className="text-muted-foreground mt-1">
+                      Nous ne partageons jamais tes informations personnelles avec des tiers.
+                    </p>
+                  </div>
                 </div>
-                <Switch checked={showLastSeen} onCheckedChange={setShowLastSeen} />
-              </div>
+              </motion.div>
             </div>
           ),
         };
@@ -196,34 +240,63 @@ const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
       case 'help':
         return {
           title: 'Aide & Support',
-          description: 'Besoin d\'aide ? Contactez-nous',
-          icon: <HelpCircle className="w-5 h-5 text-primary" />,
+          description: 'Besoin d\'aide ? On est là pour toi',
+          icon: <HelpCircle className="w-6 h-6 text-primary" />,
+          gradient: 'from-orange-500/20 to-red-500/20',
           content: (
             <div className="space-y-4">
-              <div className="glass-card rounded-xl p-4 space-y-3">
-                <h4 className="font-semibold">Questions fréquentes</h4>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <p><strong>Comment modifier mon profil ?</strong><br />
-                  Allez dans l'onglet Profil et cliquez sur "Modifier le profil".</p>
-                  <p><strong>Comment démarrer une conversation ?</strong><br />
-                  Cliquez sur le profil d'un membre ou utilisez le bouton + dans Messages.</p>
-                  <p><strong>Comment signaler un utilisateur ?</strong><br />
-                  Dans une conversation, utilisez l'option de signalement disponible.</p>
+              {/* FAQ Section */}
+              <div className="space-y-2">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Questions fréquentes
+                </h4>
+                
+                <div className="space-y-2">
+                  {[
+                    { q: "Comment modifier mon profil ?", a: "Va dans l'onglet Profil et clique sur \"Modifier le profil\"." },
+                    { q: "Comment changer ma photo de profil ?", a: "Dans Modifier le profil > Photos, touche une photo puis \"Photo de profil\"." },
+                    { q: "Comment démarrer une conversation ?", a: "Clique sur le profil d'un membre ou utilise le bouton + dans Messages." },
+                    { q: "Comment signaler un utilisateur ?", a: "Dans une conversation ou sur un profil, utilise l'icône de signalement." },
+                  ].map((faq, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                    >
+                      <p className="font-medium text-sm">{faq.q}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{faq.a}</p>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
               
               <Separator />
               
+              {/* Contact Section */}
               <div className="space-y-3">
                 <h4 className="font-semibold">Nous contacter</h4>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Mail className="w-4 h-4" />
-                  support@gayconnect.app
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-between group"
+                  onClick={() => window.open('mailto:support@gayconnect.app', '_blank')}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Mail className="w-4 h-4 text-primary" />
+                    </div>
+                    <span>support@gayconnect.app</span>
+                  </div>
+                  <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Chat en direct
-                </Button>
+              </div>
+              
+              {/* Version info */}
+              <div className="text-center pt-4 text-xs text-muted-foreground">
+                <p>GayConnect v1.0.0</p>
+                <p className="mt-1">© 2025 Tous droits réservés</p>
               </div>
             </div>
           ),
@@ -234,34 +307,57 @@ const SettingsDialog = ({ open, onOpenChange, type }: SettingsDialogProps) => {
   const dialogContent = getDialogContent();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {dialogContent.icon}
-            {dialogContent.title}
-          </DialogTitle>
-          <DialogDescription>
-            {dialogContent.description}
-          </DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+        {/* Header with gradient */}
+        <div className={cn("absolute inset-x-0 top-0 h-32 rounded-t-3xl bg-gradient-to-br opacity-50", dialogContent.gradient)} />
         
-        <div className="py-4">
-          {dialogContent.content}
+        <SheetHeader className="relative z-10 pt-2">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              {dialogContent.icon}
+            </div>
+            <div>
+              <SheetTitle className="text-xl">{dialogContent.title}</SheetTitle>
+              <SheetDescription>{dialogContent.description}</SheetDescription>
+            </div>
+          </div>
+        </SheetHeader>
+        
+        <div className="relative z-10 py-6 overflow-y-auto max-h-[calc(85vh-180px)]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={type}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {dialogContent.content}
+            </motion.div>
+          </AnimatePresence>
         </div>
         
         {type !== 'help' && (
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="relative z-10 flex gap-3 pt-4 border-t border-border">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => onOpenChange(false)}
+            >
               Annuler
             </Button>
-            <Button onClick={handleSave}>
+            <Button 
+              className="flex-1 gap-2"
+              onClick={handleSave}
+            >
+              <Check className="w-4 h-4" />
               Enregistrer
             </Button>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 
