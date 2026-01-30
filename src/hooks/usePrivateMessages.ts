@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRecordEarning } from '@/hooks/useModeratorEarnings';
 
 type Message = Tables<'messages'>;
 
@@ -14,6 +15,7 @@ interface PrivateMessageWithProfile extends Message {
 export const usePrivateMessages = (otherUserId: string | null) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const recordEarning = useRecordEarning();
 
   const query = useQuery({
     queryKey: ['private-messages', user?.id, otherUserId],
@@ -123,6 +125,16 @@ export const usePrivateMessages = (otherUserId: string | null) => {
 
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => {
+      // Record earning for admin/moderator when sending private message
+      if (otherUserId) {
+        recordEarning.mutate({
+          taskType: 'private_message_response',
+          targetUserId: otherUserId,
+          description: 'Réponse message privé',
+        });
+      }
     },
   });
 
