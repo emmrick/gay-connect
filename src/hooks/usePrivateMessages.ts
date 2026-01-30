@@ -24,40 +24,47 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     queryFn: async (): Promise<PrivateMessageWithProfile[]> => {
       if (!user || !otherUserId) return [];
 
-      // Fetch messages with timeout to prevent infinite loading
-      const { data: messages, error } = await withTimeout(
-        Promise.resolve(
-          supabase
-            .from('messages')
-            .select('*')
-            .eq('is_private', true)
-            .is('deleted_at', null)
-            .or(
-              `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
-            )
-            .order('created_at', { ascending: true })
-            .limit(50)
+      // IMPORTANT: charger en parallèle pour réduire la latence (et éviter les écrans bloqués).
+      // On n'échoue pas si le fetch profiles plante: on affiche un fallback et on garde les messages.
+      const [messagesRes, profilesRes] = await Promise.all([
+        withTimeout(
+          Promise.resolve(
+            supabase
+              .from('messages')
+              .select('*')
+              .eq('is_private', true)
+              .is('deleted_at', null)
+              .or(
+                `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
+              )
+              .order('created_at', { ascending: true })
+              .limit(50)
+          ),
+          12000
         ),
-        12000
-      );
-
-      if (error) throw error;
-      if (!messages || messages.length === 0) return [];
-
-      // Get profiles for both users in single request
-      const { data: profiles } = await withTimeout(
-        Promise.resolve(
-          supabase
-            .from('profiles')
-            .select('user_id, username, avatar_url')
-            .in('user_id', [user.id, otherUserId])
+        withTimeout(
+          Promise.resolve(
+            supabase
+              .from('profiles')
+              .select('user_id, username, avatar_url')
+              .in('user_id', [user.id, otherUserId])
+          ),
+          12000
         ),
-        12000
-      );
+      ]);
 
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      if (messagesRes.error) throw messagesRes.error;
 
-      return messages.map(msg => ({
+      const messages = messagesRes.data || [];
+      if (messages.length === 0) return [];
+
+      if (profilesRes.error) {
+        console.warn('Failed to fetch profiles for private messages:', profilesRes.error);
+      }
+
+      const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p]));
+
+      return messages.map((msg) => ({
         ...msg,
         senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
         senderAvatar: profileMap.get(msg.sender_id)?.avatar_url || null,
@@ -70,6 +77,8 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     // IMPORTANT: avoid long "stuck loading" states when the backend is slow/unavailable.
     // Users have a manual "Réessayer" button in the UI.
     retry: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // Real-time subscription for new messages
