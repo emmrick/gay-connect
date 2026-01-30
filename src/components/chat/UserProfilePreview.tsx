@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, MapPin, Clock, Flag } from 'lucide-react';
+import { MessageCircle, MapPin, Clock, Flag, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReportUserDialog from './ReportUserDialog';
@@ -29,11 +30,19 @@ interface UserProfilePreviewProps {
 }
 
 const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: UserProfilePreviewProps) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const { photos: userPhotos } = useProfilePhotos(userId || undefined);
+
+  const handleViewFullProfile = () => {
+    if (userId) {
+      onClose();
+      navigate(`/profile/${userId}`);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -128,25 +137,37 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
               </div>
 
               {/* Actions */}
-              {!isOwnProfile && (
-                <div className="flex gap-2 mt-2 w-full">
-                  <Button 
-                    variant="gradient" 
-                    className="flex-1"
-                    onClick={handleStartChat}
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Message privé
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowReportDialog(true)}
-                  >
-                    <Flag className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+              <div className="flex flex-col gap-2 mt-2 w-full">
+                {/* View Full Profile Button */}
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleViewFullProfile}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Voir le profil complet
+                </Button>
+
+                {!isOwnProfile && (
+                  <div className="flex gap-2 w-full">
+                    <Button 
+                      variant="gradient" 
+                      className="flex-1"
+                      onClick={handleStartChat}
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message privé
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowReportDialog(true)}
+                    >
+                      <Flag className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
