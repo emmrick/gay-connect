@@ -21,9 +21,26 @@ interface JoinedGroupsListProps {
 }
 
 const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
-  const { joinedGroups, leaveGroup } = useJoinedGroups();
+  const { joinedGroups, leaveGroup, isLoading } = useJoinedGroups();
   const { data: onlineCounts } = useOnlineMemberCounts();
   const [leaveConfirm, setLeaveConfirm] = useState<string | null>(null);
+
+  // Show loading state while auth/groups are loading
+  if (isLoading) {
+    return (
+      <div className="px-4 pb-6 space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/30 animate-pulse">
+            <div className="w-12 h-12 rounded-full bg-muted" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-muted rounded w-24" />
+              <div className="h-3 bg-muted rounded w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (joinedGroups.length === 0) {
     return (
