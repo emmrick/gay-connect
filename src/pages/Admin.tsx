@@ -16,7 +16,9 @@ import {
   Users,
   ShieldOff,
   IdCard,
-  Ticket
+  Ticket,
+  BarChart3,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -39,6 +41,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
 import PromoCodePanel from '@/components/admin/PromoCodePanel';
+import UserManagementPanel from '@/components/admin/UserManagementPanel';
+import ContentModerationPanel from '@/components/admin/ContentModerationPanel';
+import AdminStatsPanel from '@/components/admin/AdminStatsPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', color: 'bg-yellow-500', icon: Clock },
@@ -52,7 +57,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats, isLoading: statsLoading } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
-  const [activeSection, setActiveSection] = useState<'reports' | 'blocked' | 'verification' | 'promo'>('reports');
+  const [activeSection, setActiveSection] = useState<'stats' | 'users' | 'reports' | 'moderation' | 'blocked' | 'verification' | 'promo'>('stats');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -164,25 +169,57 @@ const Admin = () => {
         </div>
 
         {/* Section Tabs */}
-        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as 'reports' | 'blocked' | 'verification' | 'promo')}>
-          <TabsList className="grid grid-cols-4 w-fit">
-            <TabsTrigger value="reports" className="gap-2">
-              <Filter className="w-4 h-4" />
-              Signalements
-            </TabsTrigger>
-            <TabsTrigger value="verification" className="gap-2">
-              <IdCard className="w-4 h-4" />
-              Vérifications
-            </TabsTrigger>
-            <TabsTrigger value="promo" className="gap-2">
-              <Ticket className="w-4 h-4" />
-              Codes promo
-            </TabsTrigger>
-            <TabsTrigger value="blocked" className="gap-2">
-              <Ban className="w-4 h-4" />
-              Bloqués
-            </TabsTrigger>
-          </TabsList>
+        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as typeof activeSection)}>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="inline-flex w-auto min-w-full md:min-w-0">
+              <TabsTrigger value="stats" className="gap-2">
+                <BarChart3 className="w-4 h-4" />
+                <span className="hidden sm:inline">Statistiques</span>
+              </TabsTrigger>
+              <TabsTrigger value="users" className="gap-2">
+                <Users className="w-4 h-4" />
+                <span className="hidden sm:inline">Utilisateurs</span>
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="gap-2">
+                <Filter className="w-4 h-4" />
+                <span className="hidden sm:inline">Signalements</span>
+              </TabsTrigger>
+              <TabsTrigger value="moderation" className="gap-2">
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden sm:inline">Contenu</span>
+              </TabsTrigger>
+              <TabsTrigger value="verification" className="gap-2">
+                <IdCard className="w-4 h-4" />
+                <span className="hidden sm:inline">Vérifications</span>
+              </TabsTrigger>
+              <TabsTrigger value="promo" className="gap-2">
+                <Ticket className="w-4 h-4" />
+                <span className="hidden sm:inline">Promos</span>
+              </TabsTrigger>
+              <TabsTrigger value="blocked" className="gap-2">
+                <Ban className="w-4 h-4" />
+                <span className="hidden sm:inline">Bloqués</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Stats Section */}
+          <TabsContent value="stats">
+            <Card>
+              <CardContent className="pt-6">
+                <AdminStatsPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Users Section */}
+          <TabsContent value="users">
+            <Card>
+              <CardContent className="pt-6">
+                <UserManagementPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Reports Section */}
           <TabsContent value="reports">
@@ -233,6 +270,14 @@ const Admin = () => {
             </Card>
           </TabsContent>
 
+          {/* Content Moderation Section */}
+          <TabsContent value="moderation">
+            <Card>
+              <CardContent className="pt-6">
+                <ContentModerationPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Identity Verification Section */}
           <TabsContent value="verification">
