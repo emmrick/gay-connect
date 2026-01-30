@@ -95,18 +95,48 @@ export const useIdentityVerification = () => {
     }) => {
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
+      // First, reset the status to pending (in case of resubmission after rejection)
+      // This is needed because RLS only allows updates when status = 'pending'
+      const { data: currentVerification } = await supabase
         .from('identity_verifications')
-        .update({
-          selfie_url: selfieUrl,
-          id_front_url: idFrontUrl,
-          id_back_url: idBackUrl,
-          submitted_at: new Date().toISOString(),
-          status: 'pending',
-        })
-        .eq('user_id', user.id);
+        .select('status')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (currentVerification?.status === 'rejected') {
+        // Delete the old record and create a new one
+        await supabase
+          .from('identity_verifications')
+          .delete()
+          .eq('user_id', user.id);
+          
+        const { error: insertError } = await supabase
+          .from('identity_verifications')
+          .insert({
+            user_id: user.id,
+            selfie_url: selfieUrl,
+            id_front_url: idFrontUrl,
+            id_back_url: idBackUrl,
+            submitted_at: new Date().toISOString(),
+            status: 'pending',
+          });
+
+        if (insertError) throw insertError;
+      } else {
+        // Normal update for pending or new submissions
+        const { error } = await supabase
+          .from('identity_verifications')
+          .update({
+            selfie_url: selfieUrl,
+            id_front_url: idFrontUrl,
+            id_back_url: idBackUrl,
+            submitted_at: new Date().toISOString(),
+            status: 'pending',
+          })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity-verification'] });
