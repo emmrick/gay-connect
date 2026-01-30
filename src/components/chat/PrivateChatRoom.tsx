@@ -5,6 +5,7 @@ import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, ChevronDown 
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useMessageReadStatus, getMessageStatus } from '@/hooks/useMessageReadStatus';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +28,7 @@ import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import UserProfilePreview from './UserProfilePreview';
+import MessageStatusIndicator from './MessageStatusIndicator';
 
 interface PrivateChatRoomProps {
   otherUserId: string;
@@ -38,6 +40,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { markAsRead } = useUnreadMessages();
+  const { markConversationAsRead } = useMessageReadStatus(otherUserId);
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
   const unblockUser = useUnblockUserAction();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -58,8 +61,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   useEffect(() => {
     if (otherUserId) {
       markAsRead.mutate(otherUserId);
+      markConversationAsRead();
     }
-  }, [otherUserId]);
+  }, [otherUserId, markConversationAsRead]);
 
   // Track if this is the initial load
   const isInitialLoad = useRef(true);
@@ -398,10 +402,24 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       </div>
                     )}
 
-                    {/* Timestamp */}
-                    <span className="text-[10px] text-muted-foreground mt-1 px-1">
-                      {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
-                    </span>
+                    {/* Timestamp and read status */}
+                    <div className={`flex items-center gap-1 mt-1 px-1 ${isOwn ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-[10px] text-muted-foreground">
+                        {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+                      </span>
+                      {isOwn && (
+                        <MessageStatusIndicator 
+                          status={getMessageStatus(
+                            { 
+                              sender_id: message.sender_id, 
+                              read_at: (message as unknown as { read_at: string | null }).read_at, 
+                              created_at: message.created_at 
+                            }, 
+                            user?.id
+                          )} 
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               );
