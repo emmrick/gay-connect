@@ -17,6 +17,7 @@ import Admin from "./pages/Admin";
 import About from "./pages/About";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
+import MemberProfile from "./pages/MemberProfile";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const AppContent = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/profile/:userId" element={<MemberProfile />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/about" element={<About />} />

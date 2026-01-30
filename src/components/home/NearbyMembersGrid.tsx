@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Loader2, Navigation, RefreshCw, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ interface NearbyMembersGridProps {
 }
 
 const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProps) => {
+  const navigate = useNavigate();
   const { profile: currentUserProfile } = useAuth();
   const { latitude, longitude, loading: locationLoading, error: locationError, requestLocation, permissionState } = useGeolocation();
   const { data: profiles, isLoading: profilesLoading, error: profilesError, refetch, maxProfilesAllowed, isPremium, isLimited } = useNearbyProfiles(latitude, longitude);
@@ -373,7 +375,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
             setSelectedUserId(null);
           }}
           onViewProfile={() => {
-            onViewProfile(selectedUserId);
+            navigate(`/profile/${selectedUserId}`);
             setSelectedUserId(null);
           }}
         />
