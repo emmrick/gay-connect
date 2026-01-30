@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -14,6 +14,7 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
+  PartyPopper,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { toast } from 'sonner';
 import {
   useModeratorWallet,
   useModeratorEarnings,
@@ -57,6 +59,7 @@ const TaskIcon = ({ type }: { type: ModeratorTaskType }) => {
 const ModeratorWalletPanel = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [withdrawalsOpen, setWithdrawalsOpen] = useState(false);
+  const hasShownThresholdNotification = useRef(false);
 
   const { data: wallet, isLoading: walletLoading } = useModeratorWallet();
   const { data: earnings } = useModeratorEarnings(20);
@@ -69,6 +72,30 @@ const ModeratorWalletPanel = () => {
   const canWithdraw = balance >= MIN_WITHDRAWAL_CENTS;
   const progressToWithdraw = Math.min((balance / MIN_WITHDRAWAL_CENTS) * 100, 100);
   const pendingWithdrawal = withdrawals?.find(w => w.status === 'pending');
+
+  // Notification when threshold is reached
+  useEffect(() => {
+    if (
+      canWithdraw && 
+      !pendingWithdrawal && 
+      !hasShownThresholdNotification.current &&
+      wallet
+    ) {
+      hasShownThresholdNotification.current = true;
+      toast.success(
+        '🎉 Félicitations ! Vous avez atteint le seuil de 50€ !',
+        {
+          description: 'Vous pouvez maintenant demander un retrait de vos gains.',
+          duration: 8000,
+          icon: <PartyPopper className="w-5 h-5 text-primary" />,
+          action: {
+            label: 'Retirer',
+            onClick: () => requestWithdrawal.mutate(),
+          },
+        }
+      );
+    }
+  }, [canWithdraw, pendingWithdrawal, wallet, requestWithdrawal]);
 
   if (walletLoading) {
     return (
