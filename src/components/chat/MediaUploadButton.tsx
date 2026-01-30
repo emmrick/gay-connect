@@ -55,7 +55,7 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
   
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { uploadEphemeralMedia, isUploading, progress, canSend, remainingCount } = useEphemeralMediaUpload();
+  const { uploadEphemeralMedia, isUploading, progress, canSend, remainingCount, isPremium } = useEphemeralMediaUpload();
   const { uploadMedia, isUploading: isUploadingRegular, progress: regularProgress } = useMediaUpload();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
@@ -413,7 +413,16 @@ const MediaUploadButton = ({ chatRoomId, recipientId, isPrivate }: MediaUploadBu
           
           <div className="px-2 py-1 mb-1">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {canSend ? (
+              {isPremium ? (
+                <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                  <Infinity className="w-3 h-3" />
+                  <span className="font-medium">Illimité</span>
+                  <Badge variant="outline" className="ml-auto text-[10px] px-1 py-0 h-4 border-amber-500/30 text-amber-600">
+                    <Crown className="w-2.5 h-2.5 mr-0.5" />
+                    Premium
+                  </Badge>
+                </div>
+              ) : canSend ? (
                 <span>{remainingCount} média(s) restant(s) aujourd'hui</span>
               ) : (
                 <div className="flex items-center gap-1 text-amber-600">

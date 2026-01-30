@@ -9,7 +9,10 @@ import {
   ImagePlus, 
   Loader2,
   Users,
-  StopCircle
+  StopCircle,
+  Lock,
+  Crown,
+  Infinity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,7 +53,7 @@ interface AlbumManagerProps {
 }
 
 const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
-  const { albums, isLoading, createAlbum, deleteAlbum, addMedia, useAlbumMedia, useAlbumShares, stopSharing } = useAlbums();
+  const { albums, isLoading, createAlbum, deleteAlbum, addMedia, useAlbumMedia, useAlbumShares, stopSharing, canCreateAlbum, isPremium, remainingAlbums } = useAlbums();
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState('');
@@ -119,6 +122,16 @@ const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
             <SheetTitle className="flex items-center gap-2">
               <FolderLock className="w-5 h-5 text-primary" />
               Mes albums privés
+              {isPremium ? (
+                <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-600 dark:text-amber-400 ml-2">
+                  <Infinity className="w-3 h-3 mr-1" />
+                  Illimité
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-xs ml-2">
+                  {albums.length}/{albums.length + remainingAlbums}
+                </Badge>
+              )}
             </SheetTitle>
           </SheetHeader>
 
@@ -129,8 +142,27 @@ const AlbumManager = ({ isOpen, onClose }: AlbumManagerProps) => {
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Limit warning for non-premium */}
+                {!isPremium && !canCreateAlbum && !showCreateForm && (
+                  <div className="px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    <span className="text-amber-600 dark:text-amber-400">
+                      Limite d'albums atteinte !
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto h-6 text-xs px-2"
+                      onClick={() => window.location.href = '/?tab=premium'}
+                    >
+                      <Crown className="w-3 h-3 mr-1" />
+                      Premium
+                    </Button>
+                  </div>
+                )}
+
                 {/* Create album button */}
-                {!showCreateForm && (
+                {!showCreateForm && canCreateAlbum && (
                   <Button
                     variant="outline"
                     className="w-full justify-start gap-2"
