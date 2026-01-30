@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRecordEarning } from '@/hooks/useModeratorEarnings';
-import { withTimeout } from '@/lib/withTimeout';
+import { supabaseQueryWithTimeout } from '@/lib/supabaseWithAbort';
 
 type Message = Tables<'messages'>;
 
@@ -24,40 +24,39 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     queryFn: async (): Promise<PrivateMessageWithProfile[]> => {
       if (!user || !otherUserId) return [];
 
-      // IMPORTANT: charger en parallèle pour réduire la latence (et éviter les écrans bloqués).
-      // On n'échoue pas si le fetch profiles plante: on affiche un fallback et on garde les messages.
+      // Charger messages et profils en parallèle avec timeout robuste
       const [messagesRes, profilesRes] = await Promise.all([
-        withTimeout(
-          Promise.resolve(
-            supabase
-              .from('messages')
-              .select('*')
-              .eq('is_private', true)
-              .is('deleted_at', null)
-              .or(
-                `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
-              )
-              .order('created_at', { ascending: true })
-              .limit(50)
-          ),
-          12000
+        supabaseQueryWithTimeout(
+          supabase
+            .from('messages')
+            .select('*')
+            .eq('is_private', true)
+            .is('deleted_at', null)
+            .or(
+              `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
+            )
+            .order('created_at', { ascending: true })
+            .limit(50),
+          10000 // 10s timeout
         ),
-        withTimeout(
-          Promise.resolve(
-            supabase
-              .from('profiles')
-              .select('user_id, username, avatar_url')
-              .in('user_id', [user.id, otherUserId])
-          ),
-          12000
+        supabaseQueryWithTimeout(
+          supabase
+            .from('profiles')
+            .select('user_id, username, avatar_url')
+            .in('user_id', [user.id, otherUserId]),
+          10000
         ),
       ]);
 
-      if (messagesRes.error) throw messagesRes.error;
+      // Si les messages ont échoué, on lance une erreur pour afficher le bouton Réessayer
+      if (messagesRes.error) {
+        throw new Error(messagesRes.error.message);
+      }
 
       const messages = messagesRes.data || [];
       if (messages.length === 0) return [];
 
+      // On log l'erreur profiles mais on continue (fallback graceful)
       if (profilesRes.error) {
         console.warn('Failed to fetch profiles for private messages:', profilesRes.error);
       }
@@ -72,11 +71,9 @@ export const usePrivateMessages = (otherUserId: string | null) => {
       }));
     },
     enabled: !!user && !!otherUserId,
-    staleTime: 10000, // Cache for 10 seconds
-    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
-    // IMPORTANT: avoid long "stuck loading" states when the backend is slow/unavailable.
-    // Users have a manual "Réessayer" button in the UI.
-    retry: 0,
+    staleTime: 10000,
+    gcTime: 2 * 60 * 1000,
+    retry: 0, // Pas de retry auto — l'utilisateur a un bouton "Réessayer"
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
