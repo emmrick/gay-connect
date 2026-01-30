@@ -3,13 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-interface UserBlock {
-  id: string;
-  blocker_id: string;
-  blocked_id: string;
-  created_at: string;
-}
-
 // Check if current user has blocked another user
 export const useHasBlockedUser = (blockedUserId: string) => {
   const { user } = useAuth();
@@ -19,8 +12,9 @@ export const useHasBlockedUser = (blockedUserId: string) => {
     queryFn: async () => {
       if (!user?.id || !blockedUserId) return false;
 
+      // Use raw SQL query since types aren't updated yet
       const { data, error } = await supabase
-        .from('user_personal_blocks')
+        .from('user_personal_blocks' as any)
         .select('id')
         .eq('blocker_id', user.id)
         .eq('blocked_id', blockedUserId)
@@ -47,7 +41,7 @@ export const useIsBlockedByUser = (otherUserId: string) => {
       if (!user?.id || !otherUserId) return false;
 
       const { data, error } = await supabase
-        .from('user_personal_blocks')
+        .from('user_personal_blocks' as any)
         .select('id')
         .eq('blocker_id', otherUserId)
         .eq('blocked_id', user.id)
@@ -74,11 +68,11 @@ export const useBlockUserAction = () => {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { error } = await supabase
-        .from('user_personal_blocks')
+        .from('user_personal_blocks' as any)
         .insert({
           blocker_id: user.id,
           blocked_id: blockedUserId,
-        });
+        } as any);
 
       if (error) throw error;
     },
@@ -104,7 +98,7 @@ export const useUnblockUserAction = () => {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { error } = await supabase
-        .from('user_personal_blocks')
+        .from('user_personal_blocks' as any)
         .delete()
         .eq('blocker_id', user.id)
         .eq('blocked_id', blockedUserId);
@@ -133,12 +127,8 @@ export const useBlockedUsers = () => {
       if (!user?.id) return [];
 
       const { data, error } = await supabase
-        .from('user_personal_blocks')
-        .select(`
-          id,
-          blocked_id,
-          created_at
-        `)
+        .from('user_personal_blocks' as any)
+        .select('id, blocked_id, created_at')
         .eq('blocker_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -147,9 +137,10 @@ export const useBlockedUsers = () => {
         return [];
       }
 
+      if (!data || data.length === 0) return [];
+
       // Fetch profiles for blocked users
-      const blockedIds = data.map(b => b.blocked_id);
-      if (blockedIds.length === 0) return [];
+      const blockedIds = (data as any[]).map((b: any) => b.blocked_id);
 
       const { data: profiles } = await supabase
         .from('profiles')
@@ -158,8 +149,10 @@ export const useBlockedUsers = () => {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      return data.map(block => ({
-        ...block,
+      return (data as any[]).map((block: any) => ({
+        id: block.id,
+        blocked_id: block.blocked_id,
+        created_at: block.created_at,
         profile: profileMap.get(block.blocked_id),
       }));
     },

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, FolderLock } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHasBlockedUser, useUnblockUserAction } from '@/hooks/useUserBlock';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +16,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import ChatInput from './ChatInput';
@@ -22,6 +24,7 @@ import EphemeralMessage from './EphemeralMessage';
 import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
 import ReportUserDialog from './ReportUserDialog';
+import BlockUserDialog from './BlockUserDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import UserProfilePreview from './UserProfilePreview';
 
@@ -35,9 +38,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { markAsRead } = useUnreadMessages();
+  const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
+  const unblockUser = useUnblockUserAction();
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showShareAlbum, setShowShareAlbum] = useState(false);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
 
@@ -95,6 +101,11 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     if (content.trim()) {
       await sendMessage.mutateAsync({ content, messageType: 'text' });
     }
+  };
+
+  const handleUnblock = async () => {
+    await unblockUser.mutateAsync(otherUserId);
+    refetchBlockStatus();
   };
 
   return (
@@ -164,6 +175,24 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               <FolderLock className="w-4 h-4 mr-2" />
               Partager un album privé
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {hasBlocked ? (
+              <DropdownMenuItem 
+                onClick={handleUnblock}
+                disabled={unblockUser.isPending}
+              >
+                <UserCheck className="w-4 h-4 mr-2" />
+                Débloquer {otherUserProfile?.username}
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem 
+                className="text-destructive focus:text-destructive"
+                onClick={() => setShowBlockDialog(true)}
+              >
+                <Ban className="w-4 h-4 mr-2" />
+                Bloquer {otherUserProfile?.username}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem 
               className="text-destructive focus:text-destructive"
               onClick={() => setShowReportDialog(true)}
@@ -182,6 +211,20 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           onOpenChange={setShowReportDialog}
           userId={otherUserId}
           username={otherUserProfile.username}
+        />
+      )}
+
+      {/* Block Dialog */}
+      {otherUserProfile && (
+        <BlockUserDialog
+          open={showBlockDialog}
+          onOpenChange={setShowBlockDialog}
+          userId={otherUserId}
+          username={otherUserProfile.username}
+          onBlocked={() => {
+            refetchBlockStatus();
+            onBack();
+          }}
         />
       )}
 
