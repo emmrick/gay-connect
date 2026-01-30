@@ -91,12 +91,17 @@ export const usePrivateConversations = () => {
         })
       );
 
-      return conversationsWithData;
+      // Sort by last message date (most recent first), fallback to conversation created_at
+      return conversationsWithData.sort((a, b) => {
+        const aTime = a.lastMessage?.created_at || a.created_at;
+        const bTime = b.lastMessage?.created_at || b.created_at;
+        return new Date(bTime).getTime() - new Date(aTime).getTime();
+      });
     },
     enabled: !!user,
   });
 
-  // Real-time subscription for new conversations
+  // Real-time subscription for new conversations AND new messages
   useEffect(() => {
     if (!user) return;
 
@@ -111,6 +116,22 @@ export const usePrivateConversations = () => {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `is_private=eq.true`,
+        },
+        (payload) => {
+          // Refresh conversations when a new private message is sent/received
+          const msg = payload.new as { sender_id: string; recipient_id: string };
+          if (msg.sender_id === user.id || msg.recipient_id === user.id) {
+            queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
+          }
         }
       )
       .subscribe();
