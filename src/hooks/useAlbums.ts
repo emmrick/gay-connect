@@ -247,8 +247,7 @@ export const useAlbums = (userId?: string) => {
       // Get album info for the message
       const album = albums.find(a => a.id === albumId);
       
-      // Create a message in the private conversation to notify the recipient
-      // The content contains JSON with share info that will be parsed by SharedAlbumMessage
+      // Create the message content with the share info
       const messageContent = JSON.stringify({
         shareId: shareData.id,
         albumId: albumId,
@@ -256,6 +255,7 @@ export const useAlbums = (userId?: string) => {
         expiresAt: expiresAt,
       });
 
+      // Insert the message - IMPORTANT: This creates the message in the conversation
       const { error: msgError } = await supabase
         .from('messages')
         .insert({
@@ -264,11 +264,13 @@ export const useAlbums = (userId?: string) => {
           content: messageContent,
           message_type: 'album_share',
           is_private: true,
+          chat_room_id: null, // Must be null for private messages
         });
 
       if (msgError) {
         console.error('Failed to create album share message:', msgError);
-        // Don't throw - the share was created successfully
+        // Throw the error so the user knows the message wasn't created
+        throw new Error('Album partagé mais le message n\'a pas pu être envoyé: ' + msgError.message);
       }
 
       // Get sender's profile for notification
