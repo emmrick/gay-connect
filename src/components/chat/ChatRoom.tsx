@@ -358,6 +358,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           onSendMessage={handleSendMessage} 
           chatRoomId={roomId}
           isPrivate={false}
+          isSending={sendMessage.isPending}
           onTyping={handleTyping}
           onFocus={handleInputFocus}
         />

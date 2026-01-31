@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Smile } from 'lucide-react';
+import { Send, Smile, Loader2 } from 'lucide-react';
 import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
 
@@ -10,11 +10,12 @@ interface ChatInputProps {
   chatRoomId?: string;
   recipientId?: string;
   isPrivate?: boolean;
+  isSending?: boolean;
   onTyping?: () => void;
   onFocus?: () => void;
 }
 
-const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, onTyping, onFocus }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus }: ChatInputProps) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -103,10 +104,14 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
           variant="gradient" 
           size="icon" 
           onClick={handleSend}
-          disabled={!message.trim()}
-          className="w-10 h-10 flex-shrink-0 rounded-full"
+          disabled={!message.trim() || isSending}
+          className="w-10 h-10 flex-shrink-0 rounded-full relative"
         >
-          <Send className="w-4 h-4" />
+          {isSending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
         </Button>
       </div>
     </div>
