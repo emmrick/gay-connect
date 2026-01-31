@@ -81,6 +81,13 @@ serve(async (req) => {
           // Refresh subscription status on successful payment
           const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
           await handleSubscriptionChange(supabaseClient, stripe, subscription, subscription.status === "active");
+          
+          // Process referral payment tracking
+          const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer.id;
+          const customer = await stripe.customers.retrieve(customerId);
+          if (customer && !customer.deleted && customer.email) {
+            await processReferralPayment(supabaseClient, stripe, customer.email);
+          }
         }
         break;
       }
@@ -215,4 +222,160 @@ async function updateUserPremiumStatus(
   });
 
   logStep("Notification created for user", { userId: user.id });
+}
+
+// Process referral payment - increment consecutive payments
+async function processReferralPayment(
+  supabaseClient: any,
+  stripe: Stripe,
+  email: string
+) {
+  logStep("Processing referral payment", { email });
+  
+  // Find user by email
+  const { data: userData } = await supabaseClient.auth.admin.listUsers();
+  const user = userData.users.find((u: any) => u.email === email);
+  
+  if (!user) {
+    logStep("User not found for referral processing", { email });
+    return;
+  }
+  
+  // Check if user is referred
+  const { data: referral, error } = await supabaseClient
+    .from('referrals')
+    .select('*')
+    .eq('referred_user_id', user.id)
+    .single();
+  
+  if (error || !referral) {
+    logStep("User not referred, skipping", { userId: user.id });
+    return;
+  }
+  
+  // Don't process if reward already applied
+  if (referral.referred_reward_applied) {
+    logStep("Reward already applied, skipping", { referralId: referral.id });
+    return;
+  }
+  
+  const newPaymentCount = referral.consecutive_payments + 1;
+  logStep("Incrementing consecutive payments", { userId: user.id, newCount: newPaymentCount });
+  
+  // Update referral with new payment count
+  await supabaseClient
+    .from('referrals')
+    .update({
+      consecutive_payments: newPaymentCount,
+      last_payment_at: new Date().toISOString(),
+      status: newPaymentCount >= 3 ? 'completed' : 'active'
+    })
+    .eq('id', referral.id);
+  
+  // Apply rewards after 3 payments
+  if (newPaymentCount === 3) {
+    await applyReferralRewards(supabaseClient, stripe, referral);
+  }
+}
+
+// Apply 3-month credit to both referrer and referred user
+async function applyReferralRewards(
+  supabaseClient: any,
+  stripe: Stripe,
+  referral: any
+) {
+  const THREE_MONTHS_CREDIT_CENTS = 1350; // 3 x 4.50€
+  
+  logStep("Applying referral rewards", { referralId: referral.id });
+  
+  // Get both users' emails
+  const { data: userData } = await supabaseClient.auth.admin.listUsers();
+  const referredUser = userData.users.find((u: any) => u.id === referral.referred_user_id);
+  const referrerUser = userData.users.find((u: any) => u.id === referral.referrer_user_id);
+  
+  // Apply credit to referred user
+  if (referredUser?.email) {
+    await applyStripeCredit(stripe, referredUser.email, THREE_MONTHS_CREDIT_CENTS, "Promotion parrainage - 3 mois offerts");
+    
+    // Update referral - referred reward applied
+    await supabaseClient
+      .from('referrals')
+      .update({
+        referred_reward_applied: true,
+        referred_reward_applied_at: new Date().toISOString()
+      })
+      .eq('id', referral.id);
+    
+    // Notify referred user
+    await supabaseClient.from('notifications').insert({
+      user_id: referral.referred_user_id,
+      type: 'referral_reward',
+      title: '🎁 3 mois offerts !',
+      message: 'Félicitations ! Vous avez complété 3 mois d\'abonnement consécutifs. 3 mois gratuits ont été crédités sur votre compte !',
+      is_read: false
+    });
+    
+    logStep("Referred user reward applied", { userId: referral.referred_user_id });
+  }
+  
+  // Apply credit to referrer
+  if (referrerUser?.email) {
+    await applyStripeCredit(stripe, referrerUser.email, THREE_MONTHS_CREDIT_CENTS, "Récompense parrainage - 3 mois offerts");
+    
+    // Update referral - referrer reward applied
+    await supabaseClient
+      .from('referrals')
+      .update({
+        referrer_reward_applied: true,
+        referrer_reward_applied_at: new Date().toISOString()
+      })
+      .eq('id', referral.id);
+    
+    // Notify referrer
+    await supabaseClient.from('notifications').insert({
+      user_id: referral.referrer_user_id,
+      type: 'referral_reward',
+      title: '🎁 3 mois offerts !',
+      message: 'Votre filleul a complété 3 mois d\'abonnement ! Vous recevez également 3 mois gratuits en récompense.',
+      is_read: false
+    });
+    
+    logStep("Referrer reward applied", { userId: referral.referrer_user_id });
+  }
+  
+  // Update successful referrals count
+  await supabaseClient
+    .rpc('update_successful_referrals', { _referral_code_id: referral.referral_code_id });
+}
+
+// Apply credit balance to Stripe customer
+async function applyStripeCredit(
+  stripe: Stripe,
+  email: string,
+  amountCents: number,
+  description: string
+) {
+  try {
+    const customers = await stripe.customers.list({ email, limit: 1 });
+    
+    if (customers.data.length === 0) {
+      logStep("No Stripe customer found for credit", { email });
+      return false;
+    }
+    
+    const customerId = customers.data[0].id;
+    
+    // Add credit balance (negative amount = credit)
+    await stripe.customers.createBalanceTransaction(customerId, {
+      amount: -amountCents,
+      currency: 'eur',
+      description: description
+    });
+    
+    logStep("Stripe credit applied successfully", { customerId, amountCents, description });
+    return true;
+  } catch (error) {
+    logStep("Error applying Stripe credit", { email, error: error instanceof Error ? error.message : error });
+    return false;
+  }
 }

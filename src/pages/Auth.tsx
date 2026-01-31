@@ -1,15 +1,17 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useChatRooms } from '@/hooks/useChatRooms';
-import { ArrowLeft, Mail, Lock, User, MapPin, Loader2, Eye, EyeOff, ChevronDown, AlertTriangle, Calendar } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, User, MapPin, Loader2, Eye, EyeOff, ChevronDown, AlertTriangle, Calendar, Gift, CheckCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,9 +20,46 @@ const Auth = () => {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+  const [referralValidation, setReferralValidation] = useState<{ valid: boolean; message: string } | null>(null);
+  const [isValidatingReferral, setIsValidatingReferral] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { data: rooms, isLoading: roomsLoading } = useChatRooms();
+
+  // Check for referral code in URL
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode.toUpperCase());
+      setIsLogin(false); // Switch to signup mode
+      validateReferralCode(refCode);
+    }
+  }, [searchParams]);
+
+  const validateReferralCode = async (code: string) => {
+    if (!code.trim()) {
+      setReferralValidation(null);
+      return;
+    }
+    
+    setIsValidatingReferral(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-referrals', {
+        body: { action: 'validate-code', referralCode: code.trim() }
+      });
+      
+      if (error) {
+        setReferralValidation({ valid: false, message: 'Erreur de validation' });
+      } else {
+        setReferralValidation(data);
+      }
+    } catch (err) {
+      setReferralValidation({ valid: false, message: 'Erreur de validation' });
+    } finally {
+      setIsValidatingReferral(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,9 +83,20 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
+        
+        // Store referral code in localStorage for processing after auth completes
+        if (referralValidation?.valid && referralCode) {
+          localStorage.setItem('pending_referral_code', referralCode.trim());
+        }
+        
         const { error } = await signUp(email, password, username, region, ageNum);
         if (error) throw error;
-        toast.success('Compte créé avec succès !');
+        
+        if (referralValidation?.valid && referralCode) {
+          toast.success('Compte créé avec code de parrainage ! Abonnez-vous pour débloquer votre promotion.');
+        } else {
+          toast.success('Compte créé avec succès !');
+        }
         navigate('/');
       }
     } catch (error: any) {
@@ -204,6 +254,50 @@ const Auth = () => {
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   </div>
+                </div>
+
+                {/* Referral Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="referral" className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Gift className="w-4 h-4 text-primary" />
+                    Code de parrainage (optionnel)
+                  </Label>
+                  <div className="relative">
+                    <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="referral"
+                      type="text"
+                      placeholder="GC-XXXXXXXX"
+                      value={referralCode}
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase();
+                        setReferralCode(value);
+                        setReferralValidation(null);
+                        if (value.length >= 11) {
+                          validateReferralCode(value);
+                        }
+                      }}
+                      className="pl-10 pr-10 h-11 bg-secondary/50 border-border/50 rounded-xl focus:bg-secondary transition-colors uppercase"
+                    />
+                    {isValidatingReferral && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+                    )}
+                    {!isValidatingReferral && referralValidation && (
+                      referralValidation.valid ? (
+                        <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                      ) : (
+                        <X className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
+                      )
+                    )}
+                  </div>
+                  {referralValidation && (
+                    <p className={cn(
+                      "text-xs",
+                      referralValidation.valid ? "text-green-600" : "text-destructive"
+                    )}>
+                      {referralValidation.message}
+                    </p>
+                  )}
                 </div>
               </div>
             )}

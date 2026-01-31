@@ -120,6 +120,32 @@ const Index = () => {
     return currIndex > prevIndex ? 1 : -1;
   }, [previousTab, activeTab]);
 
+  // Process pending referral code after signup
+  useEffect(() => {
+    if (user && !authLoading) {
+      const pendingReferralCode = localStorage.getItem('pending_referral_code');
+      if (pendingReferralCode) {
+        // Clear it immediately to prevent duplicate processing
+        localStorage.removeItem('pending_referral_code');
+        
+        // Register the referral
+        import('@/integrations/supabase/client').then(({ supabase }) => {
+          supabase.functions.invoke('manage-referrals', {
+            body: { 
+              action: 'register-referral', 
+              userId: user.id, 
+              referralCode: pendingReferralCode 
+            }
+          }).then(() => {
+            console.log('Referral registered successfully');
+          }).catch((err) => {
+            console.error('Error registering referral:', err);
+          });
+        });
+      }
+    }
+  }, [user, authLoading]);
+
   // Redirect to home if user is logged in and on landing
   useEffect(() => {
     if (user && currentView === 'landing') {
