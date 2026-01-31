@@ -1274,6 +1274,10 @@ export type Database = {
         Returns: boolean
       }
       request_withdrawal: { Args: { _user_id: string }; Returns: Json }
+      update_successful_referrals: {
+        Args: { _referral_code_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
