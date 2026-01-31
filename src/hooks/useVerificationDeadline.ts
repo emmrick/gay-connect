@@ -10,6 +10,7 @@ export interface VerificationDeadlineStatus {
   minutesRemaining: number | null;
   isVerificationComplete: boolean;
   isVerificationPending: boolean;
+  isVerificationRejected: boolean;
   canAccessApp: boolean;
   deadlineDate: Date | null;
 }
@@ -27,6 +28,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
         minutesRemaining: null,
         isVerificationComplete: false,
         isVerificationPending: false,
+        isVerificationRejected: false,
         canAccessApp: true,
         deadlineDate: null,
         isLoading: true,
@@ -41,6 +43,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
         minutesRemaining: null,
         isVerificationComplete: true,
         isVerificationPending: false,
+        isVerificationRejected: false,
         canAccessApp: true,
         deadlineDate: null,
         isLoading: false,
@@ -55,7 +58,23 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
         minutesRemaining: null,
         isVerificationComplete: false,
         isVerificationPending: true,
+        isVerificationRejected: false,
         canAccessApp: true,
+        deadlineDate: null,
+        isLoading: false,
+      };
+    }
+
+    // If verification was rejected - user must retry, block access
+    if (verification?.status === 'rejected') {
+      return {
+        isDeadlinePassed: true, // Treat as deadline passed to show verification screen
+        hoursRemaining: 0,
+        minutesRemaining: 0,
+        isVerificationComplete: false,
+        isVerificationPending: false,
+        isVerificationRejected: true,
+        canAccessApp: false, // Block access until they retry
         deadlineDate: null,
         isLoading: false,
       };
@@ -77,6 +96,7 @@ export const useVerificationDeadline = (): VerificationDeadlineStatus & { isLoad
       minutesRemaining,
       isVerificationComplete: false,
       isVerificationPending: false,
+      isVerificationRejected: false,
       canAccessApp: !isDeadlinePassed,
       deadlineDate,
       isLoading: false,
