@@ -45,24 +45,39 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     }
   };
 
-  const startCamera = async () => {
-    try {
-      const facingMode: ConstrainDOMString =
-        step === 'selfie' ? 'user' : { ideal: 'environment' };
+  const startCamera = useCallback(() => {
+    // CRITICAL: getUserMedia must be called directly from user gesture
+    // We set camera active first to show the video element, then request the stream
+    setIsCameraActive(true);
+    
+    const facingMode: ConstrainDOMString =
+      step === 'selfie' ? 'user' : { ideal: 'environment' };
 
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode } as MediaTrackConstraints,
-        audio: false 
-      });
+    navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode } as MediaTrackConstraints,
+      audio: false 
+    })
+    .then((stream) => {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {
+          // Autoplay may fail silently on some browsers
+        });
       }
-      setIsCameraActive(true);
-    } catch (error) {
-      toast.error('Impossible d\'accéder à la caméra');
-    }
-  };
+    })
+    .catch((error) => {
+      console.error('Camera access error:', error);
+      setIsCameraActive(false);
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        toast.error('Permission caméra refusée. Autorise l\'accès dans les paramètres de ton navigateur.');
+      } else if (error.name === 'NotFoundError') {
+        toast.error('Aucune caméra détectée sur cet appareil.');
+      } else {
+        toast.error('Impossible d\'accéder à la caméra');
+      }
+    });
+  }, [step]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
