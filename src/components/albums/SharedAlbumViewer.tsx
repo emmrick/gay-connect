@@ -1,4 +1,5 @@
-import { FolderLock, Clock, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { FolderLock, Clock, Eye, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -7,7 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAlbums } from '@/hooks/useAlbums';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Loader2 } from 'lucide-react';
@@ -22,8 +22,30 @@ interface SharedAlbumViewerProps {
   onClose: () => void;
 }
 
+// Helper to extract storage path from URL and create signed URL
+const getSignedUrl = async (mediaUrl: string): Promise<string> => {
+  // Extract the path from the public URL
+  // URL format: https://xxx.supabase.co/storage/v1/object/public/media/userId/albumId/filename
+  const match = mediaUrl.match(/\/storage\/v1\/object\/public\/media\/(.+)$/);
+  if (!match) return mediaUrl;
+  
+  const path = match[1];
+  const { data, error } = await supabase.storage
+    .from('media')
+    .createSignedUrl(path, 3600); // 1 hour
+  
+  if (error || !data?.signedUrl) {
+    console.error('Failed to create signed URL:', error);
+    return mediaUrl;
+  }
+  
+  return data.signedUrl;
+};
+
 const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: SharedAlbumViewerProps) => {
-  // Fetch album media
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
+
+  // Fetch album media with signed URLs
   const { data: media = [], isLoading } = useQuery({
     queryKey: ['shared-album-media', albumId],
     queryFn: async () => {
@@ -34,7 +56,16 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Generate signed URLs for all media
+      const mediaWithSignedUrls = await Promise.all(
+        (data || []).map(async (item) => ({
+          ...item,
+          signed_url: await getSignedUrl(item.media_url),
+        }))
+      );
+      
+      return mediaWithSignedUrls;
     },
     enabled: isOpen && !!albumId,
   });
@@ -71,18 +102,21 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
           ) : (
             <div className="grid grid-cols-3 gap-2">
               {media.map((item) => (
-                <div key={item.id} className="aspect-square rounded-lg overflow-hidden bg-secondary">
+                <div 
+                  key={item.id} 
+                  className="aspect-square rounded-lg overflow-hidden bg-secondary cursor-pointer"
+                  onClick={() => setFullscreenMedia({ url: item.signed_url, type: item.media_type })}
+                >
                   {item.media_type === 'image' ? (
                     <img 
-                      src={item.media_url} 
+                      src={item.signed_url} 
                       alt="" 
-                      className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform"
                     />
                   ) : (
                     <video 
-                      src={item.media_url} 
-                      className="w-full h-full object-cover" 
-                      controls
+                      src={item.signed_url} 
+                      className="w-full h-full object-cover"
                     />
                   )}
                 </div>
@@ -90,6 +124,39 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
             </div>
           )}
         </ScrollArea>
+
+        {/* Fullscreen media viewer */}
+        {fullscreenMedia && (
+          <div 
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+            onClick={() => setFullscreenMedia(null)}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 text-white hover:bg-white/20"
+              onClick={() => setFullscreenMedia(null)}
+            >
+              <X className="w-6 h-6" />
+            </Button>
+            {fullscreenMedia.type === 'image' ? (
+              <img 
+                src={fullscreenMedia.url} 
+                alt="" 
+                className="max-w-full max-h-full object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <video 
+                src={fullscreenMedia.url} 
+                className="max-w-full max-h-full"
+                controls
+                autoPlay
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
