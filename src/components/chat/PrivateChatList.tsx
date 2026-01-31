@@ -94,7 +94,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-3">
+      <div className="px-5 py-4 space-y-3">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
             <Skeleton className="w-12 h-12 rounded-full" />
@@ -133,7 +133,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
 
   return (
     <>
-    <div className="px-4 pb-6 space-y-2">
+    <div className="px-5 pb-6 space-y-2">
       {displayConversations.map((conv, index) => {
         const unreadCount = getUnreadCount(conv.otherUser.user_id);
         const hasUnread = unreadCount > 0;
