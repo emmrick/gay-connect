@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -76,6 +76,14 @@ export const usePrivateMessages = (otherUserId: string | null) => {
             ((newMsg.sender_id === user.id && newMsg.recipient_id === otherUserId) ||
               (newMsg.sender_id === otherUserId && newMsg.recipient_id === user.id))
           ) {
+            // Check if message already exists to prevent duplicates
+            const existingMessages = queryClient.getQueryData<PrivateMessageWithProfile[]>(
+              ['private-messages', user.id, otherUserId]
+            );
+            if (existingMessages?.some(m => m.id === newMsg.id)) {
+              return;
+            }
+
             // Fetch sender profile
             const { data: profile } = await supabase
               .from('profiles')
@@ -91,7 +99,11 @@ export const usePrivateMessages = (otherUserId: string | null) => {
 
             queryClient.setQueryData<PrivateMessageWithProfile[]>(
               ['private-messages', user.id, otherUserId],
-              (old) => [...(old || []), messageWithProfile]
+              (old) => {
+                // Double-check for duplicates before adding
+                if (old?.some(m => m.id === newMsg.id)) return old;
+                return [...(old || []), messageWithProfile];
+              }
             );
 
             // Also invalidate conversations to update last message
@@ -137,25 +149,38 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     };
   }, [user, otherUserId, queryClient]);
 
+  // Ref to prevent double submissions
+  const sendingRef = useRef(false);
+
   // Send private message mutation
   const sendMessage = useMutation({
     mutationFn: async ({ content, messageType }: { content: string; messageType: 'text' | 'image' | 'video' }) => {
       if (!user || !otherUserId) throw new Error('Not authenticated or no recipient');
+      
+      // Prevent double submission
+      if (sendingRef.current) {
+        throw new Error('Message already being sent');
+      }
+      sendingRef.current = true;
 
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: user.id,
-          recipient_id: otherUserId,
-          content,
-          message_type: messageType,
-          is_private: true,
-        })
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .insert({
+            sender_id: user.id,
+            recipient_id: otherUserId,
+            content,
+            message_type: messageType,
+            is_private: true,
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      } finally {
+        sendingRef.current = false;
+      }
     },
     onSuccess: (newMessage) => {
       // Immediately add message to cache for instant UI feedback
