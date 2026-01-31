@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FolderLock, Eye, Clock, StopCircle, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,6 +71,32 @@ const SharedAlbumMessage = ({
     },
     enabled: !!shareId,
   });
+
+  // Real-time subscription for share status changes
+  useEffect(() => {
+    if (!shareId) return;
+
+    const channel = supabase
+      .channel(`share-status-${shareId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'album_shares',
+          filter: `id=eq.${shareId}`,
+        },
+        (payload) => {
+          // Invalidate the query to refresh the status
+          queryClient.invalidateQueries({ queryKey: ['album-share-status', shareId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [shareId, queryClient]);
 
   // Stop sharing mutation
   const stopSharing = useMutation({
