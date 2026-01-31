@@ -168,18 +168,34 @@ export const usePrivateConversations = () => {
           queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
         }
       )
+      // Listen for messages sent BY the user
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `is_private=eq.true`,
+          filter: `sender_id=eq.${user.id}`,
         },
         (payload) => {
-          // Refresh conversations when a new private message is sent/received
-          const msg = payload.new as { sender_id: string; recipient_id: string };
-          if (msg.sender_id === user.id || msg.recipient_id === user.id) {
+          const msg = payload.new as { is_private: boolean };
+          if (msg.is_private) {
+            queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
+          }
+        }
+      )
+      // Listen for messages received BY the user
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `recipient_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const msg = payload.new as { is_private: boolean };
+          if (msg.is_private) {
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
           }
         }
