@@ -438,8 +438,8 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Tabs for active/archived */}
-            <div className="px-4 py-2">
+             {/* Tabs for active/archived */}
+             <div className="px-5 py-2">
               <Tabs 
                 value={showArchivedConversations ? 'archived' : 'active'} 
                 onValueChange={(v) => setShowArchivedConversations(v === 'archived')}
