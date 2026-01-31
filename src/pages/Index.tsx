@@ -22,6 +22,7 @@ import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
 import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useRealtimeOnlineStatus } from '@/hooks/useRealtimeOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -85,6 +86,9 @@ const Index = () => {
   const { joinedGroups, joinGroup, remainingSlots, maxGroups } = useJoinedGroups();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Subscribe to real-time online status changes globally
+  useRealtimeOnlineStatus();
 
   // Handle deep link to open private chat from navigation state
   useEffect(() => {
