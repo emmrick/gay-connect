@@ -59,6 +59,37 @@ export const useIdentityVerification = () => {
     },
   });
 
+  // Delete rejected verification to allow retry
+  const deleteRejectedVerification = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+
+      // Delete any old documents from storage first
+      const { data: files } = await supabase.storage
+        .from('identity-documents')
+        .list(user.id);
+
+      if (files && files.length > 0) {
+        const filePaths = files.map(f => `${user.id}/${f.name}`);
+        await supabase.storage
+          .from('identity-documents')
+          .remove(filePaths);
+      }
+
+      // Delete the rejected verification record
+      const { error } = await supabase
+        .from('identity_verifications')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('status', 'rejected');
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['identity-verification'] });
+    },
+  });
+
   const uploadDocument = async (file: File, type: 'selfie' | 'id_front' | 'id_back') => {
     if (!user) throw new Error('Not authenticated');
 
@@ -118,6 +149,7 @@ export const useIdentityVerification = () => {
     isLoading,
     refetch,
     createVerification,
+    deleteRejectedVerification,
     uploadDocument,
     submitVerification,
   };

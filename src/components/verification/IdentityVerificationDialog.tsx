@@ -14,7 +14,7 @@ interface IdentityVerificationDialogProps {
 type Step = 'intro' | 'selfie' | 'id_front' | 'id_back' | 'review' | 'submitted';
 
 const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerificationDialogProps) => {
-  const { verification, createVerification, uploadDocument, submitVerification, refetch } = useIdentityVerification();
+  const { verification, createVerification, deleteRejectedVerification, uploadDocument, submitVerification, refetch } = useIdentityVerification();
   const [step, setStep] = useState<Step>('intro');
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
@@ -509,17 +509,28 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
           <Button 
             variant="hero" 
             className="w-full" 
-            onClick={() => {
+            onClick={async () => {
+              // Delete the rejected verification first
+              await deleteRejectedVerification.mutateAsync();
+              // Reset local state
               setSelfieFile(null);
               setSelfiePreview(null);
               setIdFrontFile(null);
               setIdFrontPreview(null);
               setIdBackFile(null);
               setIdBackPreview(null);
-              setStep('selfie');
+              setStep('intro');
             }}
+            disabled={deleteRejectedVerification.isPending}
           >
-            Réessayer
+            {deleteRejectedVerification.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Préparation...
+              </>
+            ) : (
+              'Réessayer'
+            )}
           </Button>
         </div>
       );
