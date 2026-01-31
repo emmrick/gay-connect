@@ -29,6 +29,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import ReferralSection from './ReferralSection';
 
 interface FeatureComparisonProps {
   feature: string;
@@ -476,6 +477,9 @@ const PremiumPage = () => {
             ))}
           </CardContent>
         </Card>
+
+        {/* Referral Section */}
+        <ReferralSection />
 
         {/* FAQ */}
         <Card>

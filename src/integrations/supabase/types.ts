@@ -714,6 +714,86 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          successful_referrals: number
+          total_referrals: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          successful_referrals?: number
+          total_referrals?: number
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          successful_referrals?: number
+          total_referrals?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          consecutive_payments: number
+          created_at: string
+          id: string
+          last_payment_at: string | null
+          referral_code_id: string
+          referred_reward_applied: boolean
+          referred_reward_applied_at: string | null
+          referred_user_id: string
+          referrer_reward_applied: boolean
+          referrer_reward_applied_at: string | null
+          referrer_user_id: string
+          status: string
+        }
+        Insert: {
+          consecutive_payments?: number
+          created_at?: string
+          id?: string
+          last_payment_at?: string | null
+          referral_code_id: string
+          referred_reward_applied?: boolean
+          referred_reward_applied_at?: string | null
+          referred_user_id: string
+          referrer_reward_applied?: boolean
+          referrer_reward_applied_at?: string | null
+          referrer_user_id: string
+          status?: string
+        }
+        Update: {
+          consecutive_payments?: number
+          created_at?: string
+          id?: string
+          last_payment_at?: string | null
+          referral_code_id?: string
+          referred_reward_applied?: boolean
+          referred_reward_applied_at?: string | null
+          referred_user_id?: string
+          referrer_reward_applied?: boolean
+          referrer_reward_applied_at?: string | null
+          referrer_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           created_at: string
@@ -1137,6 +1217,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      generate_referral_code: { Args: never; Returns: string }
       get_nearby_profiles: {
         Args: {
           limit_count?: number
@@ -1156,6 +1237,10 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      get_or_create_referral_code: {
+        Args: { _user_id: string }
+        Returns: string
       }
       get_user_role: {
         Args: { _user_id: string }
@@ -1182,6 +1267,10 @@ export type Database = {
           _task_type: Database["public"]["Enums"]["moderator_task_type"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      register_referral: {
+        Args: { _referral_code: string; _referred_user_id: string }
         Returns: boolean
       }
       request_withdrawal: { Args: { _user_id: string }; Returns: Json }
