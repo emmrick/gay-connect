@@ -8,6 +8,7 @@ import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDetailedLastSeenText, isUserTrulyOnline } from '@/hooks/useOnlineStatus';
+import { useRealtimeUserOnlineStatus } from '@/hooks/useRealtimeOnlineStatus';
 import ProfilePhotoCarousel from '@/components/chat/ProfilePhotoCarousel';
 import ReportUserDialog from '@/components/chat/ReportUserDialog';
 import ProfileReactions from '@/components/profile/ProfileReactions';
@@ -89,6 +90,9 @@ const MemberProfile = () => {
   const { photos } = useProfilePhotos(userId || '');
   const { isFavorite, toggleFavorite, isToggling } = useUserFavorites();
   const { isPremium: isUserPremium } = useIsPremiumUser(userId);
+
+  // Subscribe to real-time online status changes for this user
+  useRealtimeUserOnlineStatus(userId);
 
   const extendedProfile = profile as any;
   // Handle back navigation with swipe gesture support
