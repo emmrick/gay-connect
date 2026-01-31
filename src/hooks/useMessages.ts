@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -108,22 +108,34 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
           filter: `chat_room_id=eq.${chatRoomId}`,
         },
         async (payload) => {
+          const newMsg = payload.new as Message;
+          
+          // Check if message already exists to prevent duplicates
+          const existingMessages = queryClient.getQueryData<MessageWithProfile[]>(['messages', chatRoomId]);
+          if (existingMessages?.some(m => m.id === newMsg.id)) {
+            return;
+          }
+
           // Fetch the profile for the new message
           const { data: profile } = await supabase
             .from('profiles')
             .select('username, avatar_url')
-            .eq('user_id', (payload.new as Message).sender_id)
+            .eq('user_id', newMsg.sender_id)
             .maybeSingle();
 
           const newMessage: MessageWithProfile = {
-            ...(payload.new as Message),
+            ...newMsg,
             senderUsername: profile?.username || 'Anonyme',
             senderAvatar: profile?.avatar_url,
           };
 
           queryClient.setQueryData<MessageWithProfile[]>(
             ['messages', chatRoomId],
-            (old) => [...(old || []), newMessage]
+            (old) => {
+              // Double-check for duplicates before adding
+              if (old?.some(m => m.id === newMessage.id)) return old;
+              return [...(old || []), newMessage];
+            }
           );
         }
       )
@@ -134,26 +146,39 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
     };
   }, [chatRoomId, queryClient]);
 
+  // Ref to prevent double submissions
+  const sendingRef = useRef(false);
+
   // Send message mutation
   const sendMessage = useMutation({
     mutationFn: async ({ content, messageType, replyToId }: { content: string; messageType: 'text' | 'image' | 'video'; replyToId?: string }) => {
       if (!user || !chatRoomId) throw new Error('Not authenticated or no room');
+      
+      // Prevent double submission
+      if (sendingRef.current) {
+        throw new Error('Message already being sent');
+      }
+      sendingRef.current = true;
 
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          chat_room_id: chatRoomId,
-          sender_id: user.id,
-          content,
-          message_type: messageType,
-          is_private: false,
-          reply_to_id: replyToId || null,
-        })
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .insert({
+            chat_room_id: chatRoomId,
+            sender_id: user.id,
+            content,
+            message_type: messageType,
+            is_private: false,
+            reply_to_id: replyToId || null,
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      } finally {
+        sendingRef.current = false;
+      }
     },
   });
 
