@@ -13,8 +13,10 @@ interface ConversationWithProfile extends PrivateConversation {
     user_id: string;
     username: string;
     avatar_url: string | null;
-    is_online: boolean;
+    is_online: boolean | null;
     last_seen: string | null;
+    hide_online_status: boolean | null;
+    hide_last_seen: boolean | null;
   };
   lastMessage?: {
     content: string | null;
@@ -71,10 +73,10 @@ export const usePrivateConversations = () => {
         conv.user1_id === user.id ? conv.user2_id : conv.user1_id
       );
 
-      // Fetch profiles for other users
+      // Fetch profiles for other users with all status fields
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, username, avatar_url, is_online, last_seen')
+        .select('user_id, username, avatar_url, is_online, last_seen, hide_online_status, hide_last_seen')
         .in('user_id', otherUserIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
@@ -102,6 +104,8 @@ export const usePrivateConversations = () => {
               avatar_url: null,
               is_online: false,
               last_seen: null,
+              hide_online_status: false,
+              hide_last_seen: false,
             },
             lastMessage: lastMsg || undefined,
           };
@@ -151,7 +155,7 @@ export const usePrivateConversations = () => {
     })
   );
 
-  // Real-time subscription for new conversations AND new messages
+  // Real-time subscription for new conversations, new messages AND online status changes
   useEffect(() => {
     if (!user) return;
 
@@ -196,6 +200,22 @@ export const usePrivateConversations = () => {
         (payload) => {
           const msg = payload.new as { is_private: boolean };
           if (msg.is_private) {
+            queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
+          }
+        }
+      )
+      // Listen for online status changes on profiles
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+        },
+        (payload) => {
+          const { old: oldData, new: newData } = payload;
+          // Only refresh if online status or last_seen changed
+          if (oldData?.is_online !== newData?.is_online || oldData?.last_seen !== newData?.last_seen) {
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
           }
         }
