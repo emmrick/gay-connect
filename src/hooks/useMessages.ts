@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
+import { notifyNewGroupMessage } from '@/services/pushNotificationService';
 
 type Message = Tables<'messages'>;
 
@@ -181,6 +182,61 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
           .single();
 
         if (error) throw error;
+
+        // Detect mentions in the message and send push notifications
+        if (content && messageType === 'text') {
+          const mentionRegex = /@(\w+)/g;
+          const mentions = content.match(mentionRegex);
+          
+          if (mentions && mentions.length > 0) {
+            const usernames = mentions.map(m => m.substring(1).toLowerCase());
+            
+            // Get chat room name
+            const { data: roomData } = await supabase
+              .from('chat_rooms')
+              .select('region_name')
+              .eq('id', chatRoomId)
+              .single();
+
+            // Get sender username
+            const { data: senderProfile } = await supabase
+              .from('profiles')
+              .select('username')
+              .eq('user_id', user.id)
+              .single();
+
+            // Find users with matching usernames
+            const { data: mentionedProfiles } = await supabase
+              .from('profiles')
+              .select('user_id, username')
+              .in('username', usernames.map(u => u.toLowerCase()));
+
+            if (mentionedProfiles && mentionedProfiles.length > 0) {
+              for (const mentionedUser of mentionedProfiles) {
+                // Don't notify yourself
+                if (mentionedUser.user_id === user.id) continue;
+
+                // Send push notification
+                notifyNewGroupMessage(
+                  mentionedUser.user_id,
+                  roomData?.region_name || 'Groupe',
+                  senderProfile?.username || 'Quelqu\'un',
+                  `@${mentionedUser.username} ${content.substring(0, 30)}...`
+                );
+
+                // Create in-app notification
+                await supabase.from('notifications').insert({
+                  user_id: mentionedUser.user_id,
+                  type: 'group_mention',
+                  title: `💬 Mention dans ${roomData?.region_name || 'un groupe'}`,
+                  message: `${senderProfile?.username || 'Quelqu\'un'} t'a mentionné: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+                  action_url: '/',
+                });
+              }
+            }
+          }
+        }
+
         return data;
       } finally {
         sendingRef.current = false;
