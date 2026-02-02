@@ -14,11 +14,12 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Bell, Moon, Shield, HelpCircle, ExternalLink, Mail, MessageSquare, 
   Volume2, VolumeX, Eye, EyeOff, Palette, Sparkles, ChevronRight,
-  Globe, Lock, Check, Diamond, Crown
+  Globe, Lock, Check, Diamond, Crown, BellRing, BellOff
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { usePrivacySettings } from '@/hooks/usePrivacySettings';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Badge } from '@/components/ui/badge';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
@@ -59,11 +60,15 @@ const SettingItem = ({ icon: Icon, iconColor = "text-primary", title, descriptio
 const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDialogProps) => {
   const { toast } = useToast();
   const { settings: privacySettings, isVip, toggleHideOnlineStatus, toggleHideLastSeen } = usePrivacySettings();
+  const { 
+    isSupported: pushSupported, 
+    isSubscribed: pushSubscribed, 
+    permission: pushPermission,
+    isLoading: pushLoading,
+    toggleSubscription: togglePushSubscription 
+  } = usePushNotifications();
   
-  // Notifications settings
-  const [pushEnabled, setPushEnabled] = useState(() => 
-    localStorage.getItem('notifications_push') !== 'false'
-  );
+  // Notifications settings (local)
   const [soundEnabled, setSoundEnabled] = useState(() => 
     localStorage.getItem('notifications_sound') !== 'false'
   );
@@ -80,10 +85,9 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
   );
 
   useEffect(() => {
-    localStorage.setItem('notifications_push', String(pushEnabled));
     localStorage.setItem('notifications_sound', String(soundEnabled));
     localStorage.setItem('notifications_messages', String(messageNotifs));
-  }, [pushEnabled, soundEnabled, messageNotifs]);
+  }, [soundEnabled, messageNotifs]);
 
   useEffect(() => {
     if (darkMode) {
@@ -118,13 +122,37 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
           gradient: 'from-blue-500/20 to-cyan-500/20',
           content: (
             <div className="space-y-3">
-              <SettingItem
-                icon={Bell}
-                title="Notifications push"
-                description="Recevoir des alertes sur ton appareil"
-                checked={pushEnabled}
-                onCheckedChange={setPushEnabled}
-              />
+              {/* Native Push Notifications */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                  pushSubscribed ? "bg-green-500/20 text-green-500" : "bg-primary/10 text-primary"
+                )}>
+                  {pushSubscribed ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Label className="font-medium block">Notifications push natives</Label>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {!pushSupported 
+                      ? "Non supporté par ce navigateur" 
+                      : pushPermission === 'denied' 
+                        ? "Bloquées dans les paramètres du navigateur"
+                        : pushSubscribed 
+                          ? "Recevoir des alertes même quand l'app est fermée" 
+                          : "Activer les alertes en arrière-plan"}
+                  </p>
+                </div>
+                <Switch 
+                  checked={pushSubscribed} 
+                  onCheckedChange={togglePushSubscription}
+                  disabled={!pushSupported || pushPermission === 'denied' || pushLoading}
+                />
+              </motion.div>
+              
               <SettingItem
                 icon={soundEnabled ? Volume2 : VolumeX}
                 iconColor={soundEnabled ? "text-green-500" : "text-muted-foreground"}
@@ -140,6 +168,27 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
                 checked={messageNotifs}
                 onCheckedChange={setMessageNotifs}
               />
+              
+              {/* Info about push notifications */}
+              {pushSupported && pushPermission !== 'denied' && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20"
+                >
+                  <div className="flex gap-3">
+                    <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium text-blue-500">Notifications push</p>
+                      <p className="text-muted-foreground mt-1">
+                        {pushSubscribed 
+                          ? "Tu recevras des notifications même quand l'app est fermée."
+                          : "Active les notifications push pour ne rien rater !"}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           ),
         };
