@@ -20,6 +20,7 @@ import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
+import { useOnlineMemberCount } from '@/hooks/useTotalMemberCount';
 import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -28,7 +29,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Archive } from 'lucide-react';
+import { Loader2, Plus, Archive, User } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
@@ -85,6 +86,7 @@ const Index = () => {
   const { getOrCreateConversation } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const { joinedGroups, joinGroup, remainingSlots, maxGroups } = useJoinedGroups();
+  const { data: onlineCount } = useOnlineMemberCount();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -316,7 +318,7 @@ const Index = () => {
           >
             {/* Header */}
             <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50 flex items-center justify-between"
+              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
               style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
             >
               <div className="px-5 pb-4 flex items-center justify-between w-full">
@@ -338,17 +340,29 @@ const Index = () => {
                     Bienvenue, {profile?.username || 'membre'}
                   </motion.p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <ThemeToggle />
+                <div className="flex items-center gap-3">
+                  {/* Online members count */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400">{onlineCount || 0}</span>
+                  </div>
                   <NotificationsDropdown />
+                  {/* Profile avatar */}
+                  <button
+                    onClick={() => handleTabChange('profile')}
+                    className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors overflow-hidden border-2 border-primary/20"
+                  >
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="Profil" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
             <ScrollArea className="flex-1 min-h-0">
               <HomeView
-                onNavigateToGroups={() => handleTabChange('groups')}
-                onNavigateToMessages={() => handleTabChange('messages')}
-                onSelectRegion={handleSelectRegion}
                 onViewProfile={(userId) => handleStartPrivateChat(userId)}
                 onStartPrivateChat={handleStartPrivateChat}
               />
