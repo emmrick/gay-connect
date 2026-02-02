@@ -50,31 +50,65 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     // We set camera active first to show the video element, then request the stream
     setIsCameraActive(true);
     
-    const facingMode: ConstrainDOMString =
-      step === 'selfie' ? 'user' : { ideal: 'environment' };
+    // For selfie, use front camera. For documents, use back camera
+    const isSelfieStep = step === 'selfie';
+    
+    // Build video constraints - more explicit for mobile compatibility
+    const videoConstraints: MediaTrackConstraints = {
+      facingMode: isSelfieStep ? 'user' : 'environment',
+      width: { ideal: 1280 },
+      height: { ideal: 960 },
+    };
 
     navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode } as MediaTrackConstraints,
+      video: videoConstraints,
       audio: false 
     })
     .then((stream) => {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {
-          // Autoplay may fail silently on some browsers
-        });
+        // Important: wait for loadedmetadata before playing
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch((playError) => {
+            console.warn('Video autoplay failed:', playError);
+          });
+        };
       }
     })
     .catch((error) => {
       console.error('Camera access error:', error);
       setIsCameraActive(false);
+      
+      // Provide more specific error messages
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
         toast.error('Permission caméra refusée. Autorise l\'accès dans les paramètres de ton navigateur.');
-      } else if (error.name === 'NotFoundError') {
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
         toast.error('Aucune caméra détectée sur cet appareil.');
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        toast.error('La caméra est utilisée par une autre application. Ferme les autres apps et réessaie.');
+      } else if (error.name === 'OverconstrainedError') {
+        // If constraints fail, try with simpler constraints
+        console.log('Retrying with basic constraints...');
+        navigator.mediaDevices.getUserMedia({ 
+          video: true,
+          audio: false 
+        })
+        .then((stream) => {
+          streamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.onloadedmetadata = () => {
+              videoRef.current?.play().catch(() => {});
+            };
+          }
+          setIsCameraActive(true);
+        })
+        .catch(() => {
+          toast.error('Impossible d\'accéder à la caméra');
+        });
       } else {
-        toast.error('Impossible d\'accéder à la caméra');
+        toast.error(`Erreur caméra: ${error.message || 'Impossible d\'accéder à la caméra'}`);
       }
     });
   }, [step]);
