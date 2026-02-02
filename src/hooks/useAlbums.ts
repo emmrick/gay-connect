@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCreateNotification } from '@/hooks/useNotifications';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
 interface Album {
   id: string;
@@ -94,6 +95,30 @@ export const useAlbums = (userId?: string) => {
     mutationFn: async ({ name, description }: { name: string; description?: string }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
+      // Check if this is the first album (free) or subsequent (costs credits)
+      const currentAlbumCount = albums.length;
+      const isFirstAlbum = currentAlbumCount === 0;
+
+      if (!isFirstAlbum) {
+        // Check if user has enough credits for additional album
+        const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.album_create);
+        if (!hasCredits) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
+
+        // Deduct credits for additional album
+        const deductResult = await deductCredits(
+          user.id,
+          CREDIT_COSTS.album_create,
+          'album_create',
+          `Création d'un nouvel album: ${name}`
+        );
+
+        if (!deductResult.success) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
+      }
+
       const { data, error } = await supabase
         .from('user_albums')
         .insert({
@@ -113,7 +138,11 @@ export const useAlbums = (userId?: string) => {
       toast.success('Album créé !');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erreur lors de la création');
+      if (error.message === 'INSUFFICIENT_CREDITS') {
+        toast.error('Crédits insuffisants pour créer un album');
+      } else {
+        toast.error(error.message || 'Erreur lors de la création');
+      }
     },
   });
 
@@ -282,6 +311,24 @@ export const useAlbums = (userId?: string) => {
       duration?: 'unlimited' | '24h' | '7d' | '30d';
     }) => {
       if (!user?.id) throw new Error('Not authenticated');
+
+      // Check if user has enough credits for album share
+      const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.album_share);
+      if (!hasCredits) {
+        throw new Error('INSUFFICIENT_CREDITS');
+      }
+
+      // Deduct credits for sharing album
+      const deductResult = await deductCredits(
+        user.id,
+        CREDIT_COSTS.album_share,
+        'album_share',
+        'Partage d\'album'
+      );
+
+      if (!deductResult.success) {
+        throw new Error('INSUFFICIENT_CREDITS');
+      }
 
       let expiresAt: string | null = null;
       if (duration && duration !== 'unlimited') {

@@ -5,6 +5,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { notifyNewGroupMessage } from '@/services/pushNotificationService';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
 type Message = Tables<'messages'>;
 
@@ -168,6 +169,29 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
       sendingRef.current = true;
 
       try {
+        // Calculate credit cost based on message type (group messages have different costs)
+        const creditCost = messageType === 'text' 
+          ? CREDIT_COSTS.group_message_text 
+          : CREDIT_COSTS.group_message_media;
+
+        // Check if user has enough credits
+        const hasCredits = await checkSufficientCredits(user.id, creditCost);
+        if (!hasCredits) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
+
+        // Deduct credits first
+        const deductResult = await deductCredits(
+          user.id, 
+          creditCost, 
+          messageType === 'text' ? 'group_message_text' : 'group_message_media',
+          `Message groupe ${messageType === 'text' ? 'texte' : messageType === 'image' ? 'photo' : 'vidéo'}`
+        );
+
+        if (!deductResult.success) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
+
         const { data, error } = await supabase
           .from('messages')
           .insert({

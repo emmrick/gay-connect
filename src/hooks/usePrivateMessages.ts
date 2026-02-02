@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRecordEarning } from '@/hooks/useModeratorEarnings';
 import { notifyNewPrivateMessage } from '@/services/pushNotificationService';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
 type Message = Tables<'messages'>;
 
@@ -171,6 +172,29 @@ export const usePrivateMessages = (otherUserId: string | null) => {
       sendingRef.current = true;
 
       try {
+        // Calculate credit cost based on message type
+        const creditCost = messageType === 'text' 
+          ? CREDIT_COSTS.private_message_text 
+          : CREDIT_COSTS.private_message_media;
+
+        // Check if user has enough credits
+        const hasCredits = await checkSufficientCredits(user.id, creditCost);
+        if (!hasCredits) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
+
+        // Deduct credits first
+        const deductResult = await deductCredits(
+          user.id, 
+          creditCost, 
+          messageType === 'text' ? 'private_message_text' : 'private_message_media',
+          `Message privé ${messageType === 'text' ? 'texte' : messageType === 'image' ? 'photo' : 'vidéo'}`
+        );
+
+        if (!deductResult.success) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
+
         const { data, error } = await supabase
           .from('messages')
           .insert({
