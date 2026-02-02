@@ -442,7 +442,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                 <span className="font-medium text-amber-500">Passer à Premium</span>
                 <Zap className="w-4 h-4 text-amber-500" />
               </div>
-              <p className="text-xs text-muted-foreground">4,50 €/mois • Débloquez tout</p>
+              <p className="text-xs text-muted-foreground">5,99 €/mois • Débloquez tout</p>
             </div>
             <ChevronRight className="w-5 h-5 text-amber-500 group-hover:translate-x-1 transition-transform" />
           </motion.button>
