@@ -47,17 +47,24 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
 
   const startCamera = useCallback(() => {
     // CRITICAL: getUserMedia must be called directly from user gesture
-    // We set camera active first to show the video element, then request the stream
     setIsCameraActive(true);
     
     // For selfie, use front camera. For documents, use back camera
     const isSelfieStep = step === 'selfie';
     
-    // Build video constraints - more explicit for mobile compatibility
+    // Build video constraints - HIGH RESOLUTION for document clarity
+    // Use advanced constraints for autofocus which is critical for documents
     const videoConstraints: MediaTrackConstraints = {
       facingMode: isSelfieStep ? 'user' : 'environment',
-      width: { ideal: 1280 },
-      height: { ideal: 960 },
+      width: { ideal: 1920, min: 1280 },
+      height: { ideal: 1440, min: 960 },
+      // Enable autofocus for sharp document photos
+      // @ts-ignore - advanced constraints not in TypeScript types
+      focusMode: { ideal: 'continuous' },
+      // @ts-ignore
+      exposureMode: { ideal: 'continuous' },
+      // @ts-ignore
+      whiteBalanceMode: { ideal: 'continuous' },
     };
 
     navigator.mediaDevices.getUserMedia({ 
@@ -75,6 +82,20 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
           });
         };
       }
+      
+      // Try to enable autofocus on the video track if supported
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        const capabilities = videoTrack.getCapabilities?.() as Record<string, unknown>;
+        if (capabilities?.focusMode && Array.isArray(capabilities.focusMode) && capabilities.focusMode.includes('continuous')) {
+          videoTrack.applyConstraints({
+            // @ts-ignore - advanced constraints not in TypeScript types
+            focusMode: 'continuous'
+          }).catch(() => {
+            console.log('Could not apply focus mode');
+          });
+        }
+      }
     })
     .catch((error) => {
       console.error('Camera access error:', error);
@@ -91,7 +112,7 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
         // If constraints fail, try with simpler constraints
         console.log('Retrying with basic constraints...');
         navigator.mediaDevices.getUserMedia({ 
-          video: true,
+          video: { facingMode: isSelfieStep ? 'user' : 'environment' },
           audio: false 
         })
         .then((stream) => {
@@ -112,7 +133,6 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
       }
     });
   }, [step]);
-
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -146,16 +166,26 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
     if (videoRef.current && canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
-        canvasRef.current.width = videoRef.current.videoWidth;
-        canvasRef.current.height = videoRef.current.videoHeight;
-        ctx.drawImage(videoRef.current, 0, 0);
+        // Use full resolution from the video stream for maximum clarity
+        const videoWidth = videoRef.current.videoWidth;
+        const videoHeight = videoRef.current.videoHeight;
         
+        canvasRef.current.width = videoWidth;
+        canvasRef.current.height = videoHeight;
+        
+        // Enable image smoothing for better quality
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        ctx.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+        
+        // Use maximum quality (1.0) for document photos - clarity is critical
         canvasRef.current.toBlob((blob) => {
           if (blob) {
             const file = new File([blob], `${step}_${Date.now()}.jpg`, { type: 'image/jpeg' });
             handleFileCapture(file);
           }
-        }, 'image/jpeg', 0.9);
+        }, 'image/jpeg', 1.0); // Maximum quality
       }
     }
     stopCamera();
