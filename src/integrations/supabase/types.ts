@@ -150,6 +150,36 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          credit_type: Database["public"]["Enums"]["credit_type"]
+          description: string | null
+          id: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credit_type: Database["public"]["Enums"]["credit_type"]
+          description?: string | null
+          id?: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credit_type?: Database["public"]["Enums"]["credit_type"]
+          description?: string | null
+          id?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ephemeral_media: {
         Row: {
           created_at: string
@@ -508,6 +538,33 @@ export type Database = {
         }
         Relationships: []
       }
+      nearby_profiles_unlock: {
+        Row: {
+          credits_spent: number
+          expires_at: string
+          id: string
+          unlock_type: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          credits_spent: number
+          expires_at: string
+          id?: string
+          unlock_type: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          credits_spent?: number
+          expires_at?: string
+          id?: string
+          unlock_type?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -729,6 +786,30 @@ export type Database = {
           id?: string
           profile_user_id?: string
           reactor_user_id?: string
+        }
+        Relationships: []
+      }
+      profile_view_credits: {
+        Row: {
+          credits_spent: number
+          id: string
+          viewed_at: string
+          viewed_user_id: string
+          viewer_user_id: string
+        }
+        Insert: {
+          credits_spent: number
+          id?: string
+          viewed_at?: string
+          viewed_user_id: string
+          viewer_user_id: string
+        }
+        Update: {
+          credits_spent?: number
+          id?: string
+          viewed_at?: string
+          viewed_user_id?: string
+          viewer_user_id?: string
         }
         Relationships: []
       }
@@ -1199,6 +1280,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          bonus_credits: number
+          created_at: string
+          daily_claims_used: number
+          daily_credits: number
+          last_daily_claim: string | null
+          monthly_reset_date: string
+          purchased_credits: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bonus_credits?: number
+          created_at?: string
+          daily_claims_used?: number
+          daily_credits?: number
+          last_daily_claim?: string | null
+          monthly_reset_date?: string
+          purchased_credits?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bonus_credits?: number
+          created_at?: string
+          daily_claims_used?: number
+          daily_credits?: number
+          last_daily_claim?: string | null
+          monthly_reset_date?: string
+          purchased_credits?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_favorites: {
         Row: {
           created_at: string
@@ -1366,6 +1483,17 @@ export type Database = {
         }
         Returns: Json
       }
+      add_credits: {
+        Args: {
+          _amount: number
+          _credit_type: Database["public"]["Enums"]["credit_type"]
+          _description?: string
+          _transaction_type: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      add_verification_credits: { Args: { _user_id: string }; Returns: Json }
       calculate_distance: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -1378,6 +1506,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      check_sufficient_credits: {
+        Args: { _amount: number; _user_id: string }
+        Returns: boolean
+      }
+      claim_daily_credits: { Args: { _user_id: string }; Returns: Json }
+      deduct_credits: {
+        Args: {
+          _amount: number
+          _description?: string
+          _transaction_type: string
+          _user_id: string
+        }
+        Returns: Json
       }
       generate_referral_code: { Args: never; Returns: string }
       get_nearby_profiles: {
@@ -1404,6 +1546,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_user_credit_balance: { Args: { _user_id: string }; Returns: Json }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1421,6 +1564,10 @@ export type Database = {
       mark_messages_as_read: {
         Args: { _sender_id: string; _user_id: string }
         Returns: number
+      }
+      process_referral_credits: {
+        Args: { _referred_id: string; _referrer_id: string }
+        Returns: Json
       }
       record_moderator_earning: {
         Args: {
@@ -1445,6 +1592,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      credit_type: "daily" | "bonus" | "purchased"
       moderation_action_type:
         | "user_suspended"
         | "user_unblocked"
@@ -1597,6 +1745,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      credit_type: ["daily", "bonus", "purchased"],
       moderation_action_type: [
         "user_suspended",
         "user_unblocked",

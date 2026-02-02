@@ -1,0 +1,417 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+// Credit costs for each action
+export const CREDIT_COSTS = {
+  private_message_text: 0.1,
+  private_message_media: 0.02,
+  group_message_text: 0.1,
+  group_message_media: 0.2,
+  ephemeral_media: 0.5,
+  album_share: 1.0,
+  album_create: 10.0, // Only for 2nd+ albums
+  profile_reaction: 0.3,
+  profile_view: 0.1,
+  nearby_unlock_30: 5.0,
+  nearby_unlock_130: 10.0,
+} as const;
+
+// Credit rewards
+export const CREDIT_REWARDS = {
+  signup: 15.0, // 10 + 5 welcome bonus
+  identity_verification: 30.0,
+  daily_claim: 5.0,
+  referral_success: 10.0, // For each party
+} as const;
+
+export type CreditActionType = keyof typeof CREDIT_COSTS;
+
+export interface UserCredits {
+  user_id: string;
+  daily_credits: number;
+  bonus_credits: number;
+  purchased_credits: number;
+  total_credits: number;
+  daily_claims_used: number;
+  can_claim_daily: boolean;
+  last_daily_claim: string | null;
+  monthly_reset_date: string;
+}
+
+export interface CreditTransaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  credit_type: 'daily' | 'bonus' | 'purchased';
+  transaction_type: string;
+  description: string | null;
+  created_at: string;
+}
+
+export const useCredits = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Fetch user credits balance
+  const query = useQuery({
+    queryKey: ['user-credits', user?.id],
+    queryFn: async (): Promise<UserCredits | null> => {
+      if (!user?.id) return null;
+
+      const { data, error } = await supabase.rpc('get_user_credit_balance', {
+        _user_id: user.id,
+      });
+
+      if (error) throw error;
+      return data as unknown as UserCredits;
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
+  });
+
+  // Fetch credit transactions history
+  const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
+    queryKey: ['credit-transactions', user?.id],
+    queryFn: async (): Promise<CreditTransaction[]> => {
+      if (!user?.id) return [];
+
+      const { data, error } = await supabase
+        .from('credit_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      return data as CreditTransaction[];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Check if user has enough credits
+  const hasEnoughCredits = (amount: number): boolean => {
+    if (!query.data) return false;
+    return query.data.total_credits >= amount;
+  };
+
+  // Check credits for a specific action
+  const canPerformAction = (action: CreditActionType): boolean => {
+    return hasEnoughCredits(CREDIT_COSTS[action]);
+  };
+
+  // Deduct credits mutation
+  const deductCredits = useMutation({
+    mutationFn: async ({ 
+      amount, 
+      transactionType, 
+      description 
+    }: { 
+      amount: number; 
+      transactionType: string; 
+      description?: string;
+    }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.rpc('deduct_credits', {
+        _user_id: user.id,
+        _amount: amount,
+        _transaction_type: transactionType,
+        _description: description || null,
+      });
+
+      if (error) throw error;
+      
+      const result = data as { success: boolean; error?: string };
+      if (!result.success) {
+        throw new Error(result.error || 'Insufficient credits');
+      }
+      
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['credit-transactions', user?.id] });
+    },
+    onError: (error: Error) => {
+      if (error.message === 'Insufficient credits') {
+        toast.error('Crédits insuffisants', {
+          description: 'Achetez des crédits ou réclamez vos crédits quotidiens.',
+          action: {
+            label: 'Acheter',
+            onClick: () => window.location.href = '/?tab=credits',
+          },
+        });
+      }
+    },
+  });
+
+  // Add credits mutation (for admin use)
+  const addCredits = useMutation({
+    mutationFn: async ({ 
+      userId,
+      amount, 
+      creditType,
+      transactionType, 
+      description 
+    }: { 
+      userId: string;
+      amount: number; 
+      creditType: 'daily' | 'bonus' | 'purchased';
+      transactionType: string; 
+      description?: string;
+    }) => {
+      const { data, error } = await supabase.rpc('add_credits', {
+        _user_id: userId,
+        _amount: amount,
+        _credit_type: creditType,
+        _transaction_type: transactionType,
+        _description: description || null,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-credits'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-transactions'] });
+    },
+  });
+
+  // Claim daily credits mutation
+  const claimDailyCredits = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.rpc('claim_daily_credits', {
+        _user_id: user.id,
+      });
+
+      if (error) throw error;
+      
+      const result = data as { success: boolean; error?: string; credits_claimed?: number; claims_remaining?: number };
+      if (!result.success) {
+        throw new Error(result.error || 'Cannot claim daily credits');
+      }
+      
+      return result;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['credit-transactions', user?.id] });
+      toast.success(`+${data.credits_claimed} crédits réclamés !`, {
+        description: `Il vous reste ${data.claims_remaining} réclamations ce mois-ci.`,
+      });
+    },
+    onError: (error: Error) => {
+      if (error.message.includes('Already claimed')) {
+        toast.error('Déjà réclamé aujourd\'hui', {
+          description: 'Revenez demain pour réclamer vos crédits quotidiens.',
+        });
+      } else if (error.message.includes('Maximum 7 claims')) {
+        toast.error('Limite mensuelle atteinte', {
+          description: 'Vous avez utilisé vos 7 réclamations ce mois-ci.',
+        });
+      } else {
+        toast.error('Erreur lors de la réclamation');
+      }
+    },
+  });
+
+  // Perform action with credit deduction
+  const performAction = async (
+    action: CreditActionType,
+    description?: string
+  ): Promise<boolean> => {
+    const cost = CREDIT_COSTS[action];
+    
+    if (!hasEnoughCredits(cost)) {
+      toast.error('Crédits insuffisants', {
+        description: `Cette action coûte ${cost} crédit${cost > 1 ? 's' : ''}.`,
+        action: {
+          label: 'Acheter',
+          onClick: () => window.location.href = '/?tab=credits',
+        },
+      });
+      return false;
+    }
+
+    try {
+      await deductCredits.mutateAsync({
+        amount: cost,
+        transactionType: action,
+        description,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  return {
+    credits: query.data,
+    isLoading: query.isLoading,
+    transactions,
+    transactionsLoading,
+    // Balances
+    dailyCredits: query.data?.daily_credits || 0,
+    bonusCredits: query.data?.bonus_credits || 0,
+    purchasedCredits: query.data?.purchased_credits || 0,
+    totalCredits: query.data?.total_credits || 0,
+    // Daily claims
+    dailyClaimsUsed: query.data?.daily_claims_used || 0,
+    canClaimDaily: query.data?.can_claim_daily || false,
+    claimDailyCredits,
+    // Checks
+    hasEnoughCredits,
+    canPerformAction,
+    // Actions
+    performAction,
+    deductCredits,
+    addCredits,
+    // Refresh
+    refresh: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+    },
+  };
+};
+
+// Hook for checking if a profile has been viewed (to avoid double charge)
+export const useProfileViewCheck = (viewedUserId: string) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['profile-view-check', user?.id, viewedUserId],
+    queryFn: async () => {
+      if (!user?.id || !viewedUserId || user.id === viewedUserId) return true; // Own profile = free
+
+      const { data, error } = await supabase
+        .from('profile_view_credits')
+        .select('id')
+        .eq('viewer_user_id', user.id)
+        .eq('viewed_user_id', viewedUserId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data; // True if already viewed (free), false if new view (needs credit)
+    },
+    enabled: !!user?.id && !!viewedUserId,
+  });
+};
+
+// Hook for recording a profile view
+export const useRecordProfileView = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (viewedUserId: string) => {
+      if (!user?.id) throw new Error('Not authenticated');
+      if (user.id === viewedUserId) return; // Don't charge for viewing own profile
+
+      const { error } = await supabase
+        .from('profile_view_credits')
+        .insert({
+          viewer_user_id: user.id,
+          viewed_user_id: viewedUserId,
+          credits_spent: CREDIT_COSTS.profile_view,
+        });
+
+      // Ignore duplicate error (already viewed)
+      if (error && !error.message.includes('duplicate')) throw error;
+    },
+    onSuccess: (_, viewedUserId) => {
+      queryClient.invalidateQueries({ queryKey: ['profile-view-check', user?.id, viewedUserId] });
+    },
+  });
+};
+
+// Hook to get nearby profile unlock status
+export const useNearbyProfilesUnlock = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['nearby-unlock', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+
+      const { data, error } = await supabase
+        .from('nearby_profiles_unlock')
+        .select('*')
+        .eq('user_id', user.id)
+        .gt('expires_at', new Date().toISOString())
+        .order('expires_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const unlockMutation = useMutation({
+    mutationFn: async (unlockType: '30_extra' | '130_extra') => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const cost = unlockType === '30_extra' ? CREDIT_COSTS.nearby_unlock_30 : CREDIT_COSTS.nearby_unlock_130;
+      const duration = unlockType === '30_extra' ? 72 : 168; // hours
+      
+      // First deduct credits
+      const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits', {
+        _user_id: user.id,
+        _amount: cost,
+        _transaction_type: unlockType === '30_extra' ? 'nearby_unlock_30' : 'nearby_unlock_130',
+        _description: `Déblocage ${unlockType === '30_extra' ? '30' : '130'} profils supplémentaires`,
+      });
+
+      if (deductError) throw deductError;
+      if (!(deductResult as any).success) {
+        throw new Error((deductResult as any).error || 'Crédits insuffisants');
+      }
+
+      // Then create unlock record
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + duration);
+
+      const { error: insertError } = await supabase
+        .from('nearby_profiles_unlock')
+        .insert({
+          user_id: user.id,
+          unlock_type: unlockType,
+          credits_spent: cost,
+          expires_at: expiresAt.toISOString(),
+        });
+
+      if (insertError) throw insertError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['nearby-unlock', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+      toast.success('Profils supplémentaires débloqués !');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors du déblocage');
+    },
+  });
+
+  // Calculate max profiles visible
+  const getMaxProfiles = () => {
+    const baseLimit = 30;
+    if (!query.data) return baseLimit;
+    
+    if (query.data.unlock_type === '130_extra') return 130;
+    if (query.data.unlock_type === '30_extra') return 60;
+    return baseLimit;
+  };
+
+  return {
+    unlock: query.data,
+    isLoading: query.isLoading,
+    maxProfiles: getMaxProfiles(),
+    unlockProfiles: unlockMutation.mutateAsync,
+    isUnlocking: unlockMutation.isPending,
+  };
+};

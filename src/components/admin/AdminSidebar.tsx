@@ -11,7 +11,7 @@ import {
   IdCard, 
   Ticket, 
   Ban, 
-  Crown, 
+  Coins,
   History,
   ChevronLeft,
   Menu,
@@ -36,7 +36,7 @@ export type AdminSection =
   | 'verification' 
   | 'promo' 
   | 'history' 
-  | 'premium'
+  | 'credits'
   | 'broadcast';
 
 interface AdminSidebarProps {
@@ -64,7 +64,7 @@ const navItems: NavItem[] = [
   // Utilisateurs
   { id: 'stats', label: 'Statistiques', icon: BarChart3, group: 'users' },
   { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users' },
-  { id: 'premium', label: 'Premium', icon: Crown, group: 'users' },
+  { id: 'credits', label: 'Crédits', icon: Coins, group: 'users' },
   { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users' },
   
   // Modération
