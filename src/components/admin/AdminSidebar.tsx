@@ -14,7 +14,8 @@ import {
   Crown, 
   History,
   ChevronLeft,
-  Menu
+  Menu,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,8 @@ export type AdminSection =
   | 'verification' 
   | 'promo' 
   | 'history' 
-  | 'premium';
+  | 'premium'
+  | 'broadcast';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -73,6 +75,7 @@ const navItems: NavItem[] = [
   
   // Paramètres
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'settings' },
+  { id: 'broadcast', label: 'Notifications', icon: Bell, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {

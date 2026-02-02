@@ -40,6 +40,7 @@ import WithdrawalRequestsPanel from '@/components/admin/WithdrawalRequestsPanel'
 import GlobalEarningsPanel from '@/components/admin/GlobalEarningsPanel';
 import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
 import PremiumUsersPanel from '@/components/admin/PremiumUsersPanel';
+import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
@@ -206,6 +207,9 @@ const Admin = () => {
       
       case 'promo':
         return <PromoCodePanel />;
+      
+      case 'broadcast':
+        return <BroadcastNotificationPanel />;
       
       default:
         return null;
