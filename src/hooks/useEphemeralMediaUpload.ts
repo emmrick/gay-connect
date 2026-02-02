@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserUsage } from './useUserUsage';
 import { toast } from 'sonner';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
 interface UploadEphemeralMediaParams {
   file: File;
@@ -43,6 +44,12 @@ export const useEphemeralMediaUpload = () => {
         throw new Error('LIMIT_REACHED');
       }
 
+      // Check if user has enough credits for ephemeral media
+      const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.ephemeral_media);
+      if (!hasCredits) {
+        throw new Error('INSUFFICIENT_CREDITS');
+      }
+
       // Check file size limits
       const maxSize = messageType === 'video' ? limits.maxVideoSize : limits.maxPhotoSize;
       if (file.size > maxSize) {
@@ -54,6 +61,17 @@ export const useEphemeralMediaUpload = () => {
       setProgress(10);
 
       try {
+        // Deduct credits for ephemeral media
+        const deductResult = await deductCredits(
+          user.id,
+          CREDIT_COSTS.ephemeral_media,
+          'ephemeral_media',
+          `Média éphémère ${messageType === 'image' ? 'photo' : 'vidéo'}`
+        );
+
+        if (!deductResult.success) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
         // 1. Upload file to storage
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;

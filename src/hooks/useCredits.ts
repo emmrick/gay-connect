@@ -50,6 +50,67 @@ export interface CreditTransaction {
   created_at: string;
 }
 
+// Standalone utility function to check if user has enough credits
+export const checkSufficientCredits = async (userId: string, amount: number): Promise<boolean> => {
+  const { data, error } = await supabase.rpc('check_sufficient_credits', {
+    _user_id: userId,
+    _amount: amount,
+  });
+
+  if (error) {
+    console.error('Error checking credits:', error);
+    return false;
+  }
+
+  return data as boolean;
+};
+
+// Standalone utility function to deduct credits
+export const deductCredits = async (
+  userId: string,
+  amount: number,
+  transactionType: string,
+  description?: string
+): Promise<{ success: boolean; error?: string }> => {
+  const { data, error } = await supabase.rpc('deduct_credits', {
+    _user_id: userId,
+    _amount: amount,
+    _transaction_type: transactionType,
+    _description: description || null,
+  });
+
+  if (error) {
+    console.error('Error deducting credits:', error);
+    return { success: false, error: error.message };
+  }
+
+  return data as { success: boolean; error?: string };
+};
+
+// Standalone utility function to add credits
+export const addCreditsToUser = async (
+  userId: string,
+  amount: number,
+  creditType: 'daily' | 'bonus' | 'purchased',
+  transactionType: string,
+  description?: string
+): Promise<{ success: boolean; error?: string }> => {
+  const { data, error } = await supabase.rpc('add_credits', {
+    _user_id: userId,
+    _amount: amount,
+    _credit_type: creditType,
+    _transaction_type: transactionType,
+    _description: description || null,
+  });
+
+  if (error) {
+    console.error('Error adding credits:', error);
+    return { success: false, error: error.message };
+  }
+
+  return data as { success: boolean; error?: string };
+};
+
 export const useCredits = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
