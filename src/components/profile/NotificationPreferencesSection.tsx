@@ -9,10 +9,14 @@ import {
   Image, 
   Volume2, 
   VolumeX,
-  Loader2
+  Loader2,
+  Play
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { useNotificationSound, NOTIFICATION_SOUNDS, NotificationSoundType } from '@/hooks/useNotificationSound';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface PreferenceItemProps {
   icon: React.ElementType;
@@ -61,8 +65,23 @@ const NotificationPreferencesSection = () => {
     preferences, 
     isLoading, 
     togglePreference,
+    updatePreferences,
     isUpdating 
   } = useNotificationPreferences();
+  
+  const { previewSound } = useNotificationSound();
+
+  const handleSoundChange = (value: NotificationSoundType) => {
+    // Store in localStorage for immediate access
+    localStorage.setItem('notification_sound_type', value);
+    // Also update in database
+    updatePreferences({ notification_sound: value });
+  };
+
+  const handlePreviewSound = () => {
+    const currentSound = (preferences.notification_sound || 'default') as NotificationSoundType;
+    previewSound(currentSound);
+  };
 
   if (isLoading) {
     return (
@@ -130,7 +149,7 @@ const NotificationPreferencesSection = () => {
         disabled={isUpdating}
       />
 
-      <div className="pt-2 border-t border-border">
+      <div className="pt-2 border-t border-border space-y-3">
         <PreferenceItem
           icon={preferences.sound_enabled ? Volume2 : VolumeX}
           iconColor="text-primary"
@@ -140,6 +159,47 @@ const NotificationPreferencesSection = () => {
           onCheckedChange={() => togglePreference('sound_enabled')}
           disabled={isUpdating}
         />
+
+        {preferences.sound_enabled && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="ml-14 space-y-2"
+          >
+            <Label className="text-sm text-muted-foreground">Choix du son</Label>
+            <div className="flex items-center gap-2">
+              <Select 
+                value={preferences.notification_sound || 'default'} 
+                onValueChange={handleSoundChange}
+                disabled={isUpdating}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Choisir un son" />
+                </SelectTrigger>
+                <SelectContent>
+                  {NOTIFICATION_SOUNDS.map((sound) => (
+                    <SelectItem key={sound.id} value={sound.id}>
+                      <div className="flex flex-col">
+                        <span>{sound.name}</span>
+                        <span className="text-xs text-muted-foreground">{sound.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handlePreviewSound}
+                disabled={preferences.notification_sound === 'none'}
+                title="Écouter le son"
+              >
+                <Play className="w-4 h-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
