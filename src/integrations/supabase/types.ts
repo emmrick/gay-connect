@@ -470,6 +470,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          notification_sound: string | null
           push_album_shares: boolean
           push_favorites: boolean
           push_group_messages: boolean
@@ -482,6 +483,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          notification_sound?: string | null
           push_album_shares?: boolean
           push_favorites?: boolean
           push_group_messages?: boolean
@@ -494,6 +496,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          notification_sound?: string | null
           push_album_shares?: boolean
           push_favorites?: boolean
           push_group_messages?: boolean

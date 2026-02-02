@@ -12,6 +12,7 @@ interface NotificationPreferences {
   push_reactions: boolean;
   push_album_shares: boolean;
   sound_enabled: boolean;
+  notification_sound: string;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +24,7 @@ const defaultPreferences = {
   push_reactions: true,
   push_album_shares: true,
   sound_enabled: true,
+  notification_sound: 'default',
 };
 
 export const useNotificationPreferences = () => {
