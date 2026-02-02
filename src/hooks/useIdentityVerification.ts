@@ -93,25 +93,28 @@ export const useIdentityVerification = () => {
   const uploadDocument = async (file: File, type: 'selfie' | 'id_front' | 'id_back') => {
     if (!user) throw new Error('Not authenticated');
 
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split('.').pop() || 'jpg';
     const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
+    console.log('Uploading document:', fileName, 'Size:', file.size);
+
+    const { error: uploadError, data: uploadData } = await supabase.storage
       .from('identity-documents')
-      .upload(fileName, file);
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw new Error(`Erreur d'upload: ${uploadError.message}`);
+    }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('identity-documents')
-      .getPublicUrl(fileName);
+    console.log('Upload successful:', uploadData);
 
-    // For private buckets, we need to use signed URLs
-    const { data: signedUrlData } = await supabase.storage
-      .from('identity-documents')
-      .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
-
-    return signedUrlData?.signedUrl || fileName;
+    // For private buckets, we store the file path and create signed URLs when needed
+    // Return just the file path - admin will create signed URLs when viewing
+    return fileName;
   };
 
   const submitVerification = useMutation({
