@@ -4,6 +4,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Send, Smile, Loader2 } from 'lucide-react';
 import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
+import MentionAutocomplete from './MentionAutocomplete';
+import { useMentionAutocomplete } from '@/hooks/useMentionAutocomplete';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -17,7 +19,22 @@ interface ChatInputProps {
 
 const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus }: ChatInputProps) => {
   const [message, setMessage] = useState('');
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  const {
+    suggestions,
+    isLoading: isMentionLoading,
+    isActive: isMentionActive,
+    handleTextChange,
+    insertMention,
+    closeMention,
+  } = useMentionAutocomplete(chatRoomId);
+
+  // Reset selected index when suggestions change
+  useEffect(() => {
+    setSelectedSuggestionIndex(0);
+  }, [suggestions]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -34,6 +51,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     if (trimmedMessage) {
       onSendMessage(trimmedMessage);
       setMessage('');
+      closeMention();
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
@@ -41,7 +59,43 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     }
   };
 
+  const handleSelectMention = (user: { user_id: string; username: string; avatar_url: string | null }) => {
+    const newMessage = insertMention(message, user);
+    setMessage(newMessage);
+    closeMention();
+    // Focus back on textarea
+    textareaRef.current?.focus();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Handle mention autocomplete navigation
+    if (isMentionActive && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        handleSelectMention(suggestions[selectedSuggestionIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeMention();
+        return;
+      }
+    }
+
     // Send on Enter (without Shift for new line)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -50,11 +104,15 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
+    const newValue = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    
+    setMessage(newValue);
+    handleTextChange(newValue, cursorPosition);
     onTyping?.();
   };
 
-  const handleFocus = () => {
+  const handleInputFocus = () => {
     onFocus?.();
     setTimeout(() => {
       onFocus?.();
@@ -66,7 +124,16 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   };
 
   return (
-    <div className="p-3 border-t border-border bg-card/50 backdrop-blur-lg">
+    <div className="p-3 border-t border-border bg-card/50 backdrop-blur-lg relative">
+      {/* Mention autocomplete dropdown */}
+      <MentionAutocomplete
+        suggestions={suggestions}
+        isLoading={isMentionLoading}
+        isActive={isMentionActive}
+        selectedIndex={selectedSuggestionIndex}
+        onSelect={handleSelectMention}
+      />
+
       <div className="flex items-end gap-2">
         {/* Media upload button */}
         <MediaUploadButton 
@@ -93,8 +160,8 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
           value={message}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          placeholder="Écris ton message..."
+          onFocus={handleInputFocus}
+          placeholder="Écris ton message... (@ pour mentionner)"
           className="flex-1 bg-secondary border-none min-h-[40px] max-h-[120px] py-2.5 px-4 resize-none rounded-2xl text-sm leading-normal"
           rows={1}
         />
