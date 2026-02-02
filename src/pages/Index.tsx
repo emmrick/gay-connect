@@ -15,6 +15,7 @@ import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
 import IdentityVerificationDialog from '@/components/verification/IdentityVerificationDialog';
 import VerificationReminderBanner from '@/components/verification/VerificationReminderBanner';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
+import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
@@ -340,7 +341,9 @@ const Index = () => {
                     Bienvenue, {profile?.username || 'membre'}
                   </motion.p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {/* Credit balance */}
+                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
                   {/* Online members count */}
                   <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -407,6 +410,7 @@ const Index = () => {
                   </motion.p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
                   <NotificationsDropdown />
                   <Button
                     onClick={() => setShowGroupPicker(true)}
@@ -470,6 +474,7 @@ const Index = () => {
                   </motion.p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
                   <NotificationsDropdown />
                   <Button
                     variant="ghost"
@@ -564,7 +569,10 @@ const Index = () => {
                     Gérer ton compte
                   </motion.p>
                 </div>
-                <NotificationsDropdown />
+                <div className="flex items-center gap-2">
+                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
+                  <NotificationsDropdown />
+                </div>
               </div>
             </div>
             <ScrollArea className="flex-1 min-h-0">
