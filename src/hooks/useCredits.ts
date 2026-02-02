@@ -189,11 +189,21 @@ export const useCredits = () => {
         throw new Error(result.error || 'Insufficient credits');
       }
       
-      return result;
+      return { ...result, amount, description };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['credit-transactions', user?.id] });
+      
+      // Show subtle toast notification for credit deduction
+      const actionDescription = data.description || 'Action';
+      toast(`-${data.amount} crédit${data.amount > 1 ? 's' : ''}`, {
+        description: actionDescription,
+        duration: 2000,
+        icon: '💰',
+        position: 'bottom-center',
+        className: 'text-sm',
+      });
     },
     onError: (error: Error) => {
       if (error.message === 'Insufficient credits') {
