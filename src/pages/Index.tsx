@@ -311,9 +311,31 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1"
+            className="flex-1 flex flex-col"
           >
-            <ScrollArea className="h-full">
+            {/* Header */}
+            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
+              <div>
+                <motion.h2 
+                  className="font-display text-2xl font-bold text-foreground mb-1"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  Accueil
+                </motion.h2>
+                <motion.p 
+                  className="text-sm text-muted-foreground"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  Bienvenue, {profile?.username || 'membre'}
+                </motion.p>
+              </div>
+              <NotificationsDropdown />
+            </div>
+            <ScrollArea className="flex-1">
               <HomeView
                 onNavigateToGroups={() => handleTabChange('groups')}
                 onNavigateToMessages={() => handleTabChange('messages')}
@@ -483,9 +505,31 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1"
+            className="flex-1 flex flex-col"
           >
-            <ScrollArea className="h-full">
+            {/* Header */}
+            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
+              <div>
+                <motion.h2 
+                  className="font-display text-2xl font-bold text-foreground mb-1"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  Mon Profil
+                </motion.h2>
+                <motion.p 
+                  className="text-sm text-muted-foreground"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  Gérer ton compte
+                </motion.p>
+              </div>
+              <NotificationsDropdown />
+            </div>
+            <ScrollArea className="flex-1">
               <ProfileView 
                 onSignOut={handleSignOut}
                 onNavigateToAdmin={() => navigate('/admin')}
@@ -512,9 +556,31 @@ const Index = () => {
             animate="animate"
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1"
+            className="flex-1 flex flex-col"
           >
-            <ScrollArea className="h-full">
+            {/* Header */}
+            <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between">
+              <div>
+                <motion.h2 
+                  className="font-display text-2xl font-bold text-foreground mb-1"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  Premium
+                </motion.h2>
+                <motion.p 
+                  className="text-sm text-muted-foreground"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  Débloquer toutes les fonctionnalités
+                </motion.p>
+              </div>
+              <NotificationsDropdown />
+            </div>
+            <ScrollArea className="flex-1">
               <PremiumPage />
             </ScrollArea>
           </motion.div>
