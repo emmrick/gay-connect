@@ -43,7 +43,7 @@ export const usePushNotifications = () => {
 
   // Check if push notifications are supported
   useEffect(() => {
-    const checkSupport = async () => {
+    const initPushSupport = async () => {
       const supported = 'serviceWorker' in navigator && 
                        'PushManager' in window && 
                        'Notification' in window;
@@ -51,13 +51,29 @@ export const usePushNotifications = () => {
       
       if (supported) {
         setPermission(Notification.permission);
+        
+        // Wait for any service worker to be ready and check subscription status
+        try {
+          console.log('[Push] Waiting for service worker...');
+          const registration = await navigator.serviceWorker.ready;
+          console.log('[Push] Service worker ready:', registration.scope);
+          
+          // Check current subscription status
+          if (user) {
+            const subscription = await registration.pushManager.getSubscription();
+            setIsSubscribed(!!subscription);
+            console.log('[Push] Current subscription:', !!subscription);
+          }
+        } catch (error) {
+          console.error('[Push] Error checking service worker:', error);
+        }
       }
     };
     
-    checkSupport();
-  }, []);
+    initPushSupport();
+  }, [user]);
 
-  // Check if already subscribed
+  // Check if already subscribed when user changes
   useEffect(() => {
     const checkSubscription = async () => {
       if (!isSupported || !user) return;
@@ -67,32 +83,24 @@ export const usePushNotifications = () => {
         const subscription = await registration.pushManager.getSubscription();
         setIsSubscribed(!!subscription);
       } catch (error) {
-        console.error('Error checking subscription:', error);
+        console.error('[Push] Error checking subscription:', error);
       }
     };
 
     checkSubscription();
   }, [isSupported, user]);
 
-  // Register the push service worker
-  const registerServiceWorker = useCallback(async () => {
+  // Get the service worker registration (use the existing PWA one)
+  const getServiceWorkerRegistration = useCallback(async () => {
     if (!('serviceWorker' in navigator)) {
       throw new Error('Service Worker not supported');
     }
 
-    try {
-      const registration = await navigator.serviceWorker.register('/sw-push.js', {
-        scope: '/'
-      });
-      
-      // Wait for the service worker to be ready
-      await navigator.serviceWorker.ready;
-      
-      return registration;
-    } catch (error) {
-      console.error('Service Worker registration failed:', error);
-      throw error;
-    }
+    // Wait for the PWA service worker to be ready
+    console.log('[Push] Getting service worker registration...');
+    const registration = await navigator.serviceWorker.ready;
+    console.log('[Push] Got registration:', registration.scope);
+    return registration;
   }, []);
 
   // Subscribe to push notifications
@@ -119,7 +127,7 @@ export const usePushNotifications = () => {
       }
 
       // Register service worker
-      const registration = await registerServiceWorker();
+      const registration = await getServiceWorkerRegistration();
 
       // Check if already subscribed
       let subscription = await registration.pushManager.getSubscription();
@@ -166,7 +174,7 @@ export const usePushNotifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, isSupported, registerServiceWorker]);
+  }, [user, isSupported, getServiceWorkerRegistration]);
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async () => {
