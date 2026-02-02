@@ -1,8 +1,21 @@
 // Service Worker for Push Notifications
-// This file handles push notifications when the app is in background
+// This file handles push notifications when the app is in background or closed
 
+// Install event - activate immediately
+self.addEventListener('install', function(event) {
+  console.log('[SW-Push] Installing...');
+  self.skipWaiting();
+});
+
+// Activate event - claim clients immediately
+self.addEventListener('activate', function(event) {
+  console.log('[SW-Push] Activating...');
+  event.waitUntil(clients.claim());
+});
+
+// Handle push notifications
 self.addEventListener('push', function(event) {
-  console.log('[SW] Push notification received', event);
+  console.log('[SW-Push] Push notification received', event);
   
   let data = {
     title: 'GayConnect',
@@ -16,6 +29,7 @@ self.addEventListener('push', function(event) {
   try {
     if (event.data) {
       const payload = event.data.json();
+      console.log('[SW-Push] Payload:', payload);
       data = {
         title: payload.title || data.title,
         body: payload.body || data.body,
@@ -26,7 +40,7 @@ self.addEventListener('push', function(event) {
       };
     }
   } catch (e) {
-    console.error('[SW] Error parsing push data:', e);
+    console.error('[SW-Push] Error parsing push data:', e);
   }
 
   const options = {
@@ -35,22 +49,27 @@ self.addEventListener('push', function(event) {
     badge: data.badge,
     tag: data.tag,
     renotify: true,
-    requireInteraction: false,
+    requireInteraction: true, // Keep notification visible until user interacts
     vibrate: [200, 100, 200],
     data: data.data,
     actions: [
       { action: 'open', title: 'Ouvrir' },
       { action: 'close', title: 'Fermer' }
-    ]
+    ],
+    // Silent push should still show notification
+    silent: false
   };
 
   event.waitUntil(
     self.registration.showNotification(data.title, options)
+      .then(() => console.log('[SW-Push] Notification shown successfully'))
+      .catch(err => console.error('[SW-Push] Error showing notification:', err))
   );
 });
 
+// Handle notification click
 self.addEventListener('notificationclick', function(event) {
-  console.log('[SW] Notification click received', event);
+  console.log('[SW-Push] Notification click received', event);
   
   event.notification.close();
 
@@ -63,10 +82,12 @@ self.addEventListener('notificationclick', function(event) {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(function(clientList) {
+        console.log('[SW-Push] Found', clientList.length, 'windows');
         // Check if there's already a window open
         for (let i = 0; i < clientList.length; i++) {
           const client = clientList[i];
           if (client.url.includes(self.location.origin) && 'focus' in client) {
+            console.log('[SW-Push] Focusing existing window');
             client.focus();
             if (urlToOpen !== '/') {
               client.navigate(urlToOpen);
@@ -75,6 +96,7 @@ self.addEventListener('notificationclick', function(event) {
           }
         }
         // Open new window if none exists
+        console.log('[SW-Push] Opening new window:', urlToOpen);
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
@@ -82,7 +104,8 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
+// Handle subscription change (e.g., expired subscription)
 self.addEventListener('pushsubscriptionchange', function(event) {
-  console.log('[SW] Push subscription changed', event);
-  // The subscription expired, handle resubscription here if needed
+  console.log('[SW-Push] Push subscription changed', event);
+  // The subscription expired, would need to resubscribe here
 });
