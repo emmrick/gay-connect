@@ -583,6 +583,42 @@ export type Database = {
         }
         Relationships: []
       }
+      premium_subscriptions: {
+        Row: {
+          activated_at: string
+          activated_by: string
+          created_at: string
+          expires_at: string
+          id: string
+          notes: string | null
+          payment_reference: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string
+          activated_by: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          notes?: string | null
+          payment_reference?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string
+          activated_by?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          notes?: string | null
+          payment_reference?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       private_conversation_status: {
         Row: {
           conversation_id: string
@@ -1321,6 +1357,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_premium: {
+        Args: {
+          _duration_days?: number
+          _notes?: string
+          _payment_reference?: string
+          _target_user_id: string
+        }
+        Returns: Json
+      }
       calculate_distance: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -1363,6 +1408,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      has_active_premium: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1391,6 +1437,7 @@ export type Database = {
         Returns: boolean
       }
       request_withdrawal: { Args: { _user_id: string }; Returns: Json }
+      revoke_premium: { Args: { _target_user_id: string }; Returns: Json }
       update_successful_referrals: {
         Args: { _referral_code_id: string }
         Returns: undefined
