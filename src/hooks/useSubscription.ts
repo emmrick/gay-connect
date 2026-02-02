@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 export interface SubscriptionStatus {
   subscribed: boolean;
   isPremium: boolean;
-  isVip: boolean;
-  productId: string | null;
   subscriptionEnd: string | null;
   isLoading: boolean;
   isAdmin: boolean;
@@ -39,13 +36,14 @@ export const PREMIUM_LIMITS = {
   maxVideoSize: 1024 * 1024 * 1024, // 1 GB
 };
 
+// Lien de paiement Revolut
+export const REVOLUT_PAYMENT_LINK = 'https://checkout.revolut.com/pay/bd94a983-605b-47d8-b221-b4d9bf7da627';
+
 export const useSubscription = () => {
   const { user } = useAuth();
   const [status, setStatus] = useState<SubscriptionStatus>({
     subscribed: false,
     isPremium: false,
-    isVip: false,
-    productId: null,
     subscriptionEnd: null,
     isLoading: true,
     isAdmin: false,
@@ -56,8 +54,6 @@ export const useSubscription = () => {
       setStatus({
         subscribed: false,
         isPremium: false,
-        isVip: false,
-        productId: null,
         subscriptionEnd: null,
         isLoading: false,
         isAdmin: false,
@@ -66,26 +62,36 @@ export const useSubscription = () => {
     }
 
     try {
-      // Check both subscription and admin status in parallel
+      // Check subscription from local database and admin status in parallel
       const [subscriptionResult, adminResult] = await Promise.all([
-        supabase.functions.invoke('check-subscription'),
+        supabase.rpc('has_active_premium', { _user_id: user.id }),
         supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
       ]);
 
-      const subscriptionData = subscriptionResult.data;
+      const hasActiveSubscription = subscriptionResult.data === true;
       const isAdmin = adminResult.data === true;
 
-      // VIP users have VIP + Premium features
-      const isVip = isAdmin || subscriptionData?.is_vip || false;
-      // Admin users get premium features by default, VIP also includes Premium
-      const isPremium = isAdmin || isVip || subscriptionData?.is_premium || false;
+      // Get subscription details if active
+      let subscriptionEnd: string | null = null;
+      if (hasActiveSubscription) {
+        const { data: subData } = await supabase
+          .from('premium_subscriptions')
+          .select('expires_at')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (subData) {
+          subscriptionEnd = subData.expires_at;
+        }
+      }
+
+      // Admin users get premium features by default
+      const isPremium = isAdmin || hasActiveSubscription;
 
       setStatus({
-        subscribed: subscriptionData?.subscribed || false,
+        subscribed: hasActiveSubscription,
         isPremium,
-        isVip,
-        productId: subscriptionData?.product_id || null,
-        subscriptionEnd: subscriptionData?.subscription_end || null,
+        subscriptionEnd,
         isLoading: false,
         isAdmin,
       });
@@ -103,60 +109,9 @@ export const useSubscription = () => {
     return () => clearInterval(interval);
   }, [checkSubscription]);
 
-  const startCheckout = async (tier: 'premium' | 'vip' = 'premium', promoCode?: string) => {
-    if (!user) {
-      toast.error('Veuillez vous connecter pour souscrire');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { tier, promoCode: promoCode || undefined },
-      });
-      
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      toast.error('Erreur lors de la création du paiement');
-    }
-  };
-
-  const validatePromoCode = async (code: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-promo-codes', {
-        body: { action: 'validate', code },
-      });
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error validating promo code:', error);
-      return { valid: false, message: 'Erreur lors de la validation' };
-    }
-  };
-
-  const openCustomerPortal = async () => {
-    if (!user) {
-      toast.error('Veuillez vous connecter');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error opening customer portal:', error);
-      toast.error('Erreur lors de l\'ouverture du portail');
-    }
+  // Subscribe via Revolut link (opens in new tab)
+  const startCheckout = async () => {
+    window.open(REVOLUT_PAYMENT_LINK, '_blank');
   };
 
   const getLimits = () => {
@@ -167,8 +122,6 @@ export const useSubscription = () => {
     ...status,
     checkSubscription,
     startCheckout,
-    openCustomerPortal,
     getLimits,
-    validatePromoCode,
   };
 };

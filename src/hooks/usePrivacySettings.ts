@@ -11,7 +11,7 @@ export interface PrivacySettings {
 
 export const usePrivacySettings = () => {
   const { user } = useAuth();
-  const { isVip } = useSubscription();
+  const { isAdmin } = useSubscription();
   const [settings, setSettings] = useState<PrivacySettings>({
     hideOnlineStatus: false,
     hideLastSeen: false,
@@ -56,9 +56,9 @@ export const usePrivacySettings = () => {
   ) => {
     if (!user) return;
     
-    // Check if user is VIP
-    if (!isVip) {
-      toast.error('Cette fonctionnalité est réservée aux membres VIP');
+    // Only admins can use privacy settings now (VIP removed)
+    if (!isAdmin) {
+      toast.error('Cette fonctionnalité n\'est plus disponible');
       return;
     }
 
@@ -78,7 +78,7 @@ export const usePrivacySettings = () => {
       console.error('Error updating privacy setting:', error);
       toast.error('Erreur lors de la mise à jour');
     }
-  }, [user, isVip]);
+  }, [user, isAdmin]);
 
   const toggleHideOnlineStatus = useCallback(() => {
     updateSetting('hideOnlineStatus', !settings.hideOnlineStatus);
@@ -91,7 +91,7 @@ export const usePrivacySettings = () => {
   return {
     settings,
     isLoading,
-    isVip,
+    isAdmin,
     toggleHideOnlineStatus,
     toggleHideLastSeen,
     updateSetting,

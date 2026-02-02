@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Bell, Moon, Shield, HelpCircle, MessageSquare, 
   Volume2, VolumeX, Eye, EyeOff, Palette, Sparkles, ChevronRight,
-  Globe, Lock, Check, Diamond, BellRing, BellOff, Settings2
+  Globe, Lock, Check, BellRing, BellOff, Settings2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -60,7 +60,7 @@ const SettingItem = ({ icon: Icon, iconColor = "text-primary", title, descriptio
 
 const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDialogProps) => {
   const { toast } = useToast();
-  const { settings: privacySettings, isVip, toggleHideOnlineStatus, toggleHideLastSeen } = usePrivacySettings();
+  const { settings: privacySettings, isAdmin: isAdminUser, toggleHideOnlineStatus, toggleHideLastSeen } = usePrivacySettings();
   const { 
     isSupported: pushSupported, 
     isSubscribed: pushSubscribed, 
@@ -256,96 +256,11 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
           gradient: 'from-purple-500/20 to-purple-600/20',
           content: (
             <div className="space-y-3">
-              {/* VIP Privacy Features */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Diamond className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm font-medium text-purple-500">Fonctionnalités VIP</span>
-                  {!isVip && (
-                    <Badge variant="outline" className="text-xs border-purple-500/50 text-purple-500">
-                      Abonnement requis
-                    </Badge>
-                  )}
-                </div>
-                
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={cn(
-                    "flex items-center gap-4 p-4 rounded-xl transition-colors",
-                    isVip ? "bg-secondary/30 hover:bg-secondary/50" : "bg-purple-500/5 opacity-75"
-                  )}
-                >
-                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0", 
-                    privacySettings.hideOnlineStatus ? "bg-purple-500/20 text-purple-500" : "bg-primary/10 text-green-500"
-                  )}>
-                    {privacySettings.hideOnlineStatus ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Label className="font-medium block">Masquer le statut en ligne</Label>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {privacySettings.hideOnlineStatus ? "Personne ne voit si tu es connecté" : "Les autres voient quand tu es en ligne"}
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={privacySettings.hideOnlineStatus} 
-                    onCheckedChange={toggleHideOnlineStatus}
-                    disabled={!isVip}
-                  />
-                </motion.div>
-                
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className={cn(
-                    "flex items-center gap-4 p-4 rounded-xl transition-colors",
-                    isVip ? "bg-secondary/30 hover:bg-secondary/50" : "bg-purple-500/5 opacity-75"
-                  )}
-                >
-                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                    privacySettings.hideLastSeen ? "bg-purple-500/20 text-purple-500" : "bg-primary/10 text-primary"
-                  )}>
-                    <Globe className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Label className="font-medium block">Masquer la dernière connexion</Label>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {privacySettings.hideLastSeen ? "Ta dernière activité est cachée" : "Les autres voient \"Vu il y a...\""}
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={privacySettings.hideLastSeen} 
-                    onCheckedChange={toggleHideLastSeen}
-                    disabled={!isVip}
-                  />
-                </motion.div>
-              </div>
-              
-              {/* VIP upgrade prompt */}
-              {!isVip && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-4 p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20"
-                >
-                  <div className="flex gap-3">
-                    <Diamond className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm">
-                      <p className="font-medium text-purple-500">Passez à VIP pour la confidentialité</p>
-                      <p className="text-muted-foreground mt-1">
-                        Masquez votre statut en ligne et votre dernière connexion pour 15€/mois.
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-              
               {/* Privacy info */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20"
+                className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20"
               >
                 <div className="flex gap-3">
                   <Lock className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -357,6 +272,61 @@ const SettingsDialog = ({ open, onOpenChange, type, onContactAdmin }: SettingsDi
                   </div>
                 </div>
               </motion.div>
+              
+              {/* Admin-only privacy features */}
+              {isAdminUser && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Options administrateur</span>
+                  </div>
+                  
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0", 
+                      privacySettings.hideOnlineStatus ? "bg-purple-500/20 text-purple-500" : "bg-primary/10 text-green-500"
+                    )}>
+                      {privacySettings.hideOnlineStatus ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Label className="font-medium block">Masquer le statut en ligne</Label>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {privacySettings.hideOnlineStatus ? "Personne ne voit si tu es connecté" : "Les autres voient quand tu es en ligne"}
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={privacySettings.hideOnlineStatus} 
+                      onCheckedChange={toggleHideOnlineStatus}
+                    />
+                  </motion.div>
+                  
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                      privacySettings.hideLastSeen ? "bg-purple-500/20 text-purple-500" : "bg-primary/10 text-primary"
+                    )}>
+                      <Globe className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Label className="font-medium block">Masquer la dernière connexion</Label>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {privacySettings.hideLastSeen ? "Ta dernière activité est cachée" : "Les autres voient \"Vu il y a...\""}
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={privacySettings.hideLastSeen} 
+                      onCheckedChange={toggleHideLastSeen}
+                    />
+                  </motion.div>
+                </div>
+              )}
             </div>
           ),
         };

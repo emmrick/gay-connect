@@ -39,7 +39,7 @@ import TaskRatesPanel from '@/components/admin/TaskRatesPanel';
 import WithdrawalRequestsPanel from '@/components/admin/WithdrawalRequestsPanel';
 import GlobalEarningsPanel from '@/components/admin/GlobalEarningsPanel';
 import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
-import PremiumUsersPanel from '@/components/admin/PremiumUsersPanel';
+import PremiumActivationPanel from '@/components/admin/PremiumActivationPanel';
 import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
@@ -119,7 +119,7 @@ const Admin = () => {
         return <UserManagementPanel />;
       
       case 'premium':
-        return <PremiumUsersPanel />;
+        return <PremiumActivationPanel />;
       
       case 'blocked':
         return (

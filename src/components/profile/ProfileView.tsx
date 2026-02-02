@@ -104,7 +104,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
-  const { isPremium, subscriptionEnd, openCustomerPortal } = useSubscription();
+  const { isPremium, subscriptionEnd } = useSubscription();
   const { favorites } = useUserFavorites();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [settingsType, setSettingsType] = useState<SettingsType | null>(null);
@@ -407,7 +407,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.8 }}
-            onClick={openCustomerPortal}
+            onClick={onNavigateToPremium}
             className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 transition-all border border-amber-500/30"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
@@ -420,7 +420,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
               </div>
               {subscriptionEnd && (
                 <span className="text-xs text-muted-foreground">
-                  Renouvellement le {format(new Date(subscriptionEnd), 'dd MMM yyyy', { locale: fr })}
+                  Valide jusqu'au {format(new Date(subscriptionEnd), 'dd MMM yyyy', { locale: fr })}
                 </span>
               )}
             </div>
