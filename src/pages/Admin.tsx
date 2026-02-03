@@ -22,12 +22,14 @@ import {
   ReportWithProfiles
 } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import AdminSidebar, { AdminSection } from '@/components/admin/AdminSidebar';
+import AdminMobileNav from '@/components/admin/AdminMobileNav';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import ReportCard from '@/components/admin/ReportCard';
 import BlockedUserCard from '@/components/admin/BlockedUserCard';
@@ -59,6 +61,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
+  const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<AdminSection>('wallet');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
@@ -154,7 +157,7 @@ const Admin = () => {
               <Ban className="w-5 h-5" />
               <h2 className="text-lg font-semibold">Utilisateurs bloqués ({blockedUsers?.length || 0})</h2>
             </div>
-            <ScrollArea className="h-[calc(100vh-200px)]">
+            <ScrollArea className={isMobile ? "h-[calc(100vh-280px)]" : "h-[calc(100vh-200px)]"}>
               {blockedLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -185,16 +188,26 @@ const Admin = () => {
               <h2 className="text-lg font-semibold">Signalements</h2>
             </div>
             <Tabs value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as ReportStatus | 'all')}>
-              <TabsList className="grid grid-cols-5 mb-4">
-                <TabsTrigger value="pending">En attente</TabsTrigger>
-                <TabsTrigger value="reviewed">En cours</TabsTrigger>
-                <TabsTrigger value="resolved">Résolus</TabsTrigger>
-                <TabsTrigger value="dismissed">Rejetés</TabsTrigger>
-                <TabsTrigger value="all">Tous</TabsTrigger>
+              <TabsList className={isMobile ? "grid grid-cols-3 mb-4" : "grid grid-cols-5 mb-4"}>
+                <TabsTrigger value="pending" className="text-xs">En attente</TabsTrigger>
+                <TabsTrigger value="reviewed" className="text-xs">En cours</TabsTrigger>
+                <TabsTrigger value="resolved" className="text-xs">Résolus</TabsTrigger>
+                {!isMobile && (
+                  <>
+                    <TabsTrigger value="dismissed" className="text-xs">Rejetés</TabsTrigger>
+                    <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
+                  </>
+                )}
               </TabsList>
+              {isMobile && (
+                <TabsList className="grid grid-cols-2 mb-4">
+                  <TabsTrigger value="dismissed" className="text-xs">Rejetés</TabsTrigger>
+                  <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
+                </TabsList>
+              )}
 
               <TabsContent value={selectedStatus} className="mt-0">
-                <ScrollArea className="h-[calc(100vh-280px)]">
+                <ScrollArea className={isMobile ? "h-[calc(100vh-360px)]" : "h-[calc(100vh-280px)]"}>
                   {reportsLoading ? (
                     <div className="space-y-3">
                       {Array.from({ length: 5 }).map((_, i) => (
@@ -245,6 +258,39 @@ const Admin = () => {
     }
   };
 
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Mobile Navigation Header */}
+        <AdminMobileNav
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          pendingReports={stats?.pending || 0}
+          blockedCount={blockedUsers?.length || 0}
+          pendingPurchases={pendingPurchasesCount}
+        />
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">
+          <div className="p-4 pb-8">
+            {renderContent()}
+          </div>
+        </main>
+
+        {/* Report Detail Dialog */}
+        {selectedReport && (
+          <ReportDetailDialog
+            report={selectedReport}
+            open={!!selectedReport}
+            onOpenChange={(open) => !open && setSelectedReport(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
