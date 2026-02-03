@@ -40,6 +40,7 @@ import WithdrawalRequestsPanel from '@/components/admin/WithdrawalRequestsPanel'
 import GlobalEarningsPanel from '@/components/admin/GlobalEarningsPanel';
 import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
 import CreditsManagementPanel from '@/components/admin/CreditsManagementPanel';
+import CreditsSurveillancePanel from '@/components/admin/CreditsSurveillancePanel';
 import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
@@ -120,6 +121,9 @@ const Admin = () => {
       
       case 'credits':
         return <CreditsManagementPanel />;
+      
+      case 'credits-surveillance':
+        return <CreditsSurveillancePanel />;
       
       case 'blocked':
         return (
