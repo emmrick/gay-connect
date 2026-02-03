@@ -17,7 +17,8 @@ import {
   Menu,
   Bell,
   Activity,
-  Bot
+  Bot,
+  ShoppingCart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ export type AdminSection =
   | 'history' 
   | 'credits'
   | 'credits-surveillance'
+  | 'credit-purchases'
   | 'broadcast'
   | 'ai-moderation';
 
@@ -48,6 +50,7 @@ interface AdminSidebarProps {
   onSectionChange: (section: AdminSection) => void;
   pendingReports?: number;
   blockedCount?: number;
+  pendingPurchases?: number;
 }
 
 interface NavItem {
@@ -70,6 +73,7 @@ const navItems: NavItem[] = [
   { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users' },
   { id: 'credits', label: 'Crédits', icon: Coins, group: 'users' },
   { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'users' },
+  { id: 'credit-purchases', label: 'Achats', icon: ShoppingCart, group: 'users' },
   { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users' },
   
   // Modération
@@ -95,13 +99,15 @@ const AdminSidebar = ({
   activeSection, 
   onSectionChange, 
   pendingReports = 0,
-  blockedCount = 0 
+  blockedCount = 0,
+  pendingPurchases = 0 
 }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
 
   const getBadge = (id: AdminSection) => {
     if (id === 'reports' && pendingReports > 0) return pendingReports;
     if (id === 'blocked' && blockedCount > 0) return blockedCount;
+    if (id === 'credit-purchases' && pendingPurchases > 0) return pendingPurchases;
     return undefined;
   };
 

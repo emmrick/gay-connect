@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Shield, 
   AlertTriangle, 
@@ -20,6 +21,7 @@ import {
   ReportStatus,
   ReportWithProfiles
 } from '@/hooks/useAdmin';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -41,6 +43,7 @@ import GlobalEarningsPanel from '@/components/admin/GlobalEarningsPanel';
 import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
 import CreditsManagementPanel from '@/components/admin/CreditsManagementPanel';
 import CreditsSurveillancePanel from '@/components/admin/CreditsSurveillancePanel';
+import CreditPurchaseRequestsPanel from '@/components/admin/CreditPurchaseRequestsPanel';
 import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
 import AIModerationPanel from '@/components/admin/AIModerationPanel';
 
@@ -59,6 +62,21 @@ const Admin = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>('wallet');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
+
+  // Fetch pending purchase requests count
+  const { data: pendingPurchasesCount = 0 } = useQuery({
+    queryKey: ['admin-pending-purchases-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('credit_purchase_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      if (error) throw error;
+      return count || 0;
+    },
+    refetchInterval: 30000,
+  });
 
   const { data: reports, isLoading: reportsLoading } = useAdminReports(
     selectedStatus === 'all' ? undefined : selectedStatus
@@ -125,6 +143,9 @@ const Admin = () => {
       
       case 'credits-surveillance':
         return <CreditsSurveillancePanel />;
+      
+      case 'credit-purchases':
+        return <CreditPurchaseRequestsPanel />;
       
       case 'blocked':
         return (
@@ -232,6 +253,7 @@ const Admin = () => {
         onSectionChange={setActiveSection}
         pendingReports={stats?.pending || 0}
         blockedCount={blockedUsers?.length || 0}
+        pendingPurchases={pendingPurchasesCount}
       />
 
       {/* Main Content */}

@@ -9,7 +9,6 @@ import {
   Heart,
   Eye,
   MapPin,
-  ExternalLink,
   Loader2,
   Sparkles,
   Shield,
@@ -28,11 +27,9 @@ import CreditBalanceBar from './CreditBalanceBar';
 import DailyCreditsClaimCard from './DailyCreditsClaimCard';
 import CreditHistorySheet from './CreditHistorySheet';
 import CreditReferralSection from './CreditReferralSection';
+import BuyCreditDialog from './BuyCreditDialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
-
-// Revolut payment link for credits
-const REVOLUT_CREDITS_LINK = 'https://checkout.revolut.com/pay/bd94a983-605b-47d8-b221-b4d9bf7da627';
 
 interface CreditCostItemProps {
   icon: React.ReactNode;
@@ -177,7 +174,7 @@ const CreditsPage = () => {
         >
           <Card className="border-2 border-sky-400/50 relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-gradient-to-r from-sky-400 to-blue-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl">
-              💎 OFFRE
+              💎 ACHETER
             </div>
             <CardHeader className="text-center pb-2 pt-8">
               <CardTitle className="text-xl flex items-center justify-center gap-2">
@@ -189,29 +186,37 @@ const CreditsPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-4">
-                <div className="text-center">
-                  <span className="text-5xl font-bold">100</span>
-                  <p className="text-muted-foreground">crédits</p>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                  <div className="text-xl font-bold">50</div>
+                  <div className="text-muted-foreground">4,99 €</div>
                 </div>
-                <ChevronRight className="w-6 h-6 text-muted-foreground" />
-                <div className="text-center">
-                  <span className="text-4xl font-bold text-sky-500">5,99 €</span>
-                  <p className="text-muted-foreground">paiement unique</p>
+                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                  <div className="text-xl font-bold">120</div>
+                  <div className="text-muted-foreground">9,99 €</div>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                  <div className="text-xl font-bold">300</div>
+                  <div className="text-muted-foreground">19,99 €</div>
+                </div>
+                <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/30">
+                  <div className="text-xl font-bold text-sky-500">700</div>
+                  <div className="text-muted-foreground">39,99 €</div>
                 </div>
               </div>
               
-              <Button 
-                className="w-full bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white font-semibold h-12 text-base"
-                onClick={() => window.open(REVOLUT_CREDITS_LINK, '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Acheter avec Revolut
-              </Button>
+              <BuyCreditDialog 
+                trigger={
+                  <Button className="w-full bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white font-semibold h-12 text-base">
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Acheter des crédits
+                  </Button>
+                }
+              />
               
               <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
                 <Clock className="w-3 h-3" />
-                Crédits ajoutés sous 24h après vérification
+                Crédits ajoutés après validation admin
               </p>
             </CardContent>
           </Card>
