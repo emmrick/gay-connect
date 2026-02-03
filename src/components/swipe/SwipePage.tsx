@@ -65,7 +65,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
           </TabsList>
         </div>
 
-        <TabsContent value="swipe" className="flex-1 flex flex-col mt-0">
+        <TabsContent value="swipe" className="flex-1 flex flex-col mt-0 overflow-hidden">
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -85,10 +85,10 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
               </Button>
             </div>
           ) : (
-            <div className="flex-1 relative overflow-visible min-h-[450px]">
-              {/* Credits info - above card */}
-              <div className="flex justify-center mb-2 z-10">
-                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 shadow-lg">
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Credits info - fixed height */}
+              <div className="flex justify-center py-2 shrink-0">
+                <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 shadow-lg">
                   <div className="flex items-center gap-1.5 text-xs">
                     <Heart className="w-3.5 h-3.5 text-green-500" />
                     <span>{creditCosts.like} cr</span>
@@ -106,8 +106,8 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                 </div>
               </div>
 
-              {/* Cards stack (responsive height so it doesn't overlap actions/instructions) */}
-              <div className="relative h-[52dvh] min-h-[340px] max-h-[440px]">
+              {/* Cards stack - takes remaining space */}
+              <div className="flex-1 relative overflow-hidden min-h-0">
                 <AnimatePresence mode="popLayout">
                   {remainingProfiles.slice(0, 3).map((profile, index) => (
                     <SwipeCard
@@ -120,8 +120,8 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                 </AnimatePresence>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex justify-center gap-4 mt-4">
+              {/* Action buttons - fixed height */}
+              <div className="flex justify-center items-center gap-4 py-3 shrink-0">
                 <Button
                   variant="outline"
                   size="icon"
@@ -152,14 +152,13 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
             </div>
           )}
 
-          {/* Instructions */}
-          <div className="p-4 bg-muted/50 border-t border-border">
-            <div className="flex items-start gap-3 text-sm text-muted-foreground">
-              <Info className="w-4 h-4 mt-0.5 shrink-0" />
-              <div>
-                <p><strong className="text-foreground">Glisse à droite</strong> pour aimer ({creditCosts.like} cr)</p>
-                <p><strong className="text-foreground">Glisse à gauche</strong> pour passer ({creditCosts.dislike} cr) - revient dans 3 mois</p>
-                <p><strong className="text-foreground">Glisse vers le haut</strong> pour masquer définitivement ({creditCosts.hide} cr)</p>
+          {/* Instructions - fixed height */}
+          <div className="px-4 py-2.5 bg-muted/50 border-t border-border shrink-0">
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <div className="space-y-0.5">
+                <p><strong className="text-foreground">Droite</strong> = aimer ({creditCosts.like} cr) • <strong className="text-foreground">Gauche</strong> = passer ({creditCosts.dislike} cr)</p>
+                <p><strong className="text-foreground">Haut</strong> = masquer définitivement ({creditCosts.hide} cr)</p>
               </div>
             </div>
           </div>
