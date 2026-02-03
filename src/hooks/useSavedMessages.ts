@@ -20,8 +20,7 @@ export const useSavedMessages = () => {
     incrementSavedMessages, 
     decrementSavedMessages,
     savedMessagesCount, 
-    limits,
-    isPremium 
+    limits
   } = useUserUsage();
 
   // Fetch saved messages from database
@@ -74,11 +73,11 @@ export const useSavedMessages = () => {
     onError: (error: Error) => {
       if (error.message === 'LIMIT_REACHED') {
         toast.error(
-          `Limite atteinte ! Vous avez ${savedMessagesCount}/${limits.maxSavedMessages} message(s) enregistré(s).`,
+          `Limite atteinte ! Vous avez ${savedMessagesCount}/${limits.maxSavedMessages} message(s) enregistré(s). Achetez des crédits pour débloquer plus d'espace.`,
           {
-            action: isPremium ? undefined : {
-              label: 'Passer Premium',
-              onClick: () => window.location.href = '/?tab=premium',
+            action: {
+              label: 'Acheter des crédits',
+              onClick: () => window.location.href = '/?tab=credits',
             },
           }
         );

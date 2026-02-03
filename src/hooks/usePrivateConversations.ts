@@ -32,8 +32,7 @@ export const usePrivateConversations = () => {
     canStartConversation, 
     incrementConversations, 
     conversationsCount, 
-    limits,
-    isPremium 
+    limits
   } = useUserUsage();
 
   // Fetch conversation statuses
@@ -271,11 +270,11 @@ export const usePrivateConversations = () => {
     onError: (error: Error) => {
       if (error.message === 'LIMIT_REACHED') {
         toast.error(
-          `Limite atteinte ! Vous avez démarré ${conversationsCount}/${limits.conversationsPerWeek} conversations cette semaine.`,
+          `Limite atteinte ! Vous avez démarré ${conversationsCount}/${limits.conversationsPerWeek} conversations cette semaine. Achetez des crédits pour débloquer plus de conversations.`,
           {
-            action: isPremium ? undefined : {
-              label: 'Passer Premium',
-              onClick: () => window.location.href = '/?tab=premium',
+            action: {
+              label: 'Acheter des crédits',
+              onClick: () => window.location.href = '/?tab=credits',
             },
           }
         );

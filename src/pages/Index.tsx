@@ -582,7 +582,7 @@ const Index = () => {
               <ProfileView 
                 onSignOut={handleSignOut}
                 onNavigateToAdmin={() => navigate('/admin')}
-                onNavigateToPremium={() => handleTabChange('premium')}
+                onNavigateToCredits={() => handleTabChange('premium')}
                 onContactAdmin={() => {
                   // Admin user ID - starts a private conversation with admin
                   const adminUserId = '576f712b-2925-4d8f-ad59-9bcbd9996a02';
