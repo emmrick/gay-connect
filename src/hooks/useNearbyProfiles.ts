@@ -22,7 +22,7 @@ const PAGE_SIZE = 12; // Load 12 profiles at a time (4 rows of 3)
 export const useNearbyProfiles = (
   latitude: number | null,
   longitude: number | null,
-  maxDistance: number = 100
+  maxDistance: number = 500
 ) => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
