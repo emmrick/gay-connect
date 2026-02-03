@@ -91,6 +91,7 @@ export const useSavedMessages = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-usage', user?.id] });
     },
     onError: (error: Error) => {
       if (error.message === 'INSUFFICIENT_CREDITS') {
@@ -136,6 +137,7 @@ export const useSavedMessages = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-usage', user?.id] });
     },
     onError: (error: Error) => {
       if (error.message === 'INSUFFICIENT_CREDITS') {
@@ -165,6 +167,7 @@ export const useSavedMessages = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-usage', user?.id] });
     },
     onError: (error) => {
       console.error('Error deleting saved message:', error);
