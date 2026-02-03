@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Smile, Loader2 } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import MentionAutocomplete from './MentionAutocomplete';
@@ -165,15 +165,6 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
 
         {/* Saved messages button */}
         <SavedMessagesDialog onSelectMessage={handleSelectSavedMessage} />
-        
-        {/* Emoji button */}
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="text-muted-foreground hover:text-primary flex-shrink-0 h-10 w-10"
-        >
-          <Smile className="w-5 h-5" />
-        </Button>
         
         {/* Message input - Textarea for multiline */}
         <Textarea
