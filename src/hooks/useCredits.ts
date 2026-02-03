@@ -1,8 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, QueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
+
+// Global query client reference for standalone functions
+let globalQueryClient: QueryClient | null = null;
+
+export const setGlobalQueryClient = (client: QueryClient) => {
+  globalQueryClient = client;
+};
+
+// Helper to invalidate credit queries from standalone functions
+const invalidateCreditQueries = (userId: string) => {
+  if (globalQueryClient) {
+    globalQueryClient.invalidateQueries({ queryKey: ['user-credits', userId] });
+    globalQueryClient.invalidateQueries({ queryKey: ['credit-transactions', userId] });
+  }
+};
 
 // Credit costs for each action
 export const CREDIT_COSTS = {
@@ -97,6 +112,11 @@ export const deductCredits = async (
   // Emit animation event on successful deduction (only once)
   if (result.success && showAnimation) {
     emitCreditDeduction(amount, description);
+  }
+
+  // Invalidate credit queries to update UI immediately
+  if (result.success) {
+    invalidateCreditQueries(userId);
   }
 
   return result;
