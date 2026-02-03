@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
 import { useIsAdmin } from '@/hooks/useAdmin';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -76,16 +75,15 @@ const getEthnicityLabel = (eth: string) => ETHNICITY_LABELS[eth] || eth;
 interface ProfileViewProps {
   onSignOut: () => void;
   onNavigateToAdmin?: () => void;
-  onNavigateToPremium?: () => void;
+  onNavigateToCredits?: () => void;
   onContactAdmin?: () => void;
   isAdmin?: boolean;
 }
 
-const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onContactAdmin, isAdmin }: ProfileViewProps) => {
+const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, isAdmin }: ProfileViewProps) => {
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
-  const { isPremium, subscriptionEnd } = useSubscription();
   const { favorites } = useUserFavorites();
   const [showEditDialog, setShowEditDialog] = useState(false);
 
@@ -119,7 +117,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
           <div className="flex">
             {/* Left: Avatar Section */}
             <div className="relative flex-shrink-0 p-4">
-              <div className={isPremium ? "p-1 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 shadow-lg shadow-amber-500/25" : "p-0.5 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30"}>
+              <div className="p-0.5 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30">
                 <Avatar className="w-32 h-40 rounded-xl border-2 border-card">
                   <AvatarImage src={profile.avatar_url || undefined} className="object-cover rounded-xl" />
                   <AvatarFallback className="text-4xl bg-gradient-to-br from-primary to-accent text-white font-bold rounded-xl">
@@ -161,11 +159,9 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                   )}
                 </div>
                 <ProfileSettingsDrawer
-                  isPremium={isPremium}
-                  subscriptionEnd={subscriptionEnd}
                   isAdmin={isAdmin}
                   onNavigateToAdmin={onNavigateToAdmin}
-                  onNavigateToPremium={onNavigateToPremium}
+                  onNavigateToCredits={onNavigateToCredits}
                   onContactAdmin={onContactAdmin}
                   onSignOut={onSignOut}
                 />
@@ -179,12 +175,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                     Admin
                   </Badge>
                 )}
-                {isPremium && !isAdminUser && (
-                  <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-sm text-xs">
-                    <Crown className="w-3 h-3 mr-1" />
-                    Premium
-                  </Badge>
-                )}
+                {/* Removed Premium badge - credits system is now used */}
                 {(profile as any).sexual_position && (profile as any).sexual_position !== 'no_answer' && (
                   <Badge variant="outline" className="bg-secondary/50 text-xs">
                     {getPositionLabel((profile as any).sexual_position)}

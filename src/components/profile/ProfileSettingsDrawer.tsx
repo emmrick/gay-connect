@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle, FolderLock, 
-  ChevronRight, X, Crown, Zap, Sparkles, LogOut, FileText, Scale
+  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import SettingsDialog from './SettingsDialog';
 import AlbumManager from '@/components/albums/AlbumManager';
 import ProfileEditDialog from './ProfileEditDialog';
@@ -16,21 +14,19 @@ import ProfileEditDialog from './ProfileEditDialog';
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
 interface ProfileSettingsDrawerProps {
-  isPremium: boolean;
-  subscriptionEnd: string | null;
+  isPremium?: boolean; // Kept for backwards compatibility but no longer used
+  subscriptionEnd?: string | null; // Kept for backwards compatibility but no longer used
   isAdmin?: boolean;
   onNavigateToAdmin?: () => void;
-  onNavigateToPremium?: () => void;
+  onNavigateToCredits?: () => void;
   onContactAdmin?: () => void;
   onSignOut: () => void;
 }
 
 const ProfileSettingsDrawer = ({
-  isPremium,
-  subscriptionEnd,
   isAdmin,
   onNavigateToAdmin,
-  onNavigateToPremium,
+  onNavigateToCredits,
   onContactAdmin,
   onSignOut
 }: ProfileSettingsDrawerProps) => {
@@ -47,6 +43,7 @@ const ProfileSettingsDrawer = ({
     { icon: Shield, label: 'Confidentialité', action: () => { setOpen(false); setSettingsType('privacy'); }, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
     { icon: HelpCircle, label: 'Aide & Support', action: () => { setOpen(false); setSettingsType('help'); }, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
   ];
+
 
   const legalItems = [
     { icon: Scale, label: 'Mentions légales', section: 'legal', color: 'text-slate-500', bgColor: 'bg-slate-500/10' },
@@ -87,46 +84,23 @@ const ProfileSettingsDrawer = ({
           </SheetHeader>
 
           <div className="overflow-y-auto h-full pb-20 px-4">
-            {/* Premium Status */}
-            {isPremium ? (
-              <button
-                onClick={() => { setOpen(false); onNavigateToPremium?.(); }}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 to-orange-500/15 border border-amber-500/30 mb-4 hover:from-amber-500/20 hover:to-orange-500/20 transition-all"
-              >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                  <Crown className="w-6 h-6 text-white" />
+            {/* Credits Section */}
+            <button
+              onClick={() => { setOpen(false); onNavigateToCredits?.(); }}
+              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 mb-4 hover:from-blue-500/20 hover:to-indigo-500/20 transition-all group"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/30">
+                <Coins className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">Acheter des crédits</span>
+                  <Zap className="w-4 h-4 text-blue-500" />
                 </div>
-                <div className="flex-1 text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-amber-600 dark:text-amber-400">Premium actif</span>
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                  </div>
-                  {subscriptionEnd && (
-                    <span className="text-xs text-muted-foreground">
-                      Jusqu'au {format(new Date(subscriptionEnd), 'dd MMM yyyy', { locale: fr })}
-                    </span>
-                  )}
-                </div>
-                <ChevronRight className="w-5 h-5 text-amber-500" />
-              </button>
-            ) : (
-              <button
-                onClick={() => { setOpen(false); onNavigateToPremium?.(); }}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 mb-4 hover:from-amber-500/20 hover:to-orange-500/20 transition-all group"
-              >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-amber-500/30">
-                  <Crown className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-amber-600 dark:text-amber-400">Passer à Premium</span>
-                    <Zap className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">5,99 €/mois • Débloquez tout</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-amber-500 group-hover:translate-x-1 transition-transform" />
-              </button>
-            )}
+                <p className="text-xs text-muted-foreground">100 crédits pour 5,99 €</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-blue-500 group-hover:translate-x-1 transition-transform" />
+            </button>
 
             {/* Menu Items */}
             <div className="space-y-2">

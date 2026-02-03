@@ -20,13 +20,7 @@ export const useEphemeralMediaUpload = () => {
   const [progress, setProgress] = useState(0);
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { 
-    canSendEphemeralMedia, 
-    incrementEphemeralMedia, 
-    ephemeralMediaCount, 
-    limits,
-    isPremium 
-  } = useUserUsage();
+  const { limits } = useUserUsage();
 
   const uploadEphemeralMedia = useMutation({
     mutationFn: async ({
@@ -39,10 +33,7 @@ export const useEphemeralMediaUpload = () => {
     }: UploadEphemeralMediaParams) => {
       if (!user) throw new Error('Not authenticated');
 
-      // Check usage limit
-      if (!canSendEphemeralMedia()) {
-        throw new Error('LIMIT_REACHED');
-      }
+      // Credits are the only limiting factor now - no more premium/usage limits
 
       // Check if user has enough credits for ephemeral media
       const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.ephemeral_media);
@@ -129,8 +120,7 @@ export const useEphemeralMediaUpload = () => {
         if (ephemeralError) throw ephemeralError;
         setProgress(95);
 
-        // 5. Increment usage counter
-        await incrementEphemeralMedia();
+        // No longer tracking usage counts - credits are the only limit
         setProgress(100);
 
         return {
@@ -158,16 +148,8 @@ export const useEphemeralMediaUpload = () => {
       }
     },
     onError: (error: Error) => {
-      if (error.message === 'LIMIT_REACHED') {
-        toast.error(
-          `Limite atteinte ! Vous avez utilisé ${ephemeralMediaCount}/${limits.ephemeralMediaPerDay} média éphémère aujourd'hui.`,
-          {
-            action: isPremium ? undefined : {
-              label: 'Passer Premium',
-              onClick: () => window.location.href = '/?tab=premium',
-            },
-          }
-        );
+      if (error.message === 'INSUFFICIENT_CREDITS') {
+        toast.error('Crédits insuffisants pour envoyer ce média');
       } else if (error.message.startsWith('FILE_TOO_LARGE:')) {
         const maxSize = error.message.split(':')[1];
         toast.error(`Fichier trop volumineux. Maximum: ${maxSize} MB`);
@@ -181,7 +163,7 @@ export const useEphemeralMediaUpload = () => {
     uploadEphemeralMedia,
     isUploading,
     progress,
-    canSend: canSendEphemeralMedia(),
-    remainingCount: Math.max(0, limits.ephemeralMediaPerDay - ephemeralMediaCount),
+    canSend: true, // Always true - credits are the only limit now
+    remainingCount: Infinity, // No usage limit - only credit limit
   };
 };
