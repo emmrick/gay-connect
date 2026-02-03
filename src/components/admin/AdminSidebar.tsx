@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   Menu,
   Bell,
-  Activity
+  Activity,
+  Bot
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,8 @@ export type AdminSection =
   | 'history' 
   | 'credits'
   | 'credits-surveillance'
-  | 'broadcast';
+  | 'broadcast'
+  | 'ai-moderation';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -72,6 +74,7 @@ const navItems: NavItem[] = [
   
   // Modération
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
+  { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
   { id: 'verification', label: 'Vérifications', icon: IdCard, group: 'moderation' },
   { id: 'history', label: 'Historique', icon: History, group: 'moderation' },

@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_moderation_reports: {
+        Row: {
+          ai_analysis: string
+          ai_recommendation: string
+          auto_suspended: boolean
+          contacts_notified: boolean
+          created_at: string
+          id: string
+          investigation_data: Json | null
+          investigation_end: string | null
+          investigation_start: string
+          report_id: string | null
+          reported_user_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity_score: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis: string
+          ai_recommendation: string
+          auto_suspended?: boolean
+          contacts_notified?: boolean
+          created_at?: string
+          id?: string
+          investigation_data?: Json | null
+          investigation_end?: string | null
+          investigation_start?: string
+          report_id?: string | null
+          reported_user_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity_score?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: string
+          ai_recommendation?: string
+          auto_suspended?: boolean
+          contacts_notified?: boolean
+          created_at?: string
+          id?: string
+          investigation_data?: Json | null
+          investigation_end?: string | null
+          investigation_start?: string
+          report_id?: string | null
+          reported_user_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity_score?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_moderation_reports_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       album_media: {
         Row: {
           album_id: string
@@ -298,6 +366,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      investigation_notifications: {
+        Row: {
+          acknowledged: boolean
+          acknowledged_at: string | null
+          ai_report_id: string | null
+          data_access_expires_at: string
+          id: string
+          notification_sent_at: string
+          notified_user_id: string
+          reported_user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          acknowledged_at?: string | null
+          ai_report_id?: string | null
+          data_access_expires_at: string
+          id?: string
+          notification_sent_at?: string
+          notified_user_id: string
+          reported_user_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          acknowledged_at?: string | null
+          ai_report_id?: string | null
+          data_access_expires_at?: string
+          id?: string
+          notification_sent_at?: string
+          notified_user_id?: string
+          reported_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investigation_notifications_ai_report_id_fkey"
+            columns: ["ai_report_id"]
+            isOneToOne: false
+            referencedRelation: "ai_moderation_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_reactions: {
         Row: {

@@ -42,6 +42,7 @@ import ModerationHistoryPanel from '@/components/admin/ModerationHistoryPanel';
 import CreditsManagementPanel from '@/components/admin/CreditsManagementPanel';
 import CreditsSurveillancePanel from '@/components/admin/CreditsSurveillancePanel';
 import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
+import AIModerationPanel from '@/components/admin/AIModerationPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
@@ -214,6 +215,9 @@ const Admin = () => {
       
       case 'broadcast':
         return <BroadcastNotificationPanel />;
+      
+      case 'ai-moderation':
+        return <AIModerationPanel />;
       
       default:
         return null;

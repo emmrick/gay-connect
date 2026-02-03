@@ -79,13 +79,45 @@ export const useReports = () => {
         .single();
 
       if (error) throw error;
+
+      // Trigger AI moderation automatically
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-moderation`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              report_data: {
+                report_id: data.id,
+                reported_user_id: reportedUserId,
+                reporter_id: user.id,
+                reason,
+                description: description?.trim() || null,
+                report_type: 'user',
+              },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          console.error('AI moderation failed:', await response.text());
+        }
+      } catch (aiError) {
+        console.error('Error calling AI moderation:', aiError);
+        // Don't throw - report was still created successfully
+      }
+
       return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['has-reported', user?.id, variables.reportedUserId] });
       queryClient.invalidateQueries({ queryKey: ['my-reports', user?.id] });
       toast.success('Signalement envoyé', {
-        description: 'Merci pour votre signalement. Notre équipe va l\'examiner.',
+        description: 'Merci pour votre signalement. Notre système IA analyse la situation et un agent humain interviendra si nécessaire.',
       });
     },
     onError: (error) => {
