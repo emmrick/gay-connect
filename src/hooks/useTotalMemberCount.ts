@@ -32,7 +32,7 @@ export const useOnlineMemberCount = () => {
       if (error) throw error;
       return count || 0;
     },
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 60000, // 1 minute
+    refetchInterval: 60000, // Refetch every 1 minute
   });
 };
