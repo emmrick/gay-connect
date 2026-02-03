@@ -148,6 +148,28 @@ export const useDeleteNotification = () => {
   });
 };
 
+export const useClearAllNotifications = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!user?.id) return;
+
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count', user?.id] });
+    },
+  });
+};
+
 export const useCreateNotification = () => {
   return useMutation({
     mutationFn: async ({
