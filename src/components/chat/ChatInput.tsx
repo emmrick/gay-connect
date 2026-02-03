@@ -22,6 +22,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
+  // Only enable mentions for group chats, not private conversations
   const {
     suggestions,
     isLoading: isMentionLoading,
@@ -29,7 +30,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     handleTextChange,
     insertMention,
     closeMention,
-  } = useMentionAutocomplete(chatRoomId);
+  } = useMentionAutocomplete(isPrivate ? undefined : chatRoomId);
 
   // Reset selected index when suggestions change
   useEffect(() => {
@@ -68,8 +69,8 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle mention autocomplete navigation
-    if (isMentionActive && suggestions.length > 0) {
+    // Handle mention autocomplete navigation (only for group chats)
+    if (!isPrivate && isMentionActive && suggestions.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedSuggestionIndex(prev => 
@@ -96,7 +97,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
       }
     }
 
-    // Send on Enter (without Shift for new line)
+    // Send on Enter (Shift+Enter for new line)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -108,7 +109,12 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     const cursorPosition = e.target.selectionStart || 0;
     
     setMessage(newValue);
-    handleTextChange(newValue, cursorPosition);
+    
+    // Only process mentions for group chats
+    if (!isPrivate) {
+      handleTextChange(newValue, cursorPosition);
+    }
+    
     onTyping?.();
   };
 
@@ -123,16 +129,23 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     onSendMessage(content);
   };
 
+  // Different placeholder for private vs group chats
+  const placeholder = isPrivate 
+    ? "Écris ton message... (Shift+Entrée pour sauter une ligne)"
+    : "Écris ton message... (@ pour mentionner)";
+
   return (
     <div className="p-3 border-t border-border bg-card/50 backdrop-blur-lg relative">
-      {/* Mention autocomplete dropdown */}
-      <MentionAutocomplete
-        suggestions={suggestions}
-        isLoading={isMentionLoading}
-        isActive={isMentionActive}
-        selectedIndex={selectedSuggestionIndex}
-        onSelect={handleSelectMention}
-      />
+      {/* Mention autocomplete dropdown - only for group chats */}
+      {!isPrivate && (
+        <MentionAutocomplete
+          suggestions={suggestions}
+          isLoading={isMentionLoading}
+          isActive={isMentionActive}
+          selectedIndex={selectedSuggestionIndex}
+          onSelect={handleSelectMention}
+        />
+      )}
 
       <div className="flex items-end gap-2">
         {/* Media upload button */}
@@ -161,7 +174,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onFocus={handleInputFocus}
-          placeholder="Écris ton message... (@ pour mentionner)"
+          placeholder={placeholder}
           className="flex-1 bg-secondary border-none min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none rounded-2xl text-sm leading-5"
           rows={1}
         />
