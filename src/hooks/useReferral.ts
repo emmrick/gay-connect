@@ -63,17 +63,17 @@ export const useReferral = () => {
     enabled: !!user
   });
 
-  // Validate a referral code
+  // Validate a referral code using the secure database function
   const validateCode = useCallback(async (code: string) => {
-    const { data, error } = await supabase.functions.invoke('manage-referrals', {
-      body: { action: 'validate-code', referralCode: code }
+    const { data, error } = await supabase.rpc('validate_referral_code', {
+      _code: code.toUpperCase()
     });
     
     if (error) {
       return { valid: false, message: 'Erreur de validation' };
     }
     
-    return data as { valid: boolean; message: string };
+    return data as { valid: boolean; message?: string; referrer_username?: string };
   }, []);
 
   // Register a referral after signup
