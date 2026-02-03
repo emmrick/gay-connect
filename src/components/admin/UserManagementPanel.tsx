@@ -21,7 +21,7 @@ import {
   Mail,
   MoreVertical,
   ExternalLink,
-  Crown,
+  
   Trash2,
   RefreshCw,
   Euro,
@@ -111,8 +111,6 @@ const useAllUsers = (search: string, filter: string) => {
         query = query.eq('is_verified', true);
       } else if (filter === 'unverified') {
         query = query.eq('is_verified', false);
-      } else if (filter === 'premium') {
-        query = query.eq('is_premium', true);
       }
 
       const { data, error } = await query.limit(100);
@@ -502,7 +500,6 @@ const UserManagementPanel = () => {
             <SelectItem value="online">En ligne</SelectItem>
             <SelectItem value="verified">Vérifiés</SelectItem>
             <SelectItem value="unverified">Non vérifiés</SelectItem>
-            <SelectItem value="premium">Premium</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -729,12 +726,6 @@ const UserCard = ({
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-medium truncate">{user.username}</p>
             {getVerificationBadge()}
-            {user.is_premium && (
-              <Badge className="text-xs gap-1 bg-gradient-to-r from-primary to-accent">
-                <Crown className="w-3 h-3" />
-                Premium
-              </Badge>
-            )}
             {isBlocked && (
               <Badge variant="destructive" className="text-xs gap-1">
                 <Ban className="w-3 h-3" />
