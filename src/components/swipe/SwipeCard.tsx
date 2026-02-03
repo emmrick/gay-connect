@@ -77,7 +77,7 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-start justify-center cursor-grab active:cursor-grabbing px-4 pt-2 pb-14"
+      className="absolute inset-0 flex items-start justify-center cursor-grab active:cursor-grabbing px-3 pt-3 pb-4"
       style={{ x, y, rotate, opacity }}
       drag={isTop}
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
