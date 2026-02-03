@@ -11,6 +11,7 @@ import BlockedUserGuard from "@/components/BlockedUserGuard";
 import VerificationGuard from "@/components/verification/VerificationGuard";
 import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
 import PushNotificationBanner from "@/components/notifications/PushNotificationBanner";
+import LowCreditsAlert from "@/components/credits/LowCreditsAlert";
 import { AgeConfirmationModal } from "@/components/AgeConfirmationModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
@@ -95,6 +96,7 @@ const AppContent = () => {
               </BrowserRouter>
               <InstallPWAPrompt />
               <PushNotificationBanner />
+              <LowCreditsAlert />
               <AgeConfirmationModal />
             </TooltipProvider>
           </VerificationGuard>
