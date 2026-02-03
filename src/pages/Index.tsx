@@ -26,6 +26,7 @@ import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useRealtimeOnlineStatus } from '@/hooks/useRealtimeOnlineStatus';
+import { usePersistedNavigation } from '@/hooks/usePersistedNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -34,7 +35,6 @@ import { Loader2, Plus, Archive, User } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
-type AppView = 'landing' | 'home' | 'groups' | 'messages' | 'premium' | 'profile' | 'chat' | 'private';
 type NavTab = 'home' | 'groups' | 'messages' | 'premium' | 'profile';
 
 // Tab order for determining animation direction
@@ -69,16 +69,27 @@ const slideUpVariants = {
 };
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<AppView>('landing');
-  const [previousTab, setPreviousTab] = useState<NavTab>('home');
-  const [activeTab, setActiveTab] = useState<NavTab>('home');
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [selectedPrivateUserId, setSelectedPrivateUserId] = useState<string | null>(null);
+  const { user, profile, isLoading: authLoading, signOut } = useAuth();
+  
+  // Use persisted navigation state
+  const {
+    currentView,
+    activeTab,
+    previousTab,
+    selectedRegion,
+    selectedPrivateUserId,
+    setCurrentView,
+    setActiveTab,
+    setPreviousTab,
+    setSelectedRegion,
+    setSelectedPrivateUserId,
+    resetNavigation,
+  } = usePersistedNavigation(!!user, authLoading);
+
   const [showMemberSearch, setShowMemberSearch] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [showArchivedConversations, setShowArchivedConversations] = useState(false);
-  const { user, profile, isLoading: authLoading, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { isPremium } = useSubscription();
   const { verification, isLoading: verificationLoading } = useIdentityVerification();
@@ -150,14 +161,7 @@ const Index = () => {
     }
   }, [user, authLoading]);
 
-  // Redirect to home if user is logged in and on landing
-  useEffect(() => {
-    if (user && currentView === 'landing') {
-      setCurrentView('home');
-    } else if (!user && !authLoading && currentView !== 'landing') {
-      setCurrentView('landing');
-    }
-  }, [user, authLoading, currentView]);
+  // Note: Navigation state persistence and auth-based redirects are now handled by usePersistedNavigation hook
 
   // Show verification dialog if user hasn't completed verification
   useEffect(() => {
@@ -218,8 +222,7 @@ const Index = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    setCurrentView('landing');
-    setActiveTab('home');
+    resetNavigation();
   };
 
   const handleStartPrivateChat = async (userId: string) => {
