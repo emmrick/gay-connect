@@ -105,104 +105,97 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
   ];
 
   return (
-    <div className="animate-fade-in pb-8 bg-gradient-to-b from-background to-secondary/20 min-h-screen">
+    <div className="animate-fade-in pb-8 bg-background min-h-screen">
       <ProfileEditDialog open={showEditDialog} onOpenChange={setShowEditDialog} />
       
-      {/* Hero Header with warm gradient */}
-      <div className="relative">
-        <div className="h-44 bg-gradient-to-br from-primary/90 via-primary to-accent/80 relative overflow-hidden">
-          {/* Warm decorative elements */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,200,100,0.1),transparent_50%)]" />
-          
-          {/* Settings button - top right */}
-          <div className="absolute top-4 right-4 z-10">
-            <ProfileSettingsDrawer
-              isPremium={isPremium}
-              subscriptionEnd={subscriptionEnd}
-              isAdmin={isAdmin}
-              onNavigateToAdmin={onNavigateToAdmin}
-              onNavigateToPremium={onNavigateToPremium}
-              onContactAdmin={onContactAdmin}
-              onSignOut={onSignOut}
-            />
-          </div>
-        </div>
-        
-        {/* Profile Card */}
-        <div className="px-4 -mt-24">
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-card rounded-3xl shadow-xl border border-border/50 p-5 pb-6"
-          >
-            {/* Avatar Section */}
-            <div className="flex flex-col items-center -mt-16">
-              <div className="relative">
-                <div className={isPremium ? "p-1 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 shadow-xl shadow-amber-500/25" : "p-0.5 rounded-full bg-gradient-to-br from-primary/50 to-accent/50 shadow-xl"}>
-                  <Avatar className="w-28 h-28 border-4 border-card">
-                    <AvatarImage src={profile.avatar_url || undefined} className="object-cover" />
-                    <AvatarFallback className="text-3xl bg-gradient-to-br from-primary to-accent text-white font-bold">
-                      {profile.username.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+      {/* New Layout: Side-by-side design */}
+      <div className="px-4 pt-4">
+        {/* Main Profile Card - Horizontal Layout */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-card rounded-3xl shadow-lg border border-border/50 overflow-hidden"
+        >
+          <div className="flex">
+            {/* Left: Avatar Section */}
+            <div className="relative flex-shrink-0 p-4">
+              <div className={isPremium ? "p-1 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 shadow-lg shadow-amber-500/25" : "p-0.5 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30"}>
+                <Avatar className="w-32 h-40 rounded-xl border-2 border-card">
+                  <AvatarImage src={profile.avatar_url || undefined} className="object-cover rounded-xl" />
+                  <AvatarFallback className="text-4xl bg-gradient-to-br from-primary to-accent text-white font-bold rounded-xl">
+                    {profile.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              
+              {/* Edit photo button */}
+              <button
+                onClick={() => setShowEditDialog(true)}
+                className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform border-2 border-card"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+              
+              {/* Online indicator */}
+              {shouldShowOnlineIndicator(profile) && (
+                <span className="absolute top-6 left-6 w-4 h-4 rounded-full bg-emerald-500 border-2 border-card shadow-lg animate-pulse" />
+              )}
+            </div>
+
+            {/* Right: Info Section */}
+            <div className="flex-1 py-4 pr-4 flex flex-col justify-between">
+              {/* Settings button - top right */}
+              <div className="flex justify-between items-start">
+                <div>
+                  {/* Name & Age */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl font-bold leading-tight">
+                      {profile.username}
+                    </h1>
+                    {profile.is_verified && (
+                      <Verified className="w-5 h-5 text-blue-500 fill-blue-500" />
+                    )}
+                  </div>
+                  {profile.age && (
+                    <p className="text-lg text-muted-foreground">{profile.age} ans</p>
+                  )}
                 </div>
-                
-                {/* Edit photo button */}
-                <button
-                  onClick={() => setShowEditDialog(true)}
-                  className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform border-2 border-card"
-                >
-                  <Camera className="w-4 h-4" />
-                </button>
+                <ProfileSettingsDrawer
+                  isPremium={isPremium}
+                  subscriptionEnd={subscriptionEnd}
+                  isAdmin={isAdmin}
+                  onNavigateToAdmin={onNavigateToAdmin}
+                  onNavigateToPremium={onNavigateToPremium}
+                  onContactAdmin={onContactAdmin}
+                  onSignOut={onSignOut}
+                />
               </div>
 
-              {/* Name & badges */}
-              <div className="mt-4 text-center">
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <h1 className="text-2xl font-bold">
-                    {profile.username}
-                    {profile.age && <span className="text-muted-foreground font-normal">, {profile.age}</span>}
-                  </h1>
-                  {profile.is_verified && (
-                    <Verified className="w-5 h-5 text-blue-500 fill-blue-500" />
-                  )}
-                </div>
-                
-                {/* Role badges */}
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  {isAdminUser && (
-                    <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-md">
-                      <Crown className="w-3 h-3 mr-1" />
-                      Admin
-                    </Badge>
-                  )}
-                  {isPremium && !isAdminUser && (
-                    <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-md">
-                      <Crown className="w-3 h-3 mr-1" />
-                      Premium
-                    </Badge>
-                  )}
-                  {shouldShowOnlineIndicator(profile) && (
-                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
-                      En ligne
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Position badge */}
+              {/* Role badges */}
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {isAdminUser && (
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-sm text-xs">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Admin
+                  </Badge>
+                )}
+                {isPremium && !isAdminUser && (
+                  <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-sm text-xs">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Premium
+                  </Badge>
+                )}
                 {(profile as any).sexual_position && (profile as any).sexual_position !== 'no_answer' && (
-                  <Badge variant="outline" className="mt-2 bg-secondary/50">
+                  <Badge variant="outline" className="bg-secondary/50 text-xs">
                     {getPositionLabel((profile as any).sexual_position)}
                   </Badge>
                 )}
               </div>
 
-              {/* Quick info */}
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-3 text-sm text-muted-foreground">
+              {/* Quick info row */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5" />
+                  <MapPin className="w-3 h-3" />
                   {profile.region}
                 </span>
                 {((profile as any).height || (profile as any).weight) && (
@@ -214,69 +207,87 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToPremium, onCont
                 )}
                 {profile.created_at && (
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
+                    <Calendar className="w-3 h-3" />
                     {format(new Date(profile.created_at), 'MMM yyyy', { locale: fr })}
                   </span>
                 )}
               </div>
 
-              {/* Looking for badges */}
-              {(profile as any).looking_for && (profile as any).looking_for.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-1.5 mt-4">
-                  {(profile as any).looking_for.slice(0, 5).map((item: string) => (
-                    <Badge key={item} variant="secondary" className="text-xs bg-secondary/70">
-                      {getLookingForLabel(item)}
-                    </Badge>
-                  ))}
-                  {(profile as any).looking_for.length > 5 && (
-                    <Badge variant="secondary" className="text-xs bg-secondary/70">
-                      +{(profile as any).looking_for.length - 5}
-                    </Badge>
-                  )}
-                </div>
-              )}
-
-              {/* Additional info */}
-              <div className="flex flex-wrap justify-center gap-1.5 mt-2">
-                {(profile as any).body_type && (
-                  <Badge variant="outline" className="text-xs">
-                    {getBodyTypeLabel((profile as any).body_type)}
-                  </Badge>
-                )}
-                {(profile as any).ethnicity && (
-                  <Badge variant="outline" className="text-xs">
-                    {getEthnicityLabel((profile as any).ethnicity)}
-                  </Badge>
-                )}
-                {(profile as any).hiv_status && (profile as any).hiv_status !== 'no_answer' && (
-                  <Badge variant="outline" className="text-xs">
-                    {HIV_STATUS_LABELS[(profile as any).hiv_status]}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Bio */}
-              {profile.bio && (
-                <div className="mt-4 p-3 rounded-2xl bg-secondary/30 max-w-full w-full">
-                  <p className="text-center text-muted-foreground text-sm leading-relaxed line-clamp-3">
-                    {profile.bio}
-                  </p>
-                </div>
-              )}
-
               {/* Edit button */}
               <Button 
                 variant="default" 
                 size="sm" 
-                className="mt-4 gap-2 rounded-xl shadow-md"
+                className="mt-3 gap-1.5 rounded-xl shadow-sm self-start text-xs h-8"
                 onClick={() => setShowEditDialog(true)}
               >
-                <Edit2 className="w-4 h-4" />
+                <Edit2 className="w-3.5 h-3.5" />
                 Modifier le profil
               </Button>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Bio Section */}
+        {profile.bio && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.05 }}
+            className="mt-3"
+          >
+            <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+              <CardContent className="p-3">
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {profile.bio}
+                </p>
+              </CardContent>
+            </Card>
           </motion.div>
-        </div>
+        )}
+
+        {/* Looking for & Additional info */}
+        {((profile as any).looking_for?.length > 0 || (profile as any).body_type || (profile as any).ethnicity) && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.08 }}
+            className="mt-3"
+          >
+            <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+              <CardContent className="p-3">
+                {/* Looking for badges */}
+                {(profile as any).looking_for && (profile as any).looking_for.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {(profile as any).looking_for.map((item: string) => (
+                      <Badge key={item} variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                        {getLookingForLabel(item)}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {/* Additional info */}
+                <div className="flex flex-wrap gap-1.5">
+                  {(profile as any).body_type && (
+                    <Badge variant="outline" className="text-xs">
+                      {getBodyTypeLabel((profile as any).body_type)}
+                    </Badge>
+                  )}
+                  {(profile as any).ethnicity && (
+                    <Badge variant="outline" className="text-xs">
+                      {getEthnicityLabel((profile as any).ethnicity)}
+                    </Badge>
+                  )}
+                  {(profile as any).hiv_status && (profile as any).hiv_status !== 'no_answer' && (
+                    <Badge variant="outline" className="text-xs">
+                      {HIV_STATUS_LABELS[(profile as any).hiv_status]}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
 
       {/* Stats Grid */}
