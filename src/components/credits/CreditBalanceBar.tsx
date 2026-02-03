@@ -66,32 +66,32 @@ const CreditBalanceBar = ({
         "relative w-full overflow-hidden rounded-full bg-muted/50",
         compact ? "h-2" : "h-4"
       )}>
-        {/* Daily credits - Green */}
+        {/* Purchased credits - Light Blue (first) */}
         <motion.div 
-          className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 to-green-400"
+          className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-400 to-sky-300"
           initial={{ width: 0 }}
-          animate={{ width: `${dailyPercent}%` }}
+          animate={{ width: `${purchasedPercent}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
         
-        {/* Bonus credits - Dark Blue */}
+        {/* Bonus credits - Dark Blue (second) */}
         <motion.div 
           className="absolute top-0 h-full bg-gradient-to-r from-blue-600 to-blue-500"
           initial={{ width: 0 }}
           animate={{ 
-            left: `${dailyPercent}%`,
+            left: `${purchasedPercent}%`,
             width: `${bonusPercent}%` 
           }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
         />
         
-        {/* Purchased credits - Light Blue */}
+        {/* Daily credits - Green (last) */}
         <motion.div 
-          className="absolute top-0 h-full bg-gradient-to-r from-sky-400 to-sky-300"
+          className="absolute top-0 h-full bg-gradient-to-r from-green-500 to-green-400"
           initial={{ width: 0 }}
           animate={{ 
-            left: `${dailyPercent + bonusPercent}%`,
-            width: `${purchasedPercent}%` 
+            left: `${purchasedPercent + bonusPercent}%`,
+            width: `${dailyPercent}%` 
           }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
         />
