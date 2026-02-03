@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Crown, Ban, Sparkles, Info } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Ban, Sparkles, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
@@ -17,7 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
-import { useIsPremiumUser } from '@/hooks/usePremiumUsers';
+// Premium user check removed - premium badges no longer shown on other profiles
 import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
 import { motion } from 'framer-motion';
 import { useProfileViewCheck, useRecordProfileView, CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
@@ -124,7 +124,7 @@ const MemberProfile = () => {
   const { data: profile, isLoading } = useProfile(userId || '');
   const { photos } = useProfilePhotos(userId || '');
   const { isFavorite, toggleFavorite, isToggling } = useUserFavorites();
-  const { isPremium: isUserPremium } = useIsPremiumUser(userId);
+  // Premium badge removed from other users' profiles
   const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId);
   
   // Credit system for profile views
@@ -326,12 +326,6 @@ const MemberProfile = () => {
                 Vérifié
               </Badge>
             )}
-            {isUserPremium && (
-              <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg backdrop-blur-sm">
-                <Crown className="w-3 h-3 mr-1" />
-                Premium
-              </Badge>
-            )}
           </motion.div>
         </div>
       </div>
@@ -342,14 +336,11 @@ const MemberProfile = () => {
         animate={{ opacity: 1 }}
         className="relative"
       >
-        {/* Premium golden frame around carousel */}
-        <div className={isUserPremium ? "p-1 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500" : ""}>
-          <ProfilePhotoCarousel 
-            photos={allPhotos} 
-            username={profile.username}
-            className="aspect-[3/4] max-h-[70vh]"
-          />
-        </div>
+        <ProfilePhotoCarousel 
+          photos={allPhotos} 
+          username={profile.username}
+          className="aspect-[3/4] max-h-[70vh]"
+        />
         
         {/* Gradient overlay at bottom for text readability */}
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
