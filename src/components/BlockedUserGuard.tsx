@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlockedStatus } from '@/hooks/useBlockedStatus';
 import BlockedUserScreen from './BlockedUserScreen';
+import SuspendedUserScreen from './moderation/SuspendedUserScreen';
 import { Loader2 } from 'lucide-react';
 
 interface BlockedUserGuardProps {
@@ -10,7 +11,7 @@ interface BlockedUserGuardProps {
 
 const BlockedUserGuard = ({ children }: BlockedUserGuardProps) => {
   const { user, isLoading: authLoading } = useAuth();
-  const { isBlocked, blockInfo, isLoading: blockLoading } = useBlockedStatus();
+  const { isBlocked, blockInfo, isLoading: blockLoading, isSuspendedByAI } = useBlockedStatus();
 
   // Don't check if not logged in
   if (!user) {
@@ -26,7 +27,12 @@ const BlockedUserGuard = ({ children }: BlockedUserGuardProps) => {
     );
   }
 
-  // Show blocked screen if user is blocked
+  // Show suspended screen if user was auto-suspended by AI
+  if (isSuspendedByAI) {
+    return <SuspendedUserScreen />;
+  }
+
+  // Show blocked screen if user is blocked (permanent)
   if (isBlocked) {
     return (
       <BlockedUserScreen
