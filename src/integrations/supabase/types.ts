@@ -1473,6 +1473,7 @@ export type Database = {
           created_at: string
           daily_claims_used: number
           daily_credits: number
+          daily_credits_last_reset: string | null
           last_daily_claim: string | null
           monthly_daily_credits_given: number | null
           monthly_reset_date: string
@@ -1485,6 +1486,7 @@ export type Database = {
           created_at?: string
           daily_claims_used?: number
           daily_credits?: number
+          daily_credits_last_reset?: string | null
           last_daily_claim?: string | null
           monthly_daily_credits_given?: number | null
           monthly_reset_date?: string
@@ -1497,6 +1499,7 @@ export type Database = {
           created_at?: string
           daily_claims_used?: number
           daily_credits?: number
+          daily_credits_last_reset?: string | null
           last_daily_claim?: string | null
           monthly_daily_credits_given?: number | null
           monthly_reset_date?: string
@@ -1701,7 +1704,6 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: boolean
       }
-      claim_daily_credits: { Args: { _user_id: string }; Returns: Json }
       deduct_credits: {
         Args: {
           _amount: number

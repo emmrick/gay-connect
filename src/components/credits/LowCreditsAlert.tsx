@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Coins, X, Gift, CreditCard } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AlertTriangle, Coins, CreditCard, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -21,10 +21,11 @@ const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 /**
  * Alert popup that shows when user's credit balance falls below threshold
  * Dismissable for 24 hours to avoid being annoying
+ * Daily credits now reset automatically at midnight
  */
 const LowCreditsAlert = () => {
   const { user } = useAuth();
-  const { totalCredits, isLoading, canClaimDaily, claimDailyCredits } = useCredits();
+  const { totalCredits, dailyCredits, maxDailyCredits, isLoading } = useCredits();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -55,15 +56,6 @@ const LowCreditsAlert = () => {
   const handleDismiss = () => {
     localStorage.setItem(STORAGE_KEY, Date.now().toString());
     setIsOpen(false);
-  };
-
-  const handleClaimDaily = async () => {
-    try {
-      await claimDailyCredits.mutateAsync();
-      setIsOpen(false);
-    } catch (error) {
-      // Error handled in hook
-    }
   };
 
   const handleBuyCredits = () => {
@@ -112,24 +104,25 @@ const LowCreditsAlert = () => {
               <span className="text-muted-foreground">crédits restants</span>
             </div>
             
+            <div className="bg-green-500/10 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {maxDailyCredits} crédits gratuits à minuit
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Crédits quotidiens : {dailyCredits.toFixed(1)}/{maxDailyCredits}
+              </p>
+            </div>
+            
             <p className="text-sm">
-              Votre solde de crédits est bas. Rechargez pour continuer à profiter de toutes les fonctionnalités.
+              Achetez des crédits pour continuer sans attendre.
             </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-          {canClaimDaily && (
-            <Button
-              onClick={handleClaimDaily}
-              disabled={claimDailyCredits.isPending}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-            >
-              <Gift className="w-4 h-4 mr-2" />
-              Réclamer 5 crédits gratuits
-            </Button>
-          )}
-          
           <Button
             onClick={handleBuyCredits}
             variant="default"

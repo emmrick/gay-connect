@@ -15,7 +15,6 @@ import {
   Clock,
   TrendingDown,
   Zap,
-  ChevronRight,
   HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useCredits, CREDIT_COSTS, CREDIT_REWARDS } from '@/hooks/useCredits';
 import CreditBalanceBar from './CreditBalanceBar';
-import DailyCreditsClaimCard from './DailyCreditsClaimCard';
 import CreditHistorySheet from './CreditHistorySheet';
 import CreditReferralSection from './CreditReferralSection';
 import BuyCreditDialog from './BuyCreditDialog';
@@ -58,7 +56,7 @@ const CreditCostItem = ({ icon, action, cost, description }: CreditCostItemProps
 );
 
 const CreditsPage = () => {
-  const { isLoading, totalCredits, dailyCredits, bonusCredits, purchasedCredits } = useCredits();
+  const { isLoading, dailyCredits, bonusCredits, purchasedCredits, maxDailyCredits } = useCredits();
 
   if (isLoading) {
     return (
@@ -157,13 +155,41 @@ const CreditsPage = () => {
           </Card>
         </motion.div>
 
-        {/* Daily Credits Claim */}
+        {/* Daily Credits Info Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <DailyCreditsClaimCard />
+          <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Crédits quotidiens</p>
+                    <p className="text-xs text-muted-foreground">
+                      Rechargement automatique à minuit
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-green-500">
+                    {dailyCredits.toFixed(1)}/{maxDailyCredits}
+                  </p>
+                  <p className="text-xs text-muted-foreground">disponibles</p>
+                </div>
+              </div>
+
+              <div className="bg-green-500/10 rounded-lg p-3 text-center">
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  ✨ Vos crédits quotidiens se rechargent automatiquement chaque jour à minuit
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Purchase Credits */}
@@ -258,7 +284,7 @@ const CreditsPage = () => {
                   <Clock className="w-5 h-5 text-amber-500" />
                   <div>
                     <span className="text-sm font-medium">Crédits quotidiens</span>
-                    <p className="text-xs text-muted-foreground">Max 7 fois par mois</p>
+                    <p className="text-xs text-muted-foreground">Rechargement automatique à minuit</p>
                   </div>
                 </div>
                 <Badge className="bg-amber-500 text-white">+{CREDIT_REWARDS.daily_claim}/jour</Badge>
@@ -337,7 +363,7 @@ const CreditsPage = () => {
                     Comment fonctionne le système de crédits ?
                   </AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground">
-                    Chaque action sur GayConnect consomme des crédits. Vous recevez 15 crédits bonus à l'inscription et pouvez réclamer 5 crédits gratuits par jour (maximum 7 fois par mois). Les crédits quotidiens ne sont pas cumulables.
+                    Chaque action sur GayConnect consomme des crédits. Vous recevez 15 crédits bonus à l'inscription et 5 crédits gratuits automatiquement chaque jour à minuit. Les crédits quotidiens non utilisés sont remplacés le lendemain.
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -364,7 +390,7 @@ const CreditsPage = () => {
                     Comment fonctionnent les crédits quotidiens ?
                   </AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground">
-                    Vous pouvez réclamer 5 crédits gratuits une fois par jour, jusqu'à 7 fois par mois. Ces crédits doivent être réclamés manuellement et ne sont pas cumulables d'un jour à l'autre. Le compteur de réclamations se réinitialise chaque mois.
+                    Vous recevez automatiquement 5 crédits gratuits chaque jour à minuit. Ces crédits sont utilisés en priorité avant les crédits bonus et achetés. Si vous ne les utilisez pas dans la journée, ils seront remplacés par les nouveaux crédits le lendemain.
                   </AccordionContent>
                 </AccordionItem>
 

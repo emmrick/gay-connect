@@ -55,13 +55,8 @@ export interface UserCredits {
   bonus_credits: number;
   purchased_credits: number;
   total_credits: number;
-  daily_claims_used: number;
-  can_claim_daily: boolean;
-  last_daily_claim: string | null;
-  monthly_reset_date: string;
   max_daily_credits: number;
-  monthly_daily_credits_given: number;
-  monthly_daily_credits_max: number;
+  daily_credits_reset_date: string;
 }
 
 export interface CreditTransaction {
@@ -288,46 +283,6 @@ export const useCredits = () => {
     },
   });
 
-  // Claim daily credits mutation
-  const claimDailyCredits = useMutation({
-    mutationFn: async () => {
-      if (!user?.id) throw new Error('Not authenticated');
-
-      const { data, error } = await supabase.rpc('claim_daily_credits', {
-        _user_id: user.id,
-      });
-
-      if (error) throw error;
-      
-      const result = data as { success: boolean; error?: string; credits_claimed?: number; claims_remaining?: number };
-      if (!result.success) {
-        throw new Error(result.error || 'Cannot claim daily credits');
-      }
-      
-      return result;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['credit-transactions', user?.id] });
-      toast.success(`+${data.credits_claimed} crédits réclamés !`, {
-        description: `Il vous reste ${data.claims_remaining} réclamations ce mois-ci.`,
-      });
-    },
-    onError: (error: Error) => {
-      if (error.message.includes('Already claimed')) {
-        toast.error('Déjà réclamé aujourd\'hui', {
-          description: 'Revenez demain pour réclamer vos crédits quotidiens.',
-        });
-      } else if (error.message.includes('Maximum 7 claims')) {
-        toast.error('Limite mensuelle atteinte', {
-          description: 'Vous avez utilisé vos 7 réclamations ce mois-ci.',
-        });
-      } else {
-        toast.error('Erreur lors de la réclamation');
-      }
-    },
-  });
-
   // Perform action with credit deduction - returns object with success status and showDialog callback
   const performAction = async (
     action: CreditActionType,
@@ -398,10 +353,7 @@ export const useCredits = () => {
     bonusCredits: query.data?.bonus_credits || 0,
     purchasedCredits: query.data?.purchased_credits || 0,
     totalCredits: query.data?.total_credits || 0,
-    // Daily claims
-    dailyClaimsUsed: query.data?.daily_claims_used || 0,
-    canClaimDaily: query.data?.can_claim_daily || false,
-    claimDailyCredits,
+    maxDailyCredits: query.data?.max_daily_credits || 5,
     // Checks
     hasEnoughCredits,
     canPerformAction,
