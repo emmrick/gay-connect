@@ -29,6 +29,8 @@ const Legal = lazy(() => import("./pages/Legal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const MemberProfile = lazy(() => import("./pages/MemberProfile"));
 
+import { setGlobalQueryClient } from "@/hooks/useCredits";
+
 // Optimized QueryClient with better caching
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +42,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Register global query client for standalone credit functions
+setGlobalQueryClient(queryClient);
 
 // Global unhandled rejection handler to catch async errors that React ErrorBoundary cannot catch
 const useGlobalErrorHandler = () => {
