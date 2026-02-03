@@ -77,7 +77,7 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing p-4"
+      className="absolute inset-0 flex items-start justify-center cursor-grab active:cursor-grabbing px-4 pt-2 pb-14"
       style={{ x, y, rotate, opacity }}
       drag={isTop}
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
@@ -86,7 +86,7 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
       animate={exitDirection ? getExitAnimation() : {}}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      <div className="relative w-full max-w-[320px] h-[450px] rounded-2xl overflow-hidden bg-card border border-border shadow-2xl">
+      <div className="relative w-full max-w-[380px] h-full rounded-2xl overflow-hidden bg-card border border-border shadow-2xl">
         {/* Profile Image */}
         <div className="absolute inset-0 z-0">
           {profile.avatar_url ? (
@@ -98,13 +98,13 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center">
-              <span className="text-6xl font-bold text-primary/50">
+              <span className="text-7xl font-bold text-primary/50">
                 {profile.username.charAt(0).toUpperCase()}
               </span>
             </div>
           )}
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
         </div>
 
         {/* Online indicator */}
