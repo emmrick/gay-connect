@@ -26,6 +26,7 @@ export const useCreditCheck = () => {
     swipe_dislike: 'Passer un profil',
     swipe_hide: 'Masquer définitivement',
     swipe_start_conversation: 'Démarrer une conversation',
+    join_extra_group: 'Rejoindre un groupe',
   };
 
   /**

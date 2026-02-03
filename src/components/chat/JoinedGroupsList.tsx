@@ -2,7 +2,7 @@ import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { useChatRooms } from '@/hooks/useChatRooms';
-import { Users, ChevronRight, LogOut, MessageSquare, AtSign } from 'lucide-react';
+import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,22 +16,31 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface JoinedGroupsListProps {
   onSelectGroup: (regionCode: string) => void;
 }
 
 const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
-  const { joinedGroups, leaveGroup } = useJoinedGroups();
+  const { joinedGroups, leaveGroup, isInitialized } = useJoinedGroups();
   const { data: onlineCounts } = useOnlineMemberCounts();
   const { data: chatRooms } = useChatRooms();
   const { getMentionCount } = useUnreadMentions();
-  const [leaveConfirm, setLeaveConfirm] = useState<string | null>(null);
+  const [leaveConfirm, setLeaveConfirm] = useState<{ regionCode: string; regionName: string } | null>(null);
 
   // Create a map of region code to chat room id
   const regionToRoomId = new Map(
     chatRooms?.map(room => [room.region_code, room.id]) || []
   );
+
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (joinedGroups.length === 0) {
     return (
@@ -46,6 +55,16 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
       </div>
     );
   }
+
+  const handleLeaveAttempt = (regionCode: string, regionName: string, isHomeGroup?: boolean) => {
+    if (isHomeGroup) {
+      toast.error('Impossible de quitter ton groupe régional', {
+        description: 'Ce groupe correspond à ta région de profil.',
+      });
+      return;
+    }
+    setLeaveConfirm({ regionCode, regionName });
+  };
 
   return (
     <>
@@ -62,6 +81,7 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 "w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group",
                 "bg-secondary/30 border border-transparent",
                 "hover:bg-secondary hover:border-border",
+                group.isHomeGroup && "border-green-500/30 bg-green-500/5",
                 "animate-fade-in"
               )}
               style={{ animationDelay: `${index * 0.05}s` }}
@@ -73,10 +93,18 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
               >
                 <div className={cn(
                   "w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm",
-                  "bg-gradient-to-br from-primary to-accent text-white"
+                  group.isHomeGroup 
+                    ? "bg-green-500 text-white"
+                    : "bg-gradient-to-br from-primary to-accent text-white"
                 )}>
                   {group.regionCode}
                 </div>
+                {/* Home indicator */}
+                {group.isHomeGroup && (
+                  <span className="absolute -top-1 -left-1 w-5 h-5 bg-green-500 rounded-full border-2 border-background flex items-center justify-center">
+                    <Home className="w-3 h-3 text-white" />
+                  </span>
+                )}
                 {/* Online indicator */}
                 {onlineCount > 0 && (
                   <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background flex items-center justify-center">
@@ -97,9 +125,16 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 className="flex-1 min-w-0 text-left"
               >
                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <h3 className="font-medium text-foreground truncate">
-                    {group.regionName}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-foreground truncate">
+                      {group.regionName}
+                    </h3>
+                    {group.isHomeGroup && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-green-500/20 text-green-600 dark:text-green-400 rounded-full font-medium flex-shrink-0">
+                        Ma région
+                      </span>
+                    )}
+                  </div>
                   {mentionCount > 0 && (
                     <span className="flex-shrink-0 px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
                       {mentionCount} mention{mentionCount > 1 ? 's' : ''}
@@ -120,17 +155,19 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
 
               {/* Actions */}
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLeaveConfirm(group.regionCode);
-                  }}
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
+                {!group.isHomeGroup && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLeaveAttempt(group.regionCode, group.regionName, group.isHomeGroup);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                )}
                 <ChevronRight 
                   className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors cursor-pointer" 
                   onClick={() => onSelectGroup(group.regionCode)}
@@ -145,9 +182,9 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
       <AlertDialog open={!!leaveConfirm} onOpenChange={() => setLeaveConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Quitter ce groupe ?</AlertDialogTitle>
+            <AlertDialogTitle>Quitter {leaveConfirm?.regionName} ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tu pourras toujours le rejoindre à nouveau plus tard.
+              Tu pourras rejoindre ce groupe à nouveau, mais cela te coûtera 5 crédits.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -155,7 +192,7 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
             <AlertDialogAction
               onClick={() => {
                 if (leaveConfirm) {
-                  leaveGroup(leaveConfirm);
+                  leaveGroup(leaveConfirm.regionCode);
                   setLeaveConfirm(null);
                 }
               }}

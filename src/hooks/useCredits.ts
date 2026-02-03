@@ -37,6 +37,8 @@ export const CREDIT_COSTS = {
   swipe_dislike: 0.2,
   swipe_hide: 0.1,
   swipe_start_conversation: 0.2,
+  // Group costs
+  join_extra_group: 5.0, // Joining a group outside home department
 } as const;
 
 // Credit rewards
@@ -335,6 +337,7 @@ export const useCredits = () => {
       swipe_dislike: 'Passer un profil',
       swipe_hide: 'Masquer définitivement',
       swipe_start_conversation: 'Démarrer une conversation',
+      join_extra_group: 'Rejoindre un groupe',
     };
     return {
       hasEnough: hasEnoughCredits(cost),
