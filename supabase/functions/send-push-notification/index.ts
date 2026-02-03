@@ -109,9 +109,9 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { userId, title, body, url, tag, notificationType } = await req.json();
+    const { userId, title, body, url, tag, notificationType, regionCode } = await req.json();
 
-    console.log("Received push request for userId:", userId, "type:", notificationType);
+    console.log("Received push request for userId:", userId, "type:", notificationType, "region:", regionCode);
 
     if (!userId || !title) {
       return new Response(
@@ -144,6 +144,24 @@ serve(async (req) => {
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
+      }
+    }
+
+    // Check if group is muted (for group messages)
+    if (notificationType === 'group_message' && regionCode) {
+      const { data: mutePrefs } = await supabase
+        .from("group_mute_preferences")
+        .select("is_muted")
+        .eq("user_id", userId)
+        .eq("region_code", regionCode)
+        .maybeSingle();
+
+      if (mutePrefs?.is_muted) {
+        console.log(`Group ${regionCode} is muted for user ${userId}`);
+        return new Response(
+          JSON.stringify({ success: false, message: "Group is muted by user" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 

@@ -218,7 +218,7 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
             // Get chat room name
             const { data: roomData } = await supabase
               .from('chat_rooms')
-              .select('region_name')
+              .select('region_name, region_code')
               .eq('id', chatRoomId)
               .single();
 
@@ -240,12 +240,13 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
                 // Don't notify yourself
                 if (mentionedUser.user_id === user.id) continue;
 
-                // Send push notification
+                // Send push notification with region code
                 notifyNewGroupMessage(
                   mentionedUser.user_id,
                   roomData?.region_name || 'Groupe',
                   senderProfile?.username || 'Quelqu\'un',
-                  `@${mentionedUser.username} ${content.substring(0, 30)}...`
+                  `@${mentionedUser.username} ${content.substring(0, 30)}...`,
+                  roomData?.region_code
                 );
 
                 // Create in-app notification
