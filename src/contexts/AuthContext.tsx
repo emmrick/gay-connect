@@ -57,16 +57,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const profileData = await fetchProfile(userId);
         if (isMounted) {
           setProfile(profileData);
-          // Update online status
+          // Update online status (fire and forget, don't await)
           if (profileData) {
-            await supabase
+            supabase
               .from('profiles')
               .update({ is_online: true, last_seen: new Date().toISOString() })
-              .eq('user_id', userId);
+              .eq('user_id', userId)
+              .then(({ error }) => {
+                if (error) console.warn('[AuthContext] Online status update failed:', error.message);
+              });
           }
         }
       } catch (error) {
-        console.error('Error loading profile:', error);
+        console.error('[AuthContext] Error loading profile:', error);
         if (isMounted) {
           setProfile(null);
         }
@@ -105,6 +108,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (error) {
           console.error('[AuthContext] Error getting session:', error);
+          // Don't throw - just continue without session
+          if (isMounted) {
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+          }
+          return;
         }
         
         if (!isMounted) return;
@@ -114,14 +124,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Fetch profile BEFORE setting loading false for existing sessions
         if (session?.user) {
-          // Profile loading with its own timeout
-          const profilePromise = loadProfile(session.user.id);
-          const profileTimeout = new Promise((resolve) => setTimeout(resolve, 5000));
-          
-          await Promise.race([profilePromise, profileTimeout]);
+          try {
+            // Profile loading with its own timeout
+            const profilePromise = loadProfile(session.user.id);
+            const profileTimeout = new Promise<void>((resolve) => setTimeout(resolve, 5000));
+            
+            await Promise.race([profilePromise, profileTimeout]);
+          } catch (profileError) {
+            console.error('[AuthContext] Profile loading error:', profileError);
+            // Continue even if profile fails - user is still authenticated
+          }
         }
       } catch (error) {
         console.error('[AuthContext] Auth initialization error:', error);
+        // Ensure clean state on error
+        if (isMounted) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+        }
       } finally {
         clearTimeout(timeoutId);
         if (isMounted) {
