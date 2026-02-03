@@ -15,7 +15,8 @@ import {
   History,
   ChevronLeft,
   Menu,
-  Bell
+  Bell,
+  Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ export type AdminSection =
   | 'promo' 
   | 'history' 
   | 'credits'
+  | 'credits-surveillance'
   | 'broadcast';
 
 interface AdminSidebarProps {
@@ -65,6 +67,7 @@ const navItems: NavItem[] = [
   { id: 'stats', label: 'Statistiques', icon: BarChart3, group: 'users' },
   { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users' },
   { id: 'credits', label: 'Crédits', icon: Coins, group: 'users' },
+  { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'users' },
   { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users' },
   
   // Modération
