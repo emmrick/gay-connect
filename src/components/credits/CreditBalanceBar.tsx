@@ -1,4 +1,4 @@
-import { Coins, Info } from 'lucide-react';
+import { Coins, Info, Clock } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -17,11 +17,7 @@ const CreditBalanceBar = ({
   compact = false,
   showDetails = true 
 }: CreditBalanceBarProps) => {
-  const { dailyCredits, bonusCredits, purchasedCredits, totalCredits, isLoading, credits } = useCredits();
-
-  const maxDailyCredits = credits?.max_daily_credits || 5.0;
-  const monthlyCreditsGiven = credits?.monthly_daily_credits_given || 0;
-  const monthlyCreditsMax = credits?.monthly_daily_credits_max || 35.0;
+  const { dailyCredits, bonusCredits, purchasedCredits, totalCredits, maxDailyCredits, isLoading } = useCredits();
 
   if (isLoading) {
     return (
@@ -36,31 +32,6 @@ const CreditBalanceBar = ({
   const dailyPercent = (dailyCredits / total) * 100;
   const bonusPercent = (bonusCredits / total) * 100;
   const purchasedPercent = (purchasedCredits / total) * 100;
-
-  const creditTypes = [
-    { 
-      name: 'Quotidien', 
-      value: dailyCredits, 
-      max: maxDailyCredits,
-      color: 'bg-green-500', 
-      dotColor: 'bg-green-500',
-      description: `${dailyCredits.toFixed(1)}/${maxDailyCredits.toFixed(1)} crédits`
-    },
-    { 
-      name: 'Bonus', 
-      value: bonusCredits, 
-      color: 'bg-blue-600', 
-      dotColor: 'bg-blue-600',
-      description: 'Crédits gagnés (inscription, vérification, parrainage)'
-    },
-    { 
-      name: 'Achetés', 
-      value: purchasedCredits, 
-      color: 'bg-sky-400', 
-      dotColor: 'bg-sky-400',
-      description: 'Crédits achetés via Revolut'
-    },
-  ];
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -130,7 +101,7 @@ const CreditBalanceBar = ({
       </div>
 
       {/* Credit breakdown details */}
-      {!compact && (
+      {!compact && showDetails && (
         <div className="space-y-2">
           {/* Daily credits detail - always show */}
           <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/10 border border-green-500/20">
@@ -138,8 +109,9 @@ const CreditBalanceBar = ({
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <div>
                 <span className="text-sm font-medium">Quotidien</span>
-                <p className="text-xs text-muted-foreground">
-                  Réclamez jusqu'à 5 crédits/jour (max 7 jours/mois)
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Rechargement automatique à minuit
                 </p>
               </div>
             </div>
@@ -147,9 +119,6 @@ const CreditBalanceBar = ({
               <span className="text-sm font-bold tabular-nums text-green-600 dark:text-green-400">
                 {dailyCredits.toFixed(1)}/{maxDailyCredits.toFixed(1)}
               </span>
-              <p className="text-xs text-muted-foreground">
-                {monthlyCreditsGiven.toFixed(1)}/{monthlyCreditsMax.toFixed(1)} ce mois
-              </p>
             </div>
           </div>
 
@@ -196,7 +165,7 @@ const CreditBalanceBar = ({
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span>Quotidien: {dailyCredits.toFixed(1)}/{maxDailyCredits.toFixed(1)}</span>
+            <span>Quotidien: {dailyCredits.toFixed(1)}/{maxDailyCredits}</span>
           </div>
           {bonusCredits > 0 && (
             <div className="flex items-center gap-1">

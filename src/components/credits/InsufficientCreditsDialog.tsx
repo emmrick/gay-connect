@@ -1,4 +1,4 @@
-import { Coins, ShoppingCart, Gift, AlertTriangle, Clock } from 'lucide-react';
+import { Coins, ShoppingCart, AlertTriangle, Clock } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -25,18 +25,9 @@ const InsufficientCreditsDialog = ({
   requiredCredits,
   actionName,
 }: InsufficientCreditsDialogProps) => {
-  const { totalCredits, canClaimDaily, claimDailyCredits } = useCredits();
+  const { totalCredits, dailyCredits, maxDailyCredits } = useCredits();
   const missing = requiredCredits - totalCredits;
   const isCompletelyOut = totalCredits <= 0;
-
-  const handleClaimDaily = async () => {
-    try {
-      await claimDailyCredits.mutateAsync();
-      onOpenChange(false);
-    } catch {
-      // Error is handled by the mutation
-    }
-  };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -64,8 +55,8 @@ const InsufficientCreditsDialog = ({
                   </p>
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-amber-500" />
-                      Attendre demain pour recevoir <strong>5 crédits gratuits</strong>
+                      <Clock className="w-4 h-4 text-green-500" />
+                      Attendre minuit pour recevoir <strong>{maxDailyCredits} crédits gratuits</strong>
                     </li>
                     <li className="flex items-center gap-2">
                       <ShoppingCart className="w-4 h-4 text-primary" />
@@ -105,18 +96,6 @@ const InsufficientCreditsDialog = ({
         </AlertDialogHeader>
         
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col mt-4">
-          {canClaimDaily && (
-            <Button
-              variant="outline"
-              className="w-full justify-center gap-2 border-green-500/50 text-green-600 dark:text-green-400 hover:bg-green-500/10"
-              onClick={handleClaimDaily}
-              disabled={claimDailyCredits.isPending}
-            >
-              <Gift className="w-4 h-4" />
-              {claimDailyCredits.isPending ? 'Récupération...' : 'Réclamer mes 5 crédits quotidiens'}
-            </Button>
-          )}
-          
           <Button
             className="w-full justify-center gap-2 bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600"
             onClick={() => {
@@ -132,11 +111,10 @@ const InsufficientCreditsDialog = ({
             <AlertDialogCancel className="w-full">Annuler</AlertDialogCancel>
           )}
           
-          {isCompletelyOut && (
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Les crédits quotidiens se rechargent chaque jour à minuit
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+            <Clock className="w-3 h-3" />
+            {maxDailyCredits} crédits gratuits se rechargent automatiquement à minuit
+          </p>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
