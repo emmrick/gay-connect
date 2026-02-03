@@ -191,12 +191,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // Handle before unload (closing tab/browser)
-    const handleBeforeUnload = () => {
-      // Use sendBeacon for reliable offline status on page unload
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${user.id}`;
-      const body = JSON.stringify({ is_online: false, last_seen: new Date().toISOString() });
-      
-      navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+    // Note: We update last_seen on unload - the heartbeat stopping will naturally
+    // mark the user offline after the threshold (1h free, 24h premium)
+    const handleBeforeUnload = async () => {
+      // Update last_seen timestamp - the heartbeat stopping will naturally mark user offline
+      try {
+        await supabase
+          .from('profiles')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('user_id', user.id);
+      } catch {
+        // Ignore errors during unload
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
