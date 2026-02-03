@@ -9,6 +9,7 @@ interface SendPushOptions {
   url?: string;
   tag?: string;
   notificationType?: NotificationType;
+  regionCode?: string;
 }
 
 export const sendPushNotification = async (options: SendPushOptions): Promise<boolean> => {
@@ -58,7 +59,8 @@ export const notifyNewGroupMessage = async (
   recipientId: string,
   roomName: string,
   senderUsername: string,
-  messagePreview?: string
+  messagePreview?: string,
+  regionCode?: string
 ) => {
   const preview = messagePreview 
     ? messagePreview.length > 50 
@@ -73,6 +75,7 @@ export const notifyNewGroupMessage = async (
     url: '/',
     tag: `group-${roomName}`,
     notificationType: 'group_message',
+    regionCode,
   });
 };
 

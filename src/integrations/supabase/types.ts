@@ -358,6 +358,33 @@ export type Database = {
         }
         Relationships: []
       }
+      group_mute_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          is_muted: boolean
+          region_code: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_muted?: boolean
+          region_code: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_muted?: boolean
+          region_code?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       identity_verifications: {
         Row: {
           admin_screenshot_detected: boolean

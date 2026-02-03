@@ -187,20 +187,52 @@ export const useJoinedGroups = () => {
     saveGroups(joinedGroups.filter(g => g.regionCode !== regionCode));
   }, [joinedGroups, saveGroups]);
 
-  const toggleMuteGroup = useCallback((regionCode: string) => {
+  const toggleMuteGroup = useCallback(async (regionCode: string) => {
+    if (!user?.id) return;
+
+    const currentGroup = joinedGroups.find(g => g.regionCode === regionCode);
+    const newMutedState = !currentGroup?.isMuted;
+
+    // Update local state
     const updatedGroups = joinedGroups.map(g => 
       g.regionCode === regionCode 
-        ? { ...g, isMuted: !g.isMuted }
+        ? { ...g, isMuted: newMutedState }
         : g
     );
     saveGroups(updatedGroups);
-    const group = updatedGroups.find(g => g.regionCode === regionCode);
-    if (group?.isMuted) {
-      toast.success('Groupe mis en sourdine');
-    } else {
-      toast.success('Notifications réactivées');
+
+    // Sync with database
+    try {
+      if (newMutedState) {
+        // Insert or update mute preference
+        await supabase
+          .from('group_mute_preferences')
+          .upsert({
+            user_id: user.id,
+            region_code: regionCode,
+            is_muted: true,
+          }, { onConflict: 'user_id,region_code' });
+      } else {
+        // Remove mute preference
+        await supabase
+          .from('group_mute_preferences')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('region_code', regionCode);
+      }
+
+      if (newMutedState) {
+        toast.success('Groupe mis en sourdine');
+      } else {
+        toast.success('Notifications réactivées');
+      }
+    } catch (error) {
+      console.error('Error updating mute preference:', error);
+      // Revert on error
+      saveGroups(joinedGroups);
+      toast.error('Erreur lors de la mise à jour');
     }
-  }, [joinedGroups, saveGroups]);
+  }, [user?.id, joinedGroups, saveGroups]);
 
   const isGroupMuted = useCallback((regionCode: string) => {
     return joinedGroups.find(g => g.regionCode === regionCode)?.isMuted || false;
