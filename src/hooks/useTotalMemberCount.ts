@@ -20,10 +20,14 @@ export const useOnlineMemberCount = () => {
   return useQuery({
     queryKey: ['online-member-count'],
     queryFn: async (): Promise<number> => {
+      // A member is truly online if is_online = true AND last_seen within 5 minutes
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      
       const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('is_online', true);
+        .eq('is_online', true)
+        .gte('last_seen', fiveMinutesAgo);
 
       if (error) throw error;
       return count || 0;
