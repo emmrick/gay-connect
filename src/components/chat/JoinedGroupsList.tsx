@@ -2,7 +2,7 @@ import { useJoinedGroups } from '@/hooks/useJoinedGroups';
 import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { useChatRooms } from '@/hooks/useChatRooms';
-import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2 } from 'lucide-react';
+import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2, BellOff, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -23,7 +24,7 @@ interface JoinedGroupsListProps {
 }
 
 const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
-  const { joinedGroups, leaveGroup, isInitialized } = useJoinedGroups();
+  const { joinedGroups, leaveGroup, toggleMuteGroup, isInitialized } = useJoinedGroups();
   const { data: onlineCounts } = useOnlineMemberCounts();
   const { data: chatRooms } = useChatRooms();
   const { getMentionCount } = useUnreadMentions();
@@ -155,6 +156,31 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
 
               {/* Actions */}
               <div className="flex items-center gap-1 flex-shrink-0">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "h-8 w-8",
+                          group.isMuted 
+                            ? "text-amber-500 hover:text-amber-600" 
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMuteGroup(group.regionCode);
+                        }}
+                      >
+                        {group.isMuted ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {group.isMuted ? 'Réactiver les notifications' : 'Mettre en sourdine'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 {!group.isHomeGroup && (
                   <Button
                     variant="ghost"

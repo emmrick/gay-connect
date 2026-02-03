@@ -12,6 +12,7 @@ interface JoinedGroup {
   regionName: string;
   joinedAt: string;
   isHomeGroup?: boolean;
+  isMuted?: boolean;
 }
 
 export const useJoinedGroups = () => {
@@ -186,6 +187,25 @@ export const useJoinedGroups = () => {
     saveGroups(joinedGroups.filter(g => g.regionCode !== regionCode));
   }, [joinedGroups, saveGroups]);
 
+  const toggleMuteGroup = useCallback((regionCode: string) => {
+    const updatedGroups = joinedGroups.map(g => 
+      g.regionCode === regionCode 
+        ? { ...g, isMuted: !g.isMuted }
+        : g
+    );
+    saveGroups(updatedGroups);
+    const group = updatedGroups.find(g => g.regionCode === regionCode);
+    if (group?.isMuted) {
+      toast.success('Groupe mis en sourdine');
+    } else {
+      toast.success('Notifications réactivées');
+    }
+  }, [joinedGroups, saveGroups]);
+
+  const isGroupMuted = useCallback((regionCode: string) => {
+    return joinedGroups.find(g => g.regionCode === regionCode)?.isMuted || false;
+  }, [joinedGroups]);
+
   const isJoined = useCallback((regionCode: string) => {
     return joinedGroups.some(g => g.regionCode === regionCode);
   }, [joinedGroups]);
@@ -200,6 +220,8 @@ export const useJoinedGroups = () => {
     joinedGroups,
     joinGroup,
     leaveGroup,
+    toggleMuteGroup,
+    isGroupMuted,
     isJoined,
     isHomeGroup,
     canJoinMore,
