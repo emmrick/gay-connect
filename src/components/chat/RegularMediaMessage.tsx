@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Image, Play, Download, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Image, Play, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RegularMediaMessageProps {
   mediaUrl: string;
@@ -12,13 +13,60 @@ interface RegularMediaMessageProps {
   isOwn: boolean;
 }
 
+const SIGNED_URL_EXPIRY_SECONDS = 3600; // 1 hour
+
 const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessageProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSignedUrl = async () => {
+      if (!mediaUrl) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        // Extract just the path if it's a full URL
+        let cleanPath = mediaUrl;
+        
+        // Handle full Supabase storage URLs
+        if (mediaUrl.includes('/storage/v1/object/')) {
+          const match = mediaUrl.match(/\/storage\/v1\/object\/(?:public|sign)\/[^/]+\/(.+)/);
+          if (match) {
+            cleanPath = match[1];
+          }
+        }
+
+        const { data, error } = await supabase.storage
+          .from('media')
+          .createSignedUrl(cleanPath, SIGNED_URL_EXPIRY_SECONDS);
+
+        if (error) {
+          console.error('Error getting signed URL:', error);
+          setImageError(true);
+        } else {
+          setSignedUrl(data.signedUrl);
+        }
+      } catch (error) {
+        console.error('Error getting signed URL:', error);
+        setImageError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSignedUrl();
+  }, [mediaUrl]);
 
   const handleDownload = async () => {
+    if (!signedUrl) return;
+    
     try {
-      const response = await fetch(mediaUrl);
+      const response = await fetch(signedUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -33,7 +81,18 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
     }
   };
 
-  if (imageError) {
+  if (isLoading) {
+    return (
+      <div className={`rounded-2xl overflow-hidden ${isOwn ? 'bg-primary/20' : 'bg-secondary'} p-4 max-w-[240px]`}>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Chargement...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (imageError || !signedUrl) {
     return (
       <div className={`rounded-2xl overflow-hidden ${isOwn ? 'bg-primary/20' : 'bg-secondary'} p-4`}>
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -54,7 +113,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
       >
         {mediaType === 'image' ? (
           <img
-            src={mediaUrl}
+            src={signedUrl}
             alt="Photo partagée"
             className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
             onError={() => setImageError(true)}
@@ -62,7 +121,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
         ) : (
           <div className="relative">
             <video
-              src={mediaUrl}
+              src={signedUrl}
               className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
               preload="metadata"
             />
@@ -86,13 +145,13 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
           <div className="relative w-full h-full flex items-center justify-center min-h-[50vh]">
             {mediaType === 'image' ? (
               <img
-                src={mediaUrl}
+                src={signedUrl}
                 alt="Photo partagée"
                 className="max-w-full max-h-[85vh] object-contain"
               />
             ) : (
               <video
-                src={mediaUrl}
+                src={signedUrl}
                 className="max-w-full max-h-[85vh] object-contain"
                 controls
                 autoPlay

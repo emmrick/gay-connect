@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+const SIGNED_URL_EXPIRY_SECONDS = 3600; // 1 hour
+
 export const useMediaUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -27,13 +29,10 @@ export const useMediaUpload = () => {
 
       if (error) throw error;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
-
+      // Return the file path instead of public URL
+      // The file path will be used to generate signed URLs when displaying
       setProgress(100);
-      return urlData.publicUrl;
+      return filePath;
     } catch (error) {
       console.error('Upload error:', error);
       return null;
@@ -42,11 +41,51 @@ export const useMediaUpload = () => {
     }
   };
 
+  // Get a signed URL for accessing media (valid for 1 hour)
+  const getSignedUrl = async (filePath: string): Promise<string | null> => {
+    try {
+      // Extract just the path if it's a full URL
+      let cleanPath = filePath;
+      
+      // Handle full Supabase storage URLs
+      if (filePath.includes('/storage/v1/object/')) {
+        const match = filePath.match(/\/storage\/v1\/object\/(?:public|sign)\/[^/]+\/(.+)/);
+        if (match) {
+          cleanPath = match[1];
+        }
+      }
+
+      const { data, error } = await supabase.storage
+        .from('media')
+        .createSignedUrl(cleanPath, SIGNED_URL_EXPIRY_SECONDS);
+
+      if (error) {
+        console.error('Signed URL error:', error);
+        return null;
+      }
+
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Signed URL error:', error);
+      return null;
+    }
+  };
+
   const deleteMedia = async (filePath: string) => {
     try {
+      // Extract just the path if it's a full URL
+      let cleanPath = filePath;
+      
+      if (filePath.includes('/storage/v1/object/')) {
+        const match = filePath.match(/\/storage\/v1\/object\/(?:public|sign)\/[^/]+\/(.+)/);
+        if (match) {
+          cleanPath = match[1];
+        }
+      }
+
       const { error } = await supabase.storage
         .from('media')
-        .remove([filePath]);
+        .remove([cleanPath]);
 
       if (error) throw error;
       return true;
@@ -59,6 +98,7 @@ export const useMediaUpload = () => {
   return {
     uploadMedia,
     deleteMedia,
+    getSignedUrl,
     isUploading,
     progress,
   };

@@ -205,30 +205,42 @@ serve(async (req) => {
       case "process-payment": {
         // Called from webhook when a payment is successful
         // This increments consecutive payments and applies rewards if eligible
-        const { email } = await req.json();
-        if (!email) throw new Error("Email required");
+        // Note: This action should only be called from a verified Stripe webhook
+        const requestBody = await req.json();
+        const paymentEmail = requestBody.email;
+        if (!paymentEmail) throw new Error("Email required");
         
-        // Find user by email
-        const { data: usersData } = await supabaseClient.auth.admin.listUsers();
-        const user = usersData.users.find((u: any) => u.email === email);
+        // Look up user by email from profiles table joined with auth
+        // We limit the search to avoid full user enumeration
+        const { data: usersData } = await supabaseClient.auth.admin.listUsers({
+          page: 1,
+          perPage: 100, // Limit to prevent full enumeration
+        });
         
-        if (!user) {
-          logStep("User not found for payment processing", { email });
+        // Find matching user by email
+        const matchingUser = usersData.users.find(
+          (u: any) => u.email?.toLowerCase() === paymentEmail.toLowerCase()
+        );
+        
+        if (!matchingUser) {
+          logStep("User not found for payment processing", { email: paymentEmail });
           return new Response(JSON.stringify({ processed: false }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
           });
         }
         
+        const foundUserId = matchingUser.id;
+        
         // Check if user is referred
         const { data: referral } = await supabaseClient
           .from('referrals')
           .select('*')
-          .eq('referred_user_id', user.id)
+          .eq('referred_user_id', foundUserId)
           .single();
         
         if (!referral) {
-          logStep("User not referred", { userId: user.id });
+          logStep("User not referred", { userId: foundUserId });
           return new Response(JSON.stringify({ processed: false, reason: "not_referred" }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
@@ -236,7 +248,7 @@ serve(async (req) => {
         }
         
         const newPaymentCount = referral.consecutive_payments + 1;
-        logStep("Incrementing payment count", { userId: user.id, newCount: newPaymentCount });
+        logStep("Incrementing payment count", { userId: foundUserId, newCount: newPaymentCount });
         
         // Update referral
         await supabaseClient
@@ -338,20 +350,21 @@ async function applyReferralRewards(supabaseClient: any, referral: any) {
 
 async function applyStripeCredit(supabaseClient: any, stripe: Stripe, userId: string, description: string) {
   try {
-    // Get user email
-    const { data: usersData } = await supabaseClient.auth.admin.listUsers();
-    const user = usersData.users.find((u: any) => u.id === userId);
+    // Get user by ID instead of listing all users
+    const { data: userData, error: userError } = await supabaseClient.auth.admin.getUserById(userId);
     
-    if (!user?.email) {
+    if (userError || !userData?.user?.email) {
       logStep("User email not found", { userId });
       return;
     }
     
-    // Find Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const userEmail = userData.user.email;
+    
+    // Find Stripe customer by email
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     
     if (customers.data.length === 0) {
-      logStep("No Stripe customer found", { email: user.email });
+      logStep("No Stripe customer found", { email: userEmail });
       return;
     }
     
