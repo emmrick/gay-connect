@@ -49,9 +49,13 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
   const remainingProfiles = profiles.slice(currentIndex);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'swipe' | 'likes')} className="flex-1 flex flex-col">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as 'swipe' | 'likes')}
+        className="flex-1 flex flex-col min-h-0"
+      >
         <div className="px-4 pb-3">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="swipe" className="gap-2">
@@ -65,7 +69,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
           </TabsList>
         </div>
 
-        <TabsContent value="swipe" className="flex-1 flex flex-col mt-0 overflow-hidden">
+        <TabsContent value="swipe" className="flex-1 flex flex-col min-h-0 mt-0 overflow-hidden">
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -85,9 +89,9 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
               </Button>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0">
               {/* Cards stack - takes maximum space */}
-              <div className="flex-1 relative">
+              <div className="flex-1 relative min-h-0">
                 <AnimatePresence mode="popLayout">
                   {remainingProfiles.slice(0, 3).map((profile, index) => (
                     <SwipeCard
@@ -100,8 +104,8 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                 </AnimatePresence>
               </div>
 
-              {/* Action buttons - overlaying bottom of card */}
-              <div className="relative z-20 flex justify-center items-center gap-4 py-4 -mt-10">
+              {/* Action buttons */}
+              <div className="relative z-20 flex justify-center items-center gap-4 py-3">
                 <Button
                   variant="outline"
                   size="icon"
@@ -141,7 +145,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
           )}
         </TabsContent>
 
-        <TabsContent value="likes" className="flex-1 mt-0">
+        <TabsContent value="likes" className="flex-1 min-h-0 mt-0">
           <LikedProfilesList 
             likedUserIds={likedProfiles} 
             onStartChat={onStartChat}
