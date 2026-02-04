@@ -52,8 +52,12 @@ registerRoute(
 // PUSH NOTIFICATION HANDLING
 // ============================================
 
+// Log when SW is activated to confirm push handling is ready
+console.log('[SW] Service Worker activated with push notification support');
+
 self.addEventListener('push', function(event: PushEvent) {
-  console.log('[SW] Push notification received', event);
+  console.log('[SW] Push notification received at', new Date().toISOString());
+  console.log('[SW] Push event data:', event.data ? 'present' : 'empty');
   
   let data = {
     title: 'GayConnect',
