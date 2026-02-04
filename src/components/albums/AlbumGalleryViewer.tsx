@@ -5,6 +5,8 @@ import { X, ChevronLeft, ChevronRight, Play, Pause, Trash2, ZoomIn, ZoomOut, Ale
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
+import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
+import SecureMediaContainer from '@/components/security/SecureMediaContainer';
 interface AlbumMedia {
   id: string;
   media_url: string;
@@ -49,10 +51,11 @@ const AlbumGalleryViewer = ({
   const [videoPlaying, setVideoPlaying] = useState<string | null>(null);
   const [zoomState, setZoomState] = useState<ZoomState>({ scale: 1, x: 0, y: 0 });
   
-  // Screenshot protection with mobile detection
+  // Screenshot protection with mobile detection + preventive blur
   const {
     isSuspended,
     isBlocked,
+    showPreventiveBlur,
     getSuspensionTimeLeft,
     preventContextMenu,
     preventDrag,
@@ -337,6 +340,12 @@ const AlbumGalleryViewer = ({
         data-protected="true"
         onContextMenu={preventContextMenu}
       >
+        {/* Banking-style protection overlay */}
+        <ScreenshotProtectionOverlay 
+          isActive={showPreventiveBlur || isBlocked}
+          isSuspended={isSuspended}
+          suspensionTimeLeft={getSuspensionTimeLeft()}
+        />
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
           <Button

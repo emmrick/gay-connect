@@ -4,6 +4,7 @@ import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity, Check 
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
 
 interface EphemeralMediaViewerProps {
   isOpen: boolean;
@@ -37,7 +38,8 @@ const EphemeralMediaViewer = ({
   const [hasSaved, setHasSaved] = useState(false);
   const { 
     isSuspended, 
-    isBlocked, 
+    isBlocked,
+    showPreventiveBlur,
     preventContextMenu, 
     getSuspensionTimeLeft,
     handleViolation,
@@ -359,6 +361,12 @@ const EphemeralMediaViewer = ({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Banking-style protection overlay */}
+        <ScreenshotProtectionOverlay 
+          isActive={showPreventiveBlur || isBlocked}
+          isSuspended={false}
+        />
 
         {/* Viewing state with protection */}
         <AnimatePresence>
