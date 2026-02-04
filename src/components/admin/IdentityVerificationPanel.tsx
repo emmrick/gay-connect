@@ -15,7 +15,11 @@ import {
   Clock,
   User,
   Trash2,
-  Euro
+  Euro,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Maximize2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -42,6 +46,14 @@ interface VerificationWithProfile {
   } | null;
 }
 
+interface ImageViewerState {
+  isOpen: boolean;
+  imageUrl: string | null;
+  title: string;
+  zoom: number;
+  rotation: number;
+}
+
 const IdentityVerificationPanel = () => {
   const { pendingVerifications, isLoading, markAsViewed, reportScreenshot, approveVerification, rejectVerification } = useAdminVerifications();
   const [selectedVerification, setSelectedVerification] = useState<VerificationWithProfile | null>(null);
@@ -55,11 +67,51 @@ const IdentityVerificationPanel = () => {
     idFront: string | null;
     idBack: string | null;
   }>({ selfie: null, idFront: null, idBack: null });
+  const [imageViewer, setImageViewer] = useState<ImageViewerState>({
+    isOpen: false,
+    imageUrl: null,
+    title: '',
+    zoom: 1,
+    rotation: 0,
+  });
   
   const recordEarning = useRecordEarning();
   const logAction = useLogModerationAction();
   const { data: taskRates } = useTaskRates();
   const verificationRate = taskRates?.find(r => r.task_type === 'identity_verification')?.rate_cents || 50;
+
+  // Image viewer functions
+  const openImageViewer = (url: string, title: string) => {
+    setImageViewer({
+      isOpen: true,
+      imageUrl: url,
+      title,
+      zoom: 1,
+      rotation: 0,
+    });
+  };
+
+  const closeImageViewer = () => {
+    setImageViewer({
+      isOpen: false,
+      imageUrl: null,
+      title: '',
+      zoom: 1,
+      rotation: 0,
+    });
+  };
+
+  const handleZoomIn = () => {
+    setImageViewer(prev => ({ ...prev, zoom: Math.min(prev.zoom + 0.5, 4) }));
+  };
+
+  const handleZoomOut = () => {
+    setImageViewer(prev => ({ ...prev, zoom: Math.max(prev.zoom - 0.5, 0.5) }));
+  };
+
+  const handleRotate = () => {
+    setImageViewer(prev => ({ ...prev, rotation: (prev.rotation + 90) % 360 }));
+  };
 
   // Screenshot detection for admin
   const detectScreenshot = useCallback(() => {
@@ -352,14 +404,22 @@ const IdentityVerificationPanel = () => {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-center">Selfie</p>
-                      <div className="aspect-square bg-secondary rounded-xl overflow-hidden">
+                      <div 
+                        className="aspect-square bg-secondary rounded-xl overflow-hidden cursor-pointer relative group"
+                        onClick={() => signedUrls.selfie && openImageViewer(signedUrls.selfie, 'Selfie')}
+                      >
                         {signedUrls.selfie ? (
-                          <img 
-                            src={signedUrls.selfie} 
-                            alt="Selfie" 
-                            className="w-full h-full object-cover pointer-events-none"
-                            draggable={false}
-                          />
+                          <>
+                            <img 
+                              src={signedUrls.selfie} 
+                              alt="Selfie" 
+                              className="w-full h-full object-cover pointer-events-none"
+                              draggable={false}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Maximize2 className="w-6 h-6 text-white" />
+                            </div>
+                          </>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Loader2 className="w-6 h-6 animate-spin" />
@@ -369,14 +429,22 @@ const IdentityVerificationPanel = () => {
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-center">Recto ID</p>
-                      <div className="aspect-square bg-secondary rounded-xl overflow-hidden">
+                      <div 
+                        className="aspect-square bg-secondary rounded-xl overflow-hidden cursor-pointer relative group"
+                        onClick={() => signedUrls.idFront && openImageViewer(signedUrls.idFront, 'Recto ID')}
+                      >
                         {signedUrls.idFront ? (
-                          <img 
-                            src={signedUrls.idFront} 
-                            alt="ID Recto" 
-                            className="w-full h-full object-cover pointer-events-none"
-                            draggable={false}
-                          />
+                          <>
+                            <img 
+                              src={signedUrls.idFront} 
+                              alt="ID Recto" 
+                              className="w-full h-full object-cover pointer-events-none"
+                              draggable={false}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Maximize2 className="w-6 h-6 text-white" />
+                            </div>
+                          </>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Loader2 className="w-6 h-6 animate-spin" />
@@ -386,14 +454,22 @@ const IdentityVerificationPanel = () => {
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-center">Verso ID</p>
-                      <div className="aspect-square bg-secondary rounded-xl overflow-hidden">
+                      <div 
+                        className="aspect-square bg-secondary rounded-xl overflow-hidden cursor-pointer relative group"
+                        onClick={() => signedUrls.idBack && openImageViewer(signedUrls.idBack, 'Verso ID')}
+                      >
                         {signedUrls.idBack ? (
-                          <img 
-                            src={signedUrls.idBack} 
-                            alt="ID Verso" 
-                            className="w-full h-full object-cover pointer-events-none"
-                            draggable={false}
-                          />
+                          <>
+                            <img 
+                              src={signedUrls.idBack} 
+                              alt="ID Verso" 
+                              className="w-full h-full object-cover pointer-events-none"
+                              draggable={false}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Maximize2 className="w-6 h-6 text-white" />
+                            </div>
+                          </>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Loader2 className="w-6 h-6 animate-spin" />
@@ -401,6 +477,11 @@ const IdentityVerificationPanel = () => {
                         )}
                       </div>
                     </div>
+                  </div>
+
+                  <div className="bg-primary/10 rounded-xl p-3 text-xs text-center flex items-center justify-center gap-2">
+                    <Maximize2 className="w-4 h-4" />
+                    Cliquez sur une image pour l'agrandir et zoomer
                   </div>
 
                   <div className="bg-muted/50 rounded-xl p-3 text-xs text-muted-foreground text-center">
@@ -481,6 +562,90 @@ const IdentityVerificationPanel = () => {
                   'Confirmer le refus'
                 )}
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Viewer Dialog */}
+      <Dialog open={imageViewer.isOpen} onOpenChange={(open) => !open && closeImageViewer()}>
+        <DialogContent 
+          className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 bg-black/95 border-none"
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <div className="relative w-full h-full flex flex-col">
+            {/* Header */}
+            <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent">
+              <div className="flex items-center gap-3">
+                <h3 className="text-white font-medium">{imageViewer.title}</h3>
+                <Badge variant="secondary" className="bg-white/20 text-white">
+                  Zoom: {Math.round(imageViewer.zoom * 100)}%
+                </Badge>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeImageViewer}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Image */}
+            <div 
+              className="flex-1 flex items-center justify-center overflow-auto p-8 pt-16 pb-20"
+              style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+            >
+              {imageViewer.imageUrl && (
+                <img
+                  src={imageViewer.imageUrl}
+                  alt={imageViewer.title}
+                  className="max-w-none transition-transform duration-200 pointer-events-none select-none"
+                  style={{
+                    transform: `scale(${imageViewer.zoom}) rotate(${imageViewer.rotation}deg)`,
+                  }}
+                  draggable={false}
+                />
+              )}
+            </div>
+
+            {/* Controls */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center gap-2 p-4 bg-gradient-to-t from-black/80 to-transparent">
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={handleZoomOut}
+                disabled={imageViewer.zoom <= 0.5}
+                className="bg-white/20 hover:bg-white/30 text-white border-none"
+              >
+                <ZoomOut className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={handleZoomIn}
+                disabled={imageViewer.zoom >= 4}
+                className="bg-white/20 hover:bg-white/30 text-white border-none"
+              >
+                <ZoomIn className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={handleRotate}
+                className="bg-white/20 hover:bg-white/30 text-white border-none"
+              >
+                <RotateCw className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Warning */}
+            <div className="absolute bottom-16 left-0 right-0 flex justify-center">
+              <div className="bg-destructive/80 text-white text-xs px-3 py-1 rounded-full flex items-center gap-2">
+                <AlertTriangle className="w-3 h-3" />
+                Captures d'écran détectées et signalées
+              </div>
             </div>
           </div>
         </DialogContent>
