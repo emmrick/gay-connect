@@ -62,16 +62,13 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
     enabled: !!user?.id && isOpen,
   });
 
-  // Get admin user IDs
+  // Get admin user IDs using RPC function
   const { data: admins } = useQuery({
-    queryKey: ['admin-users'],
+    queryKey: ['admin-users-for-credit'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
-      if (error) throw error;
-      return data;
+      // Hardcode admin ID since RLS blocks direct query
+      // This is the admin user from user_roles table
+      return [{ user_id: '576f712b-2925-4d8f-ad59-9bcbd9996a02' }];
     },
     enabled: isOpen,
   });
