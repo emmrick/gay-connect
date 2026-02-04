@@ -64,6 +64,16 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   // Track if this is the initial load
   const isInitialLoad = useRef(true);
   const previousMessagesLength = useRef(0);
+  const previousOtherUserId = useRef(otherUserId);
+
+  // Reset initial load when changing conversation
+  useEffect(() => {
+    if (previousOtherUserId.current !== otherUserId) {
+      isInitialLoad.current = true;
+      previousMessagesLength.current = 0;
+      previousOtherUserId.current = otherUserId;
+    }
+  }, [otherUserId]);
 
   // Auto-scroll to bottom on initial load or new messages
   useEffect(() => {
@@ -86,7 +96,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           scrollToBottom(true);
           isInitialLoad.current = false;
           previousMessagesLength.current = messages.length;
-        }, 150);
+        }, 200);
       });
     } else if (!isInitialLoad.current && messages.length > previousMessagesLength.current) {
       // New message received - smooth scroll
