@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
-  MapPin, Calendar, Edit2, Crown, Sparkles, Star, Heart,
+  MapPin, Calendar, Edit2, Sparkles, Star, Heart,
   MessageCircle, Users, Camera, Verified
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -17,6 +17,7 @@ import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
 import ProfileReactions from './ProfileReactions';
 import ProfileSettingsDrawer from './ProfileSettingsDrawer';
+import ProfileAlbumsSection from './ProfileAlbumsSection';
 import { motion } from 'framer-motion';
 
 // Labels
@@ -171,8 +172,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                 {isAdminUser && (
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-sm text-xs">
-                    <Crown className="w-3 h-3 mr-1" />
-                    Admin
+                    ⚡ Admin
                   </Badge>
                 )}
                 {/* Removed Premium badge - credits system is now used */}
@@ -279,6 +279,16 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
             </Card>
           </motion.div>
         )}
+
+        {/* Albums Section */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mt-3"
+        >
+          <ProfileAlbumsSection />
+        </motion.div>
       </div>
 
       {/* Stats Grid */}
