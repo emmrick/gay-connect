@@ -20,7 +20,7 @@ import {
   Activity,
   Bot,
   ShoppingCart,
-  X
+  Camera
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -72,6 +72,7 @@ const navItems: NavItem[] = [
   { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
   { id: 'verification', label: 'Vérifications', icon: IdCard, group: 'moderation' },
+  { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation' },
   { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
   
   // Paramètres

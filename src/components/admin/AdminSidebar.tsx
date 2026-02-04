@@ -18,7 +18,8 @@ import {
   Bell,
   Activity,
   Bot,
-  ShoppingCart
+  ShoppingCart,
+  Camera
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,8 @@ export type AdminSection =
   | 'credits-surveillance'
   | 'credit-purchases'
   | 'broadcast'
-  | 'ai-moderation';
+  | 'ai-moderation'
+  | 'screenshot-sanctions';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -82,6 +84,7 @@ const navItems: NavItem[] = [
   { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
   { id: 'verification', label: 'Vérifications', icon: IdCard, group: 'moderation' },
+  { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation' },
   { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
   
   // Paramètres

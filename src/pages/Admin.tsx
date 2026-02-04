@@ -49,6 +49,7 @@ import CreditsSurveillancePanel from '@/components/admin/CreditsSurveillancePane
 import CreditPurchaseRequestsPanel from '@/components/admin/CreditPurchaseRequestsPanel';
 import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
 import AIModerationPanel from '@/components/admin/AIModerationPanel';
+import ScreenshotSanctionsPanel from '@/components/admin/ScreenshotSanctionsPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
@@ -254,6 +255,9 @@ const Admin = () => {
       
       case 'ai-moderation':
         return <AIModerationPanel />;
+      
+      case 'screenshot-sanctions':
+        return <ScreenshotSanctionsPanel />;
       
       default:
         return null;
