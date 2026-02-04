@@ -3,6 +3,7 @@ import { CreditCard, Check, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useIsAdmin } from '@/hooks/useAdmin';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -46,6 +47,7 @@ const REJECTION_REASONS = [
 
 const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditRequestMessageProps) => {
   const { data: isAdmin } = useIsAdmin();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [credited, setCredited] = useState(false);
@@ -58,6 +60,10 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
     requestData = JSON.parse(content);
   } catch {
     // Content might be the old format (formatted text)
+  }
+
+  // Fallback render for old format or parse error
+  if (!requestData) {
     return (
       <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 max-w-xs">
         <div className="flex items-center gap-2 mb-2">
@@ -84,14 +90,17 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
 
       if (error) throw error;
 
-      // Send confirmation message to the user
-      await supabase.from('messages').insert({
-        sender_id: senderId,
-        recipient_id: requestData.userId,
-        content: `✅ Votre demande de crédits a été approuvée ! ${credits} crédits ont été ajoutés à votre compte.`,
-        message_type: 'text',
-        is_private: true,
-      });
+      // Send confirmation message to the user from the admin
+      const adminId = user?.id;
+      if (adminId) {
+        await supabase.from('messages').insert({
+          sender_id: adminId,
+          recipient_id: requestData.userId,
+          content: `✅ Votre demande de crédits a été approuvée ! ${credits} crédits ont été ajoutés à votre compte.`,
+          message_type: 'text',
+          is_private: true,
+        });
+      }
 
       setCredited(true);
       toast.success(`${credits} crédits attribués à ${requestData.username} !`);
@@ -108,16 +117,24 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
   const handleRejectCredit = async (reason: string) => {
     if (!requestData) return;
     
+    const adminId = user?.id;
+    if (!adminId) {
+      toast.error('Erreur: utilisateur non connecté');
+      return;
+    }
+    
     setIsProcessing(true);
     try {
-      // Send rejection message to the user
-      await supabase.from('messages').insert({
-        sender_id: senderId,
+      // Send rejection message to the user from the admin
+      const { error } = await supabase.from('messages').insert({
+        sender_id: adminId,
         recipient_id: requestData.userId,
         content: `❌ Votre demande de crédits a été refusée.\n\n📋 Motif : ${reason}\n\nSi vous pensez qu'il s'agit d'une erreur, veuillez nous recontacter avec plus de détails sur votre paiement.`,
         message_type: 'text',
         is_private: true,
       });
+
+      if (error) throw error;
 
       setRejected(true);
       setRejectionReason(reason);
