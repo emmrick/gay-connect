@@ -51,6 +51,7 @@ interface AdminSidebarProps {
   pendingReports?: number;
   blockedCount?: number;
   pendingPurchases?: number;
+  pendingVerifications?: number;
 }
 
 interface NavItem {
@@ -100,7 +101,8 @@ const AdminSidebar = ({
   onSectionChange, 
   pendingReports = 0,
   blockedCount = 0,
-  pendingPurchases = 0 
+  pendingPurchases = 0,
+  pendingVerifications = 0 
 }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -108,6 +110,7 @@ const AdminSidebar = ({
     if (id === 'reports' && pendingReports > 0) return pendingReports;
     if (id === 'blocked' && blockedCount > 0) return blockedCount;
     if (id === 'credit-purchases' && pendingPurchases > 0) return pendingPurchases;
+    if (id === 'verification' && pendingVerifications > 0) return pendingVerifications;
     return undefined;
   };
 

@@ -41,6 +41,7 @@ interface AdminMobileNavProps {
   pendingReports?: number;
   blockedCount?: number;
   pendingPurchases?: number;
+  pendingVerifications?: number;
 }
 
 interface NavItem {
@@ -97,7 +98,8 @@ const AdminMobileNav = ({
   onSectionChange, 
   pendingReports = 0,
   blockedCount = 0,
-  pendingPurchases = 0 
+  pendingPurchases = 0,
+  pendingVerifications = 0 
 }: AdminMobileNavProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -105,6 +107,7 @@ const AdminMobileNav = ({
     if (id === 'reports' && pendingReports > 0) return pendingReports;
     if (id === 'blocked' && blockedCount > 0) return blockedCount;
     if (id === 'credit-purchases' && pendingPurchases > 0) return pendingPurchases;
+    if (id === 'verification' && pendingVerifications > 0) return pendingVerifications;
     return undefined;
   };
 
@@ -122,7 +125,7 @@ const AdminMobileNav = ({
     setSheetOpen(false);
   };
 
-  const totalBadges = pendingReports + blockedCount + pendingPurchases;
+  const totalBadges = pendingReports + blockedCount + pendingPurchases + pendingVerifications;
 
   return (
     <div className="sticky top-0 z-50 bg-background border-b border-border">
