@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { 
-  MessageCircle, 
   Loader2, 
   Send,
   CreditCard,
   User,
   Mail,
   MapPin,
-  Calendar
+  Calendar,
+  Lock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,18 +40,47 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;
   
-  // Form state
+  // Form state - only editable fields
   const [last4Digits, setLast4Digits] = useState('');
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [age, setAge] = useState('');
-  const [department, setDepartment] = useState('');
+  const [paymentEmail, setPaymentEmail] = useState('');
+
+  // Fetch user profile for auto-fill
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile-credit-issue', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, age, region')
+        .eq('user_id', user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id && isOpen,
+  });
+
+  // Get admin user IDs
+  const { data: admins } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+      if (error) throw error;
+      return data;
+    },
+    enabled: isOpen,
+  });
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.id) throw new Error('Not authenticated');
+      if (!user?.id) throw new Error('Non authentifié');
+      if (!profile) throw new Error('Profil non trouvé');
+      if (!admins || admins.length === 0) throw new Error('Aucun administrateur disponible');
 
       // Validate required fields
       if (!last4Digits || last4Digits.length !== 4) {
@@ -59,56 +88,63 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
       }
       if (!lastName.trim()) throw new Error('Veuillez entrer votre nom');
       if (!firstName.trim()) throw new Error('Veuillez entrer votre prénom');
-      if (!email.trim()) throw new Error('Veuillez entrer votre adresse mail');
-      if (!username.trim()) throw new Error('Veuillez entrer votre pseudonyme');
-      if (!age.trim()) throw new Error('Veuillez entrer votre âge');
-      if (!department.trim()) throw new Error('Veuillez entrer votre département');
+      if (!paymentEmail.trim()) throw new Error('Veuillez entrer votre adresse mail de paiement');
 
-      // Create a notification/report for admins
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: user.id,
-          type: 'credit_issue_report',
-          title: '💳 Demande de crédit - Paiement effectué',
-          message: `Réclamation achat crédits:\n\n` +
-            `📋 Informations de paiement:\n` +
-            `• 4 derniers chiffres CB: ${last4Digits}\n` +
-            `• Nom: ${lastName}\n` +
-            `• Prénom: ${firstName}\n` +
-            `• Email: ${email}\n\n` +
-            `📱 Compte GayConnect:\n` +
-            `• Pseudonyme: ${username}\n` +
-            `• Âge: ${age} ans\n` +
-            `• Département: ${department}`,
-          is_read: false,
-        });
+      // Format the special credit pending message
+      const creditRequestMessage = 
+        `💳 DEMANDE DE CRÉDITS EN ATTENTE\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `📋 Informations de paiement:\n` +
+        `• 4 derniers chiffres CB: ${last4Digits}\n` +
+        `• Nom: ${lastName}\n` +
+        `• Prénom: ${firstName}\n` +
+        `• Email paiement: ${paymentEmail}\n\n` +
+        `📱 Compte GayConnect:\n` +
+        `• Pseudonyme: ${profile.username}\n` +
+        `• Âge: ${profile.age || 'Non renseigné'} ans\n` +
+        `• Département: ${profile.region || 'Non renseigné'}\n` +
+        `• User ID: ${user.id}`;
 
-      if (error) throw error;
+      // Send private message to all admins
+      const messagePromises = admins.map(async (admin) => {
+        // First, get or create a private conversation
+        const { data: existingConvo } = await supabase
+          .from('private_conversations')
+          .select('id')
+          .or(`and(user1_id.eq.${user.id},user2_id.eq.${admin.user_id}),and(user1_id.eq.${admin.user_id},user2_id.eq.${user.id})`)
+          .maybeSingle();
 
-      // Also insert into a dedicated table for better tracking (using reports)
-      const { error: reportError } = await supabase
-        .from('reports')
-        .insert({
-          reporter_id: user.id,
-          reported_user_id: user.id, // Self-report for credit issue
-          reason: 'other',
-          report_type: 'credit_purchase_issue',
-          description: JSON.stringify({
-            last4Digits,
-            lastName,
-            firstName,
-            email,
-            username,
-            age,
-            department,
-          }),
-          status: 'pending',
-        });
+        let conversationId = existingConvo?.id;
 
-      if (reportError) {
-        console.warn('Could not create detailed report:', reportError);
-      }
+        if (!conversationId) {
+          const { data: newConvo, error: convoError } = await supabase
+            .from('private_conversations')
+            .insert({
+              user1_id: user.id,
+              user2_id: admin.user_id,
+            })
+            .select('id')
+            .single();
+          
+          if (convoError) throw convoError;
+          conversationId = newConvo.id;
+        }
+
+        // Send the message
+        const { error: msgError } = await supabase
+          .from('messages')
+          .insert({
+            sender_id: user.id,
+            recipient_id: admin.user_id,
+            content: creditRequestMessage,
+            message_type: 'credit_request',
+            is_private: true,
+          });
+
+        if (msgError) throw msgError;
+      });
+
+      await Promise.all(messagePromises);
     },
     onSuccess: () => {
       toast.success('Demande envoyée !', {
@@ -119,10 +155,7 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
       setLast4Digits('');
       setLastName('');
       setFirstName('');
-      setEmail('');
-      setUsername('');
-      setAge('');
-      setDepartment('');
+      setPaymentEmail('');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erreur lors de l\'envoi');
@@ -131,36 +164,36 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" className="gap-2 w-full">
-            <MessageCircle className="w-4 h-4" />
-            J'ai payé mais pas reçu mes crédits
-          </Button>
-        )}
-      </DialogTrigger>
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
 
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-primary" />
-            Signaler un problème d'achat
+            Signaler un achat de crédits
           </DialogTitle>
           <DialogDescription>
-            Remplissez ce formulaire pour nous aider à identifier votre paiement et créditer votre compte.
+            Remplissez les informations de paiement pour nous aider à attribuer vos crédits.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Payment Information Section */}
           <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-            <p className="text-sm font-medium text-amber-600 mb-2">📋 Informations de paiement</p>
+            <p className="text-sm font-medium text-amber-600">📋 Informations de paiement</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Ces informations nous permettent de retrouver votre transaction.
+            </p>
           </div>
 
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <CreditCard className="w-4 h-4" />
-              4 derniers chiffres de votre carte bancaire
+              4 derniers chiffres de votre carte bancaire *
             </Label>
             <Input
               type="text"
@@ -175,19 +208,21 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Nom</Label>
+              <Label>Nom *</Label>
               <Input
                 placeholder="Dupont"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                maxLength={50}
               />
             </div>
             <div className="space-y-2">
-              <Label>Prénom</Label>
+              <Label>Prénom *</Label>
               <Input
                 placeholder="Jean"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
+                maxLength={50}
               />
             </div>
           </div>
@@ -195,65 +230,60 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
-              Adresse mail
+              Adresse mail utilisée pour le paiement *
             </Label>
             <Input
               type="email"
               placeholder="jean.dupont@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={paymentEmail}
+              onChange={(e) => setPaymentEmail(e.target.value)}
+              maxLength={100}
             />
           </div>
 
-          {/* Account Information Section */}
+          {/* Account Information Section - Auto-filled and Read-only */}
           <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
-            <p className="text-sm font-medium text-primary mb-2">📱 Votre compte GayConnect</p>
+            <p className="text-sm font-medium text-primary flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Votre compte (rempli automatiquement)
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
+            <Label className="flex items-center gap-2 text-muted-foreground">
               <User className="w-4 h-4" />
-              Pseudonyme (nom sur le site)
+              Pseudonyme
             </Label>
             <Input
-              placeholder="MonPseudo"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={profile?.username || ''}
+              disabled
+              className="bg-muted"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="flex items-center gap-2">
+              <Label className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="w-4 h-4" />
                 Âge
               </Label>
               <Input
-                type="number"
-                min="18"
-                max="99"
-                placeholder="25"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
+                value={profile?.age ? `${profile.age} ans` : 'Non renseigné'}
+                disabled
+                className="bg-muted"
               />
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-2">
+              <Label className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
                 Département
               </Label>
               <Input
-                placeholder="75 - Paris"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
+                value={profile?.region || 'Non renseigné'}
+                disabled
+                className="bg-muted"
               />
             </div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-            <p className="text-xs text-muted-foreground">
-              Ces informations nous permettent de vérifier votre paiement et de créditer le bon compte. Vos données sont traitées de manière confidentielle.
-            </p>
           </div>
         </div>
 
@@ -263,7 +293,7 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
           </Button>
           <Button
             onClick={() => submitMutation.mutate()}
-            disabled={submitMutation.isPending}
+            disabled={submitMutation.isPending || !profile}
             className="gap-2"
           >
             {submitMutation.isPending ? (
