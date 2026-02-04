@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { CreditCard, Check, Loader2 } from 'lucide-react';
+import { CreditCard, Check, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface CreditRequestData {
   last4Digits: string;
@@ -21,6 +27,7 @@ interface CreditRequestData {
 interface CreditRequestMessageProps {
   content: string;
   senderId: string;
+  recipientId?: string;
   isOwn: boolean;
 }
 
@@ -29,11 +36,21 @@ const CREDIT_OPTIONS = [
   { credits: 250, label: '250 crédits', price: '10,99€' },
 ];
 
-const CreditRequestMessage = ({ content, senderId, isOwn }: CreditRequestMessageProps) => {
+const REJECTION_REASONS = [
+  'Transaction refusée par votre banque',
+  'Approvisionnement insuffisant',
+  'Paiement non trouvé dans nos systèmes',
+  'Informations bancaires incorrectes',
+  'Paiement expiré ou annulé',
+];
+
+const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditRequestMessageProps) => {
   const { data: isAdmin } = useIsAdmin();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [credited, setCredited] = useState(false);
+  const [rejected, setRejected] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
 
   // Parse the credit request data from content
   let requestData: CreditRequestData | null = null;
@@ -67,12 +84,48 @@ const CreditRequestMessage = ({ content, senderId, isOwn }: CreditRequestMessage
 
       if (error) throw error;
 
+      // Send confirmation message to the user
+      await supabase.from('messages').insert({
+        sender_id: senderId,
+        recipient_id: requestData.userId,
+        content: `✅ Votre demande de crédits a été approuvée ! ${credits} crédits ont été ajoutés à votre compte.`,
+        message_type: 'text',
+        is_private: true,
+      });
+
       setCredited(true);
       toast.success(`${credits} crédits attribués à ${requestData.username} !`);
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
+      queryClient.invalidateQueries({ queryKey: ['private-messages'] });
     } catch (error) {
       console.error('Error crediting user:', error);
       toast.error('Erreur lors de l\'attribution des crédits');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRejectCredit = async (reason: string) => {
+    if (!requestData) return;
+    
+    setIsProcessing(true);
+    try {
+      // Send rejection message to the user
+      await supabase.from('messages').insert({
+        sender_id: senderId,
+        recipient_id: requestData.userId,
+        content: `❌ Votre demande de crédits a été refusée.\n\n📋 Motif : ${reason}\n\nSi vous pensez qu'il s'agit d'une erreur, veuillez nous recontacter avec plus de détails sur votre paiement.`,
+        message_type: 'text',
+        is_private: true,
+      });
+
+      setRejected(true);
+      setRejectionReason(reason);
+      toast.success('Message de refus envoyé');
+      queryClient.invalidateQueries({ queryKey: ['private-messages'] });
+    } catch (error) {
+      console.error('Error rejecting credit request:', error);
+      toast.error('Erreur lors de l\'envoi du message de refus');
     } finally {
       setIsProcessing(false);
     }
@@ -102,7 +155,7 @@ const CreditRequestMessage = ({ content, senderId, isOwn }: CreditRequestMessage
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Email:</span>
-          <span className="font-medium text-xs truncate max-w-[150px]">{requestData.paymentEmail}</span>
+          <span className="font-medium text-xs truncate max-w-[180px]">{requestData.paymentEmail}</span>
         </div>
       </div>
 
@@ -126,7 +179,7 @@ const CreditRequestMessage = ({ content, senderId, isOwn }: CreditRequestMessage
       </div>
 
       {/* Admin Action Buttons */}
-      {isAdmin && !isOwn && !credited && (
+      {isAdmin && !isOwn && !credited && !rejected && (
         <div className="space-y-2 mt-4">
           <p className="text-xs text-muted-foreground mb-2">Attribuer les crédits :</p>
           <div className="flex gap-2">
@@ -150,6 +203,38 @@ const CreditRequestMessage = ({ content, senderId, isOwn }: CreditRequestMessage
               </Button>
             ))}
           </div>
+          
+          {/* Reject Button */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="w-full text-xs mt-2"
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <>
+                    <X className="w-3 h-3 mr-1" />
+                    Refuser la demande
+                  </>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-64">
+              {REJECTION_REASONS.map((reason) => (
+                <DropdownMenuItem
+                  key={reason}
+                  onClick={() => handleRejectCredit(reason)}
+                  className="text-xs cursor-pointer"
+                >
+                  {reason}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )}
 
@@ -158,6 +243,19 @@ const CreditRequestMessage = ({ content, senderId, isOwn }: CreditRequestMessage
         <div className="flex items-center gap-2 mt-4 p-2 bg-green-500/20 rounded-lg">
           <Check className="w-4 h-4 text-green-600" />
           <span className="text-sm text-green-600 font-medium">Crédits attribués !</span>
+        </div>
+      )}
+
+      {/* Rejected confirmation */}
+      {rejected && (
+        <div className="flex flex-col gap-1 mt-4 p-2 bg-red-500/20 rounded-lg">
+          <div className="flex items-center gap-2">
+            <X className="w-4 h-4 text-red-600" />
+            <span className="text-sm text-red-600 font-medium">Demande refusée</span>
+          </div>
+          {rejectionReason && (
+            <span className="text-xs text-red-500 ml-6">{rejectionReason}</span>
+          )}
         </div>
       )}
     </div>
