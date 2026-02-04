@@ -380,6 +380,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       />
                     ) : isCreditRequest ? (
                       <CreditRequestMessage
+                        messageId={message.id}
                         content={message.content || ''}
                         senderId={message.sender_id}
                         isOwn={isOwn}
