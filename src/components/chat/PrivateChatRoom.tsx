@@ -43,7 +43,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
   const unblockUser = useUnblockUserAction();
   const { isOtherTyping, startTyping, stopTyping } = usePrivateTypingIndicator(otherUserId);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
@@ -444,7 +443,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               </div>
             )}
             
-            <div ref={scrollRef} />
+            
           </div>
         )}
 
