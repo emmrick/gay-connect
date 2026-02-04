@@ -83,12 +83,28 @@ export const usePrivateTypingIndicator = (otherUserId: string | null) => {
     };
   }, [conversationKey, user?.id]);
 
-  const startTyping = useCallback(async () => {
+  const startTyping = useCallback(async (hasText: boolean = true) => {
     if (!conversationKey || !user?.id || !profile?.username) return;
 
     // Clear existing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
+    }
+
+    // If no text, stop typing immediately
+    if (!hasText) {
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        console.log('[Typing] No text - stopping typing');
+        
+        const channel = supabase.channel(`typing-broadcast-${conversationKey}`);
+        await channel.send({
+          type: 'broadcast',
+          event: 'stop_typing',
+          payload: { user_id: user.id },
+        });
+      }
+      return;
     }
 
     // Only broadcast if not already typing
@@ -105,17 +121,10 @@ export const usePrivateTypingIndicator = (otherUserId: string | null) => {
       });
     }
 
-    // Set timeout to stop typing after 3 seconds of no activity
+    // Set timeout to refresh typing indicator (keep alive) - still shows as typing if text present
     typingTimeoutRef.current = setTimeout(async () => {
-      console.log('[Typing] Timeout - stopping typing');
-      isTypingRef.current = false;
-      
-      const channel = supabase.channel(`typing-broadcast-${conversationKey}`);
-      await channel.send({
-        type: 'broadcast',
-        event: 'stop_typing',
-        payload: { user_id: user.id },
-      });
+      // Don't auto-stop anymore - will be stopped when text is cleared or message sent
+      console.log('[Typing] Keepalive timeout');
     }, 3000);
   }, [conversationKey, user?.id, profile?.username]);
 
