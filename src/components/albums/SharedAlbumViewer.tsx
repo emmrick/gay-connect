@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
 
 interface SharedAlbumViewerProps {
   albumId: string;
@@ -244,7 +245,8 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
   
   const { 
     isSuspended, 
-    isBlocked, 
+    isBlocked,
+    showPreventiveBlur,
     getSuspensionTimeLeft, 
     preventContextMenu, 
     preventDrag,
@@ -520,12 +522,12 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
             className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
             onContextMenu={preventContextMenu}
           >
-            {/* Screenshot block overlay in fullscreen */}
-            {isBlocked && (
-              <div className="absolute inset-0 z-[101] bg-black flex items-center justify-center">
-                <p className="text-white text-lg font-medium">Capture détectée</p>
-              </div>
-            )}
+            {/* Banking-style protection overlay */}
+            <ScreenshotProtectionOverlay 
+              isActive={showPreventiveBlur || isBlocked}
+              isSuspended={isSuspended}
+              suspensionTimeLeft={getSuspensionTimeLeft()}
+            />
             
             {/* Header with close button and counter */}
             <div className="absolute top-0 left-0 right-0 z-[102] flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">

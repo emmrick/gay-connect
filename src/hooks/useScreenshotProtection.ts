@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMobileScreenshotDetection } from './useMobileScreenshotDetection';
+import { usePreventiveScreenshotBlur } from './usePreventiveScreenshotBlur';
 import { enableScreenshotProtection, disableScreenshotProtection } from '@/plugins/ScreenshotBlocker';
 
 interface ScreenshotViolation {
@@ -14,6 +15,7 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isBlocked, setIsBlocked] = useState(false);
+  const [showPreventiveBlur, setShowPreventiveBlur] = useState(false);
   const blockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isProtectionActive, setIsProtectionActive] = useState(false);
 
@@ -130,6 +132,18 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
     },
   });
 
+  // Use preventive blur (banking-style frame detection)
+  const { showProtection: preventiveBlurActive } = usePreventiveScreenshotBlur({
+    enabled: isProtectionActive,
+    onThreatDetected: () => {
+      console.log('[ScreenshotProtection] Preventive blur triggered!');
+      setShowPreventiveBlur(true);
+      handleViolation();
+      // Reset after a delay
+      setTimeout(() => setShowPreventiveBlur(false), 2000);
+    },
+  });
+
   // Enable/disable native screenshot blocking (Capacitor)
   const enableProtection = useCallback(async () => {
     setIsProtectionActive(true);
@@ -229,10 +243,14 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
     return `${minutes} minutes`;
   }, [dbViolation?.suspended_until]);
 
+  // Combined blocked state (either blocked or preventive blur is active)
+  const isVisuallyBlocked = isBlocked || showPreventiveBlur || preventiveBlurActive;
+
   return {
     isSuspended: isSuspended(),
-    isBlocked,
+    isBlocked: isVisuallyBlocked,
     isProtectionActive,
+    showPreventiveBlur: showPreventiveBlur || preventiveBlurActive,
     violationCount: dbViolation?.violation_count || 0,
     suspendedUntil: dbViolation?.suspended_until ? new Date(dbViolation.suspended_until) : null,
     getSuspensionTimeLeft,
