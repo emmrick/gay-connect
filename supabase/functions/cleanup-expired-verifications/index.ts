@@ -5,8 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// RGPD Compliance: Auto-delete identity documents after 48 hours
-const MAX_RETENTION_HOURS = 48
+// RGPD Compliance: Auto-delete identity documents after 72 hours
+const MAX_RETENTION_HOURS = 72
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -19,14 +19,14 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Calculate the cutoff time (48 hours ago)
+    // Calculate the cutoff time (72 hours ago)
     const cutoffTime = new Date()
     cutoffTime.setHours(cutoffTime.getHours() - MAX_RETENTION_HOURS)
     const cutoffISOString = cutoffTime.toISOString()
 
     console.log(`[RGPD Cleanup] Starting cleanup for verifications submitted before ${cutoffISOString}`)
 
-    // Find pending verifications that have exceeded the 48-hour limit
+    // Find pending verifications that have exceeded the 72-hour limit
     const { data: expiredVerifications, error: fetchError } = await supabase
       .from('identity_verifications')
       .select('id, user_id, selfie_url, id_front_url, id_back_url')
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
           .from('identity_verifications')
           .update({
             status: 'rejected',
-            rejection_reason: 'Délai de traitement dépassé (48h). Veuillez soumettre à nouveau votre demande.',
+            rejection_reason: 'Délai de traitement dépassé (72h). Veuillez soumettre à nouveau votre demande.',
             reviewed_at: new Date().toISOString(),
             documents_deleted: true,
             selfie_url: null,
