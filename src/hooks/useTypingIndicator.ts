@@ -79,12 +79,25 @@ export const useTypingIndicator = (chatRoomId: string | null) => {
     };
   }, [chatRoomId, user?.id]);
 
-  const startTyping = useCallback(async () => {
+  const startTyping = useCallback(async (hasText: boolean = true) => {
     if (!chatRoomId || !user?.id || !profile?.username) return;
 
     // Clear existing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
+    }
+
+    // If no text, stop typing immediately
+    if (!hasText) {
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        await supabase
+          .from('typing_indicators')
+          .delete()
+          .eq('chat_room_id', chatRoomId)
+          .eq('user_id', user.id);
+      }
+      return;
     }
 
     // Only insert if not already typing
@@ -100,14 +113,9 @@ export const useTypingIndicator = (chatRoomId: string | null) => {
         }, { onConflict: 'chat_room_id,user_id' });
     }
 
-    // Set timeout to remove typing indicator after 3 seconds
-    typingTimeoutRef.current = setTimeout(async () => {
-      isTypingRef.current = false;
-      await supabase
-        .from('typing_indicators')
-        .delete()
-        .eq('chat_room_id', chatRoomId)
-        .eq('user_id', user.id);
+    // Set timeout for keep-alive (indicator stays as long as there's text)
+    typingTimeoutRef.current = setTimeout(() => {
+      // Don't auto-remove - will be removed when text is cleared or message sent
     }, 3000);
   }, [chatRoomId, user?.id, profile?.username]);
 

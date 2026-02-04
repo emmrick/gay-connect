@@ -147,8 +147,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
     }
   };
 
-  const handleTyping = () => {
-    startTyping();
+  const handleTyping = (hasText: boolean) => {
+    startTyping(hasText);
   };
 
   const handleSearchNavigate = (direction: 'prev' | 'next') => {

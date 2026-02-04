@@ -14,7 +14,7 @@ interface ChatInputProps {
   recipientId?: string;
   isPrivate?: boolean;
   isSending?: boolean;
-  onTyping?: () => void;
+  onTyping?: (hasText: boolean) => void;
   onFocus?: () => void;
 }
 
@@ -127,7 +127,8 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
       handleTextChange(newValue, cursorPosition);
     }
     
-    onTyping?.();
+    // Pass whether there's text to the typing handler
+    onTyping?.(newValue.trim().length > 0);
   };
 
   const handleInputFocus = () => {
