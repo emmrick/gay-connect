@@ -455,7 +455,7 @@ const CameraCapture = ({
                       autoPlay
                       loop
                       playsInline
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
                     />
                   )}
                 </div>
