@@ -23,6 +23,7 @@ import {
 } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePendingVerifications } from '@/hooks/usePendingVerifications';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -61,6 +62,7 @@ const Admin = () => {
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats } = useReportStats();
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
+  const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<AdminSection>('wallet');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
@@ -269,6 +271,7 @@ const Admin = () => {
           pendingReports={stats?.pending || 0}
           blockedCount={blockedUsers?.length || 0}
           pendingPurchases={pendingPurchasesCount}
+          pendingVerifications={pendingVerificationsCount}
         />
 
         {/* Main Content */}
@@ -300,6 +303,7 @@ const Admin = () => {
         pendingReports={stats?.pending || 0}
         blockedCount={blockedUsers?.length || 0}
         pendingPurchases={pendingPurchasesCount}
+        pendingVerifications={pendingVerificationsCount}
       />
 
       {/* Main Content */}
