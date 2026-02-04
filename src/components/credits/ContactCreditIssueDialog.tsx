@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { 
   Loader2, 
@@ -62,22 +62,13 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
     enabled: !!user?.id && isOpen,
   });
 
-  // Get admin user IDs using RPC function
-  const { data: admins } = useQuery({
-    queryKey: ['admin-users-for-credit'],
-    queryFn: async () => {
-      // Hardcode admin ID since RLS blocks direct query
-      // This is the admin user from user_roles table
-      return [{ user_id: '576f712b-2925-4d8f-ad59-9bcbd9996a02' }];
-    },
-    enabled: isOpen,
-  });
+  // Admin user ID (support account)
+  const ADMIN_USER_ID = '576f712b-2925-4d8f-ad59-9bcbd9996a02';
 
   const submitMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error('Non authentifié');
       if (!profile) throw new Error('Profil non trouvé');
-      if (!admins || admins.length === 0) throw new Error('Aucun administrateur disponible');
 
       // Validate required fields
       if (!last4Digits || last4Digits.length !== 4) {
@@ -87,61 +78,53 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
       if (!firstName.trim()) throw new Error('Veuillez entrer votre prénom');
       if (!paymentEmail.trim()) throw new Error('Veuillez entrer votre adresse mail de paiement');
 
-      // Format the special credit pending message
-      const creditRequestMessage = 
-        `💳 DEMANDE DE CRÉDITS EN ATTENTE\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `📋 Informations de paiement:\n` +
-        `• 4 derniers chiffres CB: ${last4Digits}\n` +
-        `• Nom: ${lastName}\n` +
-        `• Prénom: ${firstName}\n` +
-        `• Email paiement: ${paymentEmail}\n\n` +
-        `📱 Compte GayConnect:\n` +
-        `• Pseudonyme: ${profile.username}\n` +
-        `• Âge: ${profile.age || 'Non renseigné'} ans\n` +
-        `• Département: ${profile.region || 'Non renseigné'}\n` +
-        `• User ID: ${user.id}`;
+      // Format the credit request data as JSON
+      const creditRequestData = {
+        last4Digits,
+        lastName: lastName.trim(),
+        firstName: firstName.trim(),
+        paymentEmail: paymentEmail.trim(),
+        username: profile.username,
+        age: profile.age || 'Non renseigné',
+        region: profile.region || 'Non renseigné',
+        userId: user.id,
+      };
 
-      // Send private message to all admins
-      const messagePromises = admins.map(async (admin) => {
-        // First, get or create a private conversation
-        const { data: existingConvo } = await supabase
+      // First, get or create a private conversation with admin
+      const { data: existingConvo } = await supabase
+        .from('private_conversations')
+        .select('id')
+        .or(`and(user1_id.eq.${user.id},user2_id.eq.${ADMIN_USER_ID}),and(user1_id.eq.${ADMIN_USER_ID},user2_id.eq.${user.id})`)
+        .maybeSingle();
+
+      let conversationId = existingConvo?.id;
+
+      if (!conversationId) {
+        const { data: newConvo, error: convoError } = await supabase
           .from('private_conversations')
-          .select('id')
-          .or(`and(user1_id.eq.${user.id},user2_id.eq.${admin.user_id}),and(user1_id.eq.${admin.user_id},user2_id.eq.${user.id})`)
-          .maybeSingle();
-
-        let conversationId = existingConvo?.id;
-
-        if (!conversationId) {
-          const { data: newConvo, error: convoError } = await supabase
-            .from('private_conversations')
-            .insert({
-              user1_id: user.id,
-              user2_id: admin.user_id,
-            })
-            .select('id')
-            .single();
-          
-          if (convoError) throw convoError;
-          conversationId = newConvo.id;
-        }
-
-        // Send the message
-        const { error: msgError } = await supabase
-          .from('messages')
           .insert({
-            sender_id: user.id,
-            recipient_id: admin.user_id,
-            content: creditRequestMessage,
-            message_type: 'credit_request',
-            is_private: true,
-          });
+            user1_id: user.id,
+            user2_id: ADMIN_USER_ID,
+          })
+          .select('id')
+          .single();
+        
+        if (convoError) throw convoError;
+        conversationId = newConvo.id;
+      }
 
-        if (msgError) throw msgError;
-      });
+      // Send the message with credit_request type
+      const { error: msgError } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: ADMIN_USER_ID,
+          content: JSON.stringify(creditRequestData),
+          message_type: 'credit_request',
+          is_private: true,
+        });
 
-      await Promise.all(messagePromises);
+      if (msgError) throw msgError;
     },
     onSuccess: () => {
       toast.success('Demande envoyée !', {

@@ -24,6 +24,7 @@ import ChatInput from './ChatInput';
 import EphemeralMessage from './EphemeralMessage';
 import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
+import CreditRequestMessage from './CreditRequestMessage';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
@@ -307,6 +308,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && 
                                      message.content && message.content.startsWith('http');
               const isAlbumShare = message.message_type === 'album_share';
+              const isCreditRequest = message.message_type === 'credit_request';
 
               // Parse album share data if applicable
               let albumShareData: { shareId: string; albumId: string; albumName: string; expiresAt: string | null } | null = null;
@@ -358,6 +360,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                         albumName={albumShareData.albumName}
                         expiresAt={albumShareData.expiresAt}
                         sharedByUserId={message.sender_id}
+                        isOwn={isOwn}
+                      />
+                    ) : isCreditRequest ? (
+                      <CreditRequestMessage
+                        content={message.content || ''}
+                        senderId={message.sender_id}
                         isOwn={isOwn}
                       />
                     ) : isEphemeralMedia ? (

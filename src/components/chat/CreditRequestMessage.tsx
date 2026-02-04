@@ -1,0 +1,167 @@
+import { useState } from 'react';
+import { CreditCard, Check, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useIsAdmin } from '@/hooks/useAdmin';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+
+interface CreditRequestData {
+  last4Digits: string;
+  lastName: string;
+  firstName: string;
+  paymentEmail: string;
+  username: string;
+  age: string | number;
+  region: string;
+  userId: string;
+}
+
+interface CreditRequestMessageProps {
+  content: string;
+  senderId: string;
+  isOwn: boolean;
+}
+
+const CREDIT_OPTIONS = [
+  { credits: 100, label: '100 crédits', price: '4,99€' },
+  { credits: 250, label: '250 crédits', price: '10,99€' },
+];
+
+const CreditRequestMessage = ({ content, senderId, isOwn }: CreditRequestMessageProps) => {
+  const { data: isAdmin } = useIsAdmin();
+  const queryClient = useQueryClient();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [credited, setCredited] = useState(false);
+
+  // Parse the credit request data from content
+  let requestData: CreditRequestData | null = null;
+  try {
+    requestData = JSON.parse(content);
+  } catch {
+    // Content might be the old format (formatted text)
+    return (
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 max-w-xs">
+        <div className="flex items-center gap-2 mb-2">
+          <CreditCard className="w-5 h-5 text-amber-600" />
+          <span className="font-semibold text-amber-600">Demande de crédits</span>
+        </div>
+        <p className="text-sm whitespace-pre-wrap">{content}</p>
+      </div>
+    );
+  }
+
+  const handleCreditUser = async (credits: number) => {
+    if (!requestData) return;
+    
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase.rpc('add_credits', {
+        _user_id: requestData.userId,
+        _amount: credits,
+        _credit_type: 'purchased',
+        _transaction_type: 'admin_credit',
+        _description: `Attribution manuelle - ${credits} crédits`,
+      });
+
+      if (error) throw error;
+
+      setCredited(true);
+      toast.success(`${credits} crédits attribués à ${requestData.username} !`);
+      queryClient.invalidateQueries({ queryKey: ['user-credits'] });
+    } catch (error) {
+      console.error('Error crediting user:', error);
+      toast.error('Erreur lors de l\'attribution des crédits');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className={`rounded-xl p-4 max-w-sm ${isOwn ? 'bg-primary/20 border border-primary/30' : 'bg-amber-500/10 border border-amber-500/30'}`}>
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3">
+        <CreditCard className="w-5 h-5 text-amber-600" />
+        <span className="font-semibold text-amber-600 text-sm">💳 Demande de crédits</span>
+      </div>
+
+      {/* Payment Info */}
+      <div className="space-y-1.5 text-sm mb-3">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">4 derniers CB:</span>
+          <span className="font-mono font-medium">{requestData.last4Digits}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Nom:</span>
+          <span className="font-medium">{requestData.lastName}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Prénom:</span>
+          <span className="font-medium">{requestData.firstName}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Email:</span>
+          <span className="font-medium text-xs truncate max-w-[150px]">{requestData.paymentEmail}</span>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-border my-2" />
+
+      {/* Account Info */}
+      <div className="space-y-1.5 text-sm mb-3">
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground">Pseudo:</span>
+          <Badge variant="secondary">{requestData.username}</Badge>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Âge:</span>
+          <span className="font-medium">{requestData.age} ans</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Département:</span>
+          <span className="font-medium">{requestData.region}</span>
+        </div>
+      </div>
+
+      {/* Admin Action Buttons */}
+      {isAdmin && !isOwn && !credited && (
+        <div className="space-y-2 mt-4">
+          <p className="text-xs text-muted-foreground mb-2">Attribuer les crédits :</p>
+          <div className="flex gap-2">
+            {CREDIT_OPTIONS.map((option) => (
+              <Button
+                key={option.credits}
+                size="sm"
+                variant="outline"
+                className="flex-1 text-xs"
+                onClick={() => handleCreditUser(option.credits)}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <>
+                    <CreditCard className="w-3 h-3 mr-1" />
+                    {option.label}
+                  </>
+                )}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Credited confirmation */}
+      {credited && (
+        <div className="flex items-center gap-2 mt-4 p-2 bg-green-500/20 rounded-lg">
+          <Check className="w-4 h-4 text-green-600" />
+          <span className="text-sm text-green-600 font-medium">Crédits attribués !</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CreditRequestMessage;
