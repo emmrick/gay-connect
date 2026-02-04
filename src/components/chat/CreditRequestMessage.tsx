@@ -23,9 +23,14 @@ interface CreditRequestData {
   age: string | number;
   region: string;
   userId: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  processedAt?: string;
+  creditsAwarded?: number;
+  rejectionReason?: string;
 }
 
 interface CreditRequestMessageProps {
+  messageId: string;
   content: string;
   senderId: string;
   recipientId?: string;
@@ -45,14 +50,11 @@ const REJECTION_REASONS = [
   'Paiement expiré ou annulé',
 ];
 
-const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditRequestMessageProps) => {
+const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn }: CreditRequestMessageProps) => {
   const { data: isAdmin } = useIsAdmin();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [credited, setCredited] = useState(false);
-  const [rejected, setRejected] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
 
   // Parse the credit request data from content
   let requestData: CreditRequestData | null = null;
@@ -61,6 +63,11 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
   } catch {
     // Content might be the old format (formatted text)
   }
+
+  // Determine status from persisted data
+  const isApproved = requestData?.status === 'approved';
+  const isRejected = requestData?.status === 'rejected';
+  const isPending = !isApproved && !isRejected;
 
   // Fallback render for old format or parse error
   if (!requestData) {
@@ -74,6 +81,19 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
       </div>
     );
   }
+
+  // Helper to update message content with new status
+  const updateMessageStatus = async (updatedData: CreditRequestData) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({ content: JSON.stringify(updatedData) })
+      .eq('id', messageId);
+    
+    if (error) {
+      console.error('Error updating message status:', error);
+      throw error;
+    }
+  };
 
   const handleCreditUser = async (credits: number) => {
     if (!requestData) return;
@@ -102,7 +122,15 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
         });
       }
 
-      setCredited(true);
+      // Update the original message with approved status
+      const updatedData: CreditRequestData = {
+        ...requestData,
+        status: 'approved',
+        processedAt: new Date().toISOString(),
+        creditsAwarded: credits,
+      };
+      await updateMessageStatus(updatedData);
+
       toast.success(`${credits} crédits attribués à ${requestData.username} !`);
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
       queryClient.invalidateQueries({ queryKey: ['private-messages'] });
@@ -136,8 +164,15 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
 
       if (error) throw error;
 
-      setRejected(true);
-      setRejectionReason(reason);
+      // Update the original message with rejected status
+      const updatedData: CreditRequestData = {
+        ...requestData,
+        status: 'rejected',
+        processedAt: new Date().toISOString(),
+        rejectionReason: reason,
+      };
+      await updateMessageStatus(updatedData);
+
       toast.success('Message de refus envoyé');
       queryClient.invalidateQueries({ queryKey: ['private-messages'] });
     } catch (error) {
@@ -195,8 +230,8 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
         </div>
       </div>
 
-      {/* Admin Action Buttons */}
-      {isAdmin && !isOwn && !credited && !rejected && (
+      {/* Admin Action Buttons - only show if pending */}
+      {isAdmin && !isOwn && isPending && (
         <div className="space-y-2 mt-4">
           <p className="text-xs text-muted-foreground mb-2">Attribuer les crédits :</p>
           <div className="flex gap-2">
@@ -255,23 +290,25 @@ const CreditRequestMessage = ({ content, senderId, recipientId, isOwn }: CreditR
         </div>
       )}
 
-      {/* Credited confirmation */}
-      {credited && (
+      {/* Approved confirmation */}
+      {isApproved && (
         <div className="flex items-center gap-2 mt-4 p-2 bg-green-500/20 rounded-lg">
           <Check className="w-4 h-4 text-green-600" />
-          <span className="text-sm text-green-600 font-medium">Crédits attribués !</span>
+          <span className="text-sm text-green-600 font-medium">
+            ✅ {requestData.creditsAwarded} crédits attribués
+          </span>
         </div>
       )}
 
       {/* Rejected confirmation */}
-      {rejected && (
+      {isRejected && (
         <div className="flex flex-col gap-1 mt-4 p-2 bg-red-500/20 rounded-lg">
           <div className="flex items-center gap-2">
             <X className="w-4 h-4 text-red-600" />
             <span className="text-sm text-red-600 font-medium">Demande refusée</span>
           </div>
-          {rejectionReason && (
-            <span className="text-xs text-red-500 ml-6">{rejectionReason}</span>
+          {requestData.rejectionReason && (
+            <span className="text-xs text-red-500 ml-6">{requestData.rejectionReason}</span>
           )}
         </div>
       )}
