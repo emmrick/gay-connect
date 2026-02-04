@@ -67,43 +67,43 @@ const CreditBalanceBar = ({
         "relative w-full overflow-hidden rounded-full bg-muted/50",
         compact ? "h-2" : "h-4"
       )}>
-        {/* Passive credits - Yellow/Gold (FIRST - used first) */}
+        {/* Purchased credits - Light Blue (FIRST from left) */}
         <motion.div 
-          className="absolute left-0 top-0 h-full bg-gradient-to-r from-amber-400 to-yellow-300"
+          className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-400 to-sky-300"
           initial={{ width: 0 }}
-          animate={{ width: `${passivePercent}%` }}
+          animate={{ width: `${purchasedPercent}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
 
-        {/* Daily credits - Green (second) */}
-        <motion.div 
-          className="absolute top-0 h-full bg-gradient-to-r from-green-500 to-green-400"
-          initial={{ width: 0 }}
-          animate={{ 
-            left: `${passivePercent}%`,
-            width: `${dailyPercent}%` 
-          }}
-          transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-        />
-        
-        {/* Bonus credits - Dark Blue (third) */}
+        {/* Bonus credits - Dark Blue (second) */}
         <motion.div 
           className="absolute top-0 h-full bg-gradient-to-r from-blue-600 to-blue-500"
           initial={{ width: 0 }}
           animate={{ 
-            left: `${passivePercent + dailyPercent}%`,
+            left: `${purchasedPercent}%`,
             width: `${bonusPercent}%` 
+          }}
+          transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+        />
+        
+        {/* Daily credits - Green (third) */}
+        <motion.div 
+          className="absolute top-0 h-full bg-gradient-to-r from-green-500 to-green-400"
+          initial={{ width: 0 }}
+          animate={{ 
+            left: `${purchasedPercent + bonusPercent}%`,
+            width: `${dailyPercent}%` 
           }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
         />
         
-        {/* Purchased credits - Light Blue (last) */}
+        {/* Passive credits - Yellow/Gold (last - used first) */}
         <motion.div 
-          className="absolute top-0 h-full bg-gradient-to-r from-sky-400 to-sky-300"
+          className="absolute top-0 h-full bg-gradient-to-r from-amber-400 to-yellow-300"
           initial={{ width: 0 }}
           animate={{ 
-            left: `${passivePercent + dailyPercent + bonusPercent}%`,
-            width: `${purchasedPercent}%` 
+            left: `${purchasedPercent + bonusPercent + dailyPercent}%`,
+            width: `${passivePercent}%` 
           }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.3 }}
         />
