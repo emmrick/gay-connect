@@ -1,127 +1,30 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMobileScreenshotDetection } from './useMobileScreenshotDetection';
 import { usePreventiveScreenshotBlur } from './usePreventiveScreenshotBlur';
 import { enableScreenshotProtection, disableScreenshotProtection } from '@/plugins/ScreenshotBlocker';
 
-interface ScreenshotViolation {
-  count: number;
-  suspendedUntil: Date | null;
-}
-
+/**
+ * Screenshot protection hook - Shows black screen on detection
+ * No suspension/sanctions, just visual protection
+ */
 export const useScreenshotProtection = (enableNativeBlock = false) => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [isBlocked, setIsBlocked] = useState(false);
-  const [showPreventiveBlur, setShowPreventiveBlur] = useState(false);
   const blockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isProtectionActive, setIsProtectionActive] = useState(false);
 
-  // Fetch violations from database
-  const { data: dbViolation } = useQuery({
-    queryKey: ['screenshot-violations', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-
-      const { data, error } = await supabase
-        .from('screenshot_violations')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-    refetchInterval: 30000,
-  });
-
-  // Calculate suspension status
-  const isSuspended = useCallback(() => {
-    if (!dbViolation?.suspended_until) return false;
-    return new Date() < new Date(dbViolation.suspended_until);
-  }, [dbViolation]);
-
-  // Record violation mutation
-  const recordViolation = useMutation({
-    mutationFn: async (mediaId?: string) => {
-      if (!user?.id) throw new Error('User not authenticated');
-
-      const { data: existing } = await supabase
-        .from('screenshot_violations')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      let newCount = 1;
-      let suspendedUntil: Date | null = null;
-
-      if (existing) {
-        newCount = existing.violation_count + 1;
-      }
-
-      // Calculate suspension duration based on violation count
-      if (newCount === 1) {
-        // First violation: 10 minutes
-        suspendedUntil = new Date(Date.now() + 10 * 60 * 1000);
-      } else if (newCount === 2) {
-        // Second violation: 10 hours
-        suspendedUntil = new Date(Date.now() + 10 * 60 * 60 * 1000);
-      } else if (newCount >= 3) {
-        // Third+ violation: 1 month
-        suspendedUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      }
-
-      if (existing) {
-        const { error } = await supabase
-          .from('screenshot_violations')
-          .update({
-            violation_count: newCount,
-            suspended_until: suspendedUntil?.toISOString(),
-            last_violation_at: new Date().toISOString(),
-            media_id: mediaId || existing.media_id,
-          })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('screenshot_violations')
-          .insert({
-            user_id: user.id,
-            violation_count: newCount,
-            suspended_until: suspendedUntil?.toISOString(),
-            last_violation_at: new Date().toISOString(),
-            media_id: mediaId,
-          });
-
-        if (error) throw error;
-      }
-
-      return { count: newCount, suspendedUntil };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['screenshot-violations', user?.id] });
-    },
-  });
-
-  const handleViolation = useCallback((mediaId?: string) => {
-    // Immediately block content (make it black)
+  // Handle screenshot detection - just show black screen
+  const handleViolation = useCallback(() => {
+    console.log('[ScreenshotProtection] Screenshot detected - showing black screen');
     setIsBlocked(true);
-    
-    // Record violation in database
-    recordViolation.mutate(mediaId);
 
-    // Keep content blocked for 5 seconds then check suspension
+    // Keep content blocked for 3 seconds
     if (blockTimeoutRef.current) {
       clearTimeout(blockTimeoutRef.current);
     }
     blockTimeoutRef.current = setTimeout(() => {
       setIsBlocked(false);
-    }, 5000);
-  }, [recordViolation]);
+    }, 3000);
+  }, []);
 
   // Use advanced mobile screenshot detection
   useMobileScreenshotDetection({
@@ -132,15 +35,12 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
     },
   });
 
-  // Use preventive blur (banking-style frame detection)
-  const { showProtection: preventiveBlurActive } = usePreventiveScreenshotBlur({
+  // Use preventive blur (banking-style frame detection) - just triggers black screen
+  usePreventiveScreenshotBlur({
     enabled: isProtectionActive,
     onThreatDetected: () => {
       console.log('[ScreenshotProtection] Preventive blur triggered!');
-      setShowPreventiveBlur(true);
       handleViolation();
-      // Reset after a delay
-      setTimeout(() => setShowPreventiveBlur(false), 2000);
     },
   });
 
@@ -159,17 +59,10 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
     }
   }, [enableNativeBlock]);
 
-  // Cleanup native protection on unmount
-  useEffect(() => {
-    return () => {
-      if (isProtectionActive && enableNativeBlock) {
-        disableScreenshotProtection();
-      }
-    };
-  }, [isProtectionActive, enableNativeBlock]);
-
   // Detect screenshot attempts (keyboard shortcuts)
   useEffect(() => {
+    if (!isProtectionActive) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // Detect PrintScreen, Cmd+Shift+3/4 (Mac), Windows+PrintScreen, etc.
       if (
@@ -208,8 +101,11 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
       if (blockTimeoutRef.current) {
         clearTimeout(blockTimeoutRef.current);
       }
+      if (enableNativeBlock) {
+        disableScreenshotProtection();
+      }
     };
-  }, [handleViolation]);
+  }, [handleViolation, isProtectionActive, enableNativeBlock]);
 
   // Disable right-click on protected content
   const preventContextMenu = useCallback((e: React.MouseEvent) => {
@@ -223,37 +119,9 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
     return false;
   }, []);
 
-  const getSuspensionTimeLeft = useCallback(() => {
-    if (!dbViolation?.suspended_until) return null;
-    const suspendedUntil = new Date(dbViolation.suspended_until);
-    const now = new Date();
-    if (now >= suspendedUntil) return null;
-    
-    const diff = suspendedUntil.getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return `${days} jour${days > 1 ? 's' : ''}`;
-    }
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    }
-    return `${minutes} minutes`;
-  }, [dbViolation?.suspended_until]);
-
-  // Combined blocked state (either blocked or preventive blur is active)
-  const isVisuallyBlocked = isBlocked || showPreventiveBlur || preventiveBlurActive;
-
   return {
-    isSuspended: isSuspended(),
-    isBlocked: isVisuallyBlocked,
+    isBlocked,
     isProtectionActive,
-    showPreventiveBlur: showPreventiveBlur || preventiveBlurActive,
-    violationCount: dbViolation?.violation_count || 0,
-    suspendedUntil: dbViolation?.suspended_until ? new Date(dbViolation.suspended_until) : null,
-    getSuspensionTimeLeft,
     preventContextMenu,
     preventDrag,
     handleViolation,

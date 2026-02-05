@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Play, Pause, Trash2, ZoomIn, ZoomOut, AlertTriangle, Shield } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play, Pause, Trash2, ZoomIn, ZoomOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
-import SecureMediaContainer from '@/components/security/SecureMediaContainer';
+
 interface AlbumMedia {
   id: string;
   media_url: string;
@@ -53,13 +53,8 @@ const AlbumGalleryViewer = ({
   
   // Screenshot protection with mobile detection + preventive blur
   const {
-    isSuspended,
     isBlocked,
-    showPreventiveBlur,
-    getSuspensionTimeLeft,
     preventContextMenu,
-    preventDrag,
-    handleViolation,
     enableProtection,
     disableProtection,
   } = useScreenshotProtection(true); // Enable native blocking on Capacitor
@@ -291,45 +286,6 @@ const AlbumGalleryViewer = ({
 
   if (!isOpen || media.length === 0) return null;
 
-  // Show suspended state
-  if (isSuspended) {
-    return (
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6"
-        >
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-card rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-border"
-          >
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-destructive/20 flex items-center justify-center mb-6">
-                <AlertTriangle className="w-10 h-10 text-destructive" />
-              </div>
-              <h2 className="font-display text-2xl font-bold mb-3 text-foreground">Compte suspendu</h2>
-              <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-                Vous avez été suspendu pour violation des règles (capture d'écran).
-              </p>
-              <div className="bg-destructive/10 rounded-2xl p-4 mb-6">
-                <p className="text-lg font-bold text-foreground">
-                  {getSuspensionTimeLeft()}
-                </p>
-                <p className="text-xs text-muted-foreground">Temps restant</p>
-              </div>
-              <Button variant="outline" onClick={onClose} className="w-full">
-                Fermer
-              </Button>
-            </div>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
   return (
     <AnimatePresence>
       <motion.div
@@ -341,11 +297,8 @@ const AlbumGalleryViewer = ({
         onContextMenu={preventContextMenu}
       >
         {/* Banking-style protection overlay */}
-        <ScreenshotProtectionOverlay 
-          isActive={showPreventiveBlur || isBlocked}
-          isSuspended={isSuspended}
-          suspensionTimeLeft={getSuspensionTimeLeft()}
-        />
+        <ScreenshotProtectionOverlay isActive={isBlocked} />
+        
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
           <Button
@@ -548,15 +501,10 @@ const AlbumGalleryViewer = ({
                 animate={{ scale: 1 }}
                 className="text-center"
               >
-                <div className="w-24 h-24 mx-auto rounded-full bg-destructive/30 flex items-center justify-center mb-6">
-                  <AlertTriangle className="w-12 h-12 text-destructive" />
+                <div className="w-24 h-24 mx-auto rounded-full bg-white/10 flex items-center justify-center mb-6">
+                  <Shield className="w-12 h-12 text-white/70" />
                 </div>
-                <p className="text-destructive text-2xl font-bold mb-2">
-                  Capture détectée !
-                </p>
-                <p className="text-destructive/70 text-sm">
-                  Votre compte a été suspendu
-                </p>
+                <p className="text-white text-2xl font-bold mb-2">Contenu protégé</p>
               </motion.div>
             </motion.div>
           )}

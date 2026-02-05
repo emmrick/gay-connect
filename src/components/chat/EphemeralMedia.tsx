@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Play, Eye, EyeOff, AlertTriangle, Shield } from 'lucide-react';
+import { X, Play, Eye, EyeOff, Shield } from 'lucide-react';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { Button } from '@/components/ui/button';
 
@@ -25,11 +25,9 @@ const EphemeralMedia = ({
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(duration);
   const { 
-    isSuspended, 
     isBlocked, 
     preventContextMenu, 
     preventDrag, 
-    getSuspensionTimeLeft,
     handleViolation 
   } = useScreenshotProtection();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -37,7 +35,7 @@ const EphemeralMedia = ({
 
   // Timer countdown
   useEffect(() => {
-    if (isViewing && timeLeft > 0 && !isSuspended) {
+    if (isViewing && timeLeft > 0) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
@@ -46,7 +44,7 @@ const EphemeralMedia = ({
       onViewed();
       onClose();
     }
-  }, [isViewing, timeLeft, onClose, onViewed, isSuspended]);
+  }, [isViewing, timeLeft, onClose, onViewed]);
 
   // Disable DevTools detection
   useEffect(() => {
@@ -58,7 +56,7 @@ const EphemeralMedia = ({
       const heightThreshold = window.outerHeight - window.innerHeight > threshold;
       
       if (widthThreshold || heightThreshold) {
-        handleViolation(mediaId);
+        handleViolation();
       }
     };
 
@@ -66,7 +64,7 @@ const EphemeralMedia = ({
     const interval = setInterval(detectDevTools, 1000);
     
     return () => clearInterval(interval);
-  }, [isViewing, handleViolation, mediaId]);
+  }, [isViewing, handleViolation]);
 
   // Prevent copy operations
   useEffect(() => {
@@ -74,7 +72,7 @@ const EphemeralMedia = ({
 
     const preventCopy = (e: ClipboardEvent) => {
       e.preventDefault();
-      handleViolation(mediaId);
+      handleViolation();
     };
 
     const preventKeyShortcuts = (e: KeyboardEvent) => {
@@ -82,7 +80,7 @@ const EphemeralMedia = ({
       if (e.ctrlKey || e.metaKey) {
         if (['c', 's', 'p', 'a'].includes(e.key.toLowerCase())) {
           e.preventDefault();
-          handleViolation(mediaId);
+          handleViolation();
         }
       }
     };
@@ -94,38 +92,14 @@ const EphemeralMedia = ({
       document.removeEventListener('copy', preventCopy);
       document.removeEventListener('keydown', preventKeyShortcuts);
     };
-  }, [isViewing, handleViolation, mediaId]);
+  }, [isViewing, handleViolation]);
 
   const handleStartViewing = () => {
-    if (isSuspended) return;
     setIsViewing(true);
     if (type === 'video' && videoRef.current) {
       videoRef.current.play();
     }
   };
-
-  // Suspended state
-  if (isSuspended) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background flex items-center justify-center p-4">
-        <div className="glass-card rounded-2xl p-8 max-w-md text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-destructive/20 flex items-center justify-center mb-4">
-            <AlertTriangle className="w-8 h-8 text-destructive" />
-          </div>
-          <h2 className="font-display text-xl font-bold mb-2">Compte suspendu</h2>
-          <p className="text-muted-foreground mb-4">
-            Vous avez été suspendu pour violation des règles (capture d'écran).
-          </p>
-          <p className="text-lg font-semibold text-foreground mb-6">
-            Temps restant : {getSuspensionTimeLeft()}
-          </p>
-          <Button variant="outline" onClick={onClose}>
-            Fermer
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   // Pre-viewing state (tap to view)
   if (!isViewing) {
@@ -260,13 +234,8 @@ const EphemeralMedia = ({
       {isBlocked && (
         <div className="absolute inset-0 bg-black z-20 flex items-center justify-center">
           <div className="text-center">
-            <AlertTriangle className="w-16 h-16 text-destructive mx-auto mb-4" />
-            <p className="text-destructive text-xl font-bold">
-              Capture détectée !
-            </p>
-            <p className="text-destructive/80 text-sm mt-2">
-              Votre compte a été suspendu
-            </p>
+            <Shield className="w-16 h-16 text-white/50 mx-auto mb-4" />
+            <p className="text-white text-xl font-bold">Contenu protégé</p>
           </div>
         </div>
       )}

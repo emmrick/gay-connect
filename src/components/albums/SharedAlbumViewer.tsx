@@ -244,13 +244,9 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
   const notificationSentRef = useRef(false);
   
   const { 
-    isSuspended, 
     isBlocked,
-    showPreventiveBlur,
-    getSuspensionTimeLeft, 
     preventContextMenu, 
     preventDrag,
-    handleViolation,
     enableProtection,
     disableProtection,
   } = useScreenshotProtection(true); // Enable native blocking on Capacitor
@@ -429,28 +425,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
   }
 
   // Show suspended screen if user is suspended
-  if (isSuspended) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
-          <div className="text-center py-8 space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-              <ShieldX className="w-8 h-8 text-destructive" />
-            </div>
-            <h3 className="text-lg font-semibold">Accès suspendu</h3>
-            <p className="text-sm text-muted-foreground">
-              Votre accès aux albums est temporairement suspendu suite à une tentative de capture d'écran.
-            </p>
-            <p className="text-sm font-medium text-destructive">
-              Temps restant : {getSuspensionTimeLeft()}
-            </p>
-            <Button onClick={onClose} variant="outline">Fermer</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
@@ -523,11 +497,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
             onContextMenu={preventContextMenu}
           >
             {/* Banking-style protection overlay */}
-            <ScreenshotProtectionOverlay 
-              isActive={showPreventiveBlur || isBlocked}
-              isSuspended={isSuspended}
-              suspensionTimeLeft={getSuspensionTimeLeft()}
-            />
+            <ScreenshotProtectionOverlay isActive={isBlocked} />
             
             {/* Header with close button and counter */}
             <div className="absolute top-0 left-0 right-0 z-[102] flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
