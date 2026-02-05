@@ -74,7 +74,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
   const [previewUserId, setPreviewUserId] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { isSuspended, getSuspensionTimeLeft } = useScreenshotProtection();
 
   // Scroll to bottom on new messages or when conversation opens
   useEffect(() => {
@@ -203,13 +202,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
       />
 
       {/* Suspension banner */}
-      {isSuspended && (
-        <div className="bg-destructive/20 border-b border-destructive/30 px-4 py-2 text-center">
-          <p className="text-sm text-destructive font-medium">
-            ⚠️ Compte suspendu - Temps restant : {getSuspensionTimeLeft()}
-          </p>
-        </div>
-      )}
 
       {/* Header - fixed at top */}
       <header className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-20">

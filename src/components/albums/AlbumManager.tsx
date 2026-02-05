@@ -645,10 +645,10 @@ const AlbumFullViewer = ({ album, isOpen, onClose, useAlbumMedia, onDeleteMedia,
                     )}
                   </button>
                   
-                  {/* Delete button on hover */}
+                  {/* Delete button - always visible on mobile */}
                   <button
                     onClick={() => onDeleteMedia(item.id)}
-                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-destructive/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-destructive/90 text-white flex items-center justify-center shadow-lg"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

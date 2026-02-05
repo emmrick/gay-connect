@@ -37,11 +37,8 @@ const EphemeralMediaViewer = ({
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const { 
-    isSuspended, 
     isBlocked,
-    showPreventiveBlur,
     preventContextMenu, 
-    getSuspensionTimeLeft,
     handleViolation,
     enableProtection,
     disableProtection,
@@ -76,7 +73,7 @@ const EphemeralMediaViewer = ({
   useEffect(() => {
     if (isUnlimited) return; // No countdown for unlimited
     
-    if (isViewing && timeLeft > 0 && !isSuspended && !hasEnded) {
+    if (isViewing && timeLeft > 0 && !hasEnded) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
@@ -93,7 +90,7 @@ const EphemeralMediaViewer = ({
         onClose();
       }, 400);
     }
-  }, [isViewing, timeLeft, onClose, onViewed, isSuspended, hasEnded, isUnlimited]);
+  }, [isViewing, timeLeft, onClose, onViewed, hasEnded, isUnlimited]);
 
   const handleSaveToConversation = useCallback(async () => {
     if (!onSaveToConversation || isSaving || hasSaved) return;
@@ -121,13 +118,13 @@ const EphemeralMediaViewer = ({
       const heightThreshold = window.outerHeight - window.innerHeight > threshold;
       
       if (widthThreshold || heightThreshold) {
-        handleViolation(mediaId);
+        handleViolation();
       }
     };
 
     const interval = setInterval(detectDevTools, 1000);
     return () => clearInterval(interval);
-  }, [isViewing, handleViolation, mediaId, isOpen]);
+  }, [isViewing, handleViolation, isOpen]);
 
   // Prevent copy operations
   useEffect(() => {
@@ -135,19 +132,19 @@ const EphemeralMediaViewer = ({
 
     const preventCopy = (e: ClipboardEvent) => {
       e.preventDefault();
-      handleViolation(mediaId);
+      handleViolation();
     };
 
     const preventKeyShortcuts = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         if (['c', 's', 'p', 'a'].includes(e.key.toLowerCase())) {
           e.preventDefault();
-          handleViolation(mediaId);
+          handleViolation();
         }
       }
       if (e.key === 'PrintScreen') {
         e.preventDefault();
-        handleViolation(mediaId);
+        handleViolation();
       }
     };
 
@@ -158,7 +155,7 @@ const EphemeralMediaViewer = ({
       document.removeEventListener('copy', preventCopy);
       document.removeEventListener('keydown', preventKeyShortcuts);
     };
-  }, [isViewing, handleViolation, mediaId, isOpen]);
+  }, [isViewing, handleViolation, isOpen]);
 
   // Visibility change detection (switching apps on mobile)
   useEffect(() => {
@@ -166,21 +163,20 @@ const EphemeralMediaViewer = ({
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        handleViolation(mediaId);
+        handleViolation();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isViewing, handleViolation, mediaId, isOpen]);
+  }, [isViewing, handleViolation, isOpen]);
 
   const handleStartViewing = useCallback(() => {
-    if (isSuspended) return;
     setIsViewing(true);
     if (type === 'video' && videoRef.current) {
       videoRef.current.play();
     }
-  }, [isSuspended, type]);
+  }, [type]);
 
   const handleCloseClick = useCallback(() => {
     if (isViewing && !hasEnded && !hasCalledOnViewed.current) {
@@ -195,46 +191,6 @@ const EphemeralMediaViewer = ({
       onClose();
     }, 300);
   }, [isViewing, hasEnded, onViewed, onClose]);
-
-  // Suspended state
-  if (isSuspended && isOpen) {
-    return (
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6"
-        >
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-card rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-border"
-          >
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-destructive/20 flex items-center justify-center mb-6">
-                <AlertTriangle className="w-10 h-10 text-destructive" />
-              </div>
-              <h2 className="font-display text-2xl font-bold mb-3 text-foreground">Compte suspendu</h2>
-              <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-                Vous avez été suspendu pour violation des règles (capture d'écran).
-              </p>
-              <div className="bg-destructive/10 rounded-2xl p-4 mb-6">
-                <p className="text-lg font-bold text-foreground">
-                  {getSuspensionTimeLeft()}
-                </p>
-                <p className="text-xs text-muted-foreground">Temps restant</p>
-              </div>
-              <Button variant="outline" onClick={handleCloseClick} className="w-full">
-                Fermer
-              </Button>
-            </div>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
 
   if (!isOpen) return null;
 
@@ -363,10 +319,7 @@ const EphemeralMediaViewer = ({
         </AnimatePresence>
 
         {/* Banking-style protection overlay */}
-        <ScreenshotProtectionOverlay 
-          isActive={showPreventiveBlur || isBlocked}
-          isSuspended={false}
-        />
+        <ScreenshotProtectionOverlay isActive={isBlocked} />
 
         {/* Viewing state with protection */}
         <AnimatePresence>
