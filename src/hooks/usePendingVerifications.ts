@@ -1,7 +1,33 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export const usePendingVerifications = () => {
+  const queryClient = useQueryClient();
+
+  // Subscribe to realtime changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('pending-verifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'identity_verifications',
+        },
+        () => {
+          // Invalidate and refetch when any change occurs
+          queryClient.invalidateQueries({ queryKey: ['pending-verifications-count'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['pending-verifications-count'],
     queryFn: async () => {
@@ -13,6 +39,7 @@ export const usePendingVerifications = () => {
       if (error) throw error;
       return count || 0;
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 10000, // Consider data fresh for 10 seconds
+    refetchInterval: 30000,
   });
 };

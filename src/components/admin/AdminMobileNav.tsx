@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { 
   Shield, 
   Wallet, 
@@ -94,6 +94,47 @@ const groupIcons: Record<string, React.ElementType> = {
   settings: Ticket,
 };
 
+// Memoized nav item component for better performance
+const NavItemButton = memo(({ 
+  item, 
+  isActive, 
+  badge, 
+  onSelect 
+}: { 
+  item: NavItem; 
+  isActive: boolean; 
+  badge?: number;
+  onSelect: () => void;
+}) => {
+  const Icon = item.icon;
+  
+  return (
+    <button
+      onClick={onSelect}
+      className={cn(
+        "relative flex flex-col items-center gap-2 p-4 rounded-xl text-sm font-medium",
+        "border active:scale-95 transition-transform duration-150",
+        isActive 
+          ? "bg-primary text-primary-foreground border-primary shadow-lg" 
+          : "bg-card border-border active:bg-muted"
+      )}
+    >
+      <Icon className={cn("w-6 h-6", isActive && "text-primary-foreground")} />
+      <span className="text-center text-xs leading-tight">{item.label}</span>
+      {badge !== undefined && badge > 0 && (
+        <Badge 
+          variant={isActive ? "secondary" : "destructive"} 
+          className="absolute -top-1 -right-1 text-xs px-1.5 py-0.5 min-w-[20px] text-center"
+        >
+          {badge}
+        </Badge>
+      )}
+    </button>
+  );
+});
+
+NavItemButton.displayName = 'NavItemButton';
+
 const AdminMobileNav = ({ 
   activeSection, 
   onSectionChange, 
@@ -104,39 +145,45 @@ const AdminMobileNav = ({
 }: AdminMobileNavProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const getBadge = (id: AdminSection) => {
-    if (id === 'reports' && pendingReports > 0) return pendingReports;
-    if (id === 'blocked' && blockedCount > 0) return blockedCount;
-    if (id === 'credit-purchases' && pendingPurchases > 0) return pendingPurchases;
-    if (id === 'verification' && pendingVerifications > 0) return pendingVerifications;
-    return undefined;
-  };
+  const getBadge = useCallback((id: AdminSection) => {
+    switch (id) {
+      case 'reports': return pendingReports > 0 ? pendingReports : undefined;
+      case 'blocked': return blockedCount > 0 ? blockedCount : undefined;
+      case 'credit-purchases': return pendingPurchases > 0 ? pendingPurchases : undefined;
+      case 'verification': return pendingVerifications > 0 ? pendingVerifications : undefined;
+      default: return undefined;
+    }
+  }, [pendingReports, blockedCount, pendingPurchases, pendingVerifications]);
 
   const activeItem = navItems.find(item => item.id === activeSection);
   const ActiveIcon = activeItem?.icon || Shield;
 
   const groupedItems = navItems.reduce((acc, item) => {
     if (!acc[item.group]) acc[item.group] = [];
-    acc[item.group].push({ ...item, badge: getBadge(item.id) });
+    acc[item.group].push(item);
     return acc;
-  }, {} as Record<string, (NavItem & { badge?: number })[]>);
+  }, {} as Record<string, NavItem[]>);
 
-  const handleSelect = (section: AdminSection) => {
-    onSectionChange(section);
+  const handleSelect = useCallback((section: AdminSection) => {
+    // Close sheet first for snappier feel
     setSheetOpen(false);
-  };
+    // Then update section after a micro-delay
+    requestAnimationFrame(() => {
+      onSectionChange(section);
+    });
+  }, [onSectionChange]);
 
-  const totalBadges = pendingReports + blockedCount + pendingPurchases + pendingVerifications;
+  const totalBadges = pendingReports + pendingPurchases + pendingVerifications;
 
   return (
-    <div className="sticky top-0 z-50 bg-background border-b border-border">
+    <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 safe-area-top">
         <Button 
           variant="ghost" 
           size="sm"
           onClick={() => window.history.back()}
-          className="gap-1 text-muted-foreground"
+          className="gap-1 text-muted-foreground active:scale-95 transition-transform"
         >
           <ChevronLeft className="w-4 h-4" />
           Retour
@@ -147,13 +194,13 @@ const AdminMobileNav = ({
           <span className="font-display font-bold">Admin</span>
         </div>
 
-        <div className="w-16" /> {/* Spacer for centering */}
+        <div className="w-16" />
       </div>
 
       {/* Section Selector */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetTrigger asChild>
-          <button className="w-full px-4 py-3 flex items-center justify-between bg-muted/50 border-t border-border">
+          <button className="w-full px-4 py-3 flex items-center justify-between bg-muted/50 border-t border-border active:bg-muted transition-colors">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                 <ActiveIcon className="w-5 h-5 text-primary" />
@@ -176,7 +223,10 @@ const AdminMobileNav = ({
           </button>
         </SheetTrigger>
 
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+        <SheetContent 
+          side="bottom" 
+          className="h-[80vh] rounded-t-3xl"
+        >
           <SheetHeader className="pb-4 border-b border-border">
             <SheetTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
@@ -184,8 +234,8 @@ const AdminMobileNav = ({
             </SheetTitle>
           </SheetHeader>
 
-          <ScrollArea className="h-[calc(85vh-100px)] mt-4">
-            <div className="space-y-6 pb-8">
+          <ScrollArea className="h-[calc(80vh-100px)] mt-4">
+            <div className="space-y-6 pb-safe-area-bottom pb-8">
               {Object.entries(groupedItems).map(([group, items]) => {
                 const GroupIcon = groupIcons[group];
                 return (
@@ -196,36 +246,16 @@ const AdminMobileNav = ({
                         {groupLabels[group]}
                       </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {items.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = activeSection === item.id;
-                        
-                        return (
-                          <button
-                            key={item.id}
-                            onClick={() => handleSelect(item.id)}
-                            className={cn(
-                              "relative flex flex-col items-center gap-2 p-4 rounded-xl text-sm font-medium transition-all",
-                              "border",
-                              isActive 
-                                ? "bg-primary text-primary-foreground border-primary shadow-lg" 
-                                : "bg-card border-border hover:bg-muted"
-                            )}
-                          >
-                            <Icon className={cn("w-6 h-6", isActive && "text-primary-foreground")} />
-                            <span className="text-center text-xs leading-tight">{item.label}</span>
-                            {item.badge !== undefined && item.badge > 0 && (
-                              <Badge 
-                                variant={isActive ? "secondary" : "destructive"} 
-                                className="absolute -top-1 -right-1 text-xs px-1.5 py-0.5 min-w-[20px] text-center"
-                              >
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </button>
-                        );
-                      })}
+                    <div className="grid grid-cols-3 gap-2">
+                      {items.map((item) => (
+                        <NavItemButton
+                          key={item.id}
+                          item={item}
+                          isActive={activeSection === item.id}
+                          badge={getBadge(item.id)}
+                          onSelect={() => handleSelect(item.id)}
+                        />
+                      ))}
                     </div>
                   </div>
                 );
@@ -238,4 +268,4 @@ const AdminMobileNav = ({
   );
 };
 
-export default AdminMobileNav;
+export default memo(AdminMobileNav);

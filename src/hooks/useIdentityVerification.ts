@@ -266,6 +266,7 @@ export const useAdminVerifications = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-verifications-count'] });
     },
   });
 
@@ -319,6 +320,7 @@ export const useAdminVerifications = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-verifications-count'] });
     },
   });
 
