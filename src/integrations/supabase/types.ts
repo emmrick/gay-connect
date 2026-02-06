@@ -1833,6 +1833,8 @@ export type Database = {
         | "report_response"
         | "user_suspension"
         | "private_message_response"
+        | "verification_request"
+        | "credit_management"
       report_reason:
         | "harassment"
         | "inappropriate_content"
@@ -1987,6 +1989,8 @@ export const Constants = {
         "report_response",
         "user_suspension",
         "private_message_response",
+        "verification_request",
+        "credit_management",
       ],
       report_reason: [
         "harassment",
