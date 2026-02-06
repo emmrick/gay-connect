@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -69,6 +69,11 @@ const Admin = () => {
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
+  // Memoize section change handler
+  const handleSectionChange = useCallback((section: AdminSection) => {
+    setActiveSection(section);
+  }, []);
+
   // Fetch pending purchase requests count
   const { data: pendingPurchasesCount = 0 } = useQuery({
     queryKey: ['admin-pending-purchases-count'],
@@ -81,8 +86,12 @@ const Admin = () => {
       if (error) throw error;
       return count || 0;
     },
+    staleTime: 10000, // Keep data fresh for 10 seconds
     refetchInterval: 30000,
   });
+
+  // Memoize pending reports count 
+  const pendingReportsCount = useMemo(() => stats?.pending || 0, [stats?.pending]);
 
   const { data: reports, isLoading: reportsLoading } = useAdminReports(
     selectedStatus === 'all' ? undefined : selectedStatus
@@ -271,8 +280,8 @@ const Admin = () => {
         {/* Mobile Navigation Header */}
         <AdminMobileNav
           activeSection={activeSection}
-          onSectionChange={setActiveSection}
-          pendingReports={stats?.pending || 0}
+          onSectionChange={handleSectionChange}
+          pendingReports={pendingReportsCount}
           blockedCount={blockedUsers?.length || 0}
           pendingPurchases={pendingPurchasesCount}
           pendingVerifications={pendingVerificationsCount}
@@ -303,8 +312,8 @@ const Admin = () => {
       {/* Sidebar */}
       <AdminSidebar
         activeSection={activeSection}
-        onSectionChange={setActiveSection}
-        pendingReports={stats?.pending || 0}
+        onSectionChange={handleSectionChange}
+        pendingReports={pendingReportsCount}
         blockedCount={blockedUsers?.length || 0}
         pendingPurchases={pendingPurchasesCount}
         pendingVerifications={pendingVerificationsCount}
