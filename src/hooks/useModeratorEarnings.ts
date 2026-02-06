@@ -7,7 +7,9 @@ export type ModeratorTaskType =
   | 'identity_verification' 
   | 'report_response' 
   | 'user_suspension' 
-  | 'private_message_response';
+  | 'private_message_response'
+  | 'verification_request'
+  | 'credit_management';
 
 export interface TaskRate {
   id: string;
@@ -55,6 +57,8 @@ const TASK_LABELS: Record<ModeratorTaskType, string> = {
   'report_response': 'Réponse à un signalement',
   'user_suspension': 'Suspension/Blocage',
   'private_message_response': 'Réponse message privé',
+  'verification_request': 'Demande de vérification',
+  'credit_management': 'Gestion des crédits',
 };
 
 export const getTaskLabel = (taskType: ModeratorTaskType): string => {
