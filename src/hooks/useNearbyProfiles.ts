@@ -19,6 +19,23 @@ interface NearbyProfile {
 
 const PAGE_SIZE = 12; // Load 12 profiles at a time (4 rows of 3)
 
+// Threshold after which we consider is_online as stale and should show as offline
+const ONLINE_STATUS_STALE_HOURS = 2;
+
+/**
+ * Corrects stale online status: if is_online=true but last_seen is older
+ * than the stale threshold, treat as offline.
+ */
+const fixStaleOnlineStatus = (profile: NearbyProfile): NearbyProfile => {
+  if (profile.is_online && profile.last_seen) {
+    const staleThreshold = new Date(Date.now() - ONLINE_STATUS_STALE_HOURS * 60 * 60 * 1000);
+    if (new Date(profile.last_seen) < staleThreshold) {
+      return { ...profile, is_online: false };
+    }
+  }
+  return profile;
+};
+
 export const useNearbyProfiles = (
   latitude: number | null,
   longitude: number | null,
@@ -27,13 +44,6 @@ export const useNearbyProfiles = (
   const { user } = useAuth();
   const { isPremium } = useSubscription();
 
-  // Calculate offline threshold based on subscription status
-  const getOfflineThreshold = () => {
-    return isPremium 
-      ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 24 hours for Premium
-      : new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour for free
-  };
-
   const maxProfilesAllowed = isPremium 
     ? PREMIUM_LIMITS.nearbyProfiles 
     : FREE_LIMITS.nearbyProfiles;
@@ -41,7 +51,6 @@ export const useNearbyProfiles = (
   const query = useInfiniteQuery({
     queryKey: ['nearby-profiles', latitude, longitude, maxDistance, isPremium],
     queryFn: async ({ pageParam = 0 }): Promise<{ profiles: NearbyProfile[]; nextPage: number | null }> => {
-      const offlineThreshold = getOfflineThreshold();
       const offset = pageParam * PAGE_SIZE;
       
       // Apply limit based on subscription for total profiles
@@ -54,20 +63,20 @@ export const useNearbyProfiles = (
 
       // Use explicit null/undefined checks (0 is a valid coordinate).
       if (latitude == null || longitude == null) {
-        // Fallback: get online profiles or recently active
-        // Fetch more profiles to account for potential filtering
+        // Fallback: get all profiles, not just recently active
+        // Fetch extra to account for blocked/suspended filtering
+        const fetchCount = effectiveLimit + 15;
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .neq('user_id', user?.id || '')
-          .or(`is_online.eq.true,last_seen.gte.${offlineThreshold}`)
           .order('is_online', { ascending: false })
-          .order('last_seen', { ascending: false })
-          .range(offset, offset + effectiveLimit + 10); // Fetch extra to compensate for filtered
+          .order('last_seen', { ascending: false, nullsFirst: false })
+          .range(offset, offset + fetchCount - 1);
 
         if (error) throw error;
         
-        // Filter out blocked/suspended users in parallel (much faster!)
+        // Filter out blocked/suspended users in parallel
         const profilesWithStatus = await Promise.all(
           (data || []).map(async (profile) => {
             const [blockedRes, suspendedRes] = await Promise.all([
@@ -85,7 +94,7 @@ export const useNearbyProfiles = (
         const filteredProfiles = profilesWithStatus
           .filter(({ isBlocked, isSuspended }) => !isBlocked && !isSuspended)
           .slice(0, effectiveLimit)
-          .map(({ profile }) => ({
+          .map(({ profile }) => fixStaleOnlineStatus({
             ...profile,
             distance_km: null,
           }));
@@ -97,26 +106,24 @@ export const useNearbyProfiles = (
         };
       }
 
-      // Use the nearby profiles function with pagination
+      // With geolocation: fetch ALL profiles within range from RPC (no artificial JS limit)
+      // Use a high limit to get all profiles, then paginate client-side
       const { data, error } = await supabase
         .rpc('get_nearby_profiles', {
           user_lat: latitude,
           user_lon: longitude,
           max_distance_km: maxDistance,
-          limit_count: effectiveLimit + offset, // Get all up to this point
+          limit_count: maxProfilesAllowed, // Get all allowed profiles at once
         });
 
       if (error) throw error;
       
-      // Filter out users who are offline beyond the threshold
-      const filteredData = (data || []).filter(profile => {
-        if (profile.is_online) return true;
-        if (!profile.last_seen) return false;
-        return new Date(profile.last_seen) >= new Date(offlineThreshold);
-      });
+      // Fix stale online status but do NOT filter out offline profiles
+      // All profiles within range should be shown, sorted by online status then distance
+      const correctedProfiles = (data || []).map(fixStaleOnlineStatus);
       
-      // Apply pagination manually since RPC doesn't support offset
-      const paginatedProfiles = filteredData.slice(offset, offset + effectiveLimit);
+      // Apply pagination
+      const paginatedProfiles = correctedProfiles.slice(offset, offset + effectiveLimit);
       
       const hasMore = paginatedProfiles.length === effectiveLimit && (offset + paginatedProfiles.length) < maxProfilesAllowed;
       return { 
@@ -129,7 +136,7 @@ export const useNearbyProfiles = (
     enabled: !!user,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
-    staleTime: 30000, // 30 seconds - less aggressive refetching
+    staleTime: 30000,
     gcTime: 60000,
   });
 
