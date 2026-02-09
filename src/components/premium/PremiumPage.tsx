@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import { 
   Coins, 
-  Check, 
   Camera, 
   Users, 
   MessageCircle, 
   Eye, 
   FolderOpen, 
   Loader2,
-  Sparkles,
-  ExternalLink,
   Gift,
   Heart,
   MapPin,
@@ -18,41 +15,27 @@ import {
   Clock,
   ShoppingCart,
   Timer,
-  AlertTriangle,
   Zap,
   Shield,
   HelpCircle,
-  TrendingDown
+  TrendingDown,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useCredits, CREDIT_COSTS, CREDIT_REWARDS } from '@/hooks/useCredits';
-import { REVOLUT_PAYMENT_LINK } from '@/hooks/useSubscription';
 import ReferralSection from './ReferralSection';
 import CreditBalanceBar from '../credits/CreditBalanceBar';
 import CreditHistorySheet from '../credits/CreditHistorySheet';
 import ContactCreditIssueDialog from '../credits/ContactCreditIssueDialog';
 import BuyCreditDialog from '../credits/BuyCreditDialog';
 
-// Promotional offer
-const PROMO_OFFER = {
-  credits: 250,
-  price: 10.99,
-  originalPrice: 15.99,
-  paymentLink: 'https://checkout.revolut.com/pay/45dd2e98-7ab4-40e7-ad01-5a64dedee6dd',
-};
-
-
 const PremiumPage = () => {
-  const { totalCredits, dailyCredits, bonusCredits, purchasedCredits, maxDailyCredits, isLoading } = useCredits();
-  const [showContactDialog, setShowContactDialog] = useState(false);
-
-  const handleBuyPromo = () => {
-    window.open(PROMO_OFFER.paymentLink, '_blank');
-  };
+  const { totalCredits, isLoading } = useCredits();
+  const [showClaimDialog, setShowClaimDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -99,7 +82,7 @@ const PremiumPage = () => {
           </div>
         </div>
 
-        {/* Balance Card - Compact, no mini stats (already in bar) */}
+        {/* Balance Card */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
           <CardContent className="p-3.5">
             <div className="flex items-center justify-between mb-3">
@@ -118,56 +101,29 @@ const PremiumPage = () => {
           </CardContent>
         </Card>
 
-        {/* Promo Offer - Compact */}
-        <Card className="border-2 border-green-500/40 relative overflow-hidden bg-gradient-to-br from-green-500/5 to-emerald-500/5">
-          <div className="absolute top-0 right-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg">
-            🔥 -31%
-          </div>
-          <CardContent className="p-3.5">
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <p className="font-bold text-base flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-green-500" />
-                  {PROMO_OFFER.credits} crédits
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-lg font-bold text-green-600">{PROMO_OFFER.price.toFixed(2).replace('.', ',')} €</span>
-                  <span className="text-sm text-muted-foreground line-through">{PROMO_OFFER.originalPrice.toFixed(2).replace('.', ',')} €</span>
-                </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />Sans expiration</span>
-                  <span className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" />Paiement sécurisé</span>
-                </div>
-              </div>
-              <Button 
-                size="sm"
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:opacity-90 text-white font-semibold px-4"
-                onClick={handleBuyPromo}
-              >
-                <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                Acheter
-              </Button>
-            </div>
-            <p className="text-[10px] text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
-              <Clock className="w-3 h-3" />
-              Crédits ajoutés après validation admin · Sans expiration
-            </p>
-          </CardContent>
-        </Card>
+        {/* Buy Credits Button */}
+        <BuyCreditDialog 
+          trigger={
+            <Button className="w-full h-12 text-base gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold">
+              <ShoppingCart className="w-5 h-5" />
+              Acheter des crédits
+            </Button>
+          }
+        />
 
-        {/* Contact credit issue - Inline */}
-        <button 
-          onClick={() => setShowContactDialog(true)}
-          className="w-full text-center py-2.5 px-4 rounded-lg border-2 border-dashed border-muted-foreground/20 hover:border-muted-foreground/40 transition-colors"
+        {/* Claim Credits Button - Red */}
+        <Button 
+          variant="outline"
+          className="w-full h-11 gap-2 border-2 border-red-500/50 text-red-600 dark:text-red-400 hover:bg-red-500/10 font-semibold"
+          onClick={() => setShowClaimDialog(true)}
         >
-          <p className="text-xs text-muted-foreground">
-            Crédits achetés non reçus ? <span className="text-primary font-medium underline">Contacter un admin</span>
-          </p>
-        </button>
+          <AlertTriangle className="w-4 h-4" />
+          Réclamer mes crédits achetés
+        </Button>
 
         <ContactCreditIssueDialog 
-          open={showContactDialog} 
-          onOpenChange={setShowContactDialog} 
+          open={showClaimDialog} 
+          onOpenChange={setShowClaimDialog} 
         />
 
         {/* Free Credits - Compact */}
