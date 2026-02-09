@@ -70,55 +70,36 @@ export const CreditDeductionProvider = ({ children }: CreditDeductionProviderPro
     <CreditDeductionContext.Provider value={{ showDeduction }}>
       {children}
       
-      {/* Floating deduction animations */}
-      <div className="fixed top-20 right-4 z-[100] pointer-events-none">
+      {/* Modern top toast notifications */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none flex flex-col items-center gap-2">
         <AnimatePresence mode="popLayout">
-          {deductions.map((deduction, index) => (
+          {deductions.map((deduction) => (
             <motion.div
               key={deduction.id}
-              initial={{ opacity: 0, y: -20, scale: 0.8, x: 50 }}
-              animate={{ 
-                opacity: 1, 
-                y: index * 60, 
-                scale: 1, 
-                x: 0,
-              }}
+              initial={{ opacity: 0, y: -40, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ 
                 opacity: 0, 
-                y: index * 60 + 40, 
-                x: 60,
-                scale: 0.5,
-                transition: { duration: 0.5, ease: "easeOut" }
+                y: -30,
+                scale: 0.9,
+                transition: { duration: 0.35, ease: "easeIn" }
               }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 400, 
-                damping: 25 
-              }}
-              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2.5 rounded-full shadow-lg shadow-orange-500/30 mb-2"
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              className="flex items-center gap-2.5 bg-card/95 backdrop-blur-md border border-border/60 text-foreground px-4 py-2.5 rounded-xl shadow-lg shadow-black/10"
             >
-              <motion.div
-                animate={{ 
-                  rotate: [0, -15, 15, -10, 10, 0],
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-              >
-                <Coins className="w-5 h-5" />
-              </motion.div>
-              <motion.span 
-                className="font-bold text-base"
-                initial={{ scale: 1 }}
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-              >
-                -{deduction.amount}
-              </motion.span>
-              {deduction.label && (
-                <span className="text-sm text-white/90 max-w-32 truncate">
-                  {deduction.label}
+              <div className="w-7 h-7 rounded-full bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                <Coins className="w-4 h-4 text-red-500" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-sm text-red-500">
+                  -{deduction.amount}
                 </span>
-              )}
+                {deduction.label && (
+                  <span className="text-xs text-muted-foreground max-w-40 truncate">
+                    {deduction.label}
+                  </span>
+                )}
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
