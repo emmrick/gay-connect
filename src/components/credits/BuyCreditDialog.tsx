@@ -21,7 +21,7 @@ import {
 const CREDIT_OFFERS = [
   { 
     credits: 100, 
-    price: 7.99, 
+    price: 5.99, 
     paymentLink: 'https://checkout.revolut.com/pay/e6ca921f-2793-4867-b8f1-448cbfb39ad4',
   },
   { 
