@@ -419,7 +419,7 @@ const Legal = () => {
                   <li>Création d'album : 10.0 crédits</li>
                   <li>Réaction sur profil : 0.3 crédit</li>
                   <li>Consultation de profil : 0.1 crédit</li>
-                  <li>Création de message enregistré : 3.5 crédits</li>
+                  <li>Création de message enregistré : 1er gratuit, puis progressif (5, 10, 15... crédits)</li>
                   <li>Modification de message enregistré : 2.0 crédits</li>
                 </ul>
                 <p className="font-medium text-foreground mt-3 mb-2">Fonctionnalité Swipe :</p>

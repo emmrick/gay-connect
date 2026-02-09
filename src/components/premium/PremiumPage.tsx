@@ -265,7 +265,8 @@ const PremiumPage = () => {
               <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">📌 Messages enregistrés</p>
               <div className="space-y-0">
                 {[
-                  { icon: <Bookmark className="w-4 h-4 text-blue-500" />, label: 'Créer un message enregistré', cost: 3.5 },
+                  { icon: <Bookmark className="w-4 h-4 text-blue-500" />, label: '1er message enregistré', cost: 'Gratuit' },
+                  { icon: <Bookmark className="w-4 h-4 text-blue-500" />, label: '2e message et +', cost: '5, 10, 15...' },
                   { icon: <PenLine className="w-4 h-4 text-amber-500" />, label: 'Modifier un message enregistré', cost: 2.0 },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
@@ -273,7 +274,7 @@ const PremiumPage = () => {
                       {item.icon}
                       <span className="text-sm">{item.label}</span>
                     </div>
-                    <Badge variant="outline" className="text-xs font-mono text-red-500 border-red-500/30">-{item.cost}</Badge>
+                    <Badge variant="outline" className={`text-xs font-mono ${typeof item.cost === 'string' && item.cost === 'Gratuit' ? 'text-green-500 border-green-500/30' : 'text-red-500 border-red-500/30'}`}>{typeof item.cost === 'number' ? `-${item.cost}` : item.cost}</Badge>
                   </div>
                 ))}
               </div>
