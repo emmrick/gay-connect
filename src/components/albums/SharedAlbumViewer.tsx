@@ -342,7 +342,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
         type: 'screenshot_attempt',
         title: '🛡️ Tentative de capture détectée',
         message: `${viewerName} a tenté de capturer votre album "${albumName}". Rassurez-vous, nous avons pris des mesures pour protéger votre contenu : l'écran a été masqué et l'utilisateur a été sanctionné.`,
-        action_url: '/profile',
+        action_url: '/',
       });
     },
   });
