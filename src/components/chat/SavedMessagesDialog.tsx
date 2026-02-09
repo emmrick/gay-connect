@@ -146,7 +146,7 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
               <div>
                 <DialogTitle className="text-base font-semibold">Messages enregistrés</DialogTitle>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {savedMessages.length}/10 • {totalCredits.toFixed(1)} crédits
+                  {savedMessages.length}/20 • {totalCredits.toFixed(1)} crédits
                 </p>
               </div>
             </div>

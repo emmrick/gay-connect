@@ -16,13 +16,13 @@ export const SAVED_MESSAGE_COSTS = {
 /**
  * Calculate the cost to create the next saved message
  * 1st message = free (0 credits)
- * 2nd message = 5 credits
- * 3rd message = 10 credits
- * 4th message = 15 credits
- * nth message = (n-1) * 5 credits
+ * 2nd = 5, 3rd = 10, 4th = 15... 19th = 90
+ * 20th = 100 (special case)
+ * Formula: (n-1) * 5, except 20th = 100
  */
 export const getCreateCost = (currentCount: number): number => {
   if (currentCount === 0) return 0;
+  if (currentCount === 19) return 100; // 20th message special price
   return currentCount * 5;
 };
 
