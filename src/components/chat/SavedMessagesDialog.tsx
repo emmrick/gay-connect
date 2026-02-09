@@ -168,7 +168,7 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
               value={newMessageContent}
               onChange={(e) => setNewMessageContent(e.target.value)}
               placeholder="Écris ton message à enregistrer..."
-              className="min-h-[80px] max-h-[120px] resize-none bg-background border-border/50 focus:border-primary/50 text-sm"
+              className="min-h-[140px] max-h-[200px] resize-none bg-background border-border/50 focus:border-primary/50 text-sm"
               autoFocus
             />
             <div className="flex items-center justify-between mt-2">
@@ -241,7 +241,7 @@ const SavedMessagesDialog = ({ onSelectMessage }: SavedMessagesDialogProps) => {
                       <Textarea
                         value={editingMessage.content}
                         onChange={(e) => setEditingMessage({ ...editingMessage, content: e.target.value })}
-                        className="min-h-[60px] max-h-[120px] resize-none text-sm bg-background"
+                        className="min-h-[140px] max-h-[200px] resize-none text-sm bg-background"
                         autoFocus
                       />
                       <div className="flex items-center justify-between mt-2">
