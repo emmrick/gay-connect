@@ -1,23 +1,27 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Plus } from 'lucide-react';
+import { Send, Loader2, Plus, FolderLock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
+import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import { cn } from '@/lib/utils';
+
 interface PrivateChatInputProps {
   onSendMessage: (content: string) => void;
   recipientId: string;
+  recipientName?: string;
   isSending?: boolean;
   onTyping?: (hasText: boolean) => void;
   onFocus?: () => void;
 }
 
-const PrivateChatInput = ({ onSendMessage, recipientId, isSending = false, onTyping, onFocus }: PrivateChatInputProps) => {
+const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending = false, onTyping, onFocus }: PrivateChatInputProps) => {
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [showOptions, setShowOptions] = useState(false);
+  const [showShareAlbum, setShowShareAlbum] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -85,8 +89,26 @@ const PrivateChatInput = ({ onSendMessage, recipientId, isSending = false, onTyp
               isPrivate={true}
             />
           </div>
+
+          <button
+            className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl hover:bg-muted transition-colors"
+            onClick={() => { setShowShareAlbum(true); setShowOptions(false); }}
+          >
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <FolderLock className="w-5 h-5 text-primary" />
+            </div>
+            <span className="text-[10px] text-muted-foreground">Album</span>
+          </button>
         </div>
       )}
+
+      {/* Share album dialog */}
+      <ShareAlbumDialog
+        isOpen={showShareAlbum}
+        onClose={() => setShowShareAlbum(false)}
+        recipientId={recipientId}
+        recipientName={recipientName || ''}
+      />
 
       <div className="flex items-end gap-2 p-3">
         {/* Plus / Close button */}

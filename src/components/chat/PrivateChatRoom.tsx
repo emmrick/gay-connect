@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, FolderLock, Ban, UserCheck, CheckCheck, ChevronDown } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown } from 'lucide-react';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -26,7 +26,6 @@ import SharedAlbumMessage from './SharedAlbumMessage';
 import CreditRequestMessage from './CreditRequestMessage';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
-import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import UserProfilePreview from './UserProfilePreview';
 import { cn } from '@/lib/utils';
 
@@ -53,7 +52,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
-  const [showShareAlbum, setShowShareAlbum] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
 
@@ -205,11 +203,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setShowShareAlbum(true)}>
-              <FolderLock className="w-4 h-4 mr-2" />
-              Partager un album privé
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             {hasBlocked ? (
               <DropdownMenuItem onClick={handleUnblock} disabled={unblockUser.isPending}>
                 <UserCheck className="w-4 h-4 mr-2" />
@@ -234,7 +227,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         <>
           <ReportUserDialog open={showReportDialog} onOpenChange={setShowReportDialog} userId={otherUserId} username={otherUserProfile.username} />
           <BlockUserDialog open={showBlockDialog} onOpenChange={setShowBlockDialog} userId={otherUserId} username={otherUserProfile.username} onBlocked={() => { refetchBlockStatus(); onBack(); }} />
-          <ShareAlbumDialog isOpen={showShareAlbum} onClose={() => setShowShareAlbum(false)} recipientId={otherUserId} recipientName={otherUserProfile.username} />
         </>
       )}
       <UserProfilePreview userId={otherUserId} isOpen={showProfilePreview} onClose={() => setShowProfilePreview(false)} onStartPrivateChat={() => setShowProfilePreview(false)} />
@@ -398,6 +390,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         <PrivateChatInput
           onSendMessage={handleSendMessage}
           recipientId={otherUserId}
+          recipientName={otherUserProfile?.username}
           isSending={sendMessage.isPending}
           onFocus={handleInputFocus}
           onTyping={startTyping}
