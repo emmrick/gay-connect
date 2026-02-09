@@ -716,6 +716,66 @@ export type Database = {
         }
         Relationships: []
       }
+      moderator_permissions: {
+        Row: {
+          assigned_by: string | null
+          can_ai_moderation: boolean | null
+          can_broadcast: boolean | null
+          can_manage_blocked: boolean | null
+          can_manage_content: boolean | null
+          can_manage_credits: boolean | null
+          can_manage_promo: boolean | null
+          can_manage_reports: boolean | null
+          can_manage_users: boolean | null
+          can_screenshot_sanctions: boolean | null
+          can_verify_identity: boolean | null
+          can_view_history: boolean | null
+          can_view_stats: boolean | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          can_ai_moderation?: boolean | null
+          can_broadcast?: boolean | null
+          can_manage_blocked?: boolean | null
+          can_manage_content?: boolean | null
+          can_manage_credits?: boolean | null
+          can_manage_promo?: boolean | null
+          can_manage_reports?: boolean | null
+          can_manage_users?: boolean | null
+          can_screenshot_sanctions?: boolean | null
+          can_verify_identity?: boolean | null
+          can_view_history?: boolean | null
+          can_view_stats?: boolean | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          can_ai_moderation?: boolean | null
+          can_broadcast?: boolean | null
+          can_manage_blocked?: boolean | null
+          can_manage_content?: boolean | null
+          can_manage_credits?: boolean | null
+          can_manage_promo?: boolean | null
+          can_manage_reports?: boolean | null
+          can_manage_users?: boolean | null
+          can_screenshot_sanctions?: boolean | null
+          can_verify_identity?: boolean | null
+          can_view_history?: boolean | null
+          can_view_stats?: boolean | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       moderator_wallets: {
         Row: {
           balance_cents: number
@@ -1803,6 +1863,7 @@ export type Database = {
         }
         Returns: Json
       }
+      demote_moderator: { Args: { _target_user_id: string }; Returns: Json }
       generate_referral_code: { Args: never; Returns: string }
       get_nearby_profiles: {
         Args: {
@@ -1849,6 +1910,10 @@ export type Database = {
       }
       process_referral_credits: {
         Args: { _referred_id: string; _referrer_id: string }
+        Returns: Json
+      }
+      promote_to_moderator: {
+        Args: { _permissions?: Json; _target_user_id: string }
         Returns: Json
       }
       record_moderator_earning: {
