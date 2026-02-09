@@ -7,9 +7,23 @@ import { useCreditDialog } from '@/contexts/CreditDialogContext';
 import { toast } from 'sonner';
 
 // Credit costs for saved messages
+// First message is free, then progressive: 5, 10, 15, 20...
+// Formula: currentCount * 5 (where currentCount is how many messages you already have)
 export const SAVED_MESSAGE_COSTS = {
-  create: 3.5,
   update: 2.0,
+};
+
+/**
+ * Calculate the cost to create the next saved message
+ * 1st message = free (0 credits)
+ * 2nd message = 5 credits
+ * 3rd message = 10 credits
+ * 4th message = 15 credits
+ * nth message = (n-1) * 5 credits
+ */
+export const getCreateCost = (currentCount: number): number => {
+  if (currentCount === 0) return 0;
+  return currentCount * 5;
 };
 
 interface SavedMessage {
@@ -51,13 +65,18 @@ export const useSavedMessages = () => {
     enabled: !!user,
   });
 
+  const currentMessageCount = query.data?.length ?? 0;
+  const nextCreateCost = getCreateCost(currentMessageCount);
+
   // Add new saved message
   const addMutation = useMutation({
     mutationFn: async (content: string) => {
       if (!user) throw new Error('Not authenticated');
 
-      // Check credit balance first
-      if (!hasEnoughCredits(SAVED_MESSAGE_COSTS.create)) {
+      const cost = getCreateCost(currentMessageCount);
+
+      // Check credit balance first (skip if free)
+      if (cost > 0 && !hasEnoughCredits(cost)) {
         throw new Error('INSUFFICIENT_CREDITS');
       }
 
@@ -66,12 +85,14 @@ export const useSavedMessages = () => {
         throw new Error('LIMIT_REACHED');
       }
 
-      // Deduct credits first
-      await deductCredits.mutateAsync({
-        amount: SAVED_MESSAGE_COSTS.create,
-        transactionType: 'saved_message_create',
-        description: 'Création d\'un message enregistré',
-      });
+      // Deduct credits (if not free)
+      if (cost > 0) {
+        await deductCredits.mutateAsync({
+          amount: cost,
+          transactionType: 'saved_message_create',
+          description: `Création d'un message enregistré (${cost.toFixed(1)} crédits)`,
+        });
+      }
 
       const { data, error } = await supabase
         .from('saved_messages')
@@ -87,15 +108,15 @@ export const useSavedMessages = () => {
       // Increment usage counter
       await incrementSavedMessages();
 
-      return data;
+      return { data, cost };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['saved-messages', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['user-usage', user?.id] });
     },
     onError: (error: Error) => {
       if (error.message === 'INSUFFICIENT_CREDITS') {
-        showInsufficientCreditsDialog(SAVED_MESSAGE_COSTS.create, 'Créer un message enregistré');
+        showInsufficientCreditsDialog(nextCreateCost, 'Créer un message enregistré');
       } else if (error.message === 'LIMIT_REACHED') {
         toast.error(
           `Limite atteinte ! Vous avez ${savedMessagesCount}/${limits.maxSavedMessages} message(s) enregistré(s).`
@@ -197,8 +218,9 @@ export const useSavedMessages = () => {
     updateMessage,
     canAddMore: canAddSavedMessage(),
     remainingSlots: Math.max(0, limits.maxSavedMessages - savedMessagesCount),
-    canAffordCreate: hasEnoughCredits(SAVED_MESSAGE_COSTS.create),
+    canAffordCreate: nextCreateCost === 0 || hasEnoughCredits(nextCreateCost),
     canAffordUpdate: hasEnoughCredits(SAVED_MESSAGE_COSTS.update),
     totalCredits,
+    nextCreateCost,
   };
 };
