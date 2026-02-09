@@ -34,14 +34,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Archive, User } from 'lucide-react';
+import { Loader2, Plus, User, Users } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
-type NavTab = 'home' | 'swipe' | 'groups' | 'messages' | 'premium' | 'profile';
+type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'profile';
 
 // Tab order for determining animation direction
-const tabOrder: NavTab[] = ['home', 'swipe', 'groups', 'messages', 'premium', 'profile'];
+const tabOrder: NavTab[] = ['home', 'swipe', 'messages', 'premium', 'profile'];
 
 // Animation variants for page transitions
 const pageVariants = {
@@ -92,7 +92,7 @@ const Index = () => {
   const [showMemberSearch, setShowMemberSearch] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
-  const [showArchivedConversations, setShowArchivedConversations] = useState(false);
+  const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
   const { data: isAdmin } = useIsAdmin();
   const { isPremium } = useSubscription();
   const { verification, isLoading: verificationLoading } = useIdentityVerification();
@@ -202,8 +202,6 @@ const Index = () => {
     } else if (tab === 'messages') {
       setSelectedPrivateUserId(null);
       setCurrentView('messages');
-    } else if (tab === 'groups') {
-      setCurrentView('groups');
     } else if (tab === 'premium') {
       setCurrentView('premium');
     } else if (tab === 'swipe') {
@@ -224,8 +222,9 @@ const Index = () => {
 
   const handleBackToRegions = () => {
     setSelectedRegion(null);
-    setCurrentView('groups');
-    setActiveTab('groups');
+    setCurrentView('messages');
+    setActiveTab('messages');
+    setMessageSubTab('groups');
   };
 
   const handleSignOut = async () => {
@@ -430,70 +429,6 @@ const Index = () => {
           </motion.div>
         ) : null;
 
-      case 'groups':
-        return (
-          <motion.div
-            key="groups"
-            custom={direction}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
-            className="flex-1 flex flex-col min-h-0"
-          >
-            {/* Header with add button */}
-            <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
-            >
-              <div className="px-5 pb-4 flex items-center justify-between">
-                <div>
-                  <motion.h2 
-                    className="font-display text-2xl font-bold text-foreground mb-0.5"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    Groupes
-                  </motion.h2>
-                  <motion.p 
-                    className="text-sm text-muted-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                  >
-                    {joinedGroups.length}/{maxGroups} groupes rejoints
-                  </motion.p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
-                  <NotificationsDropdown />
-                  <Button
-                    onClick={() => setShowGroupPicker(true)}
-                    size="icon"
-                    className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            {/* Groups list */}
-            <ScrollArea className="flex-1 min-h-0">
-              <JoinedGroupsList onSelectGroup={handleSelectRegion} />
-            </ScrollArea>
-
-            {/* Group picker dialog */}
-            <GroupPickerDialog
-              open={showGroupPicker}
-              onOpenChange={setShowGroupPicker}
-              onGroupJoined={handleSelectRegion}
-            />
-          </motion.div>
-        );
-
       case 'messages':
         return (
           <motion.div
@@ -506,7 +441,7 @@ const Index = () => {
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.25 }}
             className="flex-1 flex flex-col relative min-h-0"
           >
-            {/* Header with search button */}
+            {/* Header */}
             <div 
               className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
               style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
@@ -527,55 +462,73 @@ const Index = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.15 }}
                   >
-                    Tes conversations privées
+                    {messageSubTab === 'groups' 
+                      ? `${joinedGroups.length}/${maxGroups} groupes rejoints`
+                      : 'Tes conversations privées'
+                    }
                   </motion.p>
                 </div>
                 <div className="flex items-center gap-2">
                   <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
                   <NotificationsDropdown />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowArchivedConversations(!showArchivedConversations)}
-                    className={cn(
-                      "rounded-full",
-                      showArchivedConversations && "bg-secondary"
-                    )}
-                  >
-                    <Archive className="w-5 h-5" />
-                  </Button>
-                  <Button
-                    onClick={() => setShowMemberSearch(true)}
-                    size="icon"
-                    className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </Button>
+                  {messageSubTab === 'groups' ? (
+                    <Button
+                      onClick={() => setShowGroupPicker(true)}
+                      size="icon"
+                      className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setShowMemberSearch(true)}
+                      size="icon"
+                      className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </Button>
+                  )}
                 </div>
               </div>
 
-               {/* Tabs for active/archived */}
-               <div className="px-5 pb-3">
+              {/* Tabs: Conversations | Groupes | Archives */}
+              <div className="px-5 pb-3">
                 <Tabs 
-                  value={showArchivedConversations ? 'archived' : 'active'} 
-                  onValueChange={(v) => setShowArchivedConversations(v === 'archived')}
+                  value={messageSubTab} 
+                  onValueChange={(v) => setMessageSubTab(v as 'conversations' | 'groups' | 'archived')}
                 >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="active">Conversations</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="conversations">Conversations</TabsTrigger>
+                    <TabsTrigger value="groups" className="flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5" />
+                      Groupes
+                    </TabsTrigger>
                     <TabsTrigger value="archived">Archives</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
             </div>
             
-            {/* Conversation list */}
+            {/* Content based on sub-tab */}
             <ScrollArea className="flex-1 min-h-0">
-              <PrivateChatList
-                onSelectConversation={handleSelectConversation}
-                selectedUserId={null}
-                showArchived={showArchivedConversations}
-              />
+              {messageSubTab === 'groups' ? (
+                <JoinedGroupsList onSelectGroup={handleSelectRegion} />
+              ) : (
+                <PrivateChatList
+                  onSelectConversation={handleSelectConversation}
+                  selectedUserId={null}
+                  showArchived={messageSubTab === 'archived'}
+                />
+              )}
             </ScrollArea>
+
+            {/* Group picker dialog */}
+            <GroupPickerDialog
+              open={showGroupPicker}
+              onOpenChange={setShowGroupPicker}
+              onGroupJoined={handleSelectRegion}
+            />
+
             <AnimatePresence>
               {showMemberSearch && (
                 <MemberSearch
