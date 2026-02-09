@@ -78,7 +78,20 @@ export const usePrivateConversations = () => {
         .select('user_id, username, avatar_url, is_online, last_seen, hide_online_status, hide_last_seen')
         .in('user_id', otherUserIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      // Fetch primary photos as fallback for users without avatar_url
+      const { data: primaryPhotos } = await supabase
+        .from('profile_photos')
+        .select('user_id, photo_url')
+        .in('user_id', otherUserIds)
+        .eq('is_primary', true);
+
+      const primaryPhotoMap = new Map(primaryPhotos?.map(p => [p.user_id, p.photo_url]) || []);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, {
+        ...p,
+        // Use avatar_url if available, otherwise fall back to primary photo
+        avatar_url: p.avatar_url || primaryPhotoMap.get(p.user_id) || null,
+      }]) || []);
 
       // Fetch last message for each conversation
       const conversationsWithData = await Promise.all(
