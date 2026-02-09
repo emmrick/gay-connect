@@ -50,7 +50,8 @@ import CreditPurchaseRequestsPanel from '@/components/admin/CreditPurchaseReques
 import BroadcastNotificationPanel from '@/components/admin/BroadcastNotificationPanel';
 import AIModerationPanel from '@/components/admin/AIModerationPanel';
 import ScreenshotSanctionsPanel from '@/components/admin/ScreenshotSanctionsPanel';
-
+import ModeratorManagementPanel from '@/components/admin/ModeratorManagementPanel';
+import SwipeStatsPanel from '@/components/admin/SwipeStatsPanel';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -68,6 +69,19 @@ const Admin = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>('wallet');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
+
+  // Check if user is moderator
+  const { data: isModerator } = useQuery({
+    queryKey: ['is-moderator', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'moderator' });
+      return data === true;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isAdminOrMod = isAdmin || isModerator;
 
   // Memoize section change handler
   const handleSectionChange = useCallback((section: AdminSection) => {
@@ -112,7 +126,7 @@ const Admin = () => {
   }
 
   // Not admin
-  if (!isAdmin) {
+  if (!isAdminOrMod) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
@@ -267,6 +281,12 @@ const Admin = () => {
       
       case 'screenshot-sanctions':
         return <ScreenshotSanctionsPanel />;
+      
+      case 'moderators':
+        return <ModeratorManagementPanel />;
+      
+      case 'swipe-stats':
+        return <SwipeStatsPanel />;
       
       default:
         return null;
