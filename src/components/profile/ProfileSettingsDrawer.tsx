@@ -37,7 +37,6 @@ const ProfileSettingsDrawer = ({
   const [showEditDialog, setShowEditDialog] = useState(false);
 
   const menuItems = [
-    { icon: FolderLock, label: 'Albums privés', action: () => { setOpen(false); setShowAlbumManager(true); }, color: 'text-violet-500', bgColor: 'bg-violet-500/10' },
     { icon: Bell, label: 'Notifications', action: () => { setOpen(false); setSettingsType('notifications'); }, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
     { icon: Moon, label: 'Apparence', action: () => { setOpen(false); setSettingsType('appearance'); }, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' },
     { icon: Shield, label: 'Confidentialité', action: () => { setOpen(false); setSettingsType('privacy'); }, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
@@ -84,23 +83,7 @@ const ProfileSettingsDrawer = ({
           </SheetHeader>
 
           <div className="overflow-y-auto h-full pb-20 px-4">
-            {/* Credits Section */}
-            <button
-              onClick={() => { setOpen(false); onNavigateToCredits?.(); }}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 mb-4 hover:from-blue-500/20 hover:to-indigo-500/20 transition-all group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/30">
-                <Coins className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1 text-left">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-blue-600 dark:text-blue-400">Acheter des crédits</span>
-                  <Zap className="w-4 h-4 text-blue-500" />
-                </div>
-                <p className="text-xs text-muted-foreground">100 crédits pour 5,99 €</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-blue-500 group-hover:translate-x-1 transition-transform" />
-            </button>
+            {/* Menu Items */}
 
             {/* Menu Items */}
             <div className="space-y-2">
