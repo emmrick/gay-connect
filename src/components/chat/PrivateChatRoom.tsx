@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import ChatInput from './ChatInput';
+import PrivateChatInput from './PrivateChatInput';
 import EphemeralMessage from './EphemeralMessage';
 import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
@@ -395,10 +395,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
       {/* Input */}
       <div className="flex-shrink-0">
-        <ChatInput
+        <PrivateChatInput
           onSendMessage={handleSendMessage}
           recipientId={otherUserId}
-          isPrivate={true}
           isSending={sendMessage.isPending}
           onFocus={handleInputFocus}
           onTyping={startTyping}
