@@ -45,12 +45,6 @@ const PROMO_OFFER = {
   paymentLink: 'https://checkout.revolut.com/pay/45dd2e98-7ab4-40e7-ad01-5a64dedee6dd',
 };
 
-const CREDIT_PACKAGES_DISPLAY = [
-  { credits: 50, price: '4,99 €' },
-  { credits: 120, price: '9,99 €' },
-  { credits: 300, price: '19,99 €' },
-  { credits: 700, price: '39,99 €' },
-];
 
 const PremiumPage = () => {
   const { totalCredits, dailyCredits, bonusCredits, purchasedCredits, maxDailyCredits, isLoading } = useCredits();
@@ -105,7 +99,7 @@ const PremiumPage = () => {
           </div>
         </div>
 
-        {/* Balance Card - Compact */}
+        {/* Balance Card - Compact, no mini stats (already in bar) */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
           <CardContent className="p-3.5">
             <div className="flex items-center justify-between mb-3">
@@ -121,22 +115,6 @@ const PremiumPage = () => {
               <CreditHistorySheet />
             </div>
             <CreditBalanceBar showLabel={false} />
-            
-            {/* Mini stats inline */}
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              <div className="text-center px-2 py-1.5 rounded-lg bg-green-500/10">
-                <p className="text-sm font-bold text-green-600">{dailyCredits.toFixed(1)}</p>
-                <p className="text-[10px] text-muted-foreground">Quotidiens</p>
-              </div>
-              <div className="text-center px-2 py-1.5 rounded-lg bg-blue-500/10">
-                <p className="text-sm font-bold text-blue-600">{bonusCredits.toFixed(1)}</p>
-                <p className="text-[10px] text-muted-foreground">Bonus</p>
-              </div>
-              <div className="text-center px-2 py-1.5 rounded-lg bg-sky-400/10">
-                <p className="text-sm font-bold text-sky-500">{purchasedCredits.toFixed(1)}</p>
-                <p className="text-[10px] text-muted-foreground">Achetés</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
@@ -170,35 +148,6 @@ const PremiumPage = () => {
                 Acheter
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* All Packages - Compact Grid + Buy Button */}
-        <Card>
-          <CardContent className="p-3.5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="font-semibold text-sm flex items-center gap-1.5">
-                <ShoppingCart className="w-4 h-4 text-primary" />
-                Tous les packs
-              </p>
-              <Badge variant="outline" className="text-[10px]">Prix de lancement</Badge>
-            </div>
-            <div className="grid grid-cols-4 gap-2 mb-3">
-              {CREDIT_PACKAGES_DISPLAY.map((pkg) => (
-                <div key={pkg.credits} className="text-center p-2 rounded-lg bg-muted/50 border border-border">
-                  <p className="text-base font-bold">{pkg.credits}</p>
-                  <p className="text-[11px] text-muted-foreground">{pkg.price}</p>
-                </div>
-              ))}
-            </div>
-            <BuyCreditDialog 
-              trigger={
-                <Button className="w-full h-10 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold">
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Acheter des crédits
-                </Button>
-              }
-            />
             <p className="text-[10px] text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
               <Clock className="w-3 h-3" />
               Crédits ajoutés après validation admin · Sans expiration
