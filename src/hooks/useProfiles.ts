@@ -33,9 +33,25 @@ export const useProfile = (userId: string) => {
         .maybeSingle();
 
       if (error) throw error;
+      if (!data) return null;
+
+      // If no avatar_url, fallback to primary photo from profile_photos
+      if (!data.avatar_url) {
+        const { data: primaryPhoto } = await supabase
+          .from('profile_photos')
+          .select('photo_url')
+          .eq('user_id', userId)
+          .eq('is_primary', true)
+          .maybeSingle();
+
+        if (primaryPhoto?.photo_url) {
+          return { ...data, avatar_url: primaryPhoto.photo_url };
+        }
+      }
+
       return data;
     },
     enabled: !!userId,
-    staleTime: 30_000, // Consider data fresh for 30 seconds to avoid excessive refetches
+    staleTime: 30_000,
   });
 };
