@@ -498,7 +498,7 @@ const TransactionItem = ({ transaction }: TransactionItemProps) => {
       <span className={`text-sm font-semibold ${
         isPositive ? 'text-green-500' : 'text-red-500'
       }`}>
-        {isPositive ? '+' : ''}{transaction.amount.toFixed(2)}
+        {isPositive ? '+' : ''}{transaction.amount.toFixed(1)}
       </span>
     </div>
   );
