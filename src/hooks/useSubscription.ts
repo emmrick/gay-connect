@@ -18,7 +18,7 @@ export const FREE_LIMITS = {
   nearbyProfiles: 30,
   conversationsPerWeek: 10,
   maxAlbums: 1,
-  maxSavedMessages: 10,
+  maxSavedMessages: 20,
   maxPhotoSize: 20 * 1024 * 1024, // 20 MB
   maxVideoSize: 500 * 1024 * 1024, // 500 MB
 };
