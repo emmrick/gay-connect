@@ -541,7 +541,7 @@ const TransactionRow = ({ transaction }: { transaction: TransactionWithProfile }
           "font-semibold min-w-[60px] text-right",
           isPositive ? "text-green-500" : "text-red-500"
         )}>
-          {isPositive ? '+' : ''}{transaction.amount.toFixed(2)}
+          {isPositive ? '+' : ''}{transaction.amount.toFixed(1)}
         </span>
       </div>
     </div>
@@ -613,7 +613,7 @@ const UserTransactionsGroup = ({
               </div>
               <div className="flex items-center gap-2">
                 <span className={tx.amount > 0 ? "text-green-500" : "text-red-500"}>
-                  {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}
+                  {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(1)}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {format(new Date(tx.created_at), 'HH:mm', { locale: fr })}
