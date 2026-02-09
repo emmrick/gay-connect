@@ -17,13 +17,13 @@ export const useScreenshotProtection = (enableNativeBlock = false) => {
     console.log('[ScreenshotProtection] Screenshot detected - showing black screen');
     setIsBlocked(true);
 
-    // Keep content blocked for 3 seconds
+    // Keep content blocked for 10 seconds
     if (blockTimeoutRef.current) {
       clearTimeout(blockTimeoutRef.current);
     }
     blockTimeoutRef.current = setTimeout(() => {
       setIsBlocked(false);
-    }, 3000);
+    }, 10000);
   }, []);
 
   // Use advanced mobile screenshot detection
