@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import SEOHead from '@/components/seo/SEOHead';
 
 const About = () => {
   const navigate = useNavigate();
@@ -70,6 +71,18 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="À propos de Gay Connect - Communauté gay sécurisée"
+        description="Gay Connect : un espace safe pour la communauté gay en France. Chat par région, médias éphémères, profils vérifiés et modération active."
+        canonical="https://gay-connect.lovable.app/about"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'AboutPage',
+          name: 'À propos de Gay Connect',
+          description: 'Un espace safe pour la communauté gay en France.',
+          url: 'https://gay-connect.lovable.app/about',
+        }}
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
