@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { useAuth } from '@/contexts/AuthContext';
 import DataExportDialog from '@/components/profile/DataExportDialog';
+import SEOHead from '@/components/seo/SEOHead';
 
 // Define searchable sections
 const LEGAL_SECTIONS = [
@@ -58,6 +59,11 @@ const Legal = () => {
 
   return (
     <>
+      <SEOHead
+        title="Mentions légales & CGU - Gay Connect"
+        description="Conditions générales d'utilisation, politique de confidentialité RGPD, et mentions légales de Gay Connect. Site réservé aux +18 ans."
+        canonical="https://gay-connect.lovable.app/legal"
+      />
       <DataExportDialog open={showExportDialog} onOpenChange={setShowExportDialog} />
       <div className="min-h-screen bg-background">
       {/* Header */}

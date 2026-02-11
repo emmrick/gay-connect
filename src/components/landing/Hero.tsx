@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle, Users, Shield, MapPin, AlertTriangle } from 'lucide-react';
 import { useTotalMemberCount } from '@/hooks/useTotalMemberCount';
 import { useNavigate, Link } from 'react-router-dom';
+import SEOHead, { websiteJsonLd, organizationJsonLd } from '@/components/seo/SEOHead';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -22,6 +23,12 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
 
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden">
+      <SEOHead
+        title="Gay Connect - Rencontres & Chat Gay en France"
+        description="Rejoins la communauté gay de ta région. Chat, échanges de photos et vidéos en groupe ou en privé. Membres vérifiés, espace sécurisé. +18 ans."
+        canonical="https://gay-connect.lovable.app/"
+        jsonLd={{ ...websiteJsonLd, ...organizationJsonLd }}
+      />
       {/* 18+ Warning Banner */}
       <div className="bg-destructive/90 text-destructive-foreground py-3 px-4 text-center relative z-20">
         <div className="container mx-auto flex items-center justify-center gap-2 flex-wrap">
