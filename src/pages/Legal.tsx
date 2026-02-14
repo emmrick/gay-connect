@@ -726,10 +726,12 @@ const Legal = () => {
               <div>
                 <h4 className="font-semibold text-foreground mb-2">3. Contact</h4>
                 <p>
-                  Pour toute question relative au site, vous pouvez nous contacter via 
-                  la messagerie intégrée à l'application ou par email à l'adresse indiquée 
-                  dans votre espace membre.
+                  Pour toute question relative au site, vous pouvez nous contacter :
                 </p>
+                <ul className="space-y-2 mt-2">
+                  <li><strong>Email :</strong> <a href="mailto:pipaselfie@gmail.com" className="text-primary hover:underline">pipaselfie@gmail.com</a></li>
+                  <li>Ou via la messagerie intégrée à l'application.</li>
+                </ul>
               </div>
 
               <div>
