@@ -15,6 +15,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { notifyCreditPurchaseApproved, notifyCreditPurchaseRejected } from '@/services/pushNotificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -134,6 +135,12 @@ const CreditPurchaseRequestsPanel = () => {
         });
 
         if (creditError) throw creditError;
+
+        // Notify user that their credits have been approved
+        await notifyCreditPurchaseApproved(request.user_id, request.amount, request.price_euros);
+      } else {
+        // Notify user that their purchase was rejected
+        await notifyCreditPurchaseRejected(request.user_id, adminNotes || undefined);
       }
     },
     onSuccess: (_, { approve }) => {

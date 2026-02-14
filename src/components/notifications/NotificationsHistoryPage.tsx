@@ -58,18 +58,33 @@ const getNotificationIcon = (type: string) => {
   switch (type) {
     case 'verification_request':
     case 'verification_approved':
+    case 'verification_submitted':
       return <ShieldCheck className="w-5 h-5 text-green-500" />;
     case 'verification_rejected':
       return <AlertTriangle className="w-5 h-5 text-destructive" />;
     case 'message':
     case 'private_message':
+    case 'group_mention':
       return <MessageSquare className="w-5 h-5 text-blue-500" />;
     case 'profile_reaction':
     case 'favorite_added':
       return <Heart className="w-5 h-5 text-pink-500" />;
+    case 'swipe_match':
+      return <Heart className="w-5 h-5 text-red-500" />;
     case 'album_shared':
     case 'album_share_stopped':
+    case 'album_share_expired':
+    case 'album_share_ended':
       return <FolderOpen className="w-5 h-5 text-amber-500" />;
+    case 'credits_approved':
+      return <Gift className="w-5 h-5 text-green-500" />;
+    case 'credits_rejected':
+      return <AlertTriangle className="w-5 h-5 text-red-500" />;
+    case 'account_suspended':
+    case 'account_banned':
+      return <AlertTriangle className="w-5 h-5 text-destructive" />;
+    case 'account_unblocked':
+      return <ShieldCheck className="w-5 h-5 text-green-500" />;
     case 'welcome':
       return <Gift className="w-5 h-5 text-purple-500" />;
     case 'subscription_activated':
@@ -81,17 +96,23 @@ const getNotificationIcon = (type: string) => {
 };
 
 const getNotificationCategory = (type: string): string => {
-  if (['verification_request', 'verification_approved', 'verification_rejected'].includes(type)) {
+  if (['verification_request', 'verification_approved', 'verification_rejected', 'verification_submitted'].includes(type)) {
     return 'verification';
   }
-  if (['message', 'private_message', 'mention'].includes(type)) {
+  if (['message', 'private_message', 'mention', 'group_mention'].includes(type)) {
     return 'messages';
   }
-  if (['profile_reaction', 'favorite_added'].includes(type)) {
+  if (['profile_reaction', 'favorite_added', 'swipe_match'].includes(type)) {
     return 'social';
   }
-  if (['album_shared', 'album_share_stopped'].includes(type)) {
+  if (['album_shared', 'album_share_stopped', 'album_share_expired', 'album_share_ended'].includes(type)) {
     return 'albums';
+  }
+  if (['credits_approved', 'credits_rejected'].includes(type)) {
+    return 'credits';
+  }
+  if (['account_suspended', 'account_banned', 'account_unblocked', 'report_investigation'].includes(type)) {
+    return 'account';
   }
   return 'other';
 };

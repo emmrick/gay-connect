@@ -207,27 +207,55 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
 
         if (error) throw error;
 
-        // Detect mentions in the message and send push notifications
+        // Get chat room info and sender profile
+        const { data: roomData } = await supabase
+          .from('chat_rooms')
+          .select('region_name, region_code, is_custom, id')
+          .eq('id', chatRoomId)
+          .single();
+
+        const { data: senderProfile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('user_id', user.id)
+          .single();
+
+        const roomName = roomData?.region_name || 'Groupe';
+        const senderName = senderProfile?.username || 'Quelqu\'un';
+        const regionCode = roomData?.region_code;
+
+        // Get all members of this group to notify them
+        const { data: roomMembers } = await supabase
+          .from('chat_room_members')
+          .select('user_id')
+          .eq('chat_room_id', chatRoomId);
+
+        const memberIds = (roomMembers || [])
+          .map(m => m.user_id)
+          .filter(id => id !== user.id); // Exclude sender
+
+        // Send push notification to all group members (not just mentions)
+        const messagePreview = messageType === 'text'
+          ? (content || '').substring(0, 50)
+          : messageType === 'image' ? '📷 Photo' : '🎥 Vidéo';
+
+        for (const memberId of memberIds) {
+          notifyNewGroupMessage(
+            memberId,
+            roomName,
+            senderName,
+            messagePreview,
+            regionCode
+          );
+        }
+
+        // Detect mentions for additional in-app notifications
         if (content && messageType === 'text') {
           const mentionRegex = /@(\w+)/g;
           const mentions = content.match(mentionRegex);
           
           if (mentions && mentions.length > 0) {
             const usernames = mentions.map(m => m.substring(1).toLowerCase());
-            
-            // Get chat room name
-            const { data: roomData } = await supabase
-              .from('chat_rooms')
-              .select('region_name, region_code')
-              .eq('id', chatRoomId)
-              .single();
-
-            // Get sender username
-            const { data: senderProfile } = await supabase
-              .from('profiles')
-              .select('username')
-              .eq('user_id', user.id)
-              .single();
 
             // Find users with matching usernames
             const { data: mentionedProfiles } = await supabase
@@ -240,21 +268,12 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
                 // Don't notify yourself
                 if (mentionedUser.user_id === user.id) continue;
 
-                // Send push notification with region code
-                notifyNewGroupMessage(
-                  mentionedUser.user_id,
-                  roomData?.region_name || 'Groupe',
-                  senderProfile?.username || 'Quelqu\'un',
-                  `@${mentionedUser.username} ${content.substring(0, 30)}...`,
-                  roomData?.region_code
-                );
-
-                // Create in-app notification
+                // Create in-app notification for mentions
                 await supabase.from('notifications').insert({
                   user_id: mentionedUser.user_id,
                   type: 'group_mention',
-                  title: `💬 Mention dans ${roomData?.region_name || 'un groupe'}`,
-                  message: `${senderProfile?.username || 'Quelqu\'un'} t'a mentionné: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+                  title: `💬 Mention dans ${roomName}`,
+                  message: `${senderName} t'a mentionné: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
                   action_url: '/',
                 });
               }

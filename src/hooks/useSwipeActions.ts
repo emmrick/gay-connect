@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditCheck } from './useCreditCheck';
 import { deductCredits } from './useCredits';
+import { notifySwipeMatch } from '@/services/pushNotificationService';
 import { toast } from 'sonner';
 
 // Credit costs for swipe actions
@@ -197,6 +198,36 @@ export const useSwipeActions = () => {
         });
 
       if (error) throw error;
+
+      // Check for mutual like (match!)
+      if (actionType === 'like') {
+        const { data: mutualLike } = await supabase
+          .from('swipe_actions')
+          .select('id')
+          .eq('user_id', targetUserId)
+          .eq('target_user_id', user.id)
+          .eq('action_type', 'like')
+          .maybeSingle();
+
+        if (mutualLike) {
+          // Get both usernames
+          const { data: myProfile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          const { data: targetProfile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('user_id', targetUserId)
+            .maybeSingle();
+
+          // Notify both users
+          notifySwipeMatch(user.id, targetProfile?.username || 'Quelqu\'un', targetUserId);
+          notifySwipeMatch(targetUserId, myProfile?.username || 'Quelqu\'un', user.id);
+        }
+      }
 
       return { actionType, targetUserId };
     },
