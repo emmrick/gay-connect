@@ -20,6 +20,8 @@ import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
+import { useScreenshotProtection } from "@/hooks/useScreenshotProtection";
+import ScreenshotProtectionOverlay from "@/components/security/ScreenshotProtectionOverlay";
 import { toast } from "sonner";
 
 // Lazy load pages for better initial bundle size
@@ -55,14 +57,12 @@ const useGlobalErrorHandler = () => {
   useEffect(() => {
     const handleRejection = (event: PromiseRejectionEvent) => {
       console.error("[unhandledrejection] Unhandled promise rejection:", event.reason);
-      // Don't toast for network/fetch failures (they're usually handled by React Query)
       const reason = event.reason;
       const isNetworkError =
         reason instanceof TypeError && reason.message?.includes("fetch");
       if (!isNetworkError) {
         toast.error("Une erreur inattendue s'est produite");
       }
-      // Prevent default browser behavior (logging to console twice, etc.)
       event.preventDefault();
     };
 
@@ -83,6 +83,14 @@ const useGlobalErrorHandler = () => {
 // Inner component that uses hooks requiring AuthProvider
 const AuthenticatedApp = () => {
   useRealtimeProfileSync();
+
+  // Global screenshot protection - active on the entire site
+  const { isBlocked, enableProtection } = useScreenshotProtection(true);
+
+  // Enable protection on mount
+  useEffect(() => {
+    enableProtection();
+  }, [enableProtection]);
   
   return (
     <CreditDialogProvider>
@@ -93,6 +101,8 @@ const AuthenticatedApp = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
+              {/* Global screenshot protection overlay */}
+              <ScreenshotProtectionOverlay isActive={isBlocked} />
               <BrowserRouter>
                 <Suspense fallback={<AppLoadingSkeleton />}>
                   <Routes>
