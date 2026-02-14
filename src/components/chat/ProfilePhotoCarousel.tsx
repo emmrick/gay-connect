@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
-import { User } from 'lucide-react';
+import { User, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProfilePhotoCarouselProps {
   photos: string[];
@@ -17,6 +18,8 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
     skipSnaps: false,
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [fullscreenOpen, setFullscreenOpen] = useState(false);
+  const [fullscreenIndex, setFullscreenIndex] = useState(0);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -32,7 +35,43 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
     };
   }, [emblaApi, onSelect]);
 
-  // If no photos, show placeholder
+  const openFullscreen = (index: number) => {
+    setFullscreenIndex(index);
+    setFullscreenOpen(true);
+  };
+
+  const closeFullscreen = () => setFullscreenOpen(false);
+
+  const goFullscreenPrev = () => {
+    setFullscreenIndex((prev) => (prev - 1 + photos.length) % photos.length);
+  };
+
+  const goFullscreenNext = () => {
+    setFullscreenIndex((prev) => (prev + 1) % photos.length);
+  };
+
+  // Keyboard navigation for fullscreen
+  useEffect(() => {
+    if (!fullscreenOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeFullscreen();
+      if (e.key === 'ArrowLeft') goFullscreenPrev();
+      if (e.key === 'ArrowRight') goFullscreenNext();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [fullscreenOpen, photos.length]);
+
+  // Lock body scroll when fullscreen is open
+  useEffect(() => {
+    if (fullscreenOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [fullscreenOpen]);
+
   if (photos.length === 0) {
     return (
       <div className={cn("relative w-full aspect-square bg-gradient-to-br from-primary to-accent flex items-center justify-center", className)}>
@@ -42,58 +81,151 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
   }
 
   return (
-    <div className={cn("relative w-full", className)}>
-      {/* Carousel */}
-      <div 
-        ref={emblaRef} 
-        className="overflow-hidden rounded-lg touch-pan-y"
-        style={{ touchAction: 'pan-y pinch-zoom' }}
-      >
-        <div className="flex touch-pan-x" style={{ touchAction: 'pan-x' }}>
-          {photos.map((photo, index) => (
-            <div
-              key={index}
-              className="flex-[0_0_100%] min-w-0"
-            >
-              <div className="aspect-square relative">
-                <img
-                  src={photo}
-                  alt={`${username} photo ${index + 1}`}
-                  className="w-full h-full object-cover select-none pointer-events-none"
-                  draggable={false}
-                />
+    <>
+      <div className={cn("relative w-full", className)}>
+        {/* Carousel */}
+        <div 
+          ref={emblaRef} 
+          className="overflow-hidden rounded-lg touch-pan-y"
+          style={{ touchAction: 'pan-y pinch-zoom' }}
+        >
+          <div className="flex touch-pan-x" style={{ touchAction: 'pan-x' }}>
+            {photos.map((photo, index) => (
+              <div
+                key={index}
+                className="flex-[0_0_100%] min-w-0"
+              >
+                <div
+                  className="aspect-square relative cursor-pointer"
+                  onClick={() => openFullscreen(index)}
+                >
+                  <img
+                    src={photo}
+                    alt={`${username} photo ${index + 1}`}
+                    className="w-full h-full object-cover select-none"
+                    draggable={false}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
+        {/* Pagination dots */}
+        {photos.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {photos.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => emblaApi?.scrollTo(index)}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-all duration-200",
+                  selectedIndex === index
+                    ? "bg-white w-4"
+                    : "bg-white/50 hover:bg-white/70"
+                )}
+                aria-label={`Aller à la photo ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Photo counter */}
+        {photos.length > 1 && (
+          <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+            {selectedIndex + 1} / {photos.length}
+          </div>
+        )}
       </div>
 
-      {/* Pagination dots */}
-      {photos.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {photos.map((_, index) => (
+      {/* Fullscreen viewer */}
+      <AnimatePresence>
+        {fullscreenOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+            onClick={closeFullscreen}
+          >
+            {/* Close button */}
             <button
-              key={index}
-              onClick={() => emblaApi?.scrollTo(index)}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all duration-200",
-                selectedIndex === index
-                  ? "bg-white w-4"
-                  : "bg-white/50 hover:bg-white/70"
-              )}
-              aria-label={`Aller à la photo ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
+              onClick={closeFullscreen}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors safe-area-top"
+              aria-label="Fermer"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-      {/* Photo counter */}
-      {photos.length > 1 && (
-        <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-          {selectedIndex + 1} / {photos.length}
-        </div>
-      )}
-    </div>
+            {/* Counter */}
+            {photos.length > 1 && (
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/70 text-sm font-medium safe-area-top">
+                {fullscreenIndex + 1} / {photos.length}
+              </div>
+            )}
+
+            {/* Image */}
+            <motion.div
+              key={fullscreenIndex}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="w-full h-full flex items-center justify-center p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={photos[fullscreenIndex]}
+                alt={`${username} photo ${fullscreenIndex + 1}`}
+                className="max-w-full max-h-full object-contain rounded-lg select-none"
+                draggable={false}
+                onClick={closeFullscreen}
+              />
+            </motion.div>
+
+            {/* Navigation arrows */}
+            {photos.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); goFullscreenPrev(); }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                  aria-label="Photo précédente"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); goFullscreenNext(); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                  aria-label="Photo suivante"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
+
+            {/* Bottom dots */}
+            {photos.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 safe-area-bottom">
+                {photos.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => { e.stopPropagation(); setFullscreenIndex(index); }}
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all duration-200",
+                      fullscreenIndex === index
+                        ? "bg-white w-5"
+                        : "bg-white/40 hover:bg-white/60"
+                    )}
+                    aria-label={`Photo ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
