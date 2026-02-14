@@ -40,7 +40,7 @@ export const CREDIT_COSTS = {
   // Group costs
   join_extra_group: 5.0, // Joining a group outside home department
   // Chatbot costs
-  chatbot_message: 0.2, // Per message with someone's chatbot
+  chatbot_message: 0.5, // Per message with someone's chatbot
   chatbot_info: 2.5, // Per info added (first 10)
   chatbot_info_extra: 20.0, // Per info added (after 10)
   chatbot_activate: 10.0, // Activation cost

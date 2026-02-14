@@ -56,7 +56,7 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
 
     // Check credits
     if (!hasEnoughCredits(CREDIT_COSTS.chatbot_message)) {
-      toast.error('Crédits insuffisants (0.2 crédits par message)');
+      toast.error('Crédits insuffisants (0.5 crédits par message)');
       pendingRef.current = false;
       return;
     }
