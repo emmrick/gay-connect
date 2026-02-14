@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FolderLock, Plus, ImageIcon, Loader2, ChevronRight } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { FolderLock, Plus, ImageIcon, Loader2, ChevronRight, EyeOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAlbums } from '@/hooks/useAlbums';
@@ -130,13 +130,29 @@ interface AlbumThumbnailProps {
 const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick }: AlbumThumbnailProps) => {
   const { data: media = [] } = useAlbumMedia(album.id);
   const coverImage = media[0]?.media_url;
+  const [revealed, setRevealed] = useState(false);
+  const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleRevealAndOpen = () => {
+    if (!revealed) {
+      // First tap: reveal
+      setRevealed(true);
+      // Auto-blur again after 3 seconds
+      revealTimerRef.current = setTimeout(() => setRevealed(false), 3000);
+    } else {
+      // Second tap: open gallery
+      if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
+      setRevealed(false);
+      onClick();
+    }
+  };
 
   return (
     <motion.button
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.05 }}
-      onClick={onClick}
+      onClick={handleRevealAndOpen}
       className={cn(
         "aspect-square rounded-xl overflow-hidden relative group",
         "bg-secondary/50 hover:ring-2 hover:ring-primary/50 transition-all"
@@ -146,11 +162,23 @@ const AlbumThumbnail = ({ album, index, useAlbumMedia, onClick }: AlbumThumbnail
         <img 
           src={coverImage} 
           alt={album.name}
-          className="w-full h-full object-cover"
+          className={cn(
+            "w-full h-full object-cover transition-all duration-300",
+            !revealed && "blur-lg scale-110"
+          )}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
           <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
+        </div>
+      )}
+
+      {/* Privacy blur hint */}
+      {coverImage && !revealed && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-black/40 backdrop-blur-sm rounded-full p-1.5">
+            <EyeOff className="w-4 h-4 text-white" />
+          </div>
         </div>
       )}
       
