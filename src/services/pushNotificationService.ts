@@ -241,3 +241,72 @@ export const notifyReportInvestigation = async (userId: string) => {
     '/'
   );
 };
+
+// === NEW NOTIFICATIONS ===
+
+// Notify user when they receive a private message (in-app notification)
+export const notifyPrivateMessageInApp = async (
+  recipientId: string,
+  senderUsername: string,
+  senderId: string,
+  messagePreview?: string
+) => {
+  const preview = messagePreview
+    ? messagePreview.length > 50
+      ? messagePreview.substring(0, 50) + '...'
+      : messagePreview
+    : 'Nouveau message';
+
+  await supabase.from('notifications').insert({
+    user_id: recipientId,
+    type: 'private_message',
+    title: `💬 ${senderUsername}`,
+    message: preview,
+    action_url: `/profile/${senderId}`,
+  });
+};
+
+// Notify both users when a swipe match occurs (mutual like)
+export const notifySwipeMatch = async (
+  userId: string,
+  matchedUsername: string,
+  matchedUserId: string
+) => {
+  await createNotificationAndPush(
+    userId,
+    'swipe_match',
+    '💘 Nouveau match !',
+    `${matchedUsername} t'a aussi liké ! Vous pouvez maintenant discuter.`,
+    `/profile/${matchedUserId}`
+  );
+};
+
+// Notify user when their credit purchase is approved
+export const notifyCreditPurchaseApproved = async (
+  userId: string,
+  amount: number,
+  priceEuros: number
+) => {
+  await createNotificationAndPush(
+    userId,
+    'credits_approved',
+    '💰 Crédits ajoutés !',
+    `Votre achat de ${amount} crédits (${priceEuros}€) a été validé. Bon tchat !`,
+    '/?tab=premium'
+  );
+};
+
+// Notify user when their credit purchase is rejected
+export const notifyCreditPurchaseRejected = async (
+  userId: string,
+  reason?: string
+) => {
+  const reasonText = reason ? ` Raison : ${reason}` : '';
+  await createNotificationAndPush(
+    userId,
+    'credits_rejected',
+    '❌ Achat refusé',
+    `Votre demande d'achat de crédits a été refusée.${reasonText}`,
+    '/?tab=premium'
+  );
+};

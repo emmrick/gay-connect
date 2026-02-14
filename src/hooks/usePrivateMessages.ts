@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRecordEarning } from '@/hooks/useModeratorEarnings';
-import { notifyNewPrivateMessage } from '@/services/pushNotificationService';
+import { notifyNewPrivateMessage, notifyPrivateMessageInApp } from '@/services/pushNotificationService';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
@@ -256,6 +256,14 @@ export const usePrivateMessages = (otherUserId: string | null) => {
               : '🎥 Vidéo';
           
           notifyNewPrivateMessage(
+            otherUserId,
+            senderProfile?.username || 'Quelqu\'un',
+            user.id,
+            messagePreview || undefined
+          );
+          
+          // Also create in-app notification (bell icon)
+          notifyPrivateMessageInApp(
             otherUserId,
             senderProfile?.username || 'Quelqu\'un',
             user.id,

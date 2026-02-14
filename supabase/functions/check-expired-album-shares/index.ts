@@ -105,6 +105,28 @@ Deno.serve(async (req) => {
       if (notifError) {
         console.error("Error inserting notifications:", notifError);
       }
+
+      // Also send push notifications for album expiration
+      for (const notif of notifications) {
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+            },
+            body: JSON.stringify({
+              userId: notif.user_id,
+              title: notif.title,
+              body: notif.message,
+              url: notif.action_url,
+              notificationType: 'system',
+            }),
+          });
+        } catch (pushErr) {
+          console.error("Error sending push for album expiry:", pushErr);
+        }
+      }
     }
 
     // Deactivate expired shares
