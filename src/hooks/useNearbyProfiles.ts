@@ -51,40 +51,23 @@ export const useNearbyProfiles = (
 
       // Use explicit null/undefined checks (0 is a valid coordinate).
       if (latitude == null || longitude == null) {
-        // Fallback: get all profiles sorted by last_seen
-        const fetchCount = PAGE_SIZE + 15;
+        // Fallback: get profiles sorted by online status / last_seen
+        // Filter blocked/suspended users via SQL subqueries to avoid N+1 RPC calls
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .neq('user_id', user?.id || '')
+          .not('user_id', 'in', `(select user_id from user_blocks where is_active = true)`)
           .order('is_online', { ascending: false })
           .order('last_seen', { ascending: false, nullsFirst: false })
-          .range(offset, offset + fetchCount - 1);
+          .range(offset, offset + PAGE_SIZE - 1);
 
         if (error) throw error;
         
-        // Filter out blocked/suspended users in parallel
-        const profilesWithStatus = await Promise.all(
-          (data || []).map(async (profile) => {
-            const [blockedRes, suspendedRes] = await Promise.all([
-              supabase.rpc('is_user_blocked', { _user_id: profile.user_id }),
-              supabase.rpc('is_user_suspended', { _user_id: profile.user_id })
-            ]);
-            return {
-              profile,
-              isBlocked: blockedRes.data,
-              isSuspended: suspendedRes.data
-            };
-          })
-        );
-        
-        const filteredProfiles = profilesWithStatus
-          .filter(({ isBlocked, isSuspended }) => !isBlocked && !isSuspended)
-          .slice(0, PAGE_SIZE)
-          .map(({ profile }) => fixStaleOnlineStatus({
-            ...profile,
-            distance_km: null,
-          }));
+        const filteredProfiles = (data || []).map((profile) => fixStaleOnlineStatus({
+          ...profile,
+          distance_km: null,
+        }));
 
         const hasMore = filteredProfiles.length === PAGE_SIZE;
         return { 
@@ -93,13 +76,15 @@ export const useNearbyProfiles = (
         };
       }
 
-      // With geolocation: fetch all profiles sorted by distance (closest first)
+      // With geolocation: use RPC with proper pagination
+      // RPC already filters blocked/suspended users
+      const fetchLimit = (pageParam + 1) * PAGE_SIZE + PAGE_SIZE; // Fetch enough for current + next check
       const { data, error } = await supabase
         .rpc('get_nearby_profiles', {
           user_lat: latitude,
           user_lon: longitude,
           max_distance_km: maxDistance,
-          limit_count: 1000,
+          limit_count: fetchLimit,
         });
 
       if (error) throw error;
