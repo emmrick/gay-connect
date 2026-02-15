@@ -82,165 +82,162 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
         </div>
 
         <TabsContent value="swipe" className="flex-1 flex flex-col min-h-0 mt-0 overflow-hidden">
-          {isLoading ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <motion.div
-                className="relative"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 200 }}
-              >
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
-                  <Loader2 className="w-9 h-9 animate-spin text-primary" />
-                </div>
+          <div className="flex-1 flex flex-col min-h-0">
+            {isLoading ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-4">
                 <motion.div
-                  className="absolute inset-0 rounded-3xl border-2 border-primary/20"
-                  animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </motion.div>
-              <p className="text-sm text-muted-foreground font-medium">Chargement des profils…</p>
-            </div>
-          ) : remainingProfiles.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                className="relative mb-6"
-              >
-                <div className="w-28 h-28 rounded-[32px] bg-gradient-to-br from-primary/15 via-accent/10 to-secondary flex items-center justify-center">
-                  <Sparkles className="w-14 h-14 text-primary/60" />
-                </div>
-                <motion.div
-                  className="absolute -top-2 -right-2 w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center"
-                  animate={{ y: [0, -4, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                  className="relative"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
                 >
-                  <Zap className="w-5 h-5 text-accent" />
-                </motion.div>
-              </motion.div>
-              <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                C'est tout pour le moment !
-              </h3>
-              <p className="text-muted-foreground text-sm mb-6 max-w-[260px] leading-relaxed">
-                Tu as vu tous les profils disponibles. Reviens plus tard pour de nouvelles découvertes.
-              </p>
-              <Button onClick={() => refetchProfiles()} variant="outline" className="gap-2 rounded-2xl h-11 px-6 font-medium">
-                <RefreshCw className="w-4 h-4" />
-                Rafraîchir
-              </Button>
-            </div>
-          ) : (
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* Cards stack */}
-              <div className="flex-1 relative min-h-0">
-                <AnimatePresence mode="popLayout">
-                  {remainingProfiles.slice(0, 3).map((profile, index) => (
-                    <SwipeCard
-                      key={profile.id}
-                      profile={profile}
-                      onSwipe={handleSwipe}
-                      isTop={index === 0}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-
-              {/* Action buttons */}
-              <div className="relative z-20 flex justify-center items-center gap-4 py-4 px-6">
-                {/* Dislike */}
-                <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
-                  <button
-                    className="w-[56px] h-[56px] rounded-full flex items-center justify-center bg-card border-2 border-destructive/30 shadow-lg shadow-destructive/10 hover:border-destructive/50 hover:shadow-destructive/20 transition-all active:bg-destructive/10"
-                    onClick={() => remainingProfiles[0] && handleSwipe('left')}
-                  >
-                    <X className="w-6 h-6 text-destructive" strokeWidth={2.5} />
-                  </button>
-                </motion.div>
-
-                {/* Hide */}
-                <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
-                  <button
-                    className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-card border-2 border-purple-400/30 shadow-lg shadow-purple-400/10 hover:border-purple-400/50 hover:shadow-purple-400/20 transition-all active:bg-purple-400/10"
-                    onClick={() => remainingProfiles[0] && handleSwipe('up')}
-                  >
-                    <EyeOff className="w-[18px] h-[18px] text-purple-400" />
-                  </button>
-                </motion.div>
-
-                {/* Like */}
-                <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
-                  <button
-                    className="w-[56px] h-[56px] rounded-full flex items-center justify-center bg-gradient-to-br from-green-400 to-green-500 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 transition-all active:from-green-500 active:to-green-600"
-                    onClick={() => remainingProfiles[0] && handleSwipe('right')}
-                  >
-                    <Heart className="w-6 h-6 text-white" fill="white" />
-                  </button>
-                </motion.div>
-              </div>
-
-              {/* Credit costs */}
-              <div className="px-5 pb-3">
-                <div className="flex items-center justify-center gap-5 text-[11px] text-muted-foreground/60">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-lg bg-green-500/10 flex items-center justify-center">
-                      <Heart className="w-2.5 h-2.5 text-green-500" fill="currentColor" />
-                    </span>
-                    <span>{creditCosts.like} cr</span>
-                  </span>
-                  <span className="w-px h-3 bg-border" />
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-lg bg-destructive/10 flex items-center justify-center">
-                      <X className="w-2.5 h-2.5 text-destructive" />
-                    </span>
-                    <span>{creditCosts.dislike} cr</span>
-                  </span>
-                  <span className="w-px h-3 bg-border" />
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                      <EyeOff className="w-2.5 h-2.5 text-purple-400" />
-                    </span>
-                    <span>{creditCosts.hide} cr</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Boost banner */}
-              <div className="px-5 pb-3">
-                {isBoostActive ? (
-                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 to-orange-500/15 border border-amber-500/20">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30">
-                      <Rocket className="w-[18px] h-[18px] text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-foreground">Profil en avant !</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Expire {boostExpiresAt ? `à ${boostExpiresAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : 'bientôt'}
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold text-amber-500">Actif</span>
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
+                    <Loader2 className="w-9 h-9 animate-spin text-primary" />
                   </div>
-                ) : (
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => activateBoost()}
-                    disabled={isActivating || totalCredits < boostCost}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/15 hover:border-amber-500/30 transition-all disabled:opacity-50"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
-                      <Rocket className="w-[18px] h-[18px] text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-xs font-semibold text-foreground">Mettre en avant mon profil</p>
-                      <p className="text-[10px] text-muted-foreground">Visible 1 à 3 fois pendant 24h</p>
-                    </div>
-                    <span className="text-xs font-bold text-amber-500">{boostCost} cr</span>
-                  </motion.button>
-                )}
+                  <motion.div
+                    className="absolute inset-0 rounded-3xl border-2 border-primary/20"
+                    animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </motion.div>
+                <p className="text-sm text-muted-foreground font-medium">Chargement des profils…</p>
               </div>
+            ) : remainingProfiles.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
+                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                  className="relative mb-6"
+                >
+                  <div className="w-28 h-28 rounded-[32px] bg-gradient-to-br from-primary/15 via-accent/10 to-secondary flex items-center justify-center">
+                    <Sparkles className="w-14 h-14 text-primary/60" />
+                  </div>
+                  <motion.div
+                    className="absolute -top-2 -right-2 w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center"
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Zap className="w-5 h-5 text-accent" />
+                  </motion.div>
+                </motion.div>
+                <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                  C'est tout pour le moment !
+                </h3>
+                <p className="text-muted-foreground text-sm mb-6 max-w-[260px] leading-relaxed">
+                  Tu as vu tous les profils disponibles. Reviens plus tard pour de nouvelles découvertes.
+                </p>
+                <Button onClick={() => refetchProfiles()} variant="outline" className="gap-2 rounded-2xl h-11 px-6 font-medium">
+                  <RefreshCw className="w-4 h-4" />
+                  Rafraîchir
+                </Button>
+              </div>
+            ) : (
+              <>
+                {/* Cards stack */}
+                <div className="flex-1 relative min-h-0">
+                  <AnimatePresence mode="popLayout">
+                    {remainingProfiles.slice(0, 3).map((profile, index) => (
+                      <SwipeCard
+                        key={profile.id}
+                        profile={profile}
+                        onSwipe={handleSwipe}
+                        isTop={index === 0}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {/* Action buttons */}
+                <div className="relative z-20 flex justify-center items-center gap-4 py-4 px-6">
+                  <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
+                    <button
+                      className="w-[56px] h-[56px] rounded-full flex items-center justify-center bg-card border-2 border-destructive/30 shadow-lg shadow-destructive/10 hover:border-destructive/50 hover:shadow-destructive/20 transition-all active:bg-destructive/10"
+                      onClick={() => remainingProfiles[0] && handleSwipe('left')}
+                    >
+                      <X className="w-6 h-6 text-destructive" strokeWidth={2.5} />
+                    </button>
+                  </motion.div>
+                  <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
+                    <button
+                      className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-card border-2 border-purple-400/30 shadow-lg shadow-purple-400/10 hover:border-purple-400/50 hover:shadow-purple-400/20 transition-all active:bg-purple-400/10"
+                      onClick={() => remainingProfiles[0] && handleSwipe('up')}
+                    >
+                      <EyeOff className="w-[18px] h-[18px] text-purple-400" />
+                    </button>
+                  </motion.div>
+                  <motion.div whileTap={{ scale: 0.85 }} whileHover={{ scale: 1.08 }}>
+                    <button
+                      className="w-[56px] h-[56px] rounded-full flex items-center justify-center bg-gradient-to-br from-green-400 to-green-500 shadow-lg shadow-green-500/30 hover:shadow-green-500/40 transition-all active:from-green-500 active:to-green-600"
+                      onClick={() => remainingProfiles[0] && handleSwipe('right')}
+                    >
+                      <Heart className="w-6 h-6 text-white" fill="white" />
+                    </button>
+                  </motion.div>
+                </div>
+
+                {/* Credit costs */}
+                <div className="px-5 pb-3">
+                  <div className="flex items-center justify-center gap-5 text-[11px] text-muted-foreground/60">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-green-500/10 flex items-center justify-center">
+                        <Heart className="w-2.5 h-2.5 text-green-500" fill="currentColor" />
+                      </span>
+                      <span>{creditCosts.like} cr</span>
+                    </span>
+                    <span className="w-px h-3 bg-border" />
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-destructive/10 flex items-center justify-center">
+                        <X className="w-2.5 h-2.5 text-destructive" />
+                      </span>
+                      <span>{creditCosts.dislike} cr</span>
+                    </span>
+                    <span className="w-px h-3 bg-border" />
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                        <EyeOff className="w-2.5 h-2.5 text-purple-400" />
+                      </span>
+                      <span>{creditCosts.hide} cr</span>
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Boost banner - always visible */}
+            <div className="px-5 pb-3">
+              {isBoostActive ? (
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 to-orange-500/15 border border-amber-500/20">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30">
+                    <Rocket className="w-[18px] h-[18px] text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground">Profil en avant !</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Expire {boostExpiresAt ? `à ${boostExpiresAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : 'bientôt'}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-amber-500">Actif</span>
+                </div>
+              ) : (
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => activateBoost()}
+                  disabled={isActivating || totalCredits < boostCost}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/15 hover:border-amber-500/30 transition-all disabled:opacity-50"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+                    <Rocket className="w-[18px] h-[18px] text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-xs font-semibold text-foreground">Mettre en avant mon profil</p>
+                    <p className="text-[10px] text-muted-foreground">Visible 1 à 3 fois pendant 24h</p>
+                  </div>
+                  <span className="text-xs font-bold text-amber-500">{boostCost} cr</span>
+                </motion.button>
+              )}
             </div>
-          )}
+          </div>
         </TabsContent>
 
         <TabsContent value="likes" className="flex-1 min-h-0 mt-0">
