@@ -651,6 +651,33 @@ export type Database = {
           },
         ]
       }
+      maintenance_mode: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          id: string
+          is_active: boolean
+          message: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           created_at: string

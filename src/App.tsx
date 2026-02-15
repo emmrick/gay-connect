@@ -23,6 +23,7 @@ import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import { useScreenshotProtection } from "@/hooks/useScreenshotProtection";
 import ScreenshotProtectionOverlay from "@/components/security/ScreenshotProtectionOverlay";
 import BackgroundRefreshIndicator from "@/components/loading/BackgroundRefreshIndicator";
+import MaintenanceGuard from "@/components/maintenance/MaintenanceGuard";
 import InitialLoadingScreen from "@/components/loading/InitialLoadingScreen";
 import { toast } from "sonner";
 
@@ -95,6 +96,7 @@ const AuthenticatedApp = () => {
   }, [enableProtection]);
   
   return (
+    <MaintenanceGuard>
     <CreditDialogProvider>
       <CreditDeductionProvider>
         <BlockedUserGuard>
@@ -134,6 +136,7 @@ const AuthenticatedApp = () => {
         </BlockedUserGuard>
       </CreditDeductionProvider>
     </CreditDialogProvider>
+    </MaintenanceGuard>
   );
 };
 

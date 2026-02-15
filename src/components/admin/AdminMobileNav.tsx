@@ -23,7 +23,8 @@ import {
   Camera,
   Heart,
   UserCog,
-  Tag
+  Tag,
+  Wrench
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -84,6 +85,7 @@ const navItems: NavItem[] = [
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'settings' },
   { id: 'broadcast', label: 'Notifications', icon: Bell, group: 'settings' },
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
+  { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {
