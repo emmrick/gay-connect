@@ -137,7 +137,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                   </div>
                   <span className="font-semibold text-sm text-foreground">Nouvelle mission !</span>
                 </div>
-                <Badge variant="outline" className="border-green-500/50 text-green-600 font-bold">
+                <Badge variant="outline" className="border-primary/50 text-primary font-bold">
                   <Euro className="w-3 h-3 mr-1" />
                   {formatCentsReward(currentOffer.reward_cents)}
                 </Badge>
@@ -216,7 +216,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                     <Clock className="w-3 h-3 mr-1" />
                     {formatTime(timeRemaining)}
                   </Badge>
-                  <p className="text-xs text-green-600 font-medium mt-1">
+                  <p className="text-xs text-primary font-medium mt-1">
                     +{formatCentsReward(activeTask.reward_cents)}
                   </p>
                 </div>
