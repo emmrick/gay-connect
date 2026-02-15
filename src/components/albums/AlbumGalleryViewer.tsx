@@ -41,8 +41,8 @@ const AlbumGalleryViewer = ({
     loop: true,
     startIndex: initialIndex,
     dragFree: false,
-    containScroll: 'trimSnaps',
-    watchDrag: (_, event) => {
+    align: 'center',
+    watchDrag: () => {
       // Disable carousel drag when zoomed
       return zoomState.scale <= 1;
     },
