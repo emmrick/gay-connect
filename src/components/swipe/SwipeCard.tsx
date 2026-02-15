@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useState } from 'react';
-import { MapPin, Verified, Ruler, Scale, Heart, X, EyeOff, Flame } from 'lucide-react';
+import { MapPin, Verified, Ruler, Scale, Heart, X, EyeOff, Flame, Rocket } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface SwipeCardProps {
@@ -19,6 +19,7 @@ interface SwipeCardProps {
     height: number | null;
     weight: number | null;
     body_type: string | null;
+    _isBoosted?: boolean;
   };
   onSwipe: (direction: 'left' | 'right' | 'up') => void;
   isTop: boolean;
@@ -116,6 +117,12 @@ const SwipeCard = ({ profile, onSwipe, isTop }: SwipeCardProps) => {
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/20 backdrop-blur-xl border border-primary/30">
               <Verified className="w-3.5 h-3.5 text-primary fill-primary" />
               <span className="text-[11px] font-semibold text-primary">Vérifié</span>
+            </div>
+          )}
+          {(profile as any)._isBoosted && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/20 backdrop-blur-xl border border-amber-400/30">
+              <Rocket className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-[11px] font-semibold text-amber-400">En avant</span>
             </div>
           )}
           

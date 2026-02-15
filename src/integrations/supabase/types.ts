@@ -1159,6 +1159,39 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_boosts: {
+        Row: {
+          created_at: string
+          credits_spent: number
+          expires_at: string
+          id: string
+          max_views: number
+          started_at: string
+          user_id: string
+          views_delivered: number
+        }
+        Insert: {
+          created_at?: string
+          credits_spent?: number
+          expires_at?: string
+          id?: string
+          max_views?: number
+          started_at?: string
+          user_id: string
+          views_delivered?: number
+        }
+        Update: {
+          created_at?: string
+          credits_spent?: number
+          expires_at?: string
+          id?: string
+          max_views?: number
+          started_at?: string
+          user_id?: string
+          views_delivered?: number
+        }
+        Relationships: []
+      }
       profile_photos: {
         Row: {
           created_at: string

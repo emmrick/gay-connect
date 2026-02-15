@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, X, EyeOff, Flame, Zap } from 'lucide-react';
+import { Heart, Sparkles, MessageCircle, Loader2, RefreshCw, X, EyeOff, Flame, Zap, Rocket } from 'lucide-react';
 import { useSwipeActions, SWIPE_CREDIT_COSTS } from '@/hooks/useSwipeActions';
 import SwipeCard from './SwipeCard';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfiles';
+import { useProfileBoost } from '@/hooks/useProfileBoost';
+import { useCreditCheck } from '@/hooks/useCreditCheck';
 
 interface SwipePageProps {
   onStartChat: (userId: string) => void;
@@ -23,6 +25,9 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
     refetchProfiles,
     creditCosts,
   } = useSwipeActions();
+
+  const { isBoostActive, activateBoost, isActivating, boostCost, boostExpiresAt } = useProfileBoost();
+  const { totalCredits } = useCreditCheck();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'swipe' | 'likes'>('swipe');
@@ -199,6 +204,40 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                     <span>{creditCosts.hide} cr</span>
                   </span>
                 </div>
+              </div>
+
+              {/* Boost banner */}
+              <div className="px-5 pb-3">
+                {isBoostActive ? (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 to-orange-500/15 border border-amber-500/20">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30">
+                      <Rocket className="w-[18px] h-[18px] text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground">Profil en avant !</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Expire {boostExpiresAt ? `à ${boostExpiresAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : 'bientôt'}
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold text-amber-500">Actif</span>
+                  </div>
+                ) : (
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => activateBoost()}
+                    disabled={isActivating || totalCredits < boostCost}
+                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/15 hover:border-amber-500/30 transition-all disabled:opacity-50"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+                      <Rocket className="w-[18px] h-[18px] text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-xs font-semibold text-foreground">Mettre en avant mon profil</p>
+                      <p className="text-[10px] text-muted-foreground">Visible 1 à 3 fois pendant 24h</p>
+                    </div>
+                    <span className="text-xs font-bold text-amber-500">{boostCost} cr</span>
+                  </motion.button>
+                )}
               </div>
             </div>
           )}
