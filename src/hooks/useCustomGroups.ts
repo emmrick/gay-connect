@@ -96,17 +96,27 @@ export const useCustomGroups = () => {
 
       if (roomError) throw roomError;
 
-      // Add creator as admin
-      const members = [
-        { chat_room_id: room.id, user_id: user.id, role: 'admin' },
-        ...memberIds.map(id => ({ chat_room_id: room.id, user_id: id, role: 'member' as string })),
-      ];
-
-      const { error: memberError } = await supabase
+      // Add creator as admin first
+      const { error: creatorError } = await supabase
         .from('chat_room_members')
-        .insert(members);
+        .insert({ chat_room_id: room.id, user_id: user.id, role: 'admin' });
 
-      if (memberError) throw memberError;
+      if (creatorError) throw creatorError;
+
+      // Then add other members
+      if (memberIds.length > 0) {
+        const otherMembers = memberIds.map(id => ({ 
+          chat_room_id: room.id, 
+          user_id: id, 
+          role: 'member' as string 
+        }));
+
+        const { error: memberError } = await supabase
+          .from('chat_room_members')
+          .insert(otherMembers);
+
+        if (memberError) throw memberError;
+      }
 
       return room;
     },
