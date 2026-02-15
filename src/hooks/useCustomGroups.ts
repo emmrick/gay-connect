@@ -116,6 +116,42 @@ export const useCustomGroups = () => {
           .insert(otherMembers);
 
         if (memberError) throw memberError;
+
+        // Send notifications to all invited members
+        const { data: creatorProfile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('user_id', user.id)
+          .single();
+
+        const creatorName = creatorProfile?.username || 'Quelqu\'un';
+
+        // Create in-app notifications for each invited member
+        const notifications = memberIds.map(memberId => ({
+          user_id: memberId,
+          type: 'group_invite',
+          title: '👥 Invitation au groupe',
+          message: `${creatorName} t'a ajouté au groupe "${name}"`,
+          action_url: '/?tab=messages',
+          is_read: false,
+        }));
+
+        await supabase.from('notifications').insert(notifications);
+
+        // Send push notifications
+        const { sendPushNotification } = await import('@/services/pushNotificationService');
+        await Promise.allSettled(
+          memberIds.map(memberId =>
+            sendPushNotification({
+              userId: memberId,
+              title: '👥 Invitation au groupe',
+              body: `${creatorName} t'a ajouté au groupe "${name}"`,
+              url: '/?tab=messages',
+              tag: `group-invite-${room.id}`,
+              notificationType: 'group_message',
+            })
+          )
+        );
       }
 
       return room;

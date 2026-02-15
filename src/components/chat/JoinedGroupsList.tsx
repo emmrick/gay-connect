@@ -25,7 +25,7 @@ interface JoinedGroupsListProps {
 }
 
 const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
-  const { joinedGroups, leaveGroup, toggleMuteGroup, isInitialized } = useJoinedGroups();
+  const { joinedGroups, leaveGroup, toggleMuteGroup, isGroupMuted, isInitialized } = useJoinedGroups();
   const { customGroups, isLoading: customLoading, leaveGroup: leaveCustomGroup } = useCustomGroups();
   const { data: onlineCounts } = useOnlineMemberCounts();
   const { data: chatRooms } = useChatRooms();
@@ -244,6 +244,31 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
               </button>
 
               <div className="flex items-center gap-1 flex-shrink-0">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "h-8 w-8",
+                          isGroupMuted(group.id)
+                            ? "text-amber-500 hover:text-amber-600" 
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMuteGroup(group.id);
+                        }}
+                      >
+                        {isGroupMuted(group.id) ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isGroupMuted(group.id) ? 'Réactiver les notifications' : 'Mettre en sourdine'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Button
                   variant="ghost"
                   size="icon"
