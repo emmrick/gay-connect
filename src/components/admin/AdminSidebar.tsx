@@ -21,7 +21,8 @@ import {
   ShoppingCart,
   Camera,
   Heart,
-  UserCog
+  UserCog,
+  Wrench
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,8 @@ export type AdminSection =
   | 'screenshot-sanctions'
   | 'moderators'
   | 'swipe-stats'
-  | 'credit-costs';
+  | 'credit-costs'
+  | 'maintenance';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -98,7 +100,7 @@ const navItems: NavItem[] = [
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'settings' },
   { id: 'broadcast', label: 'Notifications', icon: Bell, group: 'settings' },
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
-  { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
+  { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {

@@ -53,6 +53,7 @@ import ScreenshotSanctionsPanel from '@/components/admin/ScreenshotSanctionsPane
 import ModeratorManagementPanel from '@/components/admin/ModeratorManagementPanel';
 import SwipeStatsPanel from '@/components/admin/SwipeStatsPanel';
 import CreditCostsPanel from '@/components/admin/CreditCostsPanel';
+import MaintenanceTogglePanel from '@/components/admin/MaintenanceTogglePanel';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -291,6 +292,9 @@ const Admin = () => {
       
       case 'credit-costs':
         return <CreditCostsPanel />;
+      
+      case 'maintenance':
+        return <MaintenanceTogglePanel />;
       
       default:
         return null;
