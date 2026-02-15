@@ -54,6 +54,7 @@ import ModeratorManagementPanel from '@/components/admin/ModeratorManagementPane
 import SwipeStatsPanel from '@/components/admin/SwipeStatsPanel';
 import CreditCostsPanel from '@/components/admin/CreditCostsPanel';
 import MaintenanceTogglePanel from '@/components/admin/MaintenanceTogglePanel';
+import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -86,8 +87,8 @@ const Admin = () => {
   const isAdminOrMod = isAdmin || isModerator;
 
   // Memoize section change handler
-  const handleSectionChange = useCallback((section: AdminSection) => {
-    setActiveSection(section);
+  const handleSectionChange = useCallback((section: AdminSection | string) => {
+    setActiveSection(section as AdminSection);
   }, []);
 
   // Fetch pending purchase requests count
@@ -318,6 +319,7 @@ const Admin = () => {
         {/* Main Content */}
         <main className="flex-1 overflow-auto">
           <div className="p-4 pb-8">
+            <TaskQueuePopup onNavigateToSection={handleSectionChange} />
             {renderContent()}
           </div>
         </main>
@@ -348,15 +350,16 @@ const Admin = () => {
       />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden">
-        <div className="h-full p-6">
-          <Card className="h-full">
-            <CardContent className="p-6 h-full overflow-auto">
-              {renderContent()}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+        <main className="flex-1 overflow-hidden">
+          <div className="h-full p-6">
+            <Card className="h-full">
+              <CardContent className="p-6 h-full overflow-auto">
+                <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+                {renderContent()}
+              </CardContent>
+            </Card>
+          </div>
+        </main>
 
       {/* Report Detail Dialog */}
       {selectedReport && (
