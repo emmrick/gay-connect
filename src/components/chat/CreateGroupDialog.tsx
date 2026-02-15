@@ -46,14 +46,34 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreated }: CreateGroupDi
     }
   }, [open]);
 
+  // Load initial members list when step changes to 'members'
+  useEffect(() => {
+    const loadInitialMembers = async () => {
+      if (step !== 'members' || !user?.id) return;
+      
+      setIsSearching(true);
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url, is_online')
+        .neq('user_id', user.id)
+        .order('is_online', { ascending: false })
+        .order('username', { ascending: true })
+        .limit(50);
+
+      setSearchResults(data || []);
+      setIsSearching(false);
+    };
+
+    if (searchQuery.length < 2) {
+      loadInitialMembers();
+    }
+  }, [step, user?.id]);
+
   // Search users
   useEffect(() => {
-    const searchUsers = async () => {
-      if (searchQuery.length < 2) {
-        setSearchResults([]);
-        return;
-      }
+    if (searchQuery.length < 2) return;
 
+    const searchUsers = async () => {
       setIsSearching(true);
       const { data } = await supabase
         .from('profiles')
@@ -184,10 +204,6 @@ const CreateGroupDialog = ({ open, onOpenChange, onGroupCreated }: CreateGroupDi
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="w-5 h-5 animate-spin text-primary" />
                   </div>
-                ) : searchQuery.length < 2 ? (
-                  <p className="text-center text-sm text-muted-foreground py-8">
-                    Tape au moins 2 caractères pour rechercher
-                  </p>
                 ) : searchResults.length === 0 ? (
                   <p className="text-center text-sm text-muted-foreground py-8">
                     Aucun membre trouvé
