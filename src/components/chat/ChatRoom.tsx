@@ -224,12 +224,12 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
         </Button>
         
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white">
-          {regionCode}
+          {regionCode.startsWith('GRP-') ? regionName.charAt(0).toUpperCase() : regionCode}
         </div>
         
         <div className="flex-1">
           <h1 className="font-display font-semibold text-foreground">
-            Groupe {regionCode}
+            {regionCode.startsWith('GRP-') ? regionName : `Groupe ${regionCode}`}
           </h1>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Users className="w-4 h-4" />
