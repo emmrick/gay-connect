@@ -5,6 +5,7 @@ import { useCreditCheck } from './useCreditCheck';
 import { deductCredits } from './useCredits';
 import { notifySwipeMatch } from '@/services/pushNotificationService';
 import { toast } from 'sonner';
+import { useMemo } from 'react';
 
 // Credit costs for swipe actions
 export const SWIPE_CREDIT_COSTS = {
@@ -67,8 +68,24 @@ export const useSwipeActions = () => {
     staleTime: 0, // Always refetch
   });
 
+  // Fetch active boosted user IDs
+  const { data: boostedUserIds = [] } = useQuery({
+    queryKey: ['boosted-user-ids'],
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from('profile_boosts')
+        .select('user_id')
+        .gte('expires_at', new Date().toISOString())
+        .lt('views_delivered', 3);
+      if (error) throw error;
+      return (data || []).map(b => b.user_id);
+    },
+    enabled: !!user?.id,
+    staleTime: 60000,
+  });
+
   // Fetch swipeable profiles (excluding already swiped)
-  const { data: profiles = [], isLoading: profilesLoading, refetch: refetchProfiles } = useQuery({
+  const { data: rawProfiles = [], isLoading: profilesLoading, refetch: refetchProfiles } = useQuery({
     queryKey: ['swipeable-profiles', user?.id],
     queryFn: async (): Promise<SwipeableProfile[]> => {
       if (!user?.id) return [];
@@ -85,11 +102,8 @@ export const useSwipeActions = () => {
       const now = new Date();
       const excludedIds = (currentActions || [])
         .filter(action => {
-          // Always exclude 'hide' actions
           if (action.action_type === 'hide') return true;
-          // Always exclude 'like' actions
           if (action.action_type === 'like') return true;
-          // For 'dislike', only exclude if not expired (3 months)
           if (action.action_type === 'dislike') {
             if (!action.expires_at) return true;
             return new Date(action.expires_at) > now;
@@ -98,10 +112,8 @@ export const useSwipeActions = () => {
         })
         .map(action => action.target_user_id);
 
-      // Add current user to excluded list
       excludedIds.push(user.id);
 
-      // Fetch profiles
       let query = supabase
         .from('profiles')
         .select('id, user_id, username, avatar_url, bio, age, is_online, last_seen, region, is_verified, looking_for, sexual_position, height, weight, body_type')
@@ -109,7 +121,6 @@ export const useSwipeActions = () => {
         .order('last_seen', { ascending: false })
         .limit(50);
 
-      // Exclude already swiped profiles
       if (excludedIds.length > 0) {
         query = query.not('user_id', 'in', `(${excludedIds.join(',')})`);
       }
@@ -120,8 +131,27 @@ export const useSwipeActions = () => {
       return (data || []) as SwipeableProfile[];
     },
     enabled: !!user?.id,
-    staleTime: 0, // Always refetch to get fresh data
+    staleTime: 0,
   });
+
+  // Inject boosted profiles at random positions (1-3 times)
+  const profiles = useMemo(() => {
+    if (!rawProfiles.length || !boostedUserIds.length) return rawProfiles;
+    
+    const boostedProfiles = rawProfiles.filter(p => boostedUserIds.includes(p.user_id));
+    const nonBoosted = rawProfiles.filter(p => !boostedUserIds.includes(p.user_id));
+    
+    if (!boostedProfiles.length) return rawProfiles;
+
+    const result = [...nonBoosted];
+    // Insert each boosted profile at a random position in the first 10 cards
+    boostedProfiles.forEach(bp => {
+      const pos = Math.min(Math.floor(Math.random() * 5), result.length);
+      result.splice(pos, 0, { ...bp, _isBoosted: true } as any);
+    });
+    
+    return result;
+  }, [rawProfiles, boostedUserIds]);
 
   // Get profiles that user has liked - fetch directly from DB to ensure freshness
   const { data: likedProfiles = [], refetch: refetchLiked } = useQuery({
