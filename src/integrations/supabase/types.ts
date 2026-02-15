@@ -830,6 +830,60 @@ export type Database = {
         }
         Relationships: []
       }
+      moderation_tasks: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          refused_by: string[] | null
+          reserved_at: string | null
+          reserved_by: string | null
+          reward_cents: number
+          status: string
+          target_entity_id: string | null
+          target_user_id: string | null
+          task_type: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          refused_by?: string[] | null
+          reserved_at?: string | null
+          reserved_by?: string | null
+          reward_cents?: number
+          status?: string
+          target_entity_id?: string | null
+          target_user_id?: string | null
+          task_type: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          refused_by?: string[] | null
+          reserved_at?: string | null
+          reserved_by?: string | null
+          reward_cents?: number
+          status?: string
+          target_entity_id?: string | null
+          target_user_id?: string | null
+          task_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       moderator_action_cooldowns: {
         Row: {
           action_count: number | null
@@ -2073,6 +2127,10 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: boolean
       }
+      complete_moderation_task: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: Json
+      }
       deduct_credits: {
         Args: {
           _amount: number
@@ -2083,6 +2141,7 @@ export type Database = {
         Returns: Json
       }
       demote_moderator: { Args: { _target_user_id: string }; Returns: Json }
+      expire_stale_moderation_tasks: { Args: never; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
       get_nearby_profiles: {
         Args: {
@@ -2145,11 +2204,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      refuse_moderation_task: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: Json
+      }
       register_referral: {
         Args: { _referral_code: string; _referred_user_id: string }
         Returns: boolean
       }
       request_withdrawal: { Args: { _user_id: string }; Returns: Json }
+      reserve_moderation_task: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: Json
+      }
       revoke_premium: { Args: { _target_user_id: string }; Returns: Json }
       update_successful_referrals: {
         Args: { _referral_code_id: string }
