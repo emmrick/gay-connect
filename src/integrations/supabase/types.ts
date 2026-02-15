@@ -983,10 +983,14 @@ export type Database = {
           id: string
           notification_sound: string | null
           push_album_shares: boolean
+          push_credits: boolean
           push_favorites: boolean
           push_group_messages: boolean
+          push_matches: boolean
+          push_mentions: boolean
           push_private_messages: boolean
           push_reactions: boolean
+          push_verification: boolean
           sound_enabled: boolean
           updated_at: string
           user_id: string
@@ -996,10 +1000,14 @@ export type Database = {
           id?: string
           notification_sound?: string | null
           push_album_shares?: boolean
+          push_credits?: boolean
           push_favorites?: boolean
           push_group_messages?: boolean
+          push_matches?: boolean
+          push_mentions?: boolean
           push_private_messages?: boolean
           push_reactions?: boolean
+          push_verification?: boolean
           sound_enabled?: boolean
           updated_at?: string
           user_id: string
@@ -1009,10 +1017,14 @@ export type Database = {
           id?: string
           notification_sound?: string | null
           push_album_shares?: boolean
+          push_credits?: boolean
           push_favorites?: boolean
           push_group_messages?: boolean
+          push_matches?: boolean
+          push_mentions?: boolean
           push_private_messages?: boolean
           push_reactions?: boolean
+          push_verification?: boolean
           sound_enabled?: boolean
           updated_at?: string
           user_id?: string

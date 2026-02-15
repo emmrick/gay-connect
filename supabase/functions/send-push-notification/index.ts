@@ -135,6 +135,10 @@ serve(async (req) => {
           'favorite': prefs.push_favorites,
           'reaction': prefs.push_reactions,
           'album_share': prefs.push_album_shares,
+          'match': prefs.push_matches ?? true,
+          'mention': prefs.push_mentions ?? true,
+          'credit': prefs.push_credits ?? true,
+          'verification': prefs.push_verification ?? true,
         };
 
         if (prefMap[notificationType] === false) {

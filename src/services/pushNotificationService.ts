@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
-type NotificationType = 'private_message' | 'group_message' | 'favorite' | 'reaction' | 'album_share' | 'system';
+type NotificationType = 'private_message' | 'group_message' | 'favorite' | 'reaction' | 'album_share' | 'match' | 'mention' | 'credit' | 'verification' | 'system';
 
 interface SendPushOptions {
   userId: string;
@@ -167,7 +167,8 @@ export const notifyVerificationSubmitted = async (userId: string) => {
     'verification_submitted',
     '📋 Demande envoyée',
     'Votre demande de vérification d\'identité a été reçue. Un modérateur l\'examinera sous peu.',
-    '/?tab=profile'
+    '/?tab=profile',
+    { notificationType: 'verification' }
   );
 };
 
@@ -178,7 +179,8 @@ export const notifyVerificationApproved = async (userId: string) => {
     'verification_approved',
     '✅ Vérification approuvée',
     'Félicitations ! Votre identité a été vérifiée. Vous avez maintenant accès à toutes les fonctionnalités.',
-    '/?tab=profile'
+    '/?tab=profile',
+    { notificationType: 'verification' }
   );
 };
 
@@ -189,7 +191,8 @@ export const notifyVerificationRejected = async (userId: string, reason: string)
     'verification_rejected',
     '❌ Vérification refusée',
     `Votre demande de vérification a été refusée : ${reason}. Vous pouvez soumettre une nouvelle demande.`,
-    '/?tab=profile'
+    '/?tab=profile',
+    { notificationType: 'verification' }
   );
 };
 
@@ -277,7 +280,8 @@ export const notifySwipeMatch = async (
     'swipe_match',
     '💘 Nouveau match !',
     `${matchedUsername} t'a aussi liké ! Vous pouvez maintenant discuter.`,
-    `/profile/${matchedUserId}`
+    `/profile/${matchedUserId}`,
+    { notificationType: 'match' }
   );
 };
 
@@ -292,7 +296,8 @@ export const notifyCreditPurchaseApproved = async (
     'credits_approved',
     '💰 Crédits ajoutés !',
     `Votre achat de ${amount} crédits (${priceEuros}€) a été validé. Bon tchat !`,
-    '/?tab=premium'
+    '/?tab=premium',
+    { notificationType: 'credit' }
   );
 };
 
@@ -307,6 +312,7 @@ export const notifyCreditPurchaseRejected = async (
     'credits_rejected',
     '❌ Achat refusé',
     `Votre demande d'achat de crédits a été refusée.${reasonText}`,
-    '/?tab=premium'
+    '/?tab=premium',
+    { notificationType: 'credit' }
   );
 };

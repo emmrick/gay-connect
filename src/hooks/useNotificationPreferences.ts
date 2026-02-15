@@ -11,6 +11,10 @@ interface NotificationPreferences {
   push_favorites: boolean;
   push_reactions: boolean;
   push_album_shares: boolean;
+  push_matches: boolean;
+  push_mentions: boolean;
+  push_credits: boolean;
+  push_verification: boolean;
   sound_enabled: boolean;
   notification_sound: string;
   created_at: string;
@@ -23,6 +27,10 @@ const defaultPreferences = {
   push_favorites: true,
   push_reactions: true,
   push_album_shares: true,
+  push_matches: true,
+  push_mentions: true,
+  push_credits: true,
+  push_verification: true,
   sound_enabled: true,
   notification_sound: 'default',
 };

@@ -10,7 +10,11 @@ import {
   Volume2, 
   VolumeX,
   Loader2,
-  Play
+  Play,
+  Sparkles,
+  AtSign,
+  Coins,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
@@ -153,6 +157,46 @@ const NotificationPreferencesSection = () => {
         description="Quand quelqu'un te partage un album"
         checked={preferences.push_album_shares}
         onCheckedChange={() => togglePreference('push_album_shares')}
+        disabled={isUpdating}
+      />
+
+      <PreferenceItem
+        icon={Sparkles}
+        iconColor="text-pink-500"
+        title="Matchs"
+        description="Quand un like est réciproque (match mutuel)"
+        checked={preferences.push_matches}
+        onCheckedChange={() => togglePreference('push_matches')}
+        disabled={isUpdating}
+      />
+
+      <PreferenceItem
+        icon={AtSign}
+        iconColor="text-cyan-500"
+        title="Mentions"
+        description="Quand quelqu'un te mentionne dans un groupe"
+        checked={preferences.push_mentions}
+        onCheckedChange={() => togglePreference('push_mentions')}
+        disabled={isUpdating}
+      />
+
+      <PreferenceItem
+        icon={Coins}
+        iconColor="text-emerald-500"
+        title="Crédits"
+        description="Validation d'achat, bonus et transactions"
+        checked={preferences.push_credits}
+        onCheckedChange={() => togglePreference('push_credits')}
+        disabled={isUpdating}
+      />
+
+      <PreferenceItem
+        icon={ShieldCheck}
+        iconColor="text-orange-500"
+        title="Vérification d'identité"
+        description="Statut de ta demande de vérification"
+        checked={preferences.push_verification}
+        onCheckedChange={() => togglePreference('push_verification')}
         disabled={isUpdating}
       />
 
