@@ -47,6 +47,18 @@ const TaskIcon = ({ type }: { type: ModeratorTaskType }) => {
       return <span className="text-lg">🔒</span>;
     case 'private_message_response':
       return <span className="text-lg">💬</span>;
+    case 'verification_request':
+      return <span className="text-lg">📋</span>;
+    case 'credit_management':
+      return <span className="text-lg">💰</span>;
+    case 'content_moderation':
+      return <span className="text-lg">📸</span>;
+    case 'withdrawal_management':
+      return <span className="text-lg">🏦</span>;
+    case 'promo_validation':
+      return <span className="text-lg">🎟️</span>;
+    case 'support_chat':
+      return <span className="text-lg">🆘</span>;
     default:
       return <span className="text-lg">📋</span>;
   }
