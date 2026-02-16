@@ -25,9 +25,12 @@ export interface ModerationTask {
 const TASK_TYPE_LABELS: Record<string, string> = {
   identity_verification: '🪪 Vérification d\'identité',
   report_review: '🚨 Examen de signalement',
-  content_moderation: '💬 Modération de contenu',
+  content_moderation: '📸 Modération de contenu',
   user_suspension: '🔒 Suspension utilisateur',
   credit_management: '💰 Gestion de crédits',
+  withdrawal_management: '🏦 Demande de retrait',
+  promo_validation: '🎟️ Validation code promo',
+  support_chat: '🆘 Support utilisateur',
 };
 
 const TASK_TYPE_SECTIONS: Record<string, string> = {
@@ -36,6 +39,9 @@ const TASK_TYPE_SECTIONS: Record<string, string> = {
   content_moderation: 'moderation',
   user_suspension: 'users',
   credit_management: 'credits',
+  withdrawal_management: 'credits',
+  promo_validation: 'promo',
+  support_chat: 'reports',
 };
 
 export const getTaskTypeLabel = (type: string) => TASK_TYPE_LABELS[type] || type;
