@@ -229,12 +229,37 @@ export const useCustomGroups = () => {
     },
   });
 
+  // Remove member from group (admin only)
+  const removeMember = useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('chat_room_members')
+        .delete()
+        .eq('chat_room_id', groupId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['group-members', vars.groupId] });
+      queryClient.invalidateQueries({ queryKey: ['custom-groups'] });
+      toast.success('Membre expulsé du groupe');
+    },
+    onError: (error) => {
+      console.error('Error removing member:', error);
+      toast.error("Erreur lors de l'expulsion du membre");
+    },
+  });
+
   return {
     customGroups: customGroups || [],
     isLoading,
     createGroup,
     leaveGroup,
     addMember,
+    removeMember,
     useGroupMembers,
   };
 };

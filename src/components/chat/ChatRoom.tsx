@@ -40,11 +40,12 @@ interface ChatRoomProps {
   regionCode: string;
   regionName: string;
   memberCount: number;
+  isCustomGroup?: boolean;
   onBack: () => void;
   onStartPrivateChat: (userId: string) => void;
 }
 
-const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStartPrivateChat }: ChatRoomProps) => {
+const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, onBack, onStartPrivateChat }: ChatRoomProps) => {
   const { user } = useAuth();
   
   // Mobile back navigation
@@ -224,12 +225,12 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
         </Button>
         
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-sm flex-shrink-0">
-          {regionCode.startsWith('GRP-') ? regionName.charAt(0).toUpperCase() : regionCode}
+          {isCustomGroup ? regionName.charAt(0).toUpperCase() : regionCode}
         </div>
         
         <div className="flex-1 min-w-0">
           <h1 className="font-display font-semibold text-foreground truncate text-sm">
-            {regionCode.startsWith('GRP-') ? regionName : `${regionName} (${regionCode})`}
+            {isCustomGroup ? regionName : `${regionName} (${regionCode})`}
           </h1>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Users className="w-3.5 h-3.5 flex-shrink-0" />
@@ -262,6 +263,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
               <MembersList
                 regionCode={regionCode}
                 onStartPrivateChat={handleStartPrivateChat}
+                isCustomGroup={isCustomGroup}
+                roomId={roomId}
               />
             </ScrollArea>
           </SheetContent>
@@ -307,10 +310,10 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, onBack, onStart
           {/* Welcome message */}
           <div className="text-center py-8">
             <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-2xl mb-4">
-              {regionCode}
+              {isCustomGroup ? regionName.charAt(0).toUpperCase() : regionCode}
             </div>
             <h2 className="font-display text-xl font-semibold mb-2">
-              Bienvenue dans le groupe {regionCode}
+              Bienvenue dans {isCustomGroup ? regionName : `le groupe ${regionCode}`}
             </h2>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
               {regionName} • {memberCount} membres actifs
