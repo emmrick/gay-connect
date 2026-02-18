@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCircle, Flag, MoreVertical } from 'lucide-react';
+import { MessageCircle, Flag, MoreVertical, UserMinus } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -17,6 +17,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import ReportUserDialog from './ReportUserDialog';
 import ProfileDetailDialog from '@/components/profile/ProfileDetailDialog';
 import { 
@@ -26,12 +36,15 @@ import {
 } from '@/hooks/useOnlineStatus';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useCustomGroups } from '@/hooks/useCustomGroups';
 
 type Profile = Tables<'profiles'>;
 
 interface MembersListProps {
   regionCode: string;
   onStartPrivateChat: (userId: string) => void;
+  isCustomGroup?: boolean;
+  roomId?: string;
 }
 
 // Hook to load members from chat_room_members for custom groups
@@ -75,9 +88,10 @@ const useGroupMembers = (regionCode: string) => {
   });
 };
 
-const MembersList = ({ regionCode, onStartPrivateChat }: MembersListProps) => {
+const MembersList = ({ regionCode, onStartPrivateChat, isCustomGroup: isCustomProp, roomId }: MembersListProps) => {
   const { user } = useAuth();
-  const isCustomGroup = regionCode.startsWith('GRP-') || regionCode.length > 10;
+  const isCustomGroup = isCustomProp || regionCode.startsWith('GRP-') || regionCode.length > 10;
+  const { removeMember } = useCustomGroups();
   
   const { data: regionProfiles, isLoading: regionLoading } = useProfilesByRegion(isCustomGroup ? '' : regionCode);
   const { data: groupProfiles, isLoading: groupLoading } = useGroupMembers(regionCode);
@@ -85,8 +99,33 @@ const MembersList = ({ regionCode, onStartPrivateChat }: MembersListProps) => {
   const profiles = isCustomGroup ? groupProfiles : regionProfiles;
   const isLoading = isCustomGroup ? groupLoading : regionLoading;
 
+  // Check if current user is admin of this group
+  const { data: isGroupAdmin } = useQuery({
+    queryKey: ['is-group-admin', roomId || regionCode, user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const targetId = roomId || regionCode;
+      const { data } = await supabase
+        .from('chat_room_members')
+        .select('role')
+        .eq('chat_room_id', targetId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return data?.role === 'admin';
+    },
+    enabled: !!user?.id && isCustomGroup,
+  });
+
   // Filter out current user
   const otherMembers = profiles?.filter((p) => p.user_id !== user?.id) || [];
+
+  const [kickConfirm, setKickConfirm] = useState<{ userId: string; username: string } | null>(null);
+
+  const handleKickMember = () => {
+    if (!kickConfirm || !roomId) return;
+    removeMember.mutate({ groupId: roomId || regionCode, userId: kickConfirm.userId });
+    setKickConfirm(null);
+  };
 
   if (isLoading) {
     return (
@@ -122,10 +161,33 @@ const MembersList = ({ regionCode, onStartPrivateChat }: MembersListProps) => {
               key={profile.id}
               profile={profile}
               onStartChat={() => onStartPrivateChat(profile.user_id)}
+              canKick={!!isGroupAdmin && isCustomGroup}
+              onKick={() => setKickConfirm({ userId: profile.user_id, username: profile.username })}
             />
           ))}
         </div>
       )}
+
+      {/* Kick confirmation dialog */}
+      <AlertDialog open={!!kickConfirm} onOpenChange={() => setKickConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Expulser {kickConfirm?.username} ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ce membre sera retiré du groupe et ne pourra plus voir les messages.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleKickMember}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Expulser
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -133,9 +195,13 @@ const MembersList = ({ regionCode, onStartPrivateChat }: MembersListProps) => {
 const MemberCard = ({
   profile,
   onStartChat,
+  canKick,
+  onKick,
 }: {
   profile: Profile;
   onStartChat: () => void;
+  canKick?: boolean;
+  onKick?: () => void;
 }) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
@@ -169,7 +235,7 @@ const MemberCard = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-400 rounded-full border-2 border-card cursor-help" />
+                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-muted-foreground/50 rounded-full border-2 border-card cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
                   {getLastSeenText(profile) || 'Hors ligne'}
@@ -193,19 +259,28 @@ const MemberCard = ({
 
         {/* Actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" onClick={onStartChat}>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onStartChat(); }}>
             <MessageCircle className="w-5 h-5 text-primary" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
                 <MoreVertical className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {canKick && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={(e) => { e.stopPropagation(); onKick?.(); }}
+                >
+                  <UserMinus className="w-4 h-4 mr-2" />
+                  Expulser
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem 
                 className="text-destructive focus:text-destructive"
-                onClick={() => setShowReportDialog(true)}
+                onClick={(e) => { e.stopPropagation(); setShowReportDialog(true); }}
               >
                 <Flag className="w-4 h-4 mr-2" />
                 Signaler

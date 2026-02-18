@@ -289,9 +289,10 @@ const Index = () => {
       >
         <ChatRoom
           roomId={selectedRoomData.id}
-          regionCode={selectedRegion}
-          regionName={selectedRoomData.region_name}
+          regionCode={selectedRoomData.region_code}
+          regionName={selectedRoomData.is_custom ? (selectedRoomData.custom_name || selectedRoomData.region_name) : selectedRoomData.region_name}
           memberCount={memberCount}
+          isCustomGroup={selectedRoomData.is_custom}
           onBack={handleBackToRegions}
           onStartPrivateChat={handleStartPrivateChat}
         />
