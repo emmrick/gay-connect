@@ -98,20 +98,22 @@ Deno.serve(async (req) => {
 
     results["media"] = { deleted: mediaDeleted, errors: mediaErrors };
 
-    // 3. Clean old notifications (> 90 days, already read)
+    // 3. Clean old notifications (> 6 months, already read)
+    const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
     const { count: notifCount } = await supabase
       .from("notifications")
       .delete({ count: "exact" })
       .eq("is_read", true)
-      .lt("created_at", ninetyDaysAgo);
+      .lt("created_at", sixMonthsAgo);
 
     results["notifications"] = { deleted: notifCount || 0, errors: 0 };
 
-    // 4. Clean old credit transactions (> 90 days)
+    // 4. Clean old credit transactions (> 1 year)
+    const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
     const { count: txCount } = await supabase
       .from("credit_transactions")
       .delete({ count: "exact" })
-      .lt("created_at", ninetyDaysAgo);
+      .lt("created_at", oneYearAgo);
 
     results["credit_transactions"] = { deleted: txCount || 0, errors: 0 };
 
