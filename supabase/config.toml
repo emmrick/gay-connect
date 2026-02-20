@@ -1,1 +1,4 @@
 project_id = "vxrsqftlaguiwprcqlbw"
+
+[functions.cleanup-old-storage]
+verify_jwt = false
