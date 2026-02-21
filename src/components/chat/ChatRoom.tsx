@@ -18,9 +18,8 @@ import UserProfilePreview from './UserProfilePreview';
 import MediaGallerySheet from './MediaGallerySheet';
 import PinnedMessagesBanner from './PinnedMessagesBanner';
 import GroupSettingsDialog from './GroupSettingsDialog';
-import GroupEventsSheet from './GroupEventsSheet';
 import VoiceRecorder from './VoiceRecorder';
-import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown, Settings, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
@@ -91,7 +90,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const [showMembers, setShowMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showEvents, setShowEvents] = useState(false);
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -279,11 +277,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           </SheetContent>
         </Sheet>
 
-        {/* Events button */}
-        <Button variant="ghost" size="icon" onClick={() => setShowEvents(true)}>
-          <CalendarDays className="w-5 h-5" />
-        </Button>
-
         <Button variant="ghost" size="icon" onClick={() => setShowMediaGallery(true)}>
           <Image className="w-5 h-5" />
         </Button>
@@ -315,13 +308,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           onGroupDeleted={onBack}
         />
       )}
-
-      {/* Group Events */}
-      <GroupEventsSheet
-        open={showEvents}
-        onOpenChange={setShowEvents}
-        roomId={roomId}
-      />
 
       {/* Media Gallery */}
       <MediaGallerySheet

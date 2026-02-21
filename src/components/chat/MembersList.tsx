@@ -48,26 +48,32 @@ interface MembersListProps {
 }
 
 // Hook to load members from chat_room_members for custom groups
-const useGroupMembers = (regionCode: string) => {
+const useGroupMembers = (roomId: string | undefined, regionCode: string) => {
   const isCustomGroup = regionCode.startsWith('GRP-') || regionCode.length > 10;
+  const targetId = roomId || regionCode;
   
   return useQuery({
-    queryKey: ['group-members', regionCode],
+    queryKey: ['group-members-list', targetId],
     queryFn: async (): Promise<Profile[]> => {
-      // Find the chat room by region_code or id
-      const { data: room } = await supabase
-        .from('chat_rooms')
-        .select('id')
-        .or(`region_code.eq.${regionCode},id.eq.${regionCode}`)
-        .maybeSingle();
+      // Use roomId directly if available, otherwise find by region_code
+      let chatRoomId = roomId;
+      
+      if (!chatRoomId) {
+        const { data: room } = await supabase
+          .from('chat_rooms')
+          .select('id')
+          .or(`region_code.eq.${regionCode},id.eq.${regionCode}`)
+          .maybeSingle();
+        chatRoomId = room?.id;
+      }
 
-      if (!room) return [];
+      if (!chatRoomId) return [];
 
       // Get member user_ids
       const { data: members } = await supabase
         .from('chat_room_members')
         .select('user_id')
-        .eq('chat_room_id', room.id);
+        .eq('chat_room_id', chatRoomId);
 
       if (!members || members.length === 0) return [];
 
@@ -83,7 +89,7 @@ const useGroupMembers = (regionCode: string) => {
       if (error) throw error;
       return profiles || [];
     },
-    enabled: isCustomGroup && !!regionCode,
+    enabled: isCustomGroup && !!targetId,
     staleTime: 30_000,
   });
 };
@@ -94,7 +100,7 @@ const MembersList = ({ regionCode, onStartPrivateChat, isCustomGroup: isCustomPr
   const { removeMember } = useCustomGroups();
   
   const { data: regionProfiles, isLoading: regionLoading } = useProfilesByRegion(isCustomGroup ? '' : regionCode);
-  const { data: groupProfiles, isLoading: groupLoading } = useGroupMembers(regionCode);
+  const { data: groupProfiles, isLoading: groupLoading } = useGroupMembers(roomId, regionCode);
   
   const profiles = isCustomGroup ? groupProfiles : regionProfiles;
   const isLoading = isCustomGroup ? groupLoading : regionLoading;
