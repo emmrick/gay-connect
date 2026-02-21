@@ -244,12 +244,38 @@ export const useCustomGroups = () => {
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['group-members', vars.groupId] });
+      queryClient.invalidateQueries({ queryKey: ['group-members-list', vars.groupId] });
       queryClient.invalidateQueries({ queryKey: ['custom-groups'] });
       toast.success('Membre expulsé du groupe');
     },
     onError: (error) => {
       console.error('Error removing member:', error);
       toast.error("Erreur lors de l'expulsion du membre");
+    },
+  });
+
+  // Update member role (admin only)
+  const updateMemberRole = useMutation({
+    mutationFn: async ({ groupId, userId, role }: { groupId: string; userId: string; role: string }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('chat_room_members')
+        .update({ role })
+        .eq('chat_room_id', groupId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['group-members', vars.groupId] });
+      queryClient.invalidateQueries({ queryKey: ['group-members-list', vars.groupId] });
+      queryClient.invalidateQueries({ queryKey: ['is-group-admin'] });
+      toast.success('Rôle mis à jour !');
+    },
+    onError: (error) => {
+      console.error('Error updating role:', error);
+      toast.error('Erreur lors de la mise à jour du rôle');
     },
   });
 
@@ -260,6 +286,7 @@ export const useCustomGroups = () => {
     leaveGroup,
     addMember,
     removeMember,
+    updateMemberRole,
     useGroupMembers,
   };
 };
