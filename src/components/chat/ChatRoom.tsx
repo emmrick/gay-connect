@@ -52,8 +52,15 @@ interface ChatRoomProps {
 const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, onBack, onStartPrivateChat }: ChatRoomProps) => {
   const { user } = useAuth();
   
-  // Mobile back navigation
-  useMobileNavigation({ onBack, enabled: true });
+  // Track if any overlay is open to prevent back navigation
+  const [showMembers, setShowMembers] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  
+  const hasOverlayOpen = showMembers || showMediaGallery || showSettings;
+  
+  // Mobile back navigation - disabled when overlays are open
+  useMobileNavigation({ onBack, enabled: !hasOverlayOpen });
   
   // Search state
   const [searchOpen, setSearchOpen] = useState(false);
@@ -87,9 +94,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   }, [messages, user?.id, markAsRead]);
   
   const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
-  const [showMembers, setShowMembers] = useState(false);
-  const [showMediaGallery, setShowMediaGallery] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
