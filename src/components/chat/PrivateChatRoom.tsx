@@ -24,9 +24,12 @@ import EphemeralMessage from './EphemeralMessage';
 import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
 import CreditRequestMessage from './CreditRequestMessage';
+import EmojiReactionPicker from './EmojiReactionPicker';
+import MessageReactions from './MessageReactions';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import UserProfilePreview from './UserProfilePreview';
+import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatRoomProps {
@@ -45,6 +48,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
+  const { getReactionsForMessage, toggleReaction } = usePrivateMessageReactions(otherUserId);
   const { markAsRead } = useUnreadMessages();
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
   const unblockUser = useUnblockUserAction();
@@ -293,50 +297,74 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                     isOwn ? "justify-end" : "justify-start",
                     isLastInGroup ? "mb-2" : "mb-0.5"
                   )}>
-                    <div className={cn("max-w-[80%]", isOwn ? "items-end" : "items-start")}>
-                      {isAlbumShare && albumShareData ? (
-                        <SharedAlbumMessage
-                          shareId={albumShareData.shareId}
-                          albumId={albumShareData.albumId}
-                          albumName={albumShareData.albumName}
-                          expiresAt={albumShareData.expiresAt}
-                          sharedByUserId={message.sender_id}
-                          isOwn={isOwn}
-                        />
-                      ) : isCreditRequest ? (
-                        <CreditRequestMessage
-                          messageId={message.id}
-                          content={message.content || ''}
-                          senderId={message.sender_id}
-                          isOwn={isOwn}
-                        />
-                      ) : isEphemeralMedia ? (
-                        <EphemeralMessage
-                          messageId={message.id}
-                          messageType={message.message_type as 'image' | 'video'}
-                          senderName={message.senderUsername}
-                          isOwn={isOwn}
-                          recipientId={otherUserId}
-                        />
-                      ) : isRegularMedia ? (
-                        <RegularMediaMessage
-                          mediaUrl={message.content!}
-                          mediaType={message.message_type as 'image' | 'video'}
-                          isOwn={isOwn}
-                        />
-                      ) : (
-                        <div className={cn(
-                          "px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words",
-                          isOwn
-                            ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
-                            : "bg-card border border-border text-foreground rounded-2xl rounded-bl-md",
-                          "max-w-full"
+                    <div className={cn("max-w-[80%] flex flex-col", isOwn ? "items-end" : "items-start")}>
+                      {/* Message content with reaction picker */}
+                      <div className="group/msg relative flex items-center gap-1">
+                        {/* Reaction picker - left for own messages */}
+                        {isOwn && !isEphemeralMedia && (
+                          <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                            <EmojiReactionPicker onSelect={(emoji) => toggleReaction.mutate({ messageId: message.id, emoji })} />
+                          </div>
                         )}
-                        style={{ wordBreak: 'break-word' }}
-                        >
-                          {message.content}
-                        </div>
-                      )}
+
+                        {isAlbumShare && albumShareData ? (
+                          <SharedAlbumMessage
+                            shareId={albumShareData.shareId}
+                            albumId={albumShareData.albumId}
+                            albumName={albumShareData.albumName}
+                            expiresAt={albumShareData.expiresAt}
+                            sharedByUserId={message.sender_id}
+                            isOwn={isOwn}
+                          />
+                        ) : isCreditRequest ? (
+                          <CreditRequestMessage
+                            messageId={message.id}
+                            content={message.content || ''}
+                            senderId={message.sender_id}
+                            isOwn={isOwn}
+                          />
+                        ) : isEphemeralMedia ? (
+                          <EphemeralMessage
+                            messageId={message.id}
+                            messageType={message.message_type as 'image' | 'video'}
+                            senderName={message.senderUsername}
+                            isOwn={isOwn}
+                            recipientId={otherUserId}
+                          />
+                        ) : isRegularMedia ? (
+                          <RegularMediaMessage
+                            mediaUrl={message.content!}
+                            mediaType={message.message_type as 'image' | 'video'}
+                            isOwn={isOwn}
+                          />
+                        ) : (
+                          <div className={cn(
+                            "px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words",
+                            isOwn
+                              ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
+                              : "bg-card border border-border text-foreground rounded-2xl rounded-bl-md",
+                            "max-w-full"
+                          )}
+                          style={{ wordBreak: 'break-word' }}
+                          >
+                            {message.content}
+                          </div>
+                        )}
+
+                        {/* Reaction picker - right for received messages */}
+                        {!isOwn && !isEphemeralMedia && (
+                          <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                            <EmojiReactionPicker onSelect={(emoji) => toggleReaction.mutate({ messageId: message.id, emoji })} />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Reactions display */}
+                      <MessageReactions
+                        reactions={getReactionsForMessage(message.id)}
+                        onToggleReaction={(emoji) => toggleReaction.mutate({ messageId: message.id, emoji })}
+                        isOwn={isOwn}
+                      />
 
                       {/* Timestamp + read status - only on last in group */}
                       {isLastInGroup && (
