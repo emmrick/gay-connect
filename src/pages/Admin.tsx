@@ -56,6 +56,7 @@ import CreditCostsPanel from '@/components/admin/CreditCostsPanel';
 import MaintenanceTogglePanel from '@/components/admin/MaintenanceTogglePanel';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import PendingTasksPanel from '@/components/admin/PendingTasksPanel';
+import AdminSupportChatPanel from '@/components/admin/AdminSupportChatPanel';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -300,6 +301,8 @@ const Admin = () => {
       
       case 'pending-tasks':
         return <PendingTasksPanel />;
+      case 'support':
+        return <AdminSupportChatPanel onBack={() => handleSectionChange('wallet')} />;
       default:
         return null;
     }
