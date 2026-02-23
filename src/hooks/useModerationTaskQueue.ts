@@ -41,7 +41,7 @@ const TASK_TYPE_SECTIONS: Record<string, string> = {
   credit_management: 'credits',
   withdrawal_management: 'credits',
   promo_validation: 'promo',
-  support_chat: 'reports',
+  support_chat: 'support',
 };
 
 export const getTaskTypeLabel = (type: string) => TASK_TYPE_LABELS[type] || type;

@@ -107,7 +107,7 @@ const SupportChatRoom = ({ ticket, onBack }: SupportChatRoomProps) => {
   const statusColor = ticket.status === 'open' ? 'bg-amber-500/20 text-amber-600' : ticket.status === 'assigned' ? 'bg-green-500/20 text-green-600' : 'bg-muted text-muted-foreground';
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden" style={{ height: '100dvh' }}>
       {/* Header */}
       <header
         className="flex-shrink-0 flex items-center gap-2 px-2 py-2 border-b border-border bg-card z-20"

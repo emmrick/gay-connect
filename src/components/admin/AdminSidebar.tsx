@@ -54,7 +54,8 @@ export type AdminSection =
   | 'swipe-stats'
   | 'credit-costs'
   | 'maintenance'
-  | 'pending-tasks';
+  | 'pending-tasks'
+  | 'support';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
