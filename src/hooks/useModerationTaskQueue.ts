@@ -162,6 +162,7 @@ export const useAvailableTasks = () => {
         () => {
           queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
           queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
+          queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
         }
       )
       .subscribe();
@@ -228,6 +229,7 @@ export const useReserveTask = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
       queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
+      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
       toast.success('Tâche réservée ! Vous avez 5 minutes pour l\'exécuter.');
     },
     onError: (error: Error) => {
@@ -258,6 +260,7 @@ export const useRefuseTask = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
       queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
+      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
       toast.info('Tâche refusée, elle sera proposée à un autre modérateur.');
     },
     onError: (error: Error) => {
@@ -288,6 +291,7 @@ export const useCompleteTask = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
       queryClient.invalidateQueries({ queryKey: ['moderation-task-active'] });
+      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
       if (data.reward_cents > 0) {
         toast.success(`Tâche terminée ! +${formatCentsReward(data.reward_cents)}`);
       } else {
@@ -328,6 +332,7 @@ export const useCreateModerationTask = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['moderation-tasks-available'] });
+      queryClient.invalidateQueries({ queryKey: ['moderation-tasks-pending-all'] });
     },
   });
 };
