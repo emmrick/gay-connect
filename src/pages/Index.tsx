@@ -635,7 +635,12 @@ const Index = () => {
               </div>
             </div>
             <ScrollArea className="flex-1 min-h-0">
-              <PremiumPage />
+              <PremiumPage onNavigateToSupport={(ticket) => {
+                setSelectedSupportTicket(ticket);
+                setActiveTab('messages');
+                setMessageSubTab('support');
+                setCurrentView('support');
+              }} />
             </ScrollArea>
           </motion.div>
         ) : null;

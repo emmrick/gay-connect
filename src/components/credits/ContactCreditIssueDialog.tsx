@@ -30,9 +30,10 @@ interface ContactCreditIssueDialogProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onTicketCreated?: (ticket: any) => void;
 }
 
-const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange }: ContactCreditIssueDialogProps) => {
+const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange, onTicketCreated }: ContactCreditIssueDialogProps) => {
   const { user } = useAuth();
   const [internalOpen, setInternalOpen] = useState(false);
   
@@ -119,6 +120,9 @@ const ContactCreditIssueDialog = ({ trigger, open: controlledOpen, onOpenChange 
       setLastName('');
       setFirstName('');
       setPaymentEmail('');
+      if (onTicketCreated) {
+        onTicketCreated(ticket);
+      }
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erreur lors de l\'envoi');

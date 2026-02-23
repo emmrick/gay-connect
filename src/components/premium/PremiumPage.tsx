@@ -40,7 +40,11 @@ import CreditHistorySheet from '../credits/CreditHistorySheet';
 import ContactCreditIssueDialog from '../credits/ContactCreditIssueDialog';
 import BuyCreditDialog from '../credits/BuyCreditDialog';
 
-const PremiumPage = () => {
+interface PremiumPageProps {
+  onNavigateToSupport?: (ticket: any) => void;
+}
+
+const PremiumPage = ({ onNavigateToSupport }: PremiumPageProps = {}) => {
   const { totalCredits, isLoading } = useCredits();
   const [showClaimDialog, setShowClaimDialog] = useState(false);
 
@@ -130,7 +134,8 @@ const PremiumPage = () => {
 
         <ContactCreditIssueDialog 
           open={showClaimDialog} 
-          onOpenChange={setShowClaimDialog} 
+          onOpenChange={setShowClaimDialog}
+          onTicketCreated={onNavigateToSupport}
         />
 
         {/* Free Credits - Compact */}
