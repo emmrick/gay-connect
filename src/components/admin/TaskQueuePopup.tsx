@@ -218,7 +218,8 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -100, scale: 0.9 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed top-2 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md z-[60]"
+            className="fixed top-0 left-0 right-0 sm:top-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md z-[60]"
+            style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
           >
             <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-2xl shadow-primary/10 overflow-hidden">
               {/* Header */}
@@ -260,27 +261,27 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 text-xs sm:text-sm h-9"
+                    className="flex-1 text-xs sm:text-sm h-11 active:scale-95 transition-transform"
                     onClick={handleRefuse}
                     disabled={refuseTask.isPending || reserveTask.isPending}
                   >
                     {refuseTask.isPending ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
                     ) : (
-                      <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
+                      <X className="w-4 h-4 mr-1" />
                     )}
                     Passer
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 bg-primary hover:bg-primary/90 text-xs sm:text-sm h-9"
+                    className="flex-1 bg-primary hover:bg-primary/90 text-xs sm:text-sm h-11 active:scale-95 transition-transform"
                     onClick={handleAccept}
                     disabled={reserveTask.isPending || refuseTask.isPending}
                   >
                     {reserveTask.isPending ? (
-                      <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin mr-1" />
+                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
                     ) : (
-                      <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
+                      <Check className="w-4 h-4 mr-1" />
                     )}
                     Accepter
                   </Button>
@@ -336,42 +337,43 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleRefuseActive}
                   disabled={refuseTask.isPending}
-                  className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs h-9"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs h-11 active:scale-95 transition-transform"
                 >
                   {refuseTask.isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <X className="w-3.5 h-3.5 mr-1" />
+                    <X className="w-4 h-4" />
                   )}
-                  Abandonner
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 text-xs h-9"
+                  className="text-xs h-11 active:scale-95 transition-transform"
                   onClick={handleGoToTask}
                 >
-                  Exécuter la mission
-                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                  <ChevronRight className="w-4 h-4 mr-1" />
+                  Exécuter
                 </Button>
                 <Button
                   size="sm"
-                  className="flex-1 bg-primary hover:bg-primary/90 text-xs h-9"
+                  className="bg-primary hover:bg-primary/90 text-xs h-11 active:scale-95 transition-transform"
                   onClick={handleCompleteActive}
                   disabled={completeTask.isPending}
                 >
                   {completeTask.isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-1" />
+                      OK
+                    </>
                   )}
-                  Terminer
                 </Button>
               </div>
             </div>

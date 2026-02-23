@@ -24,7 +24,9 @@ import {
   Heart,
   UserCog,
   Tag,
-  Wrench
+  Wrench,
+  ListOrdered,
+  Headphones
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -72,7 +74,9 @@ const navItems: NavItem[] = [
   { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users' },
   
   // Modération
+  { id: 'pending-tasks', label: 'File missions', icon: ListOrdered, group: 'moderation' },
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
+  { id: 'support', label: 'Support', icon: Headphones, group: 'moderation' },
   { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
   { id: 'verification', label: 'Vérifications', icon: IdCard, group: 'moderation' },
