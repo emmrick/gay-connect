@@ -1,17 +1,20 @@
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Clock, Loader2, ListOrdered, Euro, User, Lock } from 'lucide-react';
+import { Clock, Loader2, ListOrdered, Euro, User, Lock, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   usePendingTasksHistory,
+  useRecycleTask,
   getTaskTypeLabel,
   formatCentsReward,
 } from '@/hooks/useModerationTaskQueue';
 
 const PendingTasksPanel = () => {
   const { data: tasks, isLoading } = usePendingTasksHistory();
+  const recycleTask = useRecycleTask();
 
   if (isLoading) {
     return (
@@ -140,10 +143,24 @@ const PendingTasksPanel = () => {
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="shrink-0 ml-2">
-                    <Euro className="w-3 h-3 mr-1" />
-                    {formatCentsReward(task.reward_cents)}
-                  </Badge>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    {task.refused_by.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        disabled={recycleTask.isPending}
+                        onClick={() => recycleTask.mutate(task.id)}
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Re-proposer
+                      </Button>
+                    )}
+                    <Badge variant="outline">
+                      <Euro className="w-3 h-3 mr-1" />
+                      {formatCentsReward(task.reward_cents)}
+                    </Badge>
+                  </div>
                 </div>
               ))}
             </div>

@@ -314,6 +314,30 @@ export const useCompleteTask = () => {
   });
 };
 
+// ─── Recycle a single task (reset refused_by) ───
+export const useRecycleTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from('moderation_tasks')
+        .update({ refused_by: [], updated_at: new Date().toISOString() } as any)
+        .eq('id', taskId)
+        .eq('status', 'pending');
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateAllTaskQueries(queryClient);
+      toast.success('Mission re-proposée aux modérateurs.');
+    },
+    onError: () => {
+      toast.error('Erreur lors de la re-proposition.');
+    },
+  });
+};
+
 // ─── Create a task in the queue ───
 export const useCreateModerationTask = () => {
   const queryClient = useQueryClient();
