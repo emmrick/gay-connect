@@ -1,19 +1,28 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info } from 'lucide-react';
+import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2 } from 'lucide-react';
 import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { notifySupportAgentReply } from '@/services/pushNotificationService';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import SavedRepliesSheet from '@/components/support/SavedRepliesSheet';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface SupportChatRoomProps {
   ticket: SupportTicket;
@@ -35,6 +44,10 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
   const [showScrollButton, setShowScrollButton] = useState(false);
   const isInitialLoad = useRef(true);
   const previousMessagesLength = useRef(0);
+  const [showManualCreditDialog, setShowManualCreditDialog] = useState(false);
+  const [manualCreditAmount, setManualCreditAmount] = useState('');
+  const [isGrantingCredits, setIsGrantingCredits] = useState(false);
+  const globalQueryClient = useQueryClient();
 
   // Fetch sender profiles for display
   const senderIds = [...new Set(messages.map(m => m.sender_id))];
@@ -106,6 +119,40 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
     }
   }, []);
 
+  const handleManualCreditGrant = async () => {
+    const amount = parseInt(manualCreditAmount, 10);
+    if (!amount || amount < 1 || amount > 10000) {
+      toast.error('Montant invalide (1 - 10 000)');
+      return;
+    }
+    setIsGrantingCredits(true);
+    try {
+      const { error } = await supabase.rpc('add_credits', {
+        _user_id: ticket.user_id,
+        _amount: amount,
+        _credit_type: 'purchased',
+        _transaction_type: 'admin_credit',
+        _description: `Attribution manuelle via support - ${amount} crédits`,
+      });
+      if (error) throw error;
+
+      // Send confirmation message in the chat
+      await sendMessage.mutateAsync({
+        content: `✅ ${amount} crédits ont été attribués à votre compte.`,
+      });
+
+      toast.success(`${amount} crédits attribués !`);
+      setShowManualCreditDialog(false);
+      setManualCreditAmount('');
+      globalQueryClient.invalidateQueries({ queryKey: ['user-credits'] });
+    } catch (error) {
+      console.error('Error granting credits:', error);
+      toast.error("Erreur lors de l'attribution des crédits");
+    } finally {
+      setIsGrantingCredits(false);
+    }
+  };
+
   const shouldShowDateSeparator = (index: number): boolean => {
     if (index === 0) return true;
     return !isSameDay(new Date(messages[index].created_at), new Date(messages[index - 1].created_at));
@@ -142,8 +189,62 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
               </Badge>
             </div>
           </div>
+          {isAgent && !isClosed && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="flex-shrink-0 h-10 w-10"
+              onClick={() => setShowManualCreditDialog(true)}
+              title="Attribuer des crédits"
+            >
+              <Coins className="w-5 h-5 text-amber-500" />
+            </Button>
+          )}
         </div>
       </header>
+
+      {/* Manual Credit Attribution Dialog */}
+      <Dialog open={showManualCreditDialog} onOpenChange={setShowManualCreditDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Coins className="w-5 h-5 text-amber-500" />
+              Attribuer des crédits
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Attribuer des crédits manuellement au client de ce ticket.
+            </p>
+            <Input
+              type="number"
+              min="1"
+              max="10000"
+              placeholder="Nombre de crédits (1 - 10 000)"
+              value={manualCreditAmount}
+              onChange={(e) => setManualCreditAmount(e.target.value)}
+              disabled={isGrantingCredits}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowManualCreditDialog(false)}>
+              Annuler
+            </Button>
+            <Button
+              onClick={handleManualCreditGrant}
+              disabled={isGrantingCredits || !manualCreditAmount}
+              className="gap-2"
+            >
+              {isGrantingCredits ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+              Attribuer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Ticket info banner */}
       <div className="px-4 py-2 bg-primary/5 border-b border-border">
