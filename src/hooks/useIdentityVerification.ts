@@ -103,23 +103,49 @@ export const useIdentityVerification = () => {
 
     console.log('Uploading document:', fileName, 'Size:', file.size);
 
-    const { error: uploadError, data: uploadData } = await supabase.storage
-      .from('identity-documents')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+    // Retry logic for Navigator LockManager timeout (common on mobile browsers)
+    const maxRetries = 3;
+    let lastError: Error | null = null;
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      throw new Error(`Erreur d'upload: ${uploadError.message}`);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('identity-documents')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: attempt > 1, // Allow overwrite on retry
+          });
+
+        if (uploadError) {
+          // Check if it's a LockManager timeout error
+          if (uploadError.message?.includes('LockManager') || uploadError.message?.includes('timed out')) {
+            console.warn(`Upload attempt ${attempt}/${maxRetries} failed (LockManager timeout), retrying...`);
+            lastError = new Error(uploadError.message);
+            // Wait before retry with exponential backoff
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+          throw new Error(`Erreur d'upload: ${uploadError.message}`);
+        }
+
+        console.log('Upload successful:', uploadData);
+        return fileName;
+      } catch (err: any) {
+        // Catch navigator lock errors that may be thrown outside Supabase
+        if (err?.message?.includes('LockManager') || err?.message?.includes('timed out')) {
+          console.warn(`Upload attempt ${attempt}/${maxRetries} failed (lock error), retrying...`);
+          lastError = err;
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+        throw err;
+      }
     }
 
-    console.log('Upload successful:', uploadData);
-
-    // For private buckets, we store the file path and create signed URLs when needed
-    // Return just the file path - admin will create signed URLs when viewing
-    return fileName;
+    // All retries failed
+    throw new Error(
+      'L\'envoi a échoué après plusieurs tentatives. Vérifie ta connexion internet et réessaie.'
+    );
   };
 
   const submitVerification = useMutation({
