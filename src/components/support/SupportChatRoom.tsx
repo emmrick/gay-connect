@@ -46,6 +46,7 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
   const previousMessagesLength = useRef(0);
   const [showManualCreditDialog, setShowManualCreditDialog] = useState(false);
   const [manualCreditAmount, setManualCreditAmount] = useState('');
+  const [manualCreditType, setManualCreditType] = useState<'purchased' | 'daily' | 'bonus' | 'passive'>('purchased');
   const [isGrantingCredits, setIsGrantingCredits] = useState(false);
   const globalQueryClient = useQueryClient();
 
@@ -127,23 +128,27 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
     }
     setIsGrantingCredits(true);
     try {
+      const creditTypeLabels: Record<string, string> = {
+        purchased: 'Achetés', daily: 'Quotidiens', bonus: 'Bonus', passive: 'Passifs'
+      };
       const { error } = await supabase.rpc('add_credits', {
         _user_id: ticket.user_id,
         _amount: amount,
-        _credit_type: 'purchased',
+        _credit_type: manualCreditType,
         _transaction_type: 'admin_credit',
-        _description: `Attribution manuelle via support - ${amount} crédits`,
+        _description: `Attribution manuelle via support - ${amount} crédits (${creditTypeLabels[manualCreditType]})`,
       });
       if (error) throw error;
 
       // Send confirmation message in the chat
       await sendMessage.mutateAsync({
-        content: `✅ ${amount} crédits ont été attribués à votre compte.`,
+        content: `✅ ${amount} crédits (${creditTypeLabels[manualCreditType]}) ont été attribués à votre compte.`,
       });
 
       toast.success(`${amount} crédits attribués !`);
       setShowManualCreditDialog(false);
       setManualCreditAmount('');
+      setManualCreditType('purchased');
       globalQueryClient.invalidateQueries({ queryKey: ['user-credits'] });
     } catch (error) {
       console.error('Error granting credits:', error);
@@ -225,6 +230,31 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
               onChange={(e) => setManualCreditAmount(e.target.value)}
               disabled={isGrantingCredits}
             />
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Type de crédits</label>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { value: 'purchased', label: 'Achetés', color: 'bg-sky-400/10 text-sky-600 border-sky-400/30' },
+                  { value: 'daily', label: 'Quotidiens', color: 'bg-green-500/10 text-green-600 border-green-500/30' },
+                  { value: 'bonus', label: 'Bonus', color: 'bg-blue-700/10 text-blue-700 border-blue-700/30' },
+                  { value: 'passive', label: 'Passifs', color: 'bg-amber-400/10 text-amber-600 border-amber-400/30' },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setManualCreditType(opt.value)}
+                    className={cn(
+                      "text-xs font-semibold rounded-full border px-3 py-1.5 transition-all",
+                      opt.color,
+                      manualCreditType === opt.value ? 'ring-2 ring-primary ring-offset-1' : 'opacity-60'
+                    )}
+                    disabled={isGrantingCredits}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowManualCreditDialog(false)}>
