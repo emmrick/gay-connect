@@ -27,6 +27,7 @@ interface CreditRequestData {
   status?: 'pending' | 'approved' | 'rejected';
   processedAt?: string;
   creditsAwarded?: number;
+  creditTypeAwarded?: 'purchased' | 'daily' | 'bonus' | 'passive';
   rejectionReason?: string;
 }
 
@@ -59,6 +60,7 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
+  const [selectedCreditType, setSelectedCreditType] = useState<'purchased' | 'daily' | 'bonus' | 'passive'>('purchased');
 
   // Parse the credit request data from content
   let requestData: CreditRequestData | null = null;
@@ -109,12 +111,15 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
     
     setIsProcessing(true);
     try {
+      const creditTypeLabels: Record<string, string> = {
+        purchased: 'Achetés', daily: 'Quotidiens', bonus: 'Bonus', passive: 'Passifs'
+      };
       const { error } = await supabase.rpc('add_credits', {
         _user_id: requestData.userId,
         _amount: credits,
-        _credit_type: 'purchased',
+        _credit_type: selectedCreditType,
         _transaction_type: 'admin_credit',
-        _description: `Attribution manuelle - ${credits} crédits`,
+        _description: `Attribution manuelle - ${credits} crédits (${creditTypeLabels[selectedCreditType]})`,
       });
 
       if (error) throw error;
@@ -127,14 +132,14 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
           .insert({
             ticket_id: ticketId,
             sender_id: adminId,
-            content: `✅ Votre demande de crédits a été approuvée ! ${credits} crédits ont été ajoutés à votre compte.`,
+            content: `✅ Votre demande de crédits a été approuvée ! ${credits} crédits (${creditTypeLabels[selectedCreditType]}) ont été ajoutés à votre compte.`,
             message_type: 'text',
           } as any);
       } else if (adminId && !isSupportContext) {
         await supabase.from('messages').insert({
           sender_id: adminId,
           recipient_id: requestData.userId,
-          content: `✅ Votre demande de crédits a été approuvée ! ${credits} crédits ont été ajoutés à votre compte.`,
+          content: `✅ Votre demande de crédits a été approuvée ! ${credits} crédits (${creditTypeLabels[selectedCreditType]}) ont été ajoutés à votre compte.`,
           message_type: 'text',
           is_private: true,
         });
@@ -146,6 +151,7 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
         status: 'approved',
         processedAt: new Date().toISOString(),
         creditsAwarded: credits,
+        creditTypeAwarded: selectedCreditType,
       };
       await updateMessageStatus(updatedData);
 
@@ -265,7 +271,28 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
       {/* Action Buttons - show for admin or agent in support context */}
       {(isAdmin || isSupportContext) && !isOwn && isPending && (
         <div className="space-y-2 mt-4">
-          <p className="text-xs text-muted-foreground mb-2">Attribuer les crédits :</p>
+          {/* Credit type selector */}
+          <p className="text-xs text-muted-foreground mb-1">Type de crédits :</p>
+          <div className="grid grid-cols-2 gap-1.5 mb-2">
+            {([
+              { value: 'purchased', label: 'Achetés', color: 'bg-sky-400/10 text-sky-600 border-sky-400/30' },
+              { value: 'daily', label: 'Quotidiens', color: 'bg-green-500/10 text-green-600 border-green-500/30' },
+              { value: 'bonus', label: 'Bonus', color: 'bg-blue-700/10 text-blue-700 border-blue-700/30' },
+              { value: 'passive', label: 'Passifs', color: 'bg-amber-400/10 text-amber-600 border-amber-400/30' },
+            ] as const).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setSelectedCreditType(opt.value)}
+                className={`text-[10px] font-semibold rounded-full border px-2 py-1 transition-all ${opt.color} ${selectedCreditType === opt.value ? 'ring-2 ring-primary ring-offset-1' : 'opacity-50'}`}
+                disabled={isProcessing}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <p className="text-xs text-muted-foreground">Attribuer les crédits :</p>
           <div className="flex gap-2">
             {CREDIT_OPTIONS.map((option) => (
               <Button
@@ -366,6 +393,18 @@ const CreditRequestMessage = ({ messageId, content, senderId, recipientId, isOwn
           <span className="text-sm text-green-600 font-medium">
             ✅ {requestData.creditsAwarded} crédits attribués
           </span>
+          {requestData.creditTypeAwarded && (
+            <span className={`text-[10px] font-semibold rounded-full border px-2 py-0.5 ${
+              requestData.creditTypeAwarded === 'purchased' ? 'bg-sky-400/10 text-sky-600 border-sky-400/30' :
+              requestData.creditTypeAwarded === 'daily' ? 'bg-green-500/10 text-green-600 border-green-500/30' :
+              requestData.creditTypeAwarded === 'bonus' ? 'bg-blue-700/10 text-blue-700 border-blue-700/30' :
+              'bg-amber-400/10 text-amber-600 border-amber-400/30'
+            }`}>
+              {requestData.creditTypeAwarded === 'purchased' ? 'Achetés' :
+               requestData.creditTypeAwarded === 'daily' ? 'Quotidiens' :
+               requestData.creditTypeAwarded === 'bonus' ? 'Bonus' : 'Passifs'}
+            </span>
+          )}
         </div>
       )}
 
