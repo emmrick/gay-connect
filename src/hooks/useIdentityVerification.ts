@@ -208,7 +208,7 @@ export const useAdminVerifications = () => {
         .select('*')
         .eq('status', 'pending')
         .not('submitted_at', 'is', null)
-        .order('submitted_at', { ascending: true });
+        .order('submitted_at', { ascending: false });
 
       if (verError) throw verError;
       if (!verifications || verifications.length === 0) return [];
