@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProfile } from '@/hooks/useProfiles';
+import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useProfileBoost } from '@/hooks/useProfileBoost';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { useNavigate } from 'react-router-dom';
@@ -441,7 +442,7 @@ const LikedProfileCard = ({
             {profile.username.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        {profile.is_online && (
+        {isUserTrulyOnline(profile) && (
           <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-400 border-[3px] border-card shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
         )}
       </button>
