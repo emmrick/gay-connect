@@ -26,9 +26,9 @@ const ProfilePhotoGuard = ({ children }: ProfilePhotoGuardProps) => {
     // We still check photos, verification doesn't exempt
   }
 
-  // Still loading photos
+  // Still loading photos - render children to avoid blank flash
   if (photosLoading) {
-    return null;
+    return <>{children}</>;
   }
 
   // No photos and no avatar — block access
