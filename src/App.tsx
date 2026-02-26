@@ -161,7 +161,11 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           {!appReady && <InitialLoadingScreen onComplete={handleLoadComplete} />}
-          <AppContent />
+          {/* Render content immediately but hidden until splash finishes, 
+              so queries start prefetching during splash */}
+          <div style={appReady ? undefined : { visibility: 'hidden', position: 'fixed', inset: 0 }}>
+            <AppContent />
+          </div>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>

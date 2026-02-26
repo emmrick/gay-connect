@@ -1,21 +1,15 @@
 import { Suspense, ReactNode } from 'react';
-import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
 interface LazyPageLoaderProps {
   children: ReactNode;
 }
 
-// Minimal fallback for lazy loaded components
+// Minimal fallback for lazy loaded components - no framer-motion overhead
 export const PageFallback = () => (
-  <motion.div 
-    className="flex-1 flex items-center justify-center min-h-[200px]"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ duration: 0.2 }}
-  >
+  <div className="flex-1 flex items-center justify-center min-h-[200px]">
     <Loader2 className="w-6 h-6 animate-spin text-primary" />
-  </motion.div>
+  </div>
 );
 
 const LazyPageLoader = ({ children }: LazyPageLoaderProps) => {

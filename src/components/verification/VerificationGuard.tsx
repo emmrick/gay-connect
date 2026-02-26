@@ -16,9 +16,9 @@ const VerificationGuard = ({ children }: VerificationGuardProps) => {
     return <>{children}</>;
   }
 
-  // Still loading auth - let parent Suspense handle skeleton
+  // Still loading auth - render children to avoid blank flash
   if (authLoading) {
-    return null;
+    return <>{children}</>;
   }
 
   // Profile not loaded yet - allow access while loading to avoid blocking
@@ -27,9 +27,9 @@ const VerificationGuard = ({ children }: VerificationGuardProps) => {
     return <>{children}</>;
   }
 
-  // Still loading verification status
+  // Still loading verification status - render children to avoid blank flash
   if (verificationLoading) {
-    return null;
+    return <>{children}</>;
   }
 
   // If verification is pending (submitted), allow access

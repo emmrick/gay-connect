@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { memo } from 'react';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
 import ChatRoom from '@/components/chat/ChatRoom';
@@ -692,24 +693,15 @@ const Index = () => {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation Bar with fade animation */}
-      <AnimatePresence>
-        {showBottomNav && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          >
-            <BottomNavBar
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              unreadCount={getTotalUnreadCount()}
-              isPremium={isPremium}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Bottom Navigation Bar */}
+      {showBottomNav && (
+        <BottomNavBar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          unreadCount={getTotalUnreadCount()}
+          isPremium={isPremium}
+        />
+      )}
 
       {/* Identity Verification Dialog */}
       {showVerificationDialog && (
