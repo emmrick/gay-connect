@@ -46,8 +46,7 @@ const HomeView = ({
   return (
     <div className="pb-4">
       <div className="px-4 py-4 space-y-4">
-        {/* Referral Banner */}
-        <ReferralBanner />
+        {/* Referral Banner removed - now shown as popup */}
 
         {/* Tabs + Filter */}
         <Tabs defaultValue="nearby" className="w-full">

@@ -90,6 +90,7 @@ const navItems: NavItem[] = [
   { id: 'broadcast', label: 'Notifications', icon: Bell, group: 'settings' },
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'settings' },
+  { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {
