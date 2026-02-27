@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 interface NearbyMembersGridProps {
   onViewProfile: (userId: string) => void;
   onStartChat: (userId: string) => void;
+  ageRange?: [number, number];
 }
 
 // Skeleton component for loading state
@@ -31,7 +32,7 @@ const ProfileSkeleton = ({ index }: { index: number }) => (
   </div>
 );
 
-const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProps) => {
+const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembersGridProps) => {
   const navigate = useNavigate();
   const { profile: currentUserProfile } = useAuth();
   const { latitude, longitude, loading: locationLoading, error: locationError, requestLocation, permissionState } = useGeolocation();
@@ -107,8 +108,17 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
       });
     }
     
+    // Apply age filter
+    if (ageRange && (ageRange[0] !== 18 || ageRange[1] !== 99)) {
+      return result.filter(p => {
+        if (p.isCurrentUser) return true; // Always show current user
+        if (!p.age) return false; // Hide profiles without age when filter is active
+        return p.age >= ageRange[0] && p.age <= ageRange[1];
+      });
+    }
+    
     return result;
-  }, [currentUserProfile, profiles]);
+  }, [currentUserProfile, profiles, ageRange]);
 
   // ---------- HELPER FUNCTIONS ----------
 
@@ -251,12 +261,9 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
     <div className="space-y-4">
       {/* Header with refresh */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            {allProfiles.length} membres{hasLocation ? ' à proximité' : ''}
-          </span>
-        </div>
+        <span className="text-sm text-muted-foreground">
+          {allProfiles.length} membres{hasLocation ? ' à proximité' : ''}
+        </span>
         <Button 
           variant="ghost" 
           size="sm" 
@@ -313,7 +320,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
 
                 {/* Current user badge */}
                 {profile.isCurrentUser && (
-                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center gap-1">
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center gap-1 z-10">
                     <Crown className="w-3 h-3" />
                     Toi
                   </div>
@@ -345,16 +352,19 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat }: NearbyMembersGridProp
                   <div className="flex items-center gap-1 text-[10px] text-white/60">
                     {profile.isCurrentUser ? (
                       <span className="text-primary-foreground/80">Voir ton profil</span>
-                    ) : profile.distance_km !== null ? (
-                      <>
-                        <MapPin className="w-2.5 h-2.5" />
-                        <span>{formatDistance(profile.distance_km)}</span>
-                      </>
                     ) : (
                       <span>{getProfileLastSeenText(profile)}</span>
                     )}
                   </div>
                 </div>
+
+                {/* Proximity badge */}
+                {!profile.isCurrentUser && profile.distance_km !== null && (
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium flex items-center gap-0.5">
+                    <MapPin className="w-2.5 h-2.5" />
+                    {formatDistance(profile.distance_km)}
+                  </div>
+                )}
 
                 {/* Hover effect */}
                 {!profile.isCurrentUser && (
