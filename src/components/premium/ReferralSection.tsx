@@ -90,7 +90,7 @@ const ReferralSection = () => {
                 )}
                 Copier le lien
               </Button>
-              <Button onClick={shareReferralLink} className="flex-1">
+              <Button onClick={() => shareReferralLink(referralReward)} className="flex-1">
                 <Share2 className="w-4 h-4 mr-2" />
                 Partager
               </Button>
