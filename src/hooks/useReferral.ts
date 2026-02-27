@@ -166,16 +166,17 @@ export const useReferral = () => {
   }, [referralData?.code]);
 
   // Share via native share API
-  const shareReferralLink = useCallback(async () => {
+  const shareReferralLink = useCallback(async (rewardAmount?: number) => {
     if (!referralData?.code) {
       toast.error('Code de parrainage non disponible');
       return;
     }
     
+    const reward = rewardAmount ?? 30;
     const link = `${window.location.origin}/auth?ref=${referralData.code}`;
     const shareData = {
       title: 'Rejoins GayConnect !',
-      text: 'Inscris-toi avec mon lien et gagne 10 crédits gratuits après vérification de ton identité !',
+      text: `Inscris-toi avec mon lien et gagne ${reward} crédits gratuits après vérification de ton identité !`,
       url: link
     };
     

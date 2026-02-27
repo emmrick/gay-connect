@@ -26,7 +26,7 @@ const ReferralBanner = () => {
         </div>
         <Button 
           size="sm" 
-          onClick={shareReferralLink}
+          onClick={() => shareReferralLink(referralReward)}
           className="flex-shrink-0"
         >
           <Share2 className="w-4 h-4 mr-1" />

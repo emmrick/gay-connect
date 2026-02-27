@@ -87,7 +87,7 @@ const CreditReferralSection = () => {
             
             <Button 
               className="w-full" 
-              onClick={shareReferralLink}
+              onClick={() => shareReferralLink(referralReward)}
               variant="outline"
             >
               <Share2 className="w-4 h-4 mr-2" />
