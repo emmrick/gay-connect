@@ -19,6 +19,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
+import PromoPopup from "@/components/popups/PromoPopup";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import { useScreenshotProtection } from "@/hooks/useScreenshotProtection";
 import ScreenshotProtectionOverlay from "@/components/security/ScreenshotProtectionOverlay";
@@ -131,6 +132,7 @@ const AuthenticatedApp = () => {
                 <LowCreditsAlert />
                 <AgeConfirmationModal />
                 <InvestigationNoticeDialog />
+                <PromoPopup />
               </BrowserRouter>
             </TooltipProvider>
           </ProfilePhotoGuard>

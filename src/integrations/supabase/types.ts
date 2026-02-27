@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_popups: {
+        Row: {
+          button_action: string | null
+          button_text: string | null
+          created_at: string
+          created_by: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          message: string
+          popup_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          button_action?: string | null
+          button_text?: string | null
+          created_at?: string
+          created_by: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          message: string
+          popup_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          button_action?: string | null
+          button_text?: string | null
+          created_at?: string
+          created_by?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string
+          popup_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_moderation_reports: {
         Row: {
           ai_analysis: string
