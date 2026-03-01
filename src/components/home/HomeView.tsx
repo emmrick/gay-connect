@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
 import ReferralBanner from './ReferralBanner';
+import StoryBar from '@/components/stories/StoryBar';
 
 interface HomeViewProps {
   onViewProfile?: (userId: string) => void;
@@ -46,6 +47,9 @@ const HomeView = ({
   return (
     <div className="pb-4">
       <div className="px-4 py-4 space-y-4">
+        {/* Stories bar */}
+        <StoryBar />
+
         {/* Referral Banner removed - now shown as popup */}
 
         {/* Tabs + Filter */}
