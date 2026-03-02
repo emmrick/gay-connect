@@ -232,6 +232,7 @@ const Admin = () => {
     if (isHome) {
       return (
         <>
+          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
           <AdminMobileNav
             activeSection={'__home__' as any}
             onSectionChange={handleSectionChange}
@@ -240,7 +241,6 @@ const Admin = () => {
             pendingPurchases={pendingPurchasesCount}
             pendingVerifications={pendingVerificationsCount}
           />
-          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
         </>
       );
     }
