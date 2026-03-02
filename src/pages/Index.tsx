@@ -23,6 +23,7 @@ import VerificationReminderBanner from '@/components/verification/VerificationRe
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import Help from '@/pages/Help';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -190,7 +191,9 @@ const Index = () => {
 
   const handleTabChange = (tab: NavTab) => {
     if (tab === 'help') {
-      navigate('/aide');
+      setPreviousTab(activeTab);
+      setActiveTab(tab);
+      setCurrentView('help');
       return;
     }
     setPreviousTab(activeTab);
@@ -563,8 +566,11 @@ const Index = () => {
                 onSignOut={handleSignOut}
                 onNavigateToAdmin={() => navigate('/admin')}
                 onNavigateToCredits={() => handleTabChange('premium')}
-                onContactAdmin={() => navigate('/aide')
-                }
+                onContactAdmin={() => {
+                  setPreviousTab(activeTab);
+                  setActiveTab('help');
+                  setCurrentView('help');
+                }}
                 isAdmin={isAdmin}
                 isModerator={isModerator}
               />
@@ -605,9 +611,26 @@ const Index = () => {
             </div>
             <ScrollArea className="flex-1 min-h-0">
               <PremiumPage onNavigateToSupport={() => {
-                navigate('/aide');
+                setPreviousTab(activeTab);
+                setActiveTab('help');
+                setCurrentView('help');
               }} />
             </ScrollArea>
+          </motion.div>
+        ) : null;
+
+      case 'help':
+        return user ? (
+          <motion.div
+            key="help"
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="flex-1 flex flex-col min-h-0"
+          >
+            <Help embedded />
           </motion.div>
         ) : null;
 

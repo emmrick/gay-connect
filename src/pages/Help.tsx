@@ -33,7 +33,11 @@ const RATING_EMOJIS = [
   { emoji: '🤩', label: 'Très satisfait' },
 ];
 
-const Help = () => {
+interface HelpProps {
+  embedded?: boolean;
+}
+
+const Help = ({ embedded = false }: HelpProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -623,15 +627,17 @@ const Help = () => {
 
   // ============ DEFAULT: FAQ page ============
   return (
-    <div className="min-h-dvh bg-background flex flex-col">
+    <div className={cn("bg-background flex flex-col", embedded ? "flex-1" : "min-h-dvh")}>
       <div
         className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
         style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))' }}
       >
         <div className="px-4 pb-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
+          {!embedded && (
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          )}
           <div className="flex-1">
             <h1 className="font-display text-xl font-bold">Centre d'aide</h1>
             <p className="text-xs text-muted-foreground">FAQ & Support client</p>
@@ -725,7 +731,10 @@ const Help = () => {
       {/* Floating chat bubble */}
       <button
         onClick={handleStartChat}
-        className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-foreground text-background shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
+        className={cn(
+          "fixed right-4 z-50 w-14 h-14 rounded-full bg-foreground text-background shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center",
+          embedded ? "bottom-28" : "bottom-20"
+        )}
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
         aria-label="Démarrer le chat"
       >
