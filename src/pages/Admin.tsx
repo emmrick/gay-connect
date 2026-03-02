@@ -1,31 +1,18 @@
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  Shield, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Eye,
-  Loader2,
-  Ban,
-  Users
+  Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, Loader2, Ban, Users
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  useIsAdmin, 
-  useAdminReports, 
-  useReportStats,
-  useBlockedUsers,
-  ReportStatus,
-  ReportWithProfiles
+  useIsAdmin, useAdminReports, useReportStats, useBlockedUsers,
+  ReportStatus, ReportWithProfiles
 } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePendingVerifications } from '@/hooks/usePendingVerifications';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -60,6 +47,7 @@ import AdminSupportChatPanel from '@/components/admin/AdminSupportChatPanel';
 import SupportRatingsPanel from '@/components/admin/SupportRatingsPanel';
 import PopupManagementPanel from '@/components/admin/PopupManagementPanel';
 import FAQManagementPanel from '@/components/admin/FAQManagementPanel';
+
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -74,11 +62,10 @@ const Admin = () => {
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
-  const [activeSection, setActiveSection] = useState<AdminSection>('wallet');
+  const [activeSection, setActiveSection] = useState<AdminSection | '__home__'>('__home__' as any);
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
-  // Check if user is moderator
   const { data: isModerator } = useQuery({
     queryKey: ['is-moderator', user?.id],
     queryFn: async () => {
@@ -91,12 +78,10 @@ const Admin = () => {
 
   const isAdminOrMod = isAdmin || isModerator;
 
-  // Memoize section change handler
   const handleSectionChange = useCallback((section: AdminSection | string) => {
     setActiveSection(section as AdminSection);
   }, []);
 
-  // Fetch pending purchase requests count
   const { data: pendingPurchasesCount = 0 } = useQuery({
     queryKey: ['admin-pending-purchases-count'],
     queryFn: async () => {
@@ -104,22 +89,19 @@ const Admin = () => {
         .from('credit_purchase_requests')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
-
       if (error) throw error;
       return count || 0;
     },
-    staleTime: 10000, // Keep data fresh for 10 seconds
+    staleTime: 10000,
     refetchInterval: 30000,
   });
 
-  // Memoize pending reports count 
   const pendingReportsCount = useMemo(() => stats?.pending || 0, [stats?.pending]);
 
   const { data: reports, isLoading: reportsLoading } = useAdminReports(
     selectedStatus === 'all' ? undefined : selectedStatus
   );
 
-  // Loading state
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -128,62 +110,38 @@ const Admin = () => {
     );
   }
 
-  // Not authenticated
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  if (!user) return <Navigate to="/auth" replace />;
 
-  // Not admin
   if (!isAdminOrMod) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center">
-            <div className="w-16 h-16 mx-auto rounded-full bg-destructive/20 flex items-center justify-center mb-4">
-              <Shield className="w-8 h-8 text-destructive" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Accès refusé</h2>
-            <p className="text-muted-foreground mb-6">
-              Vous n'avez pas les permissions nécessaires pour accéder à cette page.
-            </p>
-            <Button variant="outline" onClick={() => window.history.back()}>
-              Retour
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="max-w-sm w-full text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-destructive/10 flex items-center justify-center">
+            <Shield className="w-7 h-7 text-destructive" />
+          </div>
+          <h2 className="text-lg font-semibold">Accès refusé</h2>
+          <p className="text-sm text-muted-foreground">
+            Vous n'avez pas les permissions nécessaires.
+          </p>
+          <Button variant="outline" size="sm" onClick={() => window.history.back()}>
+            Retour
+          </Button>
+        </div>
       </div>
     );
   }
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'wallet':
-        return <ModeratorWalletPanel />;
-      
-      case 'rates':
-        return <TaskRatesPanel />;
-      
-      case 'withdrawals':
-        return <WithdrawalRequestsPanel />;
-      
-      case 'global':
-        return <GlobalEarningsPanel />;
-      
-      case 'stats':
-        return <AdminStatsPanel />;
-      
-      case 'users':
-        return <UserManagementPanel />;
-      
-      case 'credits':
-        return <CreditsManagementPanel />;
-      
-      case 'credits-surveillance':
-        return <CreditsSurveillancePanel />;
-      
-      case 'credit-purchases':
-        return <CreditPurchaseRequestsPanel />;
-      
+      case 'wallet': return <ModeratorWalletPanel />;
+      case 'rates': return <TaskRatesPanel />;
+      case 'withdrawals': return <WithdrawalRequestsPanel />;
+      case 'global': return <GlobalEarningsPanel />;
+      case 'stats': return <AdminStatsPanel />;
+      case 'users': return <UserManagementPanel />;
+      case 'credits': return <CreditsManagementPanel />;
+      case 'credits-surveillance': return <CreditsSurveillancePanel />;
+      case 'credit-purchases': return <CreditPurchaseRequestsPanel />;
       case 'blocked':
         return (
           <div className="space-y-4">
@@ -191,12 +149,10 @@ const Admin = () => {
               <Ban className="w-5 h-5" />
               <h2 className="text-lg font-semibold">Utilisateurs bloqués ({blockedUsers?.length || 0})</h2>
             </div>
-            <ScrollArea className={isMobile ? "h-[calc(100vh-280px)]" : "h-[calc(100vh-200px)]"}>
+            <ScrollArea className="h-[calc(100dvh-200px)]">
               {blockedLoading ? (
                 <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-20 rounded-lg" />
-                  ))}
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
                 </div>
               ) : blockedUsers?.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
@@ -205,15 +161,12 @@ const Admin = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {blockedUsers?.map((block) => (
-                    <BlockedUserCard key={block.id} block={block} />
-                  ))}
+                  {blockedUsers?.map((block) => <BlockedUserCard key={block.id} block={block} />)}
                 </div>
               )}
             </ScrollArea>
           </div>
         );
-      
       case 'reports':
         return (
           <div className="space-y-4">
@@ -222,31 +175,18 @@ const Admin = () => {
               <h2 className="text-lg font-semibold">Signalements</h2>
             </div>
             <Tabs value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as ReportStatus | 'all')}>
-              <TabsList className={isMobile ? "grid grid-cols-3 mb-4" : "grid grid-cols-5 mb-4"}>
+              <TabsList className="grid grid-cols-5 mb-4">
                 <TabsTrigger value="pending" className="text-xs">En attente</TabsTrigger>
                 <TabsTrigger value="reviewed" className="text-xs">En cours</TabsTrigger>
                 <TabsTrigger value="resolved" className="text-xs">Résolus</TabsTrigger>
-                {!isMobile && (
-                  <>
-                    <TabsTrigger value="dismissed" className="text-xs">Rejetés</TabsTrigger>
-                    <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
-                  </>
-                )}
+                <TabsTrigger value="dismissed" className="text-xs">Rejetés</TabsTrigger>
+                <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
               </TabsList>
-              {isMobile && (
-                <TabsList className="grid grid-cols-2 mb-4">
-                  <TabsTrigger value="dismissed" className="text-xs">Rejetés</TabsTrigger>
-                  <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
-                </TabsList>
-              )}
-
               <TabsContent value={selectedStatus} className="mt-0">
-                <ScrollArea className={isMobile ? "h-[calc(100vh-360px)]" : "h-[calc(100vh-280px)]"}>
+                <ScrollArea className="h-[calc(100dvh-280px)]">
                   {reportsLoading ? (
                     <div className="space-y-3">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Skeleton key={i} className="h-20 rounded-lg" />
-                      ))}
+                      {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
                     </div>
                   ) : reports?.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
@@ -255,11 +195,7 @@ const Admin = () => {
                   ) : (
                     <div className="space-y-3">
                       {reports?.map((report) => (
-                        <ReportCard
-                          key={report.id}
-                          report={report}
-                          onClick={() => setSelectedReport(report)}
-                        />
+                        <ReportCard key={report.id} report={report} onClick={() => setSelectedReport(report)} />
                       ))}
                     </div>
                   )}
@@ -268,78 +204,64 @@ const Admin = () => {
             </Tabs>
           </div>
         );
-      
-      case 'moderation':
-        return <ContentModerationPanel />;
-      
-      case 'verification':
-        return <IdentityVerificationPanel />;
-      
-      case 'history':
-        return <ModerationHistoryPanel />;
-      
-      case 'promo':
-        return <PromoCodePanel />;
-      
-      case 'broadcast':
-        return <BroadcastNotificationPanel />;
-      
-      case 'ai-moderation':
-        return <AIModerationPanel />;
-      
-      case 'screenshot-sanctions':
-        return <ScreenshotSanctionsPanel />;
-      
-      case 'moderators':
-        return <ModeratorManagementPanel />;
-      
-      case 'swipe-stats':
-        return <SwipeStatsPanel />;
-      
-      case 'credit-costs':
-        return <CreditCostsPanel />;
-      
-      case 'maintenance':
-        return <MaintenanceTogglePanel />;
-      
-      case 'pending-tasks':
-        return <PendingTasksPanel />;
-      case 'support':
-        return <AdminSupportChatPanel onBack={() => handleSectionChange('wallet')} />;
-      case 'support-ratings':
-        return <SupportRatingsPanel />;
-      case 'popups':
-        return <PopupManagementPanel />;
-      case 'faq':
-        return <FAQManagementPanel />;
-      default:
-        return null;
+      case 'moderation': return <ContentModerationPanel />;
+      case 'verification': return <IdentityVerificationPanel />;
+      case 'history': return <ModerationHistoryPanel />;
+      case 'promo': return <PromoCodePanel />;
+      case 'broadcast': return <BroadcastNotificationPanel />;
+      case 'ai-moderation': return <AIModerationPanel />;
+      case 'screenshot-sanctions': return <ScreenshotSanctionsPanel />;
+      case 'moderators': return <ModeratorManagementPanel />;
+      case 'swipe-stats': return <SwipeStatsPanel />;
+      case 'credit-costs': return <CreditCostsPanel />;
+      case 'maintenance': return <MaintenanceTogglePanel />;
+      case 'pending-tasks': return <PendingTasksPanel />;
+      case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('__home__')} />;
+      case 'support-ratings': return <SupportRatingsPanel />;
+      case 'popups': return <PopupManagementPanel />;
+      case 'faq': return <FAQManagementPanel />;
+      default: return null;
     }
   };
 
   // Mobile Layout
   if (isMobile) {
+    const isHome = activeSection === ('__home__' as any);
+
+    // Home = dashboard grid (rendered by AdminMobileNav itself)
+    if (isHome) {
+      return (
+        <>
+          <AdminMobileNav
+            activeSection={'__home__' as any}
+            onSectionChange={handleSectionChange}
+            pendingReports={pendingReportsCount}
+            blockedCount={blockedUsers?.length || 0}
+            pendingPurchases={pendingPurchasesCount}
+            pendingVerifications={pendingVerificationsCount}
+          />
+          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+        </>
+      );
+    }
+
+    // Section content
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Mobile Navigation Header */}
+      <div className="min-h-[100dvh] bg-background flex flex-col">
         <AdminMobileNav
-          activeSection={activeSection}
+          activeSection={activeSection as AdminSection}
           onSectionChange={handleSectionChange}
           pendingReports={pendingReportsCount}
           blockedCount={blockedUsers?.length || 0}
           pendingPurchases={pendingPurchasesCount}
           pendingVerifications={pendingVerificationsCount}
         />
-
-        {/* Main Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 pb-8">
+          <div className={activeSection === 'support' ? 'h-[calc(100dvh-52px)]' : 'p-4 pb-8'}>
             <TaskQueuePopup onNavigateToSection={handleSectionChange} />
             {renderContent()}
           </div>
         </main>
-
-        {/* Report Detail Dialog */}
         {selectedReport && (
           <ReportDetailDialog
             report={selectedReport}
@@ -353,10 +275,9 @@ const Admin = () => {
 
   // Desktop Layout
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
+    <div className="h-screen bg-background flex overflow-hidden">
       <AdminSidebar
-        activeSection={activeSection}
+        activeSection={activeSection as AdminSection}
         onSectionChange={handleSectionChange}
         pendingReports={pendingReportsCount}
         blockedCount={blockedUsers?.length || 0}
@@ -364,26 +285,22 @@ const Admin = () => {
         pendingVerifications={pendingVerificationsCount}
       />
 
-      {/* Main Content */}
-        <main className="flex-1 overflow-hidden">
-          {activeSection === 'support' ? (
-            <div className="h-full p-4">
+      <main className="flex-1 overflow-hidden">
+        {activeSection === 'support' ? (
+          <div className="h-full">
+            <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+            {renderContent()}
+          </div>
+        ) : (
+          <div className="h-full overflow-auto">
+            <div className="max-w-6xl mx-auto p-6 space-y-6">
               <TaskQueuePopup onNavigateToSection={handleSectionChange} />
               {renderContent()}
             </div>
-          ) : (
-            <div className="h-full p-6">
-              <Card className="h-full">
-                <CardContent className="p-6 h-full overflow-auto">
-                  <TaskQueuePopup onNavigateToSection={handleSectionChange} />
-                  {renderContent()}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </main>
+          </div>
+        )}
+      </main>
 
-      {/* Report Detail Dialog */}
       {selectedReport && (
         <ReportDetailDialog
           report={selectedReport}
