@@ -4,9 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { BookmarkPlus, MessageSquareText, Trash2, Plus, X, Edit2, Check } from 'lucide-react';
+import { BookmarkPlus, MessageSquareText, Trash2, Plus, X, Edit2, Check, Zap } from 'lucide-react';
 import { useModeratorSavedReplies, SavedReply } from '@/hooks/useModeratorSavedReplies';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+const DEFAULT_QUICK_REPLIES = [
+  { label: '👋 Accueil', content: 'Bonjour ! Je suis votre conseiller. Comment puis-je vous aider aujourd\'hui ?' },
+  { label: '⏳ Patience', content: 'Je vérifie cela de mon côté, un instant s\'il vous plaît.' },
+  { label: '✅ Résolu', content: 'Votre problème a été résolu ! N\'hésitez pas à nous recontacter si besoin.' },
+  { label: '💳 Crédits ajoutés', content: 'Les crédits ont été ajoutés à votre compte. Vous pouvez vérifier votre solde dans la section Crédits.' },
+  { label: '🔒 Vérification', content: 'Pour des raisons de sécurité, pourriez-vous me donner plus de détails sur votre demande ?' },
+  { label: '📋 Infos nécessaires', content: 'Pour traiter votre demande, j\'aurais besoin des informations suivantes :\n- Votre nom d\'utilisateur\n- La date du problème\n- Une description détaillée' },
+  { label: '🚫 Signalement traité', content: 'Le signalement a bien été pris en compte et des mesures appropriées ont été prises. Merci de contribuer à la sécurité de la communauté.' },
+  { label: '🔄 Redémarrage', content: 'Essayez de vider le cache de votre navigateur et de vous reconnecter. Si le problème persiste, revenez vers nous.' },
+  { label: '👋 Clôture', content: 'Merci pour votre patience. Je vais maintenant clôturer ce ticket. Bonne continuation sur GayConnect ! 💜' },
+  { label: '⚠️ Règles', content: 'Je vous rappelle que le non-respect des règles de la communauté peut entraîner une suspension de votre compte. Merci de votre compréhension.' },
+];
 
 interface SavedRepliesSheetProps {
   onSelect: (content: string) => void;
@@ -58,18 +71,41 @@ const SavedRepliesSheet = ({ onSelect }: SavedRepliesSheetProps) => {
         <SheetHeader className="pb-2">
           <SheetTitle className="flex items-center gap-2 text-base">
             <BookmarkPlus className="w-5 h-5 text-primary" />
-            Réponses enregistrées
+            Réponses rapides
           </SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="flex-1 h-[calc(70vh-120px)]">
-          <div className="space-y-2 pr-2">
-            {replies.length === 0 && !showAdd && (
-              <div className="text-center py-10 text-muted-foreground text-sm">
-                <MessageSquareText className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                <p>Aucune réponse enregistrée</p>
-                <p className="text-xs mt-1">Créez des modèles pour répondre plus rapidement.</p>
+          <div className="space-y-3 pr-2">
+            {/* Quick replies section */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Réponses rapides</span>
               </div>
+              <div className="flex flex-wrap gap-1.5">
+                {DEFAULT_QUICK_REPLIES.map((qr, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSelect(qr.content)}
+                    className="px-3 py-1.5 text-xs font-medium rounded-full border border-border bg-card hover:bg-muted transition-colors active:scale-95"
+                  >
+                    {qr.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-2 pt-1">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Mes réponses personnalisées</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* Custom saved replies */}
+            {replies.length === 0 && !showAdd && (
+              <p className="text-center text-xs text-muted-foreground py-3">Aucune réponse personnalisée. Ajoutez-en ci-dessous.</p>
             )}
 
             {replies.map((reply) => (
@@ -164,7 +200,7 @@ const SavedRepliesSheet = ({ onSelect }: SavedRepliesSheetProps) => {
                 onClick={() => setShowAdd(true)}
               >
                 <Plus className="w-4 h-4 mr-1" />
-                Nouvelle réponse
+                Nouvelle réponse personnalisée
               </Button>
             )}
           </div>
