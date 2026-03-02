@@ -45,6 +45,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [chatPhase, setChatPhase] = useState<ChatPhase>('idle');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
+  const [nodeHistory, setNodeHistory] = useState<(string | null)[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [showTickets, setShowTickets] = useState(false);
   const [freeText, setFreeText] = useState('');
@@ -58,6 +59,21 @@ const Help = ({ embedded = false }: HelpProps) => {
   const { data: rootNodes = [] } = useHelpChatbotNodes(undefined);
   const { data: childNodes = [] } = useHelpChatbotNodes(currentNodeId);
   const { createTicket, closeTicket } = useSupportTickets();
+
+  // Fetch user profile for personalized greeting
+  const { data: userProfile } = useQuery({
+    queryKey: ['own-profile-help', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
   // Listen for agent messages on the active ticket
   const { messages: ticketMessages } = useSupportMessages(selectedTicket?.id ?? null);
@@ -119,10 +135,12 @@ const Help = ({ embedded = false }: HelpProps) => {
   const handleStartChat = () => {
     setChatPhase('chatbot');
     setCurrentNodeId(null);
+    setNodeHistory([]);
     agentJoinedRef.current = false;
+    const displayName = userProfile?.username || 'cher utilisateur';
     setChatMessages([
-      { type: 'bot', text: 'Bonjour ! 👋 Merci de contacter l\'assistance. Nous sommes là pour vous aider.' },
-      { type: 'bot', text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ou décrivez votre problème ci-dessous.' },
+      { type: 'bot', text: `Bonjour ${displayName} ! 👋 Merci de contacter l'assistance. Nous sommes là pour vous aider.` },
+      { type: 'bot', text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ci-dessous.' },
     ]);
   };
 
@@ -135,7 +153,19 @@ const Help = ({ embedded = false }: HelpProps) => {
       newMessages.push({ type: 'bot', text: node.response_text });
     }
     setChatMessages(newMessages);
+    setNodeHistory(prev => [...prev, currentNodeId]);
     setCurrentNodeId(node.id);
+  };
+
+  const handleGoBackInChat = () => {
+    if (nodeHistory.length === 0) return;
+    const previousNodeId = nodeHistory[nodeHistory.length - 1];
+    setNodeHistory(prev => prev.slice(0, -1));
+    setChatMessages(prev => [
+      ...prev,
+      { type: 'system', text: '↩️ Retour au menu précédent' },
+    ]);
+    setCurrentNodeId(previousNodeId);
   };
 
   const handleContactAgent = async () => {
@@ -169,8 +199,8 @@ const Help = ({ embedded = false }: HelpProps) => {
     setChatPhase('idle');
     setChatMessages([]);
     setCurrentNodeId(null);
+    setNodeHistory([]);
     setFreeText('');
-    // Don't reset selectedTicket if ticket is still open/assigned - allows resuming
     if (selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned')) {
       // Keep selectedTicket so we can resume
     } else {
@@ -195,6 +225,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setChatPhase('idle');
     setChatMessages([]);
     setCurrentNodeId(null);
+    setNodeHistory([]);
     setFreeText('');
     setSelectedTicket(null);
     agentJoinedRef.current = false;
@@ -536,18 +567,21 @@ const Help = ({ embedded = false }: HelpProps) => {
                       {node.label}
                     </button>
                   ))}
-                  <button
-                    onClick={handleContactAgent}
-                    disabled={createTicket.isPending}
-                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
-                  >
-                    <Headphones className="w-4 h-4 shrink-0" />
-                    {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
-                  </button>
+                  {/* Back button */}
+                  {nodeHistory.length > 0 && (
+                    <button
+                      onClick={handleGoBackInChat}
+                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98] flex items-center gap-2 text-muted-foreground"
+                    >
+                      <ArrowLeft className="w-4 h-4 shrink-0" />
+                      Revenir en arrière
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )}
 
+            {/* Leaf node: no children = show agent button + other options */}
             {chatPhase === 'chatbot' && currentOptions.length === 0 && chatMessages.length > 2 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -560,12 +594,6 @@ const Help = ({ embedded = false }: HelpProps) => {
                 </div>
                 <div className="flex-1 space-y-1.5 max-w-[80%]">
                   <button
-                    onClick={handleStartChat}
-                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
-                  >
-                    Autre demande
-                  </button>
-                  <button
                     onClick={handleContactAgent}
                     disabled={createTicket.isPending}
                     className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98] flex items-center gap-2"
@@ -573,6 +601,30 @@ const Help = ({ embedded = false }: HelpProps) => {
                     <Headphones className="w-4 h-4 shrink-0" />
                     {createTicket.isPending ? 'Connexion...' : 'Mise en relation avec un agent'}
                   </button>
+                  <button
+                    onClick={() => {
+                      setNodeHistory([]);
+                      setCurrentNodeId(null);
+                      setChatMessages(prev => [
+                        ...prev,
+                        { type: 'system', text: '───────────' },
+                        { type: 'bot', text: 'Avez-vous une autre question ? Sélectionnez une option ci-dessous.' },
+                      ]);
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98]"
+                  >
+                    Autre demande
+                  </button>
+                  {/* Back button */}
+                  {nodeHistory.length > 0 && (
+                    <button
+                      onClick={handleGoBackInChat}
+                      className="w-full text-left px-4 py-3 text-sm font-medium rounded-2xl border border-border bg-background hover:bg-muted transition-colors active:scale-[0.98] flex items-center gap-2 text-muted-foreground"
+                    >
+                      <ArrowLeft className="w-4 h-4 shrink-0" />
+                      Revenir en arrière
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )}
