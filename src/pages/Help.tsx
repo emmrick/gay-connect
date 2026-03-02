@@ -39,10 +39,11 @@ const Help = () => {
 
   const { data: faqArticles = [], isLoading: faqLoading } = useFAQArticles(searchQuery);
   const { data: rootNodes = [] } = useHelpChatbotNodes(undefined);
-  const { data: childNodes = [] } = useHelpChatbotNodes(currentNodeId);
+  const { data: childNodes = [], isLoading: childNodesLoading } = useHelpChatbotNodes(currentNodeId);
   const { createTicket } = useSupportTickets();
 
   const currentOptions = currentNodeId ? childNodes : rootNodes;
+  const isOptionsLoading = currentNodeId ? childNodesLoading : false;
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -165,18 +166,12 @@ const Help = () => {
   // Show ticket detail from "Mes tickets"
   if (selectedTicket && chatPhase !== 'agent') {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
+      <div className="fixed inset-0 z-[60] bg-background">
         <SupportChatRoom
           ticket={selectedTicket}
           onBack={() => setSelectedTicket(null)}
         />
-      </motion.div>
+      </div>
     );
   }
 
@@ -441,7 +436,7 @@ const Help = () => {
                 )}
 
                 {/* Action buttons */}
-                {!isTyping && currentOptions.length > 0 && (
+                {!isTyping && !isOptionsLoading && currentOptions.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -472,7 +467,7 @@ const Help = () => {
                 )}
 
                 {/* End of tree */}
-                {!isTyping && currentOptions.length === 0 && chatMessages.length > 1 && (
+                {!isTyping && !isOptionsLoading && currentOptions.length === 0 && chatMessages.length > 1 && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
