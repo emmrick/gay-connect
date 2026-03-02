@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2 } from 'lucide-react';
+import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2, CheckCheck } from 'lucide-react';
 import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { notifySupportAgentReply } from '@/services/pushNotificationService';
@@ -91,6 +91,54 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
       previousMessagesLength.current = messages.length;
     }
   }, [messages, isLoading, scrollToBottom]);
+
+  // Mark messages as read
+  useEffect(() => {
+    if (!ticket.id || !user?.id || messages.length === 0) return;
+    const unreadFromOthers = messages.filter(m => m.sender_id !== user.id && !m.read_at);
+    if (unreadFromOthers.length > 0) {
+      const ids = unreadFromOthers.map(m => m.id);
+      supabase
+        .from('support_messages' as any)
+        .update({ read_at: new Date().toISOString() } as any)
+        .in('id', ids)
+        .then(() => {});
+    }
+  }, [messages, user?.id, ticket.id]);
+
+  // Simple typing state (based on input)
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Listen for typing via realtime broadcast
+  useEffect(() => {
+    if (!ticket.id || !user?.id) return;
+    const channel = supabase.channel(`support-typing-${ticket.id}`);
+    
+    channel
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload.payload?.user_id !== user.id) {
+          setIsOtherTyping(true);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
+        }
+      })
+      .subscribe();
+    
+    return () => { 
+      supabase.removeChannel(channel);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, [ticket.id, user?.id]);
+
+  const broadcastTyping = useCallback(() => {
+    if (!ticket.id || !user?.id) return;
+    supabase.channel(`support-typing-${ticket.id}`).send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { user_id: user.id },
+    });
+  }, [ticket.id, user?.id]);
 
   const handleSend = async () => {
     const text = inputValue.trim();
@@ -373,9 +421,31 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
                       )}
 
                       {isLastInGroup && (
-                        <span className="text-[10px] text-muted-foreground mt-0.5 px-1">
-                          {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
-                        </span>
+                        <div className="flex items-center gap-1 mt-0.5 px-1">
+                          <span className="text-[10px] text-muted-foreground">
+                            {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+                          </span>
+                          {isOwn && (
+                            <CheckCheck className={cn(
+                              "w-3.5 h-3.5",
+                              message.read_at ? "text-primary" : "text-muted-foreground/50"
+                            )} />
+                          )}
+
+            {/* Typing indicator */}
+            {isOtherTyping && (
+              <div className="flex justify-start mb-2">
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-2xl rounded-bl-md">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground">écrit...</span>
+                </div>
+              </div>
+            )}
+          </div>
                       )}
                     </div>
                   </div>
@@ -411,7 +481,7 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
             )}
             <Textarea
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={(e) => { setInputValue(e.target.value); if (e.target.value.trim()) broadcastTyping(); }}
               onKeyDown={handleKeyDown}
               placeholder={isAgent ? "Répondre au client..." : "Décrivez votre problème..."}
               className="min-h-[40px] max-h-[120px] resize-none text-sm"
