@@ -28,18 +28,51 @@ import {
   formatCentsReward,
 } from '@/hooks/useModerationTaskQueue';
 
-// ── Mission arrival sound (short rising chime) ──
-const MISSION_SOUND_URL = 'data:audio/wav;base64,UklGRsQFAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YaAFAAB/gIKFiIuOkZSXmp2foqWoqqyusbO1t7m7vb/BwsTGx8nKy8zNzs/Q0dHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7//////v39/Pv6+fj39vX08/Lx8O/u7ezr6uno5+bl5OPi4eDf3t3c29rZ2NfW1dTT0tHQz87NzMvKycjHxsXEw8LBwL++vby7urm4t7a1tLOysbCvrq2sq6qpqKempaSjoqGgn56dnJuamZiXlpWUk5KRkI+OjYyLiomIh4aFhIOCgYB/fn18e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhYF9eXVxbWllYV1ZVVFNSUVBPTk1MS0pJSEdGRURDQkFAPz49PDs6OTg3NjU0MzIxMC8uLSwrKikoJyYlJCMiISAfHh0cGxoZGBcWFRQTEhEQDw4NDAsKCQgHBgUEAwIBAP///v38+/r5+Pf29fTz8vHw7+7t7Ovq6ejn5uXk4+Lh4N/e3dzb2tnY19bV1NPS0dDPzs3My8rJyMfGxcTDwsHAv769vLu6ubm4t7a1tLOysbCvrq2sq6qpqKempaSjoqGgn56dnJuamZiXlpWUk5KRkI+OjYyLiomIh4aFhIOCgYB/fn18e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhYF9eXVxbWllYV1ZVVFNSUVBPTk1MS0pJSEdGRURDQkFAPz49PDs6OTg3NjU0MzIxMC8uLSwrKikoJyYlJCMiISAfHh0cGxoZGBcWFRQTEhEQDw4NDAsKCQgHBgUEAwIBAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==';
-let missionAudioCache: HTMLAudioElement | null = null;
+// ── Mission arrival sound (synthesized rising chime) ──
+let missionAudioCtx: AudioContext | null = null;
 
 const playMissionSound = () => {
   try {
-    if (!missionAudioCache) {
-      missionAudioCache = new Audio(MISSION_SOUND_URL);
-      missionAudioCache.volume = 0.6;
+    if (!missionAudioCtx || missionAudioCtx.state === 'closed') {
+      missionAudioCtx = new AudioContext();
     }
-    missionAudioCache.currentTime = 0;
-    missionAudioCache.play().catch(() => {});
+    const ctx = missionAudioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const now = ctx.currentTime;
+    // Three-note rising chime: C5 → E5 → G5 with harmonics
+    const notes = [
+      { freq: 523.25, start: 0, dur: 0.25 },    // C5
+      { freq: 659.25, start: 0.15, dur: 0.25 },  // E5
+      { freq: 783.99, start: 0.30, dur: 0.4 },   // G5
+    ];
+
+    notes.forEach(({ freq, start, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + start);
+
+      // Add a subtle harmonic
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(freq * 2, now + start);
+      gain2.gain.setValueAtTime(0.15, now + start);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+      osc2.connect(gain2).connect(ctx.destination);
+      osc2.start(now + start);
+      osc2.stop(now + start + dur);
+
+      // Main tone with envelope
+      gain.gain.setValueAtTime(0, now + start);
+      gain.gain.linearRampToValueAtTime(0.35, now + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + dur);
+    });
   } catch {}
 };
 
