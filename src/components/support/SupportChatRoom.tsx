@@ -82,6 +82,10 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
   const [manualCreditType, setManualCreditType] = useState<'purchased' | 'daily' | 'bonus' | 'passive'>('purchased');
   const [isGrantingCredits, setIsGrantingCredits] = useState(false);
   const [isClosingTicket, setIsClosingTicket] = useState(false);
+  const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
+  const [ratingComment, setRatingComment] = useState('');
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [ratingSubmitted, setRatingSubmitted] = useState(!!initialTicket.rated_at);
   const globalQueryClient = useQueryClient();
 
   // Fetch sender profiles for display
@@ -220,6 +224,34 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
   };
 
   const isClosed = ticket.status === 'closed';
+  const hasRated = ratingSubmitted || !!ticket.rated_at;
+
+  // Sync ratingSubmitted when ticket data updates
+  useEffect(() => {
+    if (ticket.rated_at) setRatingSubmitted(true);
+  }, [ticket.rated_at]);
+
+  const handleSubmitRating = async () => {
+    if (!ratingEmoji) return;
+    setIsSubmittingRating(true);
+    try {
+      await supabase
+        .from('support_tickets' as any)
+        .update({
+          rating_emoji: ratingEmoji,
+          rating_comment: ratingComment.trim() || null,
+          rated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', ticket.id);
+      setRatingSubmitted(true);
+      globalQueryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      globalQueryClient.invalidateQueries({ queryKey: ['live-support-ticket', ticket.id] });
+    } catch {
+      toast.error('Erreur lors de l\'envoi de votre avis');
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
 
   const statusLabel = ticket.status === 'open' ? 'En attente' : ticket.status === 'assigned' ? 'En cours' : 'Fermé';
   const statusColor = ticket.status === 'open' ? 'bg-amber-500/20 text-amber-600' : ticket.status === 'assigned' ? 'bg-green-500/20 text-green-600' : 'bg-muted text-muted-foreground';
@@ -483,12 +515,77 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
         )}
       </div>
 
-      {/* Input */}
-      {isClosed ? (
-        <div className="p-4 border-t border-border bg-muted/50 text-center">
-          <p className="text-sm text-muted-foreground">Ce ticket est fermé.</p>
+      {/* Inline satisfaction survey when closed (user side) */}
+      {isClosed && !isAgent && (
+        <div className="px-3 py-3 border-t border-border bg-card">
+          {!hasRated ? (
+            <div className="bg-muted/50 border border-border rounded-2xl p-4 space-y-3">
+              <p className="text-sm font-medium text-foreground text-center">Comment évaluez-vous cette assistance ?</p>
+              <div className="flex justify-center gap-3">
+                {[
+                  { emoji: '😡', label: 'Terrible' },
+                  { emoji: '😕', label: 'Mauvais' },
+                  { emoji: '😐', label: 'Moyen' },
+                  { emoji: '😊', label: 'Bien' },
+                  { emoji: '😍', label: 'Excellent' },
+                ].map((opt) => (
+                  <button
+                    key={opt.emoji}
+                    onClick={() => setRatingEmoji(opt.emoji)}
+                    className={cn(
+                      "flex flex-col items-center gap-1 p-2 rounded-xl transition-all",
+                      ratingEmoji === opt.emoji
+                        ? "bg-primary/10 ring-2 ring-primary scale-110"
+                        : "hover:bg-muted"
+                    )}
+                  >
+                    <span className="text-2xl">{opt.emoji}</span>
+                    <span className="text-[10px] text-muted-foreground">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+              {ratingEmoji && (
+                <>
+                  <Textarea
+                    value={ratingComment}
+                    onChange={(e) => setRatingComment(e.target.value)}
+                    placeholder="Un commentaire ? (optionnel)"
+                    className="min-h-[60px] max-h-[100px] resize-none text-sm"
+                    rows={2}
+                  />
+                  <Button
+                    onClick={handleSubmitRating}
+                    disabled={isSubmittingRating}
+                    className="w-full gap-2"
+                    size="sm"
+                  >
+                    {isSubmittingRating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    Envoyer mon avis
+                  </Button>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="flex justify-center py-2">
+              <span className="text-xs text-muted-foreground bg-muted/80 px-4 py-1.5 rounded-full">
+                🔒 Conversation clôturée
+              </span>
+            </div>
+          )}
         </div>
-      ) : (
+      )}
+
+      {/* Agent sees closed label */}
+      {isClosed && isAgent && (
+        <div className="flex justify-center py-3 border-t border-border bg-card">
+          <span className="text-xs text-muted-foreground bg-muted/80 px-4 py-1.5 rounded-full">
+            🔒 Conversation clôturée
+          </span>
+        </div>
+      )}
+
+      {/* Input (only when not closed) */}
+      {!isClosed && (
         <div className="flex-shrink-0 border-t border-border bg-card p-2"
           style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
         >
