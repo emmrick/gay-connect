@@ -39,6 +39,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const MemberProfile = lazy(() => import("./pages/MemberProfile"));
 const RegionPage = lazy(() => import("./pages/RegionPage"));
 const Regions = lazy(() => import("./pages/Regions"));
+const Help = lazy(() => import("./pages/Help"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
@@ -123,6 +124,7 @@ const AuthenticatedApp = () => {
                     {/* Public SEO pages - accessible without auth */}
                     <Route path="/regions" element={<Suspense fallback={<PageFallback />}><Regions /></Suspense>} />
                     <Route path="/region/:slug" element={<Suspense fallback={<PageFallback />}><RegionPage /></Suspense>} />
+                    <Route path="/aide" element={<Suspense fallback={<PageFallback />}><Help /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>

@@ -58,6 +58,7 @@ import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import PendingTasksPanel from '@/components/admin/PendingTasksPanel';
 import AdminSupportChatPanel from '@/components/admin/AdminSupportChatPanel';
 import PopupManagementPanel from '@/components/admin/PopupManagementPanel';
+import FAQManagementPanel from '@/components/admin/FAQManagementPanel';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -306,6 +307,8 @@ const Admin = () => {
         return <AdminSupportChatPanel onBack={() => handleSectionChange('wallet')} />;
       case 'popups':
         return <PopupManagementPanel />;
+      case 'faq':
+        return <FAQManagementPanel />;
       default:
         return null;
     }

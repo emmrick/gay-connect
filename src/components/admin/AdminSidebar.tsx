@@ -23,7 +23,8 @@ import {
   Heart,
   UserCog,
   Wrench,
-  ListOrdered
+  ListOrdered,
+  HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,8 @@ export type AdminSection =
   | 'maintenance'
   | 'pending-tasks'
   | 'support'
-  | 'popups';
+  | 'popups'
+  | 'faq';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -107,6 +109,7 @@ const navItems: NavItem[] = [
   { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'settings' },
   { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'settings' },
+  { id: 'faq', label: 'Centre d\'aide', icon: HelpCircle, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {
