@@ -98,7 +98,11 @@ const ScreenshotSanctionsPanel = () => {
     mutationFn: async (violationId: string) => {
       const { error } = await supabase
         .from('screenshot_violations')
-        .delete()
+        .update({
+          violation_count: 0,
+          suspended_until: null,
+          last_violation_at: null,
+        })
         .eq('id', violationId);
 
       if (error) throw error;
@@ -107,7 +111,8 @@ const ScreenshotSanctionsPanel = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-screenshot-violations'] });
       toast.success('Compteur réinitialisé avec succès');
     },
-    onError: () => {
+    onError: (err) => {
+      console.error('Reset violation error:', err);
       toast.error('Erreur lors de la réinitialisation');
     },
   });
