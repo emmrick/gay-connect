@@ -530,6 +530,42 @@ export type Database = {
           },
         ]
       }
+      faq_articles: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string
+          created_by: string
+          display_order: number
+          id: string
+          is_published: boolean
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          category?: string
+          created_at?: string
+          created_by: string
+          display_order?: number
+          id?: string
+          is_published?: boolean
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string
+          created_by?: string
+          display_order?: number
+          id?: string
+          is_published?: boolean
+          question?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorite_regions: {
         Row: {
           created_at: string
@@ -682,6 +718,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      help_chatbot_nodes: {
+        Row: {
+          created_at: string
+          created_by: string
+          display_order: number
+          id: string
+          is_active: boolean
+          is_root: boolean
+          label: string
+          parent_id: string | null
+          response_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_root?: boolean
+          label: string
+          parent_id?: string | null
+          response_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_root?: boolean
+          label?: string
+          parent_id?: string | null
+          response_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_chatbot_nodes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "help_chatbot_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       identity_verifications: {
         Row: {

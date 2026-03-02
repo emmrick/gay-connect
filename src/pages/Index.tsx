@@ -9,8 +9,6 @@ import HomeView from '@/components/home/HomeView';
 import ChatRoom from '@/components/chat/ChatRoom';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
-import SupportChatRoom from '@/components/support/SupportChatRoom';
-import SupportTicketList from '@/components/support/SupportTicketList';
 import ProfileView from '@/components/profile/ProfileView';
 import PremiumPage from '@/components/premium/PremiumPage';
 import ReferralDialog from '@/components/premium/ReferralDialog';
@@ -79,8 +77,7 @@ const Index = () => {
   const [showGroupPicker, setShowGroupPicker] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
-  const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived' | 'support'>('conversations');
-  const [selectedSupportTicket, setSelectedSupportTicket] = useState<any>(null);
+  const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
   const { data: isAdmin } = useIsAdmin();
   const { data: isModerator } = useQuery({
     queryKey: ['is-moderator', user?.id],
@@ -293,28 +290,7 @@ const Index = () => {
     );
   }
 
-  // Render support chat view with slide animation
-  if (currentView === 'support' && selectedSupportTicket) {
-    return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
-        <SupportChatRoom
-          ticket={selectedSupportTicket}
-          onBack={() => {
-            setSelectedSupportTicket(null);
-            setCurrentView('messages');
-          }}
-        />
-      </motion.div>
-    );
-  }
-
-  const showBottomNav = user && currentView !== 'landing' && currentView !== 'chat' && currentView !== 'private' && currentView !== 'support';
+  const showBottomNav = user && currentView !== 'landing' && currentView !== 'chat' && currentView !== 'private';
 
   // Get current view content
   const renderContent = () => {
@@ -488,16 +464,13 @@ const Index = () => {
               <div className="px-5 pb-3">
                 <Tabs 
                   value={messageSubTab} 
-                  onValueChange={(v) => setMessageSubTab(v as 'conversations' | 'groups' | 'archived' | 'support')}
+                  onValueChange={(v) => setMessageSubTab(v as 'conversations' | 'groups' | 'archived')}
                 >
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="conversations">Messages</TabsTrigger>
                     <TabsTrigger value="groups" className="flex items-center gap-1.5">
                       <Users className="w-3.5 h-3.5" />
                       Groupes
-                    </TabsTrigger>
-                    <TabsTrigger value="support" className="flex items-center gap-1.5">
-                      🎧 Support
                     </TabsTrigger>
                     <TabsTrigger value="archived">Archives</TabsTrigger>
                   </TabsList>
@@ -509,13 +482,6 @@ const Index = () => {
             <ScrollArea className="flex-1 min-h-0">
               {messageSubTab === 'groups' ? (
                 <JoinedGroupsList onSelectGroup={handleSelectRegion} />
-              ) : messageSubTab === 'support' ? (
-                <SupportTicketList
-                  onSelectTicket={(ticket) => {
-                    setSelectedSupportTicket(ticket);
-                    setCurrentView('support');
-                  }}
-                />
               ) : (
                 <PrivateChatList
                   onSelectConversation={handleSelectConversation}
@@ -593,10 +559,8 @@ const Index = () => {
                 onSignOut={handleSignOut}
                 onNavigateToAdmin={() => navigate('/admin')}
                 onNavigateToCredits={() => handleTabChange('premium')}
-                onContactAdmin={() => {
-                  handleTabChange('messages');
-                  setMessageSubTab('support');
-                }}
+                onContactAdmin={() => navigate('/aide')
+                }
                 isAdmin={isAdmin}
                 isModerator={isModerator}
               />
@@ -636,11 +600,8 @@ const Index = () => {
               </div>
             </div>
             <ScrollArea className="flex-1 min-h-0">
-              <PremiumPage onNavigateToSupport={(ticket) => {
-                setSelectedSupportTicket(ticket);
-                setActiveTab('messages');
-                setMessageSubTab('support');
-                setCurrentView('support');
+              <PremiumPage onNavigateToSupport={() => {
+                navigate('/aide');
               }} />
             </ScrollArea>
           </motion.div>
