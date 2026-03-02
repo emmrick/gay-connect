@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2 } from 'lucide-react';
+import { ArrowLeft, Headphones, ChevronDown, Hash, Send, Info, Coins, Loader2, XCircle } from 'lucide-react';
 import CreditRequestMessage from '@/components/chat/CreditRequestMessage';
 import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
@@ -37,8 +37,24 @@ const formatDateLabel = (date: Date): string => {
   return format(date, 'd MMMM yyyy', { locale: fr });
 };
 
-const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomProps) => {
+const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: SupportChatRoomProps) => {
   const { user } = useAuth();
+  
+  // Live ticket status to detect closure in real-time
+  const { data: liveTicketData } = useQuery({
+    queryKey: ['live-support-ticket', initialTicket.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('support_tickets' as any)
+        .select('*')
+        .eq('id', initialTicket.id)
+        .single();
+      return data as unknown as SupportTicket;
+    },
+    refetchInterval: 3000,
+  });
+  const ticket = liveTicketData || initialTicket;
+
   const { messages, isLoading, sendMessage } = useSupportMessages(ticket.id);
   const { typingUsers, handleTyping, sendStopTyping } = useSupportTypingIndicator(ticket.id);
   const [inputValue, setInputValue] = useState('');
@@ -65,6 +81,7 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
   const [manualCreditAmount, setManualCreditAmount] = useState('');
   const [manualCreditType, setManualCreditType] = useState<'purchased' | 'daily' | 'bonus' | 'passive'>('purchased');
   const [isGrantingCredits, setIsGrantingCredits] = useState(false);
+  const [isClosingTicket, setIsClosingTicket] = useState(false);
   const globalQueryClient = useQueryClient();
 
   // Fetch sender profiles for display
@@ -181,6 +198,27 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
     return !isSameDay(new Date(messages[index].created_at), new Date(messages[index - 1].created_at));
   };
 
+  const handleCloseTicket = async () => {
+    setIsClosingTicket(true);
+    try {
+      // Send system message before closing
+      await sendMessage.mutateAsync({
+        content: '🔒 La conversation a été clôturée par le support.',
+        messageType: 'system',
+      });
+      await supabase
+        .from('support_tickets' as any)
+        .update({ status: 'closed', closed_at: new Date().toISOString() } as any)
+        .eq('id', ticket.id);
+      globalQueryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      toast.success('Ticket clôturé');
+    } catch {
+      toast.error('Erreur lors de la clôture');
+    } finally {
+      setIsClosingTicket(false);
+    }
+  };
+
   const isClosed = ticket.status === 'closed';
 
   const statusLabel = ticket.status === 'open' ? 'En attente' : ticket.status === 'assigned' ? 'En cours' : 'Fermé';
@@ -213,15 +251,28 @@ const SupportChatRoom = ({ ticket, onBack, isAgent = false }: SupportChatRoomPro
             </div>
           </div>
           {isAgent && !isClosed && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="flex-shrink-0 h-10 w-10"
-              onClick={() => setShowManualCreditDialog(true)}
-              title="Attribuer des crédits"
-            >
-              <Coins className="w-5 h-5 text-amber-500" />
-            </Button>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10"
+                onClick={() => setShowManualCreditDialog(true)}
+                title="Attribuer des crédits"
+              >
+                <Coins className="w-5 h-5 text-amber-500" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={handleCloseTicket}
+                disabled={isClosingTicket}
+                title="Clôturer le ticket"
+              >
+                {isClosingTicket ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                Clôturer
+              </Button>
+            </div>
           )}
         </div>
       </header>

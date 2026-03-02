@@ -74,6 +74,22 @@ export const useSupportTickets = () => {
     },
   });
 
+  const closeTicket = useMutation({
+    mutationFn: async (ticketId: string) => {
+      const { error } = await supabase
+        .from('support_tickets' as any)
+        .update({ status: 'closed', closed_at: new Date().toISOString() } as any)
+        .eq('id', ticketId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+    },
+    onError: () => {
+      toast.error('Erreur lors de la fermeture du ticket');
+    },
+  });
+
   // Realtime subscription for ticket updates
   useEffect(() => {
     if (!user?.id) return;
@@ -90,7 +106,7 @@ export const useSupportTickets = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, queryClient]);
 
-  return { tickets, isLoading, createTicket };
+  return { tickets, isLoading, createTicket, closeTicket };
 };
 
 export const useSupportMessages = (ticketId: string | null) => {

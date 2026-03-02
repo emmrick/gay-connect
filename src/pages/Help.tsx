@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -53,7 +53,7 @@ const Help = () => {
   const { data: faqArticles = [], isLoading: faqLoading } = useFAQArticles(searchQuery);
   const { data: rootNodes = [] } = useHelpChatbotNodes(undefined);
   const { data: childNodes = [] } = useHelpChatbotNodes(currentNodeId);
-  const { createTicket } = useSupportTickets();
+  const { createTicket, closeTicket } = useSupportTickets();
 
   // Listen for agent messages on the active ticket
   const { messages: ticketMessages } = useSupportMessages(selectedTicket?.id ?? null);
@@ -89,7 +89,7 @@ const Help = () => {
     refetchInterval: 3000,
   });
 
-  // Detect when agent joins
+  // Detect when agent joins or closes
   useEffect(() => {
     if (!liveTicket) return;
 
@@ -99,7 +99,8 @@ const Help = () => {
       setSelectedTicket(liveTicket);
     }
 
-    if (liveTicket.status === 'closed' && chatPhase === 'agent') {
+    // Agent closed the ticket -> show rating
+    if (liveTicket.status === 'closed' && (chatPhase === 'agent' || chatPhase === 'waiting_agent')) {
       setChatPhase('rating');
       setSelectedTicket(liveTicket);
     }
@@ -159,6 +160,33 @@ const Help = () => {
     }
   };
 
+  // Go back to FAQ without closing the ticket - conversation stays open
+  const handleGoBack = () => {
+    setChatPhase('idle');
+    setChatMessages([]);
+    setCurrentNodeId(null);
+    setFreeText('');
+    // Don't reset selectedTicket if ticket is still open/assigned - allows resuming
+    if (selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned')) {
+      // Keep selectedTicket so we can resume
+    } else {
+      setSelectedTicket(null);
+    }
+    agentJoinedRef.current = false;
+  };
+
+  // Close the ticket officially -> show rating
+  const handleCloseTicket = async () => {
+    if (!selectedTicket?.id) return;
+    try {
+      await closeTicket.mutateAsync(selectedTicket.id);
+      setChatPhase('rating');
+    } catch {
+      // Error handled by mutation
+    }
+  };
+
+  // Full reset after rating or skip
   const handleEndChat = () => {
     setChatPhase('idle');
     setChatMessages([]);
@@ -334,7 +362,7 @@ const Help = () => {
           className="border-b border-border bg-background/95 backdrop-blur-lg flex items-center gap-3 px-3 py-2.5"
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}
         >
-          <Button variant="ghost" size="icon" onClick={handleEndChat} className="shrink-0">
+          <Button variant="ghost" size="icon" onClick={handleGoBack} className="shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -357,9 +385,22 @@ const Help = () => {
               </>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={handleEndChat} className="text-xs shrink-0 rounded-full">
-            Mettre fin
-          </Button>
+          {(isAgentPhase || isWaiting) ? (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleCloseTicket} 
+              disabled={closeTicket.isPending}
+              className="text-xs shrink-0 rounded-full gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
+            >
+              {closeTicket.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+              Clôturer
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleGoBack} className="text-xs shrink-0 rounded-full">
+              Fermer
+            </Button>
+          )}
         </div>
 
         {/* Messages */}
