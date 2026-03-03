@@ -76,6 +76,36 @@ const playMissionSound = () => {
   } catch {}
 };
 
+const playAcceptSound = () => {
+  try {
+    if (!missionAudioCtx || missionAudioCtx.state === 'closed') {
+      missionAudioCtx = new AudioContext();
+    }
+    const ctx = missionAudioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const now = ctx.currentTime;
+    // Satisfying confirmation: G5 → C6 (rising fifth)
+    const notes = [
+      { freq: 783.99, start: 0, dur: 0.15 },     // G5
+      { freq: 1046.50, start: 0.12, dur: 0.35 },  // C6
+    ];
+
+    notes.forEach(({ freq, start, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + start);
+      gain.gain.setValueAtTime(0, now + start);
+      gain.gain.linearRampToValueAtTime(0.4, now + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + dur);
+    });
+  } catch {}
+};
+
 interface TaskQueuePopupProps {
   onNavigateToSection: (section: string) => void;
 }
@@ -179,6 +209,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
   // ── Actions ──
   const handleAccept = useCallback(() => {
     if (!nextTask) return;
+    playAcceptSound();
     reserveTask.mutate(nextTask.id);
   }, [nextTask, reserveTask]);
 
