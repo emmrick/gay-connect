@@ -204,9 +204,12 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+      const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if (!isMobile) {
+        e.preventDefault();
+        handleSend();
+      }
     }
   };
 
