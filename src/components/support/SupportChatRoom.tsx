@@ -141,6 +141,23 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
     }
   }, [messages, isLoading, scrollToBottom]);
 
+  // Scroll to bottom when mobile keyboard opens (visualViewport resize)
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let prevHeight = vv.height;
+    const onResize = () => {
+      const newHeight = vv.height;
+      // Keyboard opened (viewport shrank)
+      if (newHeight < prevHeight - 50) {
+        setTimeout(() => scrollToBottom(true), 80);
+      }
+      prevHeight = newHeight;
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, [scrollToBottom]);
+
   const handleSend = async () => {
     const text = inputValue.trim();
     if (!text) return;
