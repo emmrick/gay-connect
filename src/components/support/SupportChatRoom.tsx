@@ -148,58 +148,30 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
     sendStopTyping();
 
     // If client replies to a waiting_client ticket, auto-reopen it
+    // The DB trigger trg_create_support_task_on_reopen will auto-create a new mission
     if (!isAgent && ticket.status === 'waiting_client') {
-      // Send system message first
-      await supabase
-        .from('support_messages' as any)
-        .insert({
-          ticket_id: ticket.id,
-          sender_id: user?.id,
-          content: '🔄 Nous vous mettons en relation avec un agent. Merci de patienter...',
-          message_type: 'system',
-        } as any);
-
-      // Reopen the ticket
-      await supabase
-        .from('support_tickets' as any)
-        .update({ status: 'open', assigned_to: null } as any)
-        .eq('id', ticket.id);
-
-      // The create_support_task trigger will auto-create a new moderation task
-      // since the ticket status is back to 'open'... but the trigger only fires on INSERT.
-      // So we need to manually create the task
-      const { data: taskRate } = await supabase
-        .from('task_rates')
-        .select('rate_cents')
-        .eq('task_type', 'support_chat')
-        .eq('is_active', true)
-        .maybeSingle();
-
-      const { data: clientProfile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('user_id', ticket.user_id)
-        .single();
-
-      await supabase
-        .from('moderation_tasks')
-        .insert({
-          task_type: 'support_chat',
-          target_entity_id: ticket.id,
-          target_user_id: ticket.user_id,
-          reward_cents: taskRate?.rate_cents || 5,
-          description: `Reprise support #${ticket.ticket_number} de ${clientProfile?.username || 'un utilisateur'}`,
-          metadata: {
+      try {
+        // Send system message first
+        await supabase
+          .from('support_messages' as any)
+          .insert({
             ticket_id: ticket.id,
-            ticket_number: ticket.ticket_number,
-            username: clientProfile?.username,
-            subject: ticket.subject,
-            reopened: true,
-          },
-        } as any);
+            sender_id: user?.id,
+            content: '🔄 Nous vous mettons en relation avec un agent. Merci de patienter...',
+            message_type: 'system',
+          } as any);
 
-      globalQueryClient.invalidateQueries({ queryKey: ['support-tickets'] });
-      globalQueryClient.invalidateQueries({ queryKey: ['live-support-ticket', ticket.id] });
+        // Reopen the ticket — the DB trigger handles creating the moderation task
+        await supabase
+          .from('support_tickets' as any)
+          .update({ status: 'open', assigned_to: null } as any)
+          .eq('id', ticket.id);
+
+        globalQueryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+        globalQueryClient.invalidateQueries({ queryKey: ['live-support-ticket', ticket.id] });
+      } catch (err) {
+        console.error('Error reopening ticket:', err);
+      }
     }
 
     await sendMessage.mutateAsync({ content: text });
