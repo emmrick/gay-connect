@@ -58,6 +58,32 @@ const Help = ({ embedded = false }: HelpProps) => {
   
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const agentJoinedRef = useRef(false);
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (botTypingTimeoutRef.current) clearTimeout(botTypingTimeoutRef.current);
+    };
+  }, []);
+
+  // Helper: add bot messages with a random 10-30s delay
+  const addBotMessagesWithDelay = (
+    currentMessages: ChatMessage[],
+    botMessages: ChatMessage[],
+    onDone?: () => void
+  ) => {
+    setChatMessages(currentMessages);
+    setIsBotTyping(true);
+    const delay = Math.floor(Math.random() * 21 + 10) * 1000; // 10-30s
+    botTypingTimeoutRef.current = setTimeout(() => {
+      setChatMessages(prev => [...prev, ...botMessages]);
+      setIsBotTyping(false);
+      playNotificationSoundStandalone();
+      onDone?.();
+    }, delay);
+  };
 
   const { data: faqArticles = [], isLoading: faqLoading } = useFAQArticles(searchQuery);
   const { data: rootNodes = [] } = useHelpChatbotNodes(undefined);
@@ -142,25 +168,31 @@ const Help = ({ embedded = false }: HelpProps) => {
     setNodeHistory([]);
     agentJoinedRef.current = false;
     const displayName = userProfile?.username || 'cher utilisateur';
-    setChatMessages([
-      { type: 'bot', text: `Bonjour ${displayName} ! 👋 Merci de contacter l'assistance. Nous sommes là pour vous aider.` },
-      { type: 'bot', text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ci-dessous.' },
-    ]);
-    playNotificationSoundStandalone();
+    addBotMessagesWithDelay(
+      [],
+      [
+        { type: 'bot', text: `Bonjour ${displayName} ! 👋 Merci de contacter l'assistance. Nous sommes là pour vous aider.` },
+        { type: 'bot', text: 'Comment pouvons-nous vous aider aujourd\'hui ? Sélectionnez une option ci-dessous.' },
+      ]
+    );
   };
 
   const handleSelectOption = (node: HelpChatbotNode) => {
-    const newMessages: ChatMessage[] = [
+    const userMessages: ChatMessage[] = [
       ...chatMessages,
       { type: 'user', text: node.label },
     ];
-    if (node.response_text) {
-      newMessages.push({ type: 'bot', text: node.response_text });
-      playNotificationSoundStandalone();
-    }
-    setChatMessages(newMessages);
     setNodeHistory(prev => [...prev, currentNodeId]);
-    setCurrentNodeId(node.id);
+    if (node.response_text) {
+      addBotMessagesWithDelay(
+        userMessages,
+        [{ type: 'bot', text: node.response_text }],
+        () => setCurrentNodeId(node.id)
+      );
+    } else {
+      setChatMessages(userMessages);
+      setCurrentNodeId(node.id);
+    }
   };
 
   const handleGoBackInChat = () => {
@@ -244,13 +276,12 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   const handleSendFreeText = () => {
     if (!freeText.trim()) return;
-    setChatMessages(prev => [
-      ...prev,
-      { type: 'user', text: freeText.trim() },
-      { type: 'bot', text: 'Merci pour ces détails. Pour une assistance personnalisée, nous vous recommandons de contacter un agent.' },
-    ]);
+    const userMsg = freeText.trim();
     setFreeText('');
-    playNotificationSoundStandalone();
+    addBotMessagesWithDelay(
+      [...chatMessages, { type: 'user' as const, text: userMsg }],
+      [{ type: 'bot', text: 'Merci pour ces détails. Pour une assistance personnalisée, nous vous recommandons de contacter un agent.' }]
+    );
   };
 
   // Send message to agent (in agent phase)
@@ -487,6 +518,26 @@ const Help = ({ embedded = false }: HelpProps) => {
               </motion.div>
             ))}
 
+            {/* Bot typing indicator */}
+            {isBotTyping && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-end gap-2 justify-start"
+              >
+                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shrink-0 mb-0.5">
+                  <Bot className="w-3.5 h-3.5 text-background" />
+                </div>
+                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Waiting spinner */}
             {isWaiting && (
               <motion.div
@@ -557,7 +608,7 @@ const Help = ({ embedded = false }: HelpProps) => {
               })}
 
             {/* Chatbot action buttons (only in chatbot phase) */}
-            {chatPhase === 'chatbot' && currentOptions.length > 0 && (
+            {chatPhase === 'chatbot' && currentOptions.length > 0 && !isBotTyping && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
