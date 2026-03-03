@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, ChevronDown, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ChevronDown, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset, MessageSquareText } from 'lucide-react';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useFAQArticles, useHelpChatbotNodes, type HelpChatbotNode } from '@/hooks/useFAQ';
 import { useSupportTickets, useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
@@ -751,29 +752,47 @@ const Help = ({ embedded = false }: HelpProps) => {
                 <span>Recherche d'un agent disponible...</span>
               </div>
             )}
-            {/* Quick reply chips for client */}
-            {(isAgentPhase || isWaiting) && !freeText.trim() && (
-              <div className="max-w-lg mx-auto flex flex-wrap gap-1.5 mb-2">
-                {[
-                  'Je patiente quelques minutes',
-                  'Merci beaucoup pour votre aide et votre assistance.',
-                ].map((qr) => (
-                  <button
-                    key={qr}
-                    onClick={async () => {
-                      if (!selectedTicket?.id || !user?.id) return;
-                      await supabase
-                        .from('support_messages' as any)
-                        .insert({ ticket_id: selectedTicket.id, sender_id: user.id, content: qr, message_type: 'text' } as any);
-                    }}
-                    className="px-3 py-1.5 text-xs font-medium rounded-full border border-border bg-card hover:bg-muted transition-colors active:scale-95"
-                  >
-                    {qr}
-                  </button>
-                ))}
-              </div>
-            )}
             <div className="max-w-lg mx-auto flex items-end gap-2">
+              {/* Pre-written messages bubble */}
+              {(isAgentPhase || isWaiting) && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="flex-shrink-0 w-10 h-10 rounded-full"
+                    >
+                      <MessageSquareText className="w-5 h-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="rounded-t-2xl max-h-[50vh]">
+                    <SheetHeader>
+                      <SheetTitle>Réponses rapides</SheetTitle>
+                    </SheetHeader>
+                    <div className="flex flex-col gap-2 mt-4">
+                      {[
+                        'Je patiente quelques minutes',
+                        'Merci beaucoup pour votre aide et votre assistance.',
+                        'Pouvez-vous m\'aider avec ce problème ?',
+                        'J\'ai bien compris, merci !',
+                      ].map((qr) => (
+                        <button
+                          key={qr}
+                          onClick={async () => {
+                            if (!selectedTicket?.id || !user?.id) return;
+                            await supabase
+                              .from('support_messages' as any)
+                              .insert({ ticket_id: selectedTicket.id, sender_id: user.id, content: qr, message_type: 'text' } as any);
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm rounded-xl border border-border bg-card hover:bg-muted transition-colors active:scale-[0.98]"
+                        >
+                          {qr}
+                        </button>
+                      ))}
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
               <Textarea
                 ref={freeTextRef}
                 placeholder={(isAgentPhase || isWaiting) ? "Écrivez votre message..." : "Décrivez votre problème..."}
