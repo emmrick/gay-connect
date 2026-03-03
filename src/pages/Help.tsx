@@ -76,7 +76,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   ) => {
     setChatMessages(currentMessages);
     setIsBotTyping(true);
-    const delay = Math.floor(Math.random() * 21 + 10) * 1000; // 10-30s
+    const delay = Math.floor(Math.random() * 3 + 3) * 1000; // 3-5s
     botTypingTimeoutRef.current = setTimeout(() => {
       setChatMessages(prev => [...prev, ...botMessages]);
       setIsBotTyping(false);
