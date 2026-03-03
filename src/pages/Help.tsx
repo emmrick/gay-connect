@@ -769,9 +769,14 @@ const Help = ({ embedded = false }: HelpProps) => {
                 value={freeText}
                 onChange={(e) => setFreeText(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    (isAgentPhase || isWaiting) ? handleSendToAgent() : handleSendFreeText();
+                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                    // On mobile, don't intercept Enter - let it create a newline
+                    // Only send on desktop (non-touch devices) with Enter without Shift
+                    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                    if (!isMobile) {
+                      e.preventDefault();
+                      (isAgentPhase || isWaiting) ? handleSendToAgent() : handleSendFreeText();
+                    }
                   }
                 }}
                 className="flex-1 rounded-2xl bg-muted border-0 min-h-[120px] max-h-[200px] resize-none text-sm leading-relaxed"
