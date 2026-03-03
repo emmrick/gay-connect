@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download, Printer, Palette, Type, Eye, RefreshCw } from 'lucide-react';
+import { Download, Printer, Palette, Type, Eye, RefreshCw, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,9 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FlyerConfig {
   title: string;
@@ -42,7 +45,7 @@ const SingleFlyer = ({ config, index }: { config: FlyerConfig; index: number }) 
     : '';
 
   const qrUrl = config.showPromoCode
-    ? `${config.siteUrl}?ref=${promoCode}`
+    ? `${config.siteUrl}?promo=${promoCode}`
     : config.siteUrl;
 
   return (
@@ -111,19 +114,52 @@ const SingleFlyer = ({ config, index }: { config: FlyerConfig; index: number }) 
 };
 
 const FlyerGeneratorPanel = () => {
+  const { user } = useAuth();
   const [config, setConfig] = useState<FlyerConfig>(defaultConfig);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [codesCreated, setCodesCreated] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const updateConfig = useCallback((key: keyof FlyerConfig, value: string | boolean) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  // Save promo codes to database before PDF generation
+  const savePromoCodesToDB = async () => {
+    if (!config.showPromoCode || !user) return;
+
+    const codes: string[] = [];
+    for (let i = 1; i <= 6; i++) {
+      codes.push(config.promoCode + `-${String(i).padStart(2, '0')}`);
+    }
+
+    // Insert codes that don't already exist
+    for (const code of codes) {
+      const { error } = await supabase
+        .from('flyer_promo_codes')
+        .upsert(
+          { code: code.toUpperCase(), credits_amount: 30, max_uses: 1, created_by: user.id },
+          { onConflict: 'code' }
+        );
+      if (error) {
+        console.error('Error saving promo code:', code, error);
+      }
+    }
+
+    setCodesCreated(true);
+    toast.success(`${codes.length} codes promo créés en base (30 crédits chacun, usage unique)`);
+  };
+
   const generatePDF = async () => {
     if (!printRef.current) return;
     setIsGenerating(true);
 
     try {
+      // Save promo codes to DB first
+      if (config.showPromoCode) {
+        await savePromoCodesToDB();
+      }
+
       // A4 landscape: 297mm x 210mm
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const pdfW = 297;
@@ -324,6 +360,10 @@ const FlyerGeneratorPanel = () => {
                       <p className="text-[10px] text-muted-foreground mt-1">
                         Chaque flyer aura un suffixe unique (ex: {config.promoCode}-01, {config.promoCode}-02…)
                       </p>
+                      <Badge variant="outline" className="mt-2 text-[10px] gap-1">
+                        <Database className="w-3 h-3" />
+                        30 crédits offerts • 1 usage par utilisateur
+                      </Badge>
                     </div>
                   )}
                 </div>
