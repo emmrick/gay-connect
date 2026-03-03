@@ -848,6 +848,12 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
                 handleTyping(e.target.value.length > 0, ownProfile?.username || 'Utilisateur');
               }}
               onKeyDown={handleKeyDown}
+              onFocus={() => {
+                // Multiple delays to catch keyboard animation on various mobile devices
+                setTimeout(() => scrollToBottom(true), 100);
+                setTimeout(() => scrollToBottom(true), 300);
+                setTimeout(() => scrollToBottom(true), 500);
+              }}
               placeholder={isWaitingClient && !isAgent ? "Répondez pour reprendre la conversation..." : isAgent ? "Répondre au client..." : "Décrivez votre problème..."}
               className="min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none text-sm leading-5 rounded-2xl"
               rows={1}
