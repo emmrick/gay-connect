@@ -83,7 +83,7 @@ const SingleFlyer = ({ config, index }: { config: FlyerConfig; index: number }) 
           value={qrUrl}
           size={80}
           bgColor="#ffffff"
-          fgColor={config.bgColor}
+          fgColor="#000000"
           level="M"
         />
       </div>
@@ -98,7 +98,7 @@ const SingleFlyer = ({ config, index }: { config: FlyerConfig; index: number }) 
             className="inline-block px-3 py-1 rounded-full text-[9px] font-bold tracking-wider"
             style={{
               backgroundColor: config.accentColor,
-              color: config.textColor,
+              color: config.bgColor,
             }}
           >
             CODE : {promoCode}
