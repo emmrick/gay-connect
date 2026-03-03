@@ -47,6 +47,7 @@ import AdminSupportChatPanel from '@/components/admin/AdminSupportChatPanel';
 import SupportRatingsPanel from '@/components/admin/SupportRatingsPanel';
 import PopupManagementPanel from '@/components/admin/PopupManagementPanel';
 import FAQManagementPanel from '@/components/admin/FAQManagementPanel';
+import FlyerGeneratorPanel from '@/components/admin/FlyerGeneratorPanel';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
@@ -220,6 +221,7 @@ const Admin = () => {
       case 'support-ratings': return <SupportRatingsPanel />;
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;
+      case 'flyers': return <FlyerGeneratorPanel />;
       default: return null;
     }
   };

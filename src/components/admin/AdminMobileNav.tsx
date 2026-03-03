@@ -3,7 +3,7 @@ import {
   Shield, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Bell, 
   Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, ListOrdered, 
-  Headphones, Star, HelpCircle, ArrowLeft
+  Headphones, Star, HelpCircle, ArrowLeft, FileImage
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,7 @@ const navItems: NavItem[] = [
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'settings' },
   { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'settings' },
   { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'settings' },
+  { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {
