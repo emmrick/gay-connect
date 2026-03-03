@@ -2,7 +2,7 @@ import {
   Shield, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, 
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, 
-  ListOrdered, HelpCircle, Star, Headphones
+  ListOrdered, HelpCircle, Star, Headphones, FileImage
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ export type AdminSection =
   | 'credits-surveillance' | 'credit-purchases' | 'broadcast'
   | 'ai-moderation' | 'screenshot-sanctions' | 'moderators'
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
-  | 'support' | 'support-ratings' | 'popups' | 'faq';
+  | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -64,6 +64,7 @@ const navItems: NavItem[] = [
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'settings' },
   { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'settings' },
   { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'settings' },
+  { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {
