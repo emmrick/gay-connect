@@ -126,9 +126,10 @@ const RegionPage = () => {
   const { data: profiles, isLoading: profilesLoading } = useProfilesByRegion(regionCode);
   
   const regionName = room?.region_name || dept?.name || regionCode;
-  const pageTitle = `Gay Connect ${regionCode} ${regionName} - Rencontres & Chat Gay`;
-  const pageDescription = `Rejoins la communauté gay du ${regionCode} ${regionName}. ${dept?.description || ''} Chat de groupe, échanges privés, profils vérifiés. ${total > 0 ? `${total} membres inscrits.` : ''} +18 ans.`;
+  const pageTitle = `Gay ${regionName} (${regionCode}) - Rencontre Gay, Plan Cul Gay & Tchat | Gay Connect`;
+  const pageDescription = `Rencontre gay ${regionName} : plan cul gay, sexe gay et tchat gay dans le ${regionCode}. ${dept?.description || ''} Profils vérifiés, échanges de photos et vidéos éphémères. ${total > 0 ? `${total} hommes gay inscrits.` : ''} Rejoins la communauté gay du ${regionCode} gratuitement. +18 ans.`;
   const canonical = `https://gay-connect.lovable.app/region/${slug}`;
+  const seoKeywords = `gay ${regionName?.toLowerCase()}, rencontre gay ${regionName?.toLowerCase()}, plan cul gay ${regionName?.toLowerCase()}, sexe gay ${regionName?.toLowerCase()}, tchat gay ${regionName?.toLowerCase()}, homme gay ${regionName?.toLowerCase()}, drague gay ${regionName?.toLowerCase()}, site gay ${regionCode}, mec gay ${regionName?.toLowerCase()}`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -163,7 +164,7 @@ const RegionPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead title={pageTitle} description={pageDescription} canonical={canonical} jsonLd={jsonLd} />
+      <SEOHead title={pageTitle} description={pageDescription} canonical={canonical} jsonLd={jsonLd} keywords={seoKeywords} />
 
       {/* 18+ Banner */}
       <div className="bg-destructive/90 text-destructive-foreground py-2 px-4 text-center text-sm">
@@ -307,36 +308,59 @@ const RegionPage = () => {
         {/* Features */}
         <section>
           <h2 className="font-display text-xl font-semibold text-foreground mb-4">
-            Pourquoi rejoindre le groupe {regionCode} ?
+            Pourquoi rejoindre le groupe gay {regionName} ?
           </h2>
           <div className="grid md:grid-cols-3 gap-4">
             <Card className="border-border/50">
               <CardContent className="pt-6 text-center space-y-2">
                 <MessageCircle className="w-8 h-8 text-primary mx-auto" />
-                <h3 className="font-semibold text-foreground">Chat de groupe</h3>
+                <h3 className="font-semibold text-foreground">Tchat gay {regionName}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Discute avec les membres du {regionCode} en temps réel.
+                  Discute avec des hommes gay du {regionCode} en temps réel. Plan cul, rencontres, échanges.
                 </p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
               <CardContent className="pt-6 text-center space-y-2">
                 <Shield className="w-8 h-8 text-primary mx-auto" />
-                <h3 className="font-semibold text-foreground">Profils vérifiés</h3>
+                <h3 className="font-semibold text-foreground">Profils gay vérifiés</h3>
                 <p className="text-sm text-muted-foreground">
-                  Vérification d'identité pour un espace sécurisé.
+                  Vérification d'identité pour un espace de rencontre gay sécurisé et sans faux profils.
                 </p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
               <CardContent className="pt-6 text-center space-y-2">
                 <Star className="w-8 h-8 text-primary mx-auto" />
-                <h3 className="font-semibold text-foreground">Échanges privés</h3>
+                <h3 className="font-semibold text-foreground">Sexe gay discret</h3>
                 <p className="text-sm text-muted-foreground">
-                  Photos, vidéos et messages éphémères en toute discrétion.
+                  Photos et vidéos éphémères, anti-screenshot. Tes échanges restent privés et discrets.
                 </p>
               </CardContent>
             </Card>
+          </div>
+        </section>
+
+        {/* SEO Rich Text for region */}
+        <section className="bg-secondary/30 rounded-2xl p-6 md:p-8">
+          <h2 className="font-display text-lg font-semibold text-foreground mb-4">
+            Rencontre gay {regionName} — Tout savoir
+          </h2>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
+            <p>
+              Tu cherches un <strong>plan cul gay dans le {regionCode} {regionName}</strong> ? Gay Connect est la plateforme 
+              idéale pour rencontrer des <strong>hommes gay</strong> près de chez toi. {dept?.description && `Notre communauté couvre ${dept.description} et toutes les villes alentour.`}
+            </p>
+            <p>
+              Rejoins le <strong>tchat gay {regionName}</strong> pour discuter en groupe avec les membres de ton département, 
+              partager des photos et organiser des <strong>rencontres gay</strong>. Passe ensuite en conversation privée pour 
+              des échanges plus intimes : photos, vidéos éphémères et messages privés.
+            </p>
+            <p>
+              Que tu sois <strong>actif, passif ou versatile</strong>, bear, twink, daddy ou muscle, 
+              tu trouveras sur Gay Connect des profils qui correspondent à tes envies dans le <strong>{regionCode}</strong>. 
+              Inscription gratuite et immédiate !
+            </p>
           </div>
         </section>
 
