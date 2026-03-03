@@ -741,6 +741,28 @@ const Help = ({ embedded = false }: HelpProps) => {
                 <span>Recherche d'un agent disponible...</span>
               </div>
             )}
+            {/* Quick reply chips for client */}
+            {(isAgentPhase || isWaiting) && !freeText.trim() && (
+              <div className="max-w-lg mx-auto flex flex-wrap gap-1.5 mb-2">
+                {[
+                  'Je patiente quelques minutes',
+                  'Merci beaucoup pour votre aide et votre assistance.',
+                ].map((qr) => (
+                  <button
+                    key={qr}
+                    onClick={async () => {
+                      if (!selectedTicket?.id || !user?.id) return;
+                      await supabase
+                        .from('support_messages' as any)
+                        .insert({ ticket_id: selectedTicket.id, sender_id: user.id, content: qr, message_type: 'text' } as any);
+                    }}
+                    className="px-3 py-1.5 text-xs font-medium rounded-full border border-border bg-card hover:bg-muted transition-colors active:scale-95"
+                  >
+                    {qr}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="max-w-lg mx-auto flex items-center gap-2">
               <Input
                 placeholder={(isAgentPhase || isWaiting) ? "Écrivez votre message..." : "Décrivez votre problème..."}
