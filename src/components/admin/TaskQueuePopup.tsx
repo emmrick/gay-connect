@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   Phone,
   PhoneOff,
-  Headphones
+  Headphones,
+  PauseCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -432,7 +433,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
 
               {/* Exclusive distribution notice */}
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className={`grid gap-2 ${activeTask.task_type === 'support_chat' ? 'grid-cols-4' : 'grid-cols-3'}`}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -446,6 +447,17 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                     <X className="w-4 h-4" />
                   )}
                 </Button>
+                {activeTask.task_type === 'support_chat' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-orange-600 border-orange-400/30 hover:bg-orange-500/10 text-xs h-11 active:scale-95 transition-transform"
+                    onClick={() => onNavigateToSection('support')}
+                  >
+                    <PauseCircle className="w-4 h-4 mr-1" />
+                    Attente
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
