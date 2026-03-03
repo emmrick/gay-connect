@@ -29,6 +29,7 @@ interface SupportChatRoomProps {
   ticket: SupportTicket;
   onBack: () => void;
   isAgent?: boolean;
+  hideHeader?: boolean;
 }
 
 const formatDateLabel = (date: Date): string => {
@@ -37,7 +38,7 @@ const formatDateLabel = (date: Date): string => {
   return format(date, 'd MMMM yyyy', { locale: fr });
 };
 
-const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: SupportChatRoomProps) => {
+const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideHeader = false }: SupportChatRoomProps) => {
   const { user } = useAuth();
   
   // Live ticket status to detect closure in real-time
@@ -413,7 +414,8 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
-      {/* Header */}
+      {/* Header - hidden when embedded in admin panel */}
+      {!hideHeader && (
       <header
         className="flex-shrink-0 flex items-center gap-2 px-2 py-2 border-b border-border bg-card z-20"
         style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
@@ -474,6 +476,49 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
           )}
         </div>
       </header>
+      )}
+
+      {/* Agent action bar when header is hidden (embedded mode) */}
+      {hideHeader && isAgent && (
+        <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-border bg-card/50">
+          <Badge variant="secondary" className={cn("text-[11px] px-2 py-0.5 font-medium", statusColor)}>
+            {statusLabel}
+          </Badge>
+          {!isClosed && !isWaitingClient && (
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 text-xs"
+                onClick={() => setShowManualCreditDialog(true)}
+              >
+                <Coins className="w-3.5 h-3.5 text-amber-500" />
+                Crédits
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 text-xs text-orange-600 hover:bg-orange-500/10"
+                onClick={handleHoldTicket}
+                disabled={isHoldingTicket}
+              >
+                {isHoldingTicket ? <Loader2 className="w-3 h-3 animate-spin" /> : <PauseCircle className="w-3.5 h-3.5" />}
+                Attente
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 text-xs text-destructive hover:bg-destructive/10"
+                onClick={handleCloseTicket}
+                disabled={isClosingTicket}
+              >
+                {isClosingTicket ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                Clôturer
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Manual Credit Attribution Dialog */}
       <Dialog open={showManualCreditDialog} onOpenChange={setShowManualCreditDialog}>
@@ -543,12 +588,14 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false }: Sup
         </DialogContent>
       </Dialog>
 
-      {/* Ticket info banner */}
-      <div className="px-4 py-2 bg-primary/5 border-b border-border">
-        <p className="text-xs text-muted-foreground text-center">
-          Ticket #{ticket.ticket_number} • {ticket.subject}
-        </p>
-      </div>
+      {/* Ticket info banner - hidden when embedded */}
+      {!hideHeader && (
+        <div className="px-4 py-2 bg-primary/5 border-b border-border">
+          <p className="text-xs text-muted-foreground text-center">
+            Ticket #{ticket.ticket_number} • {ticket.subject}
+          </p>
+        </div>
+      )}
 
       {/* Messages area */}
       <div
