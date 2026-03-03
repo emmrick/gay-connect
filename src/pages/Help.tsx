@@ -774,8 +774,8 @@ const Help = ({ embedded = false }: HelpProps) => {
                     (isAgentPhase || isWaiting) ? handleSendToAgent() : handleSendFreeText();
                   }
                 }}
-                className="flex-1 rounded-2xl bg-muted border-0 min-h-[80px] max-h-[160px] resize-none text-sm leading-relaxed"
-                rows={3}
+                className="flex-1 rounded-2xl bg-muted border-0 min-h-[120px] max-h-[200px] resize-none text-sm leading-relaxed"
+                rows={5}
               />
               <Button
                 size="icon"
