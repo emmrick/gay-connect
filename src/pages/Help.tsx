@@ -54,6 +54,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
   const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [hasCheckedActiveTicket, setHasCheckedActiveTicket] = useState(false);
   
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const agentJoinedRef = useRef(false);
@@ -66,6 +67,21 @@ const Help = ({ embedded = false }: HelpProps) => {
       if (botTypingTimeoutRef.current) clearTimeout(botTypingTimeoutRef.current);
     };
   }, []);
+
+  // Auto-resume active ticket on mount
+  const { tickets, createTicket, closeTicket } = useSupportTickets();
+  useEffect(() => {
+    if (hasCheckedActiveTicket || !user?.id || !tickets) return;
+    setHasCheckedActiveTicket(true);
+    
+    // Find the most recent active (open or assigned) ticket
+    const activeTicket = tickets.find(t => t.status === 'open' || t.status === 'assigned');
+    if (activeTicket) {
+      setSelectedTicket(activeTicket);
+      agentJoinedRef.current = activeTicket.status === 'assigned';
+      setChatPhase(activeTicket.status === 'assigned' ? 'agent' : 'waiting_agent');
+    }
+  }, [tickets, user?.id, hasCheckedActiveTicket]);
 
   // Helper: add bot messages with a random 10-30s delay
   const addBotMessagesWithDelay = (
@@ -87,7 +103,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   const { data: faqArticles = [], isLoading: faqLoading } = useFAQArticles(searchQuery);
   const { data: rootNodes = [] } = useHelpChatbotNodes(undefined);
   const { data: childNodes = [] } = useHelpChatbotNodes(currentNodeId);
-  const { createTicket, closeTicket } = useSupportTickets();
+  // createTicket and closeTicket already destructured above
 
   // Fetch user profile for personalized greeting
   const { data: userProfile } = useQuery({
@@ -135,8 +151,8 @@ const Help = ({ embedded = false }: HelpProps) => {
         .single();
       return data as unknown as SupportTicket;
     },
-    enabled: !!selectedTicket?.id && (chatPhase === 'waiting_agent' || chatPhase === 'agent'),
-    refetchInterval: 3000,
+    enabled: !!selectedTicket?.id,
+    refetchInterval: (chatPhase === 'waiting_agent' || chatPhase === 'agent') ? 3000 : 10000,
   });
 
   // Detect when agent joins or closes
@@ -808,6 +824,33 @@ const Help = ({ embedded = false }: HelpProps) => {
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-5 pb-28">
+            {/* Resume active conversation banner */}
+            {!searchQuery && selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned') && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <button
+                  onClick={() => {
+                    const currentStatus = liveTicket?.status || selectedTicket.status;
+                    agentJoinedRef.current = currentStatus === 'assigned';
+                    setChatPhase(currentStatus === 'assigned' ? 'agent' : 'waiting_agent');
+                    if (liveTicket) setSelectedTicket(liveTicket);
+                  }}
+                  className="w-full rounded-2xl bg-primary/10 border border-primary/20 p-4 text-left transition-all hover:bg-primary/15 active:scale-[0.98] flex items-center gap-3"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+                    <Headphones className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground">Conversation en cours</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Reprendre votre échange avec le support</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                </button>
+              </motion.div>
+            )}
+
             {/* Quick action cards */}
             {!searchQuery && (
               <motion.div
