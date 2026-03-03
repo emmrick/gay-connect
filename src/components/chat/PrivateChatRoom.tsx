@@ -114,7 +114,26 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   }, [isOtherTyping, scrollToBottom]);
 
   const handleInputFocus = useCallback(() => {
-    setTimeout(() => scrollToBottom(false), 100);
+    // Multiple delays to catch keyboard animation on various mobile devices
+    setTimeout(() => scrollToBottom(true), 100);
+    setTimeout(() => scrollToBottom(true), 300);
+    setTimeout(() => scrollToBottom(true), 500);
+  }, [scrollToBottom]);
+
+  // Scroll to bottom when mobile keyboard opens (visualViewport resize)
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let prevHeight = vv.height;
+    const onResize = () => {
+      const newHeight = vv.height;
+      if (newHeight < prevHeight - 50) {
+        setTimeout(() => scrollToBottom(true), 80);
+      }
+      prevHeight = newHeight;
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
   }, [scrollToBottom]);
 
   const handleScroll = useCallback(() => {
