@@ -62,6 +62,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   const agentJoinedRef = useRef(false);
   const [isBotTyping, setIsBotTyping] = useState(false);
   const botTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingOptionRef = useRef(false);
 
   // Auto-resize freeText textarea
   useEffect(() => {
@@ -194,6 +195,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setCurrentNodeId(null);
     setNodeHistory([]);
     agentJoinedRef.current = false;
+    isProcessingOptionRef.current = false;
     const displayName = userProfile?.username || 'cher utilisateur';
     addBotMessagesWithDelay(
       [],
@@ -205,6 +207,8 @@ const Help = ({ embedded = false }: HelpProps) => {
   };
 
   const handleSelectOption = (node: HelpChatbotNode) => {
+    if (isProcessingOptionRef.current) return;
+    isProcessingOptionRef.current = true;
     const userMessages: ChatMessage[] = [
       ...chatMessages,
       { type: 'user', text: node.label },
@@ -214,11 +218,12 @@ const Help = ({ embedded = false }: HelpProps) => {
       addBotMessagesWithDelay(
         userMessages,
         [{ type: 'bot', text: node.response_text }],
-        () => setCurrentNodeId(node.id)
+        () => { setCurrentNodeId(node.id); isProcessingOptionRef.current = false; }
       );
     } else {
       setChatMessages(userMessages);
       setCurrentNodeId(node.id);
+      isProcessingOptionRef.current = false;
     }
   };
 
