@@ -10,8 +10,8 @@ const Regions = () => {
   const { data: rooms, isLoading } = useChatRooms();
   const { data: counts } = useRegionMemberCounts();
 
-  const pageTitle = 'Rencontre Gay par Département - Tchat Gay Local | Gay Connect';
-  const pageDescription = 'Trouve des hommes gay près de chez toi. 101 départements, tchat gay gratuit, plan gay local, profils vérifiés. Le site de rencontre gay n°1 en France. +18 ans.';
+  const pageTitle = 'Rencontre Gay par Département - Plan Cul Gay, Sexe Gay & Tchat Local | Gay Connect';
+  const pageDescription = 'Trouve un plan cul gay ou une rencontre gay près de chez toi. 101 départements français, tchat gay gratuit, sexe gay local, profils vérifiés. Le site gay n°1 en France. +18 ans.';
   const canonical = 'https://gay-connect.lovable.app/regions';
 
   const jsonLd = {
@@ -53,10 +53,11 @@ const Regions = () => {
       <header className="py-12 md:py-16">
         <div className="container max-w-5xl mx-auto px-4 text-center">
           <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-4">
-            Rencontres gay par <span className="gradient-text">département</span>
+            Rencontre gay & sexe gay par <span className="gradient-text">département</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choisis ton département pour rejoindre la communauté gay locale. Chat de groupe, profils vérifiés et échanges privés.
+            Choisis ton département pour trouver un plan cul gay, un sexfriend ou un mec gay près de chez toi. 
+            Chat de groupe, profils vérifiés et échanges privés discrets.
           </p>
         </div>
       </header>

@@ -8,19 +8,22 @@ interface SEOHeadProps {
   ogType?: string;
   noindex?: boolean;
   jsonLd?: Record<string, unknown>;
+  keywords?: string;
 }
 
 const BASE_URL = 'https://gay-connect.lovable.app';
 const DEFAULT_OG_IMAGE = 'https://lovable.dev/opengraph-image-p98pqg.png';
+const DEFAULT_KEYWORDS = 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, drague gay, annonce gay, homme gay, gay france, rencontre homosexuel, plan sexe gay, hookup gay, sexfriend gay, homme cherche homme';
 
 const SEOHead = ({
-  title = 'Gay Connect - Site de Rencontre Gay & Tchat Gay France',
-  description = 'Gay Connect : le site gay n°1 pour les rencontres entre hommes en France. Tchat gay gratuit, plan gay par département, échanges de photos et vidéos. Communauté gay vérifiée. +18 ans.',
+  title = 'Gay Connect - Site de Rencontre Gay, Sexe Gay & Tchat Gay France',
+  description = 'Gay Connect : le site gay n°1 pour les rencontres et le sexe entre hommes en France. Tchat gay gratuit, plan cul gay par département, échanges de photos et vidéos. Communauté gay vérifiée. +18 ans.',
   canonical,
   ogImage = DEFAULT_OG_IMAGE,
   ogType = 'website',
   noindex = false,
   jsonLd,
+  keywords = DEFAULT_KEYWORDS,
 }: SEOHeadProps) => {
   useEffect(() => {
     // Title
@@ -39,6 +42,8 @@ const SEOHead = ({
 
     // Standard meta
     setMeta('name', 'description', description);
+    setMeta('name', 'keywords', keywords);
+    setMeta('name', 'rating', 'adult');
     if (noindex) {
       setMeta('name', 'robots', 'noindex, nofollow');
     } else {
@@ -105,7 +110,7 @@ const SEOHead = ({
       const el = document.getElementById(jsonLdId);
       if (el) el.remove();
     };
-  }, [title, description, canonical, ogImage, ogType, noindex, jsonLd]);
+  }, [title, description, canonical, ogImage, ogType, noindex, jsonLd, keywords]);
 
   return null;
 };
@@ -117,14 +122,20 @@ export const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Gay Connect',
+  alternateName: ['GayConnect', 'Gay Connect France'],
   url: BASE_URL,
-  description: 'Site de rencontre gay et tchat gay gratuit en France. Rencontres entre hommes par département, plan gay local, échanges de photos et vidéos. Communauté gay vérifiée.',
+  description: 'Site de rencontre gay et sexe entre hommes en France. Tchat gay gratuit, plan cul gay local, échanges de photos et vidéos entre mecs. Communauté gay vérifiée. +18 ans.',
   inLanguage: 'fr-FR',
-  keywords: 'site gay, rencontre gay, chat gay, tchat gay, plan gay, site de rencontre gay, gay france, communauté gay, annonce gay, homme gay',
+  keywords: 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, site de rencontre gay, gay france, communauté gay, annonce gay, homme gay, drague gay, hookup gay, plan sexe gay, homme cherche homme, sexfriend gay',
   potentialAction: {
     '@type': 'SearchAction',
     target: `${BASE_URL}/auth`,
     'query-input': 'required name=search_term_string',
+  },
+  audience: {
+    '@type': 'Audience',
+    audienceType: 'Adults only',
+    suggestedMinAge: 18,
   },
 };
 
@@ -141,3 +152,16 @@ export const organizationJsonLd = {
     availableLanguage: 'French',
   },
 };
+
+export const faqPageJsonLd = (faqs: { question: string; answer: string }[]) => ({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(faq => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+});

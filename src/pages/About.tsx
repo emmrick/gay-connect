@@ -72,14 +72,15 @@ const About = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="À propos de Gay Connect - Communauté gay sécurisée"
-        description="Gay Connect : un espace safe pour la communauté gay en France. Chat par région, médias éphémères, profils vérifiés et modération active."
+        title="À propos de Gay Connect - Site de Rencontre Gay & Sexe Gay Sécurisé"
+        description="Gay Connect : le site de rencontre gay et de sexe entre hommes n°1 en France. Espace safe, profils vérifiés, médias éphémères et modération active. Plan cul gay sécurisé."
         canonical="https://gay-connect.lovable.app/about"
+        keywords="site gay, rencontre gay, sexe gay, communauté gay france, plan cul gay sécurisé, tchat gay, espace safe gay, gay connect avis"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'AboutPage',
-          name: 'À propos de Gay Connect',
-          description: 'Un espace safe pour la communauté gay en France.',
+          name: 'À propos de Gay Connect - Rencontre Gay & Sexe Gay',
+          description: 'Gay Connect : site de rencontre gay et de sexe entre hommes sécurisé en France. Profils vérifiés, médias éphémères, anti-capture d\'écran.',
           url: 'https://gay-connect.lovable.app/about',
         }}
       />
