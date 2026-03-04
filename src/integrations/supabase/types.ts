@@ -1903,6 +1903,42 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+          is_blocked: boolean | null
+          request_count: number | null
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+          is_blocked?: boolean | null
+          request_count?: number | null
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+          is_blocked?: boolean | null
+          request_count?: number | null
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       referral_codes: {
         Row: {
           code: string
@@ -2106,6 +2142,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          description: string
+          event_type: string
+          id: string
+          is_blocked: boolean | null
+          is_resolved: boolean | null
+          metadata: Json | null
+          page_url: string | null
+          payload: string | null
+          request_path: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source_ip: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          event_type: string
+          id?: string
+          is_blocked?: boolean | null
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          page_url?: string | null
+          payload?: string | null
+          request_path?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source_ip?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          event_type?: string
+          id?: string
+          is_blocked?: boolean | null
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          page_url?: string | null
+          payload?: string | null
+          request_path?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source_ip?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       stories: {
         Row: {
@@ -2393,7 +2486,7 @@ export type Database = {
           id: string
           is_active: boolean
           reason: string | null
-          suspension_duration: unknown
+          suspension_duration: string | null
           suspension_ends_at: string | null
           suspension_type: string | null
           unblocked_at: string | null
@@ -2405,7 +2498,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           reason?: string | null
-          suspension_duration?: unknown
+          suspension_duration?: string | null
           suspension_ends_at?: string | null
           suspension_type?: string | null
           unblocked_at?: string | null
@@ -2417,7 +2510,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           reason?: string | null
-          suspension_duration?: unknown
+          suspension_duration?: string | null
           suspension_ends_at?: string | null
           suspension_type?: string | null
           unblocked_at?: string | null
