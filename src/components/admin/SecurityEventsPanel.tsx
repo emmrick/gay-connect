@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   ShieldAlert, ShieldCheck, AlertTriangle, Bug, Zap, Globe, Lock, 
-  Trash2, CheckCircle, RefreshCw, Eye, Filter, Clock
+  Trash2, CheckCircle, RefreshCw, Eye, Filter, Clock, Ban, UserX, 
+  RotateCcw, Copy, ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -131,6 +139,117 @@ const SecurityEventsPanel = () => {
     },
   });
 
+  const blockUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data: { user: admin } } = await supabase.auth.getUser();
+      if (!admin) throw new Error('Non authentifié');
+
+      // Insert moderation action
+      const { error: modError } = await (supabase.from('moderation_actions') as any)
+        .insert({
+          action_type: 'block',
+          performed_by: admin.id,
+          target_user_id: userId,
+          details: 'Blocage automatique suite à un événement de sécurité',
+        });
+      if (modError) throw modError;
+
+      // Update profile to blocked
+      const { error: profileError } = await supabase
+        .from('profiles' as any)
+        .update({ is_blocked: true } as any)
+        .eq('user_id', userId);
+      if (profileError) throw profileError;
+    },
+    onSuccess: () => {
+      toast.success('Utilisateur bloqué avec succès');
+      queryClient.invalidateQueries({ queryKey: ['security-events'] });
+    },
+    onError: () => {
+      toast.error('Erreur lors du blocage');
+    },
+  });
+
+  const suspendUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data: { user: admin } } = await supabase.auth.getUser();
+      if (!admin) throw new Error('Non authentifié');
+
+      const { error: modError } = await (supabase.from('moderation_actions') as any)
+        .insert({
+          action_type: 'suspend',
+          performed_by: admin.id,
+          target_user_id: userId,
+          details: 'Suspension suite à une menace de sécurité détectée',
+        });
+      if (modError) throw modError;
+
+      const { error: profileError } = await supabase
+        .from('profiles' as any)
+        .update({ is_suspended: true } as any)
+        .eq('user_id', userId);
+      if (profileError) throw profileError;
+    },
+    onSuccess: () => {
+      toast.success('Utilisateur suspendu avec succès');
+      queryClient.invalidateQueries({ queryKey: ['security-events'] });
+    },
+    onError: () => {
+      toast.error('Erreur lors de la suspension');
+    },
+  });
+
+  const resetRateLimitMutation = useMutation({
+    mutationFn: async (identifier: string) => {
+      const { error } = await (supabase.from('rate_limits' as any) as any)
+        .update({ is_blocked: false, blocked_until: null, request_count: 0 })
+        .eq('identifier', identifier);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Rate limit réinitialisé');
+    },
+    onError: () => {
+      toast.error('Erreur lors de la réinitialisation');
+    },
+  });
+
+  const resolveAllBySeverityMutation = useMutation({
+    mutationFn: async (severity: string) => {
+      let query = (supabase.from('security_events' as any) as any)
+        .update({ is_resolved: true, resolved_at: new Date().toISOString() })
+        .eq('is_resolved', false);
+      
+      if (severity !== 'all') {
+        query = query.eq('severity', severity);
+      }
+      
+      const { error } = await query;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['security-events'] });
+      queryClient.invalidateQueries({ queryKey: ['security-stats'] });
+      toast.success('Événements résolus en masse');
+    },
+  });
+
+  const copyEventDetails = (event: SecurityEvent) => {
+    const details = [
+      `Type: ${eventTypeLabels[event.event_type] || event.event_type}`,
+      `Sévérité: ${event.severity}`,
+      `Description: ${event.description}`,
+      `Date: ${format(new Date(event.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: fr })}`,
+      event.user_id ? `User ID: ${event.user_id}` : null,
+      event.page_url ? `URL: ${event.page_url}` : null,
+      event.payload ? `Payload: ${event.payload}` : null,
+      event.metadata ? `Metadata: ${JSON.stringify(event.metadata, null, 2)}` : null,
+    ].filter(Boolean).join('\n');
+    
+    navigator.clipboard.writeText(details);
+    toast.success('Détails copiés dans le presse-papier');
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -142,6 +261,25 @@ const SecurityEventsPanel = () => {
           <Button size="sm" variant="outline" onClick={() => setShowResolved(!showResolved)}>
             {showResolved ? 'Masquer résolus' : 'Voir résolus'}
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline">
+                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Résoudre
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => resolveAllBySeverityMutation.mutate('all')}>
+                Tout résoudre
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => resolveAllBySeverityMutation.mutate('low')}>
+                Résoudre les faibles
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => resolveAllBySeverityMutation.mutate('medium')}>
+                Résoudre les moyennes
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button size="sm" variant="destructive" onClick={() => purgeResolvedMutation.mutate()} disabled={purgeResolvedMutation.isPending}>
             <Trash2 className="w-3.5 h-3.5 mr-1" /> Purger
           </Button>
@@ -248,19 +386,59 @@ const SecurityEventsPanel = () => {
                                   {new URL(event.page_url).pathname}
                                 </span>
                               )}
+                              {event.user_id && (
+                                <span className="text-[10px] font-mono">
+                                  👤 {event.user_id.slice(0, 8)}…
+                                </span>
+                              )}
                             </div>
                           </div>
-                          {!event.is_resolved && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => resolveMutation.mutate(event.id)}
-                              disabled={resolveMutation.isPending}
-                              className="h-8 w-8 p-0"
-                            >
-                              <CheckCircle className="w-4 h-4 text-primary" />
-                            </Button>
-                          )}
+
+                          {/* Quick Actions Dropdown */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <Zap className="w-4 h-4 text-primary" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52">
+                              {!event.is_resolved && (
+                                <DropdownMenuItem onClick={() => resolveMutation.mutate(event.id)}>
+                                  <CheckCircle className="w-3.5 h-3.5 mr-2 text-primary" />
+                                  Marquer résolu
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => copyEventDetails(event)}>
+                                <Copy className="w-3.5 h-3.5 mr-2" />
+                                Copier les détails
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {event.user_id && (
+                                <>
+                                  <DropdownMenuItem 
+                                    onClick={() => blockUserMutation.mutate(event.user_id!)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Ban className="w-3.5 h-3.5 mr-2" />
+                                    Bloquer l'utilisateur
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => suspendUserMutation.mutate(event.user_id!)}
+                                    className="text-orange-500 focus:text-orange-500"
+                                  >
+                                    <UserX className="w-3.5 h-3.5 mr-2" />
+                                    Suspendre le compte
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {(event.event_type === 'rate_limit_exceeded' || event.event_type === 'ddos') && event.user_id && (
+                                <DropdownMenuItem onClick={() => resetRateLimitMutation.mutate(event.user_id!)}>
+                                  <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                                  Réinitialiser rate limit
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </CardContent>
                     </Card>
