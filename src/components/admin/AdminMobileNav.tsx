@@ -1,6 +1,6 @@
 import { memo, useCallback } from 'react';
 import { 
-  Shield, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
+  Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Bell, 
   Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, ListOrdered, 
   Headphones, Star, HelpCircle, ArrowLeft, FileImage
@@ -57,6 +57,7 @@ const navItems: NavItem[] = [
   { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'settings' },
   { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'settings' },
   { id: 'error-logs', label: "Logs erreurs", icon: Activity, group: 'settings' },
+  { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'settings' },
 ];
 
 const groupLabels: Record<string, string> = {
