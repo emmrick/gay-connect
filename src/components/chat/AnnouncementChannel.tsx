@@ -140,7 +140,7 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
   }, [adminMessage]);
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-background overflow-hidden w-full max-w-full">
       {/* Header */}
       <header className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-20">
         <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0">
