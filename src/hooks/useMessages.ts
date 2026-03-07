@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
+import { playNotificationSoundStandalone, playAnnouncementSoundStandalone } from '@/hooks/useNotificationSound';
 import { notifyNewGroupMessage } from '@/services/pushNotificationService';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
