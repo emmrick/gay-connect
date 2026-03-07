@@ -177,6 +177,52 @@ const BroadcastNotificationPanel = () => {
         <h2 className="text-lg font-semibold">Diffusion de notifications</h2>
       </div>
 
+      {/* Canal Informations - Publier une annonce */}
+      <Card className="border-primary/30">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Megaphone className="w-4 h-4 text-primary" />
+            Canal Informations
+          </CardTitle>
+          <CardDescription>
+            Publiez un message visible par tous dans le canal d'annonces + notification push
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Message</Label>
+            <Textarea
+              placeholder="Écrivez votre annonce ici..."
+              value={announcementMessage}
+              onChange={(e) => setAnnouncementMessage(e.target.value)}
+              rows={3}
+              maxLength={500}
+            />
+            <p className="text-xs text-muted-foreground">{announcementMessage.length}/500 caractères</p>
+          </div>
+          <Button
+            onClick={handleSendAnnouncement}
+            disabled={isSendingAnnouncement || !announcementMessage.trim() || !announcementRoom}
+            className="w-full"
+          >
+            {isSendingAnnouncement ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Publication en cours...
+              </>
+            ) : (
+              <>
+                <Megaphone className="w-4 h-4 mr-2" />
+                Publier sur le Canal Informations
+              </>
+            )}
+          </Button>
+          {!announcementRoom && (
+            <p className="text-xs text-destructive">Le canal d'annonces n'a pas été trouvé.</p>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Form */}
         <Card>
