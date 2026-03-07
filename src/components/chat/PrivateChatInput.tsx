@@ -23,6 +23,7 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
   const [message, setMessage] = useState('');
   const [showOptions, setShowOptions] = useState(false);
   const [showShareAlbum, setShowShareAlbum] = useState(false);
+  const [showSnapCapture, setShowSnapCapture] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
