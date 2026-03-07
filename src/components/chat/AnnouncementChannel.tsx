@@ -159,6 +159,7 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
             Canal officiel • Lecture seule
           </p>
         </div>
+        <MuteButton conversationId="announcement" />
       </header>
 
       {/* Messages area */}
