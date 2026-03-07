@@ -14,6 +14,7 @@ import ProfileView from '@/components/profile/ProfileView';
 import ChatBotConfigPage from '@/components/chatbot/ChatBotConfigPage';
 import PremiumPage from '@/components/premium/PremiumPage';
 import ReferralDialog from '@/components/premium/ReferralDialog';
+import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
 import SwipePage from '@/components/swipe/SwipePage';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import MemberSearch from '@/components/chat/MemberSearch';
