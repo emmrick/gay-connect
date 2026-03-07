@@ -58,6 +58,7 @@ export const useNearbyProfiles = (
     staleTime: 30000,
     gcTime: 300000,
     refetchOnWindowFocus: false,
+    refetchInterval: 600000,
   });
 
   // Query 2: When geolocation is available, fetch with distances (runs in parallel / replaces)
@@ -80,6 +81,7 @@ export const useNearbyProfiles = (
     enabled: !!user && latitude != null && longitude != null,
     staleTime: 45000,
     gcTime: 120000,
+    refetchInterval: 600000,
   });
 
   // Use geo-sorted data when available, otherwise base data
