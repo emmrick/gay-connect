@@ -44,7 +44,7 @@ type TargetType = 'all' | 'region';
 
 const getTargetLabel = (targetType: string, targetRegion: string | null) => {
   if (targetType === 'all') return 'Tous';
-  if (targetType === 'premium') return 'Premium';
+  if (targetType === 'premium') return 'Anciens Premium';
   if (targetType === 'region' && targetRegion) {
     const region = REGIONS.find(r => r.code === targetRegion);
     return region?.name || targetRegion;
