@@ -92,6 +92,35 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
 
       if (error) throw error;
 
+      // Send push notifications to all users for announcement
+      try {
+        const { data: allProfiles } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .neq('user_id', user.id)
+          .limit(1000);
+
+        if (allProfiles) {
+          // Fire and forget - send push to all users
+          const preview = adminMessage.trim().length > 80 
+            ? adminMessage.trim().substring(0, 80) + '...' 
+            : adminMessage.trim();
+
+          for (const profile of allProfiles) {
+            sendPushNotification({
+              userId: profile.user_id,
+              title: '📢 Canal Informations',
+              body: preview,
+              url: '/',
+              tag: 'announcement',
+              notificationType: 'system',
+            }).catch(() => {}); // Ignore individual failures
+          }
+        }
+      } catch (pushErr) {
+        console.error('Error sending announcement push:', pushErr);
+      }
+
       setAdminMessage('');
       toast.success('Message publié sur le canal');
     } catch (err) {
