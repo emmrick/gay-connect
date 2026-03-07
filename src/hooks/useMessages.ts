@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
+import { playNotificationSoundStandalone, playAnnouncementSoundStandalone } from '@/hooks/useNotificationSound';
 import { notifyNewGroupMessage } from '@/services/pushNotificationService';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 
@@ -19,7 +19,7 @@ interface MessageWithProfile extends Message {
   } | null;
 }
 
-export const useMessages = (chatRoomId: string | null, searchQuery?: string) => {
+export const useMessages = (chatRoomId: string | null, searchQuery?: string, isAnnouncementChannel?: boolean) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -143,7 +143,11 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string) => 
 
           // Play notification sound for incoming messages (not our own)
           if (newMsg.sender_id !== user?.id) {
-            playNotificationSoundStandalone();
+            if (isAnnouncementChannel) {
+              playAnnouncementSoundStandalone();
+            } else {
+              playNotificationSoundStandalone();
+            }
           }
         }
       )

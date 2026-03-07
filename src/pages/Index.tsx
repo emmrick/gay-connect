@@ -7,6 +7,7 @@ import { memo } from 'react';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
 import ChatRoom from '@/components/chat/ChatRoom';
+import AnnouncementChannel from '@/components/chat/AnnouncementChannel';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';
@@ -26,6 +27,7 @@ import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import Help from '@/pages/Help';
 import { useChatRoom } from '@/hooks/useChatRooms';
+import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
@@ -92,7 +94,8 @@ const Index = () => {
   });
   const { isPremium } = useSubscription();
   const { verification, isLoading: verificationLoading } = useIdentityVerification();
-  const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
+  const { data: selectedRoomData } = useChatRoom(selectedRegion === 'announcement' ? '' : (selectedRegion || ''));
+  const { data: announcementChannel } = useAnnouncementChannel();
   const { total: memberCount } = useRegionMemberCount(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
@@ -288,6 +291,24 @@ const Index = () => {
         <PrivateChatRoom
           otherUserId={selectedPrivateUserId}
           onBack={handleBackFromPrivateChat}
+        />
+      </motion.div>
+    );
+  }
+
+  // Render announcement channel
+  if (currentView === 'chat' && selectedRegion === 'announcement' && announcementChannel) {
+    return (
+      <motion.div
+        initial={{ x: '100%', opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: '100%', opacity: 0 }}
+        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+        className="min-h-screen"
+      >
+        <AnnouncementChannel
+          roomId={announcementChannel.id}
+          onBack={handleBackToRegions}
         />
       </motion.div>
     );

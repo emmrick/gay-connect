@@ -21,6 +21,7 @@ import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
 import PromoPopup from "@/components/popups/PromoPopup";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
+import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 import { useScreenshotProtection } from "@/hooks/useScreenshotProtection";
 import ScreenshotProtectionOverlay from "@/components/security/ScreenshotProtectionOverlay";
 import BackgroundRefreshIndicator from "@/components/loading/BackgroundRefreshIndicator";
@@ -89,6 +90,7 @@ const useGlobalErrorHandler = () => {
 // Inner component that uses hooks requiring AuthProvider
 const AuthenticatedApp = () => {
   useRealtimeProfileSync();
+  useAnnouncementNotifications();
 
   // Global screenshot protection - active on the entire site
   const { isBlocked, enableProtection } = useScreenshotProtection(true);
