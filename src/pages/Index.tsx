@@ -638,10 +638,10 @@ const Index = () => {
               <div className="px-5 pb-4 flex items-center justify-between">
                 <div>
                   <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
-                    Premium
+                    Crédits
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Débloquer toutes les fonctionnalités
+                    Gérer vos crédits et actions
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
