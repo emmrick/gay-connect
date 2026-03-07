@@ -61,8 +61,65 @@ const BroadcastNotificationPanel = () => {
   const [isSending, setIsSending] = useState(false);
   const [lastResult, setLastResult] = useState<{ sent: number; failed: number } | null>(null);
   
+  // Canal Informations
+  const [announcementMessage, setAnnouncementMessage] = useState('');
+  const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
+  const { data: announcementRoom } = useAnnouncementChannel();
+  const { user } = useAuth();
+  
   const queryClient = useQueryClient();
   const { data: history = [], isLoading: isLoadingHistory } = useBroadcastHistory();
+
+  const handleSendAnnouncement = async () => {
+    if (!announcementMessage.trim() || !user || !announcementRoom || isSendingAnnouncement) return;
+    setIsSendingAnnouncement(true);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          chat_room_id: announcementRoom.id,
+          sender_id: user.id,
+          content: announcementMessage.trim(),
+          message_type: 'text',
+          is_private: false,
+        });
+      if (error) throw error;
+
+      // Send push notifications
+      try {
+        const { data: allProfiles } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .neq('user_id', user.id)
+          .limit(1000);
+        if (allProfiles) {
+          const preview = announcementMessage.trim().length > 80
+            ? announcementMessage.trim().substring(0, 80) + '...'
+            : announcementMessage.trim();
+          for (const profile of allProfiles) {
+            sendPushNotification({
+              userId: profile.user_id,
+              title: '📢 Canal Informations',
+              body: preview,
+              url: '/',
+              tag: 'announcement',
+              notificationType: 'system',
+            }).catch(() => {});
+          }
+        }
+      } catch (pushErr) {
+        console.error('Error sending announcement push:', pushErr);
+      }
+
+      setAnnouncementMessage('');
+      toast.success('Message publié sur le Canal Informations');
+    } catch (err) {
+      console.error('Error sending announcement:', err);
+      toast.error('Erreur lors de la publication');
+    } finally {
+      setIsSendingAnnouncement(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!title.trim()) {
