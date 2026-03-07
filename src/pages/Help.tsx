@@ -760,46 +760,6 @@ const Help = ({ embedded = false }: HelpProps) => {
               </div>
             )}
             <div className="max-w-lg mx-auto flex items-end gap-2">
-              {/* Pre-written messages bubble */}
-              {(isAgentPhase || isWaiting) && (
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="flex-shrink-0 w-10 h-10 rounded-full"
-                    >
-                      <MessageSquareText className="w-5 h-5" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="rounded-t-2xl max-h-[50vh]">
-                    <SheetHeader>
-                      <SheetTitle>Réponses rapides</SheetTitle>
-                    </SheetHeader>
-                    <div className="flex flex-col gap-2 mt-4">
-                      {[
-                        'Je patiente quelques minutes',
-                        'Merci beaucoup pour votre aide et votre assistance.',
-                        'Pouvez-vous m\'aider avec ce problème ?',
-                        'J\'ai bien compris, merci !',
-                      ].map((qr) => (
-                        <button
-                          key={qr}
-                          onClick={async () => {
-                            if (!selectedTicket?.id || !user?.id) return;
-                            await supabase
-                              .from('support_messages' as any)
-                              .insert({ ticket_id: selectedTicket.id, sender_id: user.id, content: qr, message_type: 'text' } as any);
-                          }}
-                          className="w-full text-left px-4 py-3 text-sm rounded-xl border border-border bg-card hover:bg-muted transition-colors active:scale-[0.98]"
-                        >
-                          {qr}
-                        </button>
-                      ))}
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              )}
               <Textarea
                 ref={freeTextRef}
                 placeholder={(isAgentPhase || isWaiting) ? "Écrivez votre message..." : "Décrivez votre problème..."}
