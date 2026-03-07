@@ -279,13 +279,6 @@ const BroadcastNotificationPanel = () => {
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="premium" id="premium" />
-                  <Label htmlFor="premium" className="flex items-center gap-2 cursor-pointer">
-                    <Users className="w-4 h-4 text-amber-500" />
-                    Utilisateurs Premium uniquement
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
                   <RadioGroupItem value="region" id="region" />
                   <Label htmlFor="region" className="flex items-center gap-2 cursor-pointer">
                     <Users className="w-4 h-4" />
