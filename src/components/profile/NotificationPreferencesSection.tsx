@@ -14,7 +14,8 @@ import {
   Sparkles,
   AtSign,
   Coins,
-  ShieldCheck
+  ShieldCheck,
+  Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
