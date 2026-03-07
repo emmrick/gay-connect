@@ -40,7 +40,7 @@ const REGIONS = [
   { code: 'OTHER', name: 'Autre' },
 ];
 
-type TargetType = 'all' | 'region' | 'premium';
+type TargetType = 'all' | 'region';
 
 const getTargetLabel = (targetType: string, targetRegion: string | null) => {
   if (targetType === 'all') return 'Tous';
