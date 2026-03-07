@@ -220,6 +220,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           </button>
         )}
 
+        <MuteButton conversationId={otherUserId} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0">
