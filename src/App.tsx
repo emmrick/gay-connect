@@ -21,6 +21,7 @@ import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
 import PromoPopup from "@/components/popups/PromoPopup";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
+import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 import { useScreenshotProtection } from "@/hooks/useScreenshotProtection";
 import ScreenshotProtectionOverlay from "@/components/security/ScreenshotProtectionOverlay";
 import BackgroundRefreshIndicator from "@/components/loading/BackgroundRefreshIndicator";
