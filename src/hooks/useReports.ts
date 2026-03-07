@@ -33,6 +33,7 @@ export const useReports = () => {
           .select('id')
           .eq('reporter_id', user.id)
           .eq('reported_user_id', reportedUserId)
+          .eq('status', 'pending')
           .maybeSingle();
 
         if (error) throw error;
