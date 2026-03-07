@@ -1,23 +1,53 @@
 import { useState } from 'react';
 import { BanIcon, HelpCircle, X } from 'lucide-react';
 
-const DISMISSED_KEY = 'gc_ad_free_banner_dismissed';
+const STORAGE_KEY = 'gc_ad_free_banner';
+
+interface BannerState {
+  dismissedAt: number;
+  dismissCount: number;
+  firstSeen: number;
+}
+
+const getBannerState = (): BannerState | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const shouldShow = (): boolean => {
+  const state = getBannerState();
+  if (!state) return true; // Never dismissed
+
+  const now = Date.now();
+  const daysSinceFirstSeen = (now - state.firstSeen) / (1000 * 60 * 60 * 24);
+  const daysSinceDismissed = (now - state.dismissedAt) / (1000 * 60 * 60 * 24);
+
+  // First 3 months (~90 days): show every 2 weeks (14 days)
+  // After 3 months: show every month (30 days)
+  const interval = daysSinceFirstSeen < 90 ? 14 : 30;
+
+  return daysSinceDismissed >= interval;
+};
 
 const AdFreeBanner = () => {
-  const [dismissed, setDismissed] = useState(() => {
-    try {
-      return sessionStorage.getItem(DISMISSED_KEY) === '1';
-    } catch {
-      return false;
-    }
-  });
+  const [visible, setVisible] = useState(() => shouldShow());
 
-  if (dismissed) return null;
+  if (!visible) return null;
 
   const handleDismiss = () => {
-    setDismissed(true);
+    setVisible(false);
     try {
-      sessionStorage.setItem(DISMISSED_KEY, '1');
+      const prev = getBannerState();
+      const state: BannerState = {
+        dismissedAt: Date.now(),
+        dismissCount: (prev?.dismissCount ?? 0) + 1,
+        firstSeen: prev?.firstSeen ?? Date.now(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {}
   };
 
