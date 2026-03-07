@@ -279,6 +279,7 @@ export type Database = {
           custom_name: string | null
           description: string | null
           id: string
+          is_announcement: boolean | null
           is_custom: boolean
           region_code: string
           region_name: string
@@ -290,6 +291,7 @@ export type Database = {
           custom_name?: string | null
           description?: string | null
           id?: string
+          is_announcement?: boolean | null
           is_custom?: boolean
           region_code: string
           region_name: string
@@ -301,6 +303,7 @@ export type Database = {
           custom_name?: string | null
           description?: string | null
           id?: string
+          is_announcement?: boolean | null
           is_custom?: boolean
           region_code?: string
           region_name?: string
