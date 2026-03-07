@@ -10,6 +10,7 @@ interface UnifiedPageHeaderProps {
   onNavigateToProfile: () => void;
   onlineCount?: number;
   rightContent?: React.ReactNode;
+  bottomContent?: React.ReactNode;
 }
 
 const UnifiedPageHeader = ({
