@@ -36,7 +36,7 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
 
   useMobileNavigation({ onBack, enabled: true });
 
-  const { messages, isLoading, sendMessage } = useMessages(roomId);
+  const { messages, isLoading, sendMessage } = useMessages(roomId, undefined, true);
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
 
   const [showScrollButton, setShowScrollButton] = useState(false);
