@@ -12,7 +12,7 @@ import { ArrowLeft, Megaphone, Loader2, ChevronDown, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { playAnnouncementSoundStandalone } from '@/hooks/useNotificationSound';
+
 
 interface AnnouncementChannelProps {
   roomId: string;
