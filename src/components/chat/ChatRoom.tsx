@@ -19,6 +19,7 @@ import MediaGallerySheet from './MediaGallerySheet';
 import PinnedMessagesBanner from './PinnedMessagesBanner';
 import GroupSettingsDialog from './GroupSettingsDialog';
 import VoiceRecorder from './VoiceRecorder';
+import MuteButton from './MuteButton';
 import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
