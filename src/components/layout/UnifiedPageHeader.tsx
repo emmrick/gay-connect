@@ -18,6 +18,7 @@ const UnifiedPageHeader = ({
   onNavigateToProfile,
   onlineCount,
   rightContent,
+  bottomContent,
 }: UnifiedPageHeaderProps) => {
   const { user } = useAuth();
 
