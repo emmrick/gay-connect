@@ -7,11 +7,12 @@ import { useIsAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import ChatMessage from './ChatMessage';
-import ChatInput from './ChatInput';
+import MuteButton from './MuteButton';
 import { ArrowLeft, Megaphone, Loader2, ChevronDown, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { sendPushNotification } from '@/services/pushNotificationService';
 
 
 interface AnnouncementChannelProps {
