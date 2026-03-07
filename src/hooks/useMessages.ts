@@ -143,7 +143,11 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
 
           // Play notification sound for incoming messages (not our own)
           if (newMsg.sender_id !== user?.id) {
-            playNotificationSoundStandalone();
+            if (isAnnouncementChannel) {
+              playAnnouncementSoundStandalone();
+            } else {
+              playNotificationSoundStandalone();
+            }
           }
         }
       )
