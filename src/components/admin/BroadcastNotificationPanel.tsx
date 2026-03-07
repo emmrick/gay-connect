@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Send, Users, Globe, Loader2, CheckCircle, History, Clock } from 'lucide-react';
+import { Bell, Send, Users, Globe, Loader2, CheckCircle, History, Clock, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,9 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useBroadcastHistory } from '@/hooks/useBroadcastHistory';
+import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
+import { useAuth } from '@/contexts/AuthContext';
+import { sendPushNotification } from '@/services/pushNotificationService';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
