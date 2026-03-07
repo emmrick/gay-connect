@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Plus, FolderLock } from 'lucide-react';
+import { Send, Loader2, Plus, FolderLock, Camera } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
+import SnapCaptureDialog from './SnapCaptureDialog';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatInputProps {
@@ -22,6 +23,7 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
   const [message, setMessage] = useState('');
   const [showOptions, setShowOptions] = useState(false);
   const [showShareAlbum, setShowShareAlbum] = useState(false);
+  const [showSnapCapture, setShowSnapCapture] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -94,6 +96,16 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
 
           <button
             className="flex flex-col items-center gap-1.5"
+            onClick={() => { setShowSnapCapture(true); setShowOptions(false); }}
+          >
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <Camera className="w-6 h-6 text-primary" />
+            </div>
+            <span className="text-[10px] text-muted-foreground">Snap</span>
+          </button>
+
+          <button
+            className="flex flex-col items-center gap-1.5"
             onClick={() => { setShowShareAlbum(true); setShowOptions(false); }}
           >
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
@@ -103,6 +115,14 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
           </button>
         </div>
       )}
+
+      {/* Snap capture dialog */}
+      <SnapCaptureDialog
+        isOpen={showSnapCapture}
+        onClose={() => setShowSnapCapture(false)}
+        recipientId={recipientId}
+        isPrivate={true}
+      />
 
       {/* Share album dialog */}
       <ShareAlbumDialog
