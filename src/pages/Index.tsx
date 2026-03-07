@@ -26,6 +26,7 @@ import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import Help from '@/pages/Help';
 import { useChatRoom } from '@/hooks/useChatRooms';
+import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useRegionMemberCount } from '@/hooks/useRegionMemberCounts';
