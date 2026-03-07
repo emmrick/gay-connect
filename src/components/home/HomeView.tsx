@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
 import ReferralBanner from './ReferralBanner';
+import AdFreeBanner from './AdFreeBanner';
 import StoryBar from '@/components/stories/StoryBar';
 
 interface HomeViewProps {
