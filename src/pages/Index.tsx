@@ -94,7 +94,8 @@ const Index = () => {
   });
   const { isPremium } = useSubscription();
   const { verification, isLoading: verificationLoading } = useIdentityVerification();
-  const { data: selectedRoomData } = useChatRoom(selectedRegion || '');
+  const { data: selectedRoomData } = useChatRoom(selectedRegion === 'announcement' ? '' : (selectedRegion || ''));
+  const { data: announcementChannel } = useAnnouncementChannel();
   const { total: memberCount } = useRegionMemberCount(selectedRegion || '');
   const { getOrCreateConversation } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
