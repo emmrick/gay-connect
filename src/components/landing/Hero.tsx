@@ -253,6 +253,23 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
         </div>
       </div>
 
+      {/* Ad-Free Banner */}
+      <div className="relative z-20 bg-gradient-to-r from-primary/5 via-background to-primary/5 border-t border-border/50">
+        <div className="container mx-auto px-4 py-10 max-w-3xl text-center space-y-3">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold">
+            🚫 Zéro publicité. Pour toujours.
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Notre site est construit sur des bases solides et <span className="font-medium text-foreground">sans aucune publicité</span>. 
+            OUI, la publicité, c'est très emmerdant ! Nous ne voulons pas gâcher votre expérience. 
+            La seule économie du site repose sur les <span className="font-medium text-foreground">crédits</span>, rechargeables de plusieurs façons.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Consultez la <Link to="/about" className="text-primary hover:underline font-medium">FAQ dédiée</Link> pour comprendre les crédits.
+          </p>
+        </div>
+      </div>
+
       {/* SEO FAQ Section with structured data */}
       <div className="relative z-20 bg-background border-t border-border/50">
         <div className="container mx-auto px-4 py-16 max-w-4xl">
