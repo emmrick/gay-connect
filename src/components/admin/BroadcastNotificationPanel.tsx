@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Send, Users, Globe, Loader2, CheckCircle, History, Clock } from 'lucide-react';
+import { Bell, Send, Users, Globe, Loader2, CheckCircle, History, Clock, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,9 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useBroadcastHistory } from '@/hooks/useBroadcastHistory';
+import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
+import { useAuth } from '@/contexts/AuthContext';
+import { sendPushNotification } from '@/services/pushNotificationService';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -58,8 +61,65 @@ const BroadcastNotificationPanel = () => {
   const [isSending, setIsSending] = useState(false);
   const [lastResult, setLastResult] = useState<{ sent: number; failed: number } | null>(null);
   
+  // Canal Informations
+  const [announcementMessage, setAnnouncementMessage] = useState('');
+  const [isSendingAnnouncement, setIsSendingAnnouncement] = useState(false);
+  const { data: announcementRoom } = useAnnouncementChannel();
+  const { user } = useAuth();
+  
   const queryClient = useQueryClient();
   const { data: history = [], isLoading: isLoadingHistory } = useBroadcastHistory();
+
+  const handleSendAnnouncement = async () => {
+    if (!announcementMessage.trim() || !user || !announcementRoom || isSendingAnnouncement) return;
+    setIsSendingAnnouncement(true);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          chat_room_id: announcementRoom.id,
+          sender_id: user.id,
+          content: announcementMessage.trim(),
+          message_type: 'text',
+          is_private: false,
+        });
+      if (error) throw error;
+
+      // Send push notifications
+      try {
+        const { data: allProfiles } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .neq('user_id', user.id)
+          .limit(1000);
+        if (allProfiles) {
+          const preview = announcementMessage.trim().length > 80
+            ? announcementMessage.trim().substring(0, 80) + '...'
+            : announcementMessage.trim();
+          for (const profile of allProfiles) {
+            sendPushNotification({
+              userId: profile.user_id,
+              title: '📢 Canal Informations',
+              body: preview,
+              url: '/',
+              tag: 'announcement',
+              notificationType: 'system',
+            }).catch(() => {});
+          }
+        }
+      } catch (pushErr) {
+        console.error('Error sending announcement push:', pushErr);
+      }
+
+      setAnnouncementMessage('');
+      toast.success('Message publié sur le Canal Informations');
+    } catch (err) {
+      console.error('Error sending announcement:', err);
+      toast.error('Erreur lors de la publication');
+    } finally {
+      setIsSendingAnnouncement(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!title.trim()) {
@@ -116,6 +176,52 @@ const BroadcastNotificationPanel = () => {
         <Bell className="w-5 h-5" />
         <h2 className="text-lg font-semibold">Diffusion de notifications</h2>
       </div>
+
+      {/* Canal Informations - Publier une annonce */}
+      <Card className="border-primary/30">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Megaphone className="w-4 h-4 text-primary" />
+            Canal Informations
+          </CardTitle>
+          <CardDescription>
+            Publiez un message visible par tous dans le canal d'annonces + notification push
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Message</Label>
+            <Textarea
+              placeholder="Écrivez votre annonce ici..."
+              value={announcementMessage}
+              onChange={(e) => setAnnouncementMessage(e.target.value)}
+              rows={3}
+              maxLength={500}
+            />
+            <p className="text-xs text-muted-foreground">{announcementMessage.length}/500 caractères</p>
+          </div>
+          <Button
+            onClick={handleSendAnnouncement}
+            disabled={isSendingAnnouncement || !announcementMessage.trim() || !announcementRoom}
+            className="w-full"
+          >
+            {isSendingAnnouncement ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Publication en cours...
+              </>
+            ) : (
+              <>
+                <Megaphone className="w-4 h-4 mr-2" />
+                Publier sur le Canal Informations
+              </>
+            )}
+          </Button>
+          {!announcementRoom && (
+            <p className="text-xs text-destructive">Le canal d'annonces n'a pas été trouvé.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Form */}
