@@ -409,75 +409,58 @@ const Index = () => {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="flex-1 flex flex-col relative min-h-0"
           >
-            {/* Header */}
-            <div 
-              className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50"
-              style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top, 0px))' }}
-            >
-              <div className="px-5 pb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-0.5">
-                    Messages
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {messageSubTab === 'groups' 
-                      ? `${joinedGroups.length}/${maxGroups} groupes rejoints`
-                      : 'Tes conversations privées'
-                    }
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CreditBalanceCompact onClick={() => handleTabChange('premium')} />
-                  <NotificationsDropdown />
-                  {messageSubTab === 'groups' ? (
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        onClick={() => setShowCreateGroup(true)}
-                        size="icon"
-                        variant="outline"
-                        className="rounded-full"
-                        title="Créer un groupe"
-                      >
-                        <Users className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => setShowGroupPicker(true)}
-                        size="icon"
-                        className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-                        title="Rejoindre un groupe régional"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </Button>
-                    </div>
-                  ) : (
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+              rightContent={
+                messageSubTab === 'groups' ? (
+                  <div className="flex items-center gap-1.5">
                     <Button
-                      onClick={() => setShowMemberSearch(true)}
+                      onClick={() => setShowCreateGroup(true)}
+                      size="icon"
+                      variant="outline"
+                      className="rounded-full"
+                      title="Créer un groupe"
+                    >
+                      <Users className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={() => setShowGroupPicker(true)}
                       size="icon"
                       className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                      title="Rejoindre un groupe régional"
                     >
                       <Plus className="w-5 h-5" />
                     </Button>
-                  )}
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => setShowMemberSearch(true)}
+                    size="icon"
+                    className="rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                )
+              }
+              bottomContent={
+                <div className="px-5 pb-3">
+                  <Tabs 
+                    value={messageSubTab} 
+                    onValueChange={(v) => setMessageSubTab(v as 'conversations' | 'groups' | 'archived')}
+                  >
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="conversations">Messages</TabsTrigger>
+                      <TabsTrigger value="groups" className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5" />
+                        Groupes
+                      </TabsTrigger>
+                      <TabsTrigger value="archived">Archives</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
-              </div>
-
-              {/* Tabs: Conversations | Groupes | Archives */}
-              <div className="px-5 pb-3">
-                <Tabs 
-                  value={messageSubTab} 
-                  onValueChange={(v) => setMessageSubTab(v as 'conversations' | 'groups' | 'archived')}
-                >
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="conversations">Messages</TabsTrigger>
-                    <TabsTrigger value="groups" className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5" />
-                      Groupes
-                    </TabsTrigger>
-                    <TabsTrigger value="archived">Archives</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </div>
+              }
+            />
             
             {/* Content based on sub-tab */}
             <ScrollArea className="flex-1 min-h-0">
