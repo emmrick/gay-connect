@@ -51,7 +51,8 @@ const HomeView = ({
         {/* Stories bar */}
         <StoryBar />
 
-        {/* Referral Banner removed - now shown as popup */}
+        {/* Ad-free banner */}
+        <AdFreeBanner />
 
         {/* Tabs + Filter */}
         <Tabs defaultValue="nearby" className="w-full">
