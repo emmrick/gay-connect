@@ -31,6 +31,7 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
   const { data: onlineCounts } = useOnlineMemberCounts();
   const { data: chatRooms } = useChatRooms();
   const { getMentionCount } = useUnreadMentions();
+  const { data: announcementChannel } = useAnnouncementChannel();
   const [leaveConfirm, setLeaveConfirm] = useState<{ regionCode: string; regionName: string; isCustom?: boolean } | null>(null);
 
   // Create a map of region code to chat room id
