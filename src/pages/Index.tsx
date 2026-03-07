@@ -296,6 +296,24 @@ const Index = () => {
     );
   }
 
+  // Render announcement channel
+  if (currentView === 'chat' && selectedRegion === 'announcement' && announcementChannel) {
+    return (
+      <motion.div
+        initial={{ x: '100%', opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: '100%', opacity: 0 }}
+        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+        className="min-h-screen"
+      >
+        <AnnouncementChannel
+          roomId={announcementChannel.id}
+          onBack={handleBackToRegions}
+        />
+      </motion.div>
+    );
+  }
+
   // Render group chat view with slide animation
   if (currentView === 'chat' && selectedRegion && selectedRoomData) {
     return (
