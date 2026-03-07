@@ -90,6 +90,7 @@ const useGlobalErrorHandler = () => {
 // Inner component that uses hooks requiring AuthProvider
 const AuthenticatedApp = () => {
   useRealtimeProfileSync();
+  useAnnouncementNotifications();
 
   // Global screenshot protection - active on the entire site
   const { isBlocked, enableProtection } = useScreenshotProtection(true);
