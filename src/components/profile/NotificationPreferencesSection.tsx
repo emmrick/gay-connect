@@ -201,6 +201,16 @@ const NotificationPreferencesSection = () => {
         disabled={isUpdating}
       />
 
+      <PreferenceItem
+        icon={Megaphone}
+        iconColor="text-amber-500"
+        title="Annonces officielles"
+        description="Notifications du canal informations"
+        checked={(preferences as any).push_announcements ?? true}
+        onCheckedChange={() => togglePreference('push_announcements' as any)}
+        disabled={isUpdating}
+      />
+
       <div className="pt-2 border-t border-border space-y-3">
         <PreferenceItem
           icon={preferences.sound_enabled ? Volume2 : VolumeX}
