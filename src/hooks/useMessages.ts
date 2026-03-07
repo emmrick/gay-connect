@@ -19,7 +19,7 @@ interface MessageWithProfile extends Message {
   } | null;
 }
 
-export const useMessages = (chatRoomId: string | null, searchQuery?: string) => {
+export const useMessages = (chatRoomId: string | null, searchQuery?: string, isAnnouncementChannel?: boolean) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
