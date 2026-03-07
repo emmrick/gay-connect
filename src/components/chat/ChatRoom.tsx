@@ -253,6 +253,9 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           </div>
         </div>
 
+        {/* Mute button */}
+        <MuteButton conversationId={roomId} />
+
         {/* Search button */}
         <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
           <Search className="w-5 h-5" />
