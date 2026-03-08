@@ -1627,29 +1627,35 @@ export type Database = {
       }
       private_conversation_status: {
         Row: {
+          auto_delete_mode: string
           conversation_id: string
           created_at: string
           id: string
           is_archived: boolean
           is_deleted: boolean
+          messages_hidden_before: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          auto_delete_mode?: string
           conversation_id: string
           created_at?: string
           id?: string
           is_archived?: boolean
           is_deleted?: boolean
+          messages_hidden_before?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          auto_delete_mode?: string
           conversation_id?: string
           created_at?: string
           id?: string
           is_archived?: boolean
           is_deleted?: boolean
+          messages_hidden_before?: string | null
           updated_at?: string
           user_id?: string
         }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
@@ -22,8 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MessageCircle, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen } from 'lucide-react';
+import { MessageCircle, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ConversationAutoDeleteSheet from './ConversationAutoDeleteSheet';
 
 interface PrivateChatListProps {
   onSelectConversation: (userId: string) => void;
@@ -37,6 +38,24 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
   const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [autoDeleteSheet, setAutoDeleteSheet] = useState<{ conversationId: string; username: string } | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const wasLongPressRef = useRef(false);
+
+  const handleLongPressStart = useCallback((conversationId: string, username: string) => {
+    wasLongPressRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      wasLongPressRef.current = true;
+      setAutoDeleteSheet({ conversationId, username });
+    }, 500);
+  }, []);
+
+  const handleLongPressEnd = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
 
   const displayConversations = showArchived ? archivedConversations : conversations;
 
@@ -132,9 +151,16 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
           return (
             <div
               key={conv.id}
-              onClick={() => onSelectConversation(conv.otherUser.user_id)}
+              onClick={() => {
+                if (!wasLongPressRef.current) {
+                  onSelectConversation(conv.otherUser.user_id);
+                }
+              }}
+              onPointerDown={() => handleLongPressStart(conv.id, conv.otherUser.username)}
+              onPointerUp={handleLongPressEnd}
+              onPointerLeave={handleLongPressEnd}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors",
+                "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors select-none",
                 "hover:bg-muted/50 active:bg-muted",
                 selectedUserId === conv.otherUser.user_id && "bg-primary/5"
               )}
@@ -230,6 +256,15 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAutoDeleteSheet({ conversationId: conv.id, username: conv.otherUser.username });
+                    }}
+                  >
+                    <Timer className="w-4 h-4 mr-2" />
+                    Messages éphémères
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     onClick={(e) => handleDeleteClick(e, conv.id)}
                     className="text-destructive focus:text-destructive"
                   >
@@ -259,6 +294,15 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {autoDeleteSheet && (
+        <ConversationAutoDeleteSheet
+          isOpen={true}
+          onClose={() => setAutoDeleteSheet(null)}
+          conversationId={autoDeleteSheet.conversationId}
+          username={autoDeleteSheet.username}
+        />
+      )}
     </>
   );
 };
