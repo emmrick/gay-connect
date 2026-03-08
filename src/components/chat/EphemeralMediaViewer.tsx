@@ -85,21 +85,11 @@ const EphemeralMediaViewer = ({
 
   // Wrap violation handler to also notify sender
   const handleViolation = useCallback(() => {
-    baseHandleViolation();
     if (onScreenshotDetected && !hasNotifiedScreenshot.current) {
       hasNotifiedScreenshot.current = true;
       onScreenshotDetected();
     }
-  }, [baseHandleViolation, onScreenshotDetected]);
-
-  // Enable protection when viewing starts
-  useEffect(() => {
-    if (isViewing && isOpen) {
-      enableProtection();
-    } else {
-      disableProtection();
-    }
-  }, [isViewing, isOpen, enableProtection, disableProtection]);
+  }, [onScreenshotDetected]);
 
   // Reset state when opening
   useEffect(() => {
