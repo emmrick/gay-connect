@@ -114,7 +114,7 @@ const HelpCenter = () => {
                     {related.map(a => (
                       <button
                         key={a.id}
-                        onClick={() => navigate(`/aide/centre?article=${a.id}`)}
+                        onClick={() => navigate(`/aide?article=${a.id}`)}
                         className="w-full flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                       >
                         <span className="text-sm">{a.question}</span>
