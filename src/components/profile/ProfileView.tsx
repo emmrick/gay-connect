@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   MapPin, Calendar, Edit2, Sparkles, Star, Heart,
-  MessageCircle, Users, Camera, Verified
+  MessageCircle, Users, Camera, Verified, Cake
 } from 'lucide-react';
+import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
