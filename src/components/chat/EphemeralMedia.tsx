@@ -40,25 +40,6 @@ const EphemeralMedia = ({
     }
   }, [isViewing, timeLeft, onClose, onViewed]);
 
-  // Disable DevTools detection
-  useEffect(() => {
-    if (!isViewing) return;
-
-    const detectDevTools = () => {
-      const threshold = 160;
-      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-      
-      if (widthThreshold || heightThreshold) {
-        handleViolation();
-      }
-    };
-
-    // Check periodically while viewing
-    const interval = setInterval(detectDevTools, 1000);
-    
-    return () => clearInterval(interval);
-  }, [isViewing, handleViolation]);
 
   // Prevent copy operations
   useEffect(() => {
