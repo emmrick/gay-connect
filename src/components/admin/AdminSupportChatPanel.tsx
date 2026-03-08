@@ -5,10 +5,12 @@ import { notifySupportTicketAssigned } from '@/services/pushNotificationService'
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
+import InfractionsSidebar from '@/components/admin/InfractionsSidebar';
 import { SupportTicket } from '@/hooks/useSupportTickets';
 import { useAuth } from '@/contexts/AuthContext';
-import { Headphones, Loader2, User } from 'lucide-react';
+import { Headphones, Loader2, User, Shield } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 interface AdminSupportChatPanelProps {
   onBack: () => void;
