@@ -455,8 +455,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                           src={item.signed_url} 
                           alt="" 
                           className="max-w-full max-h-full object-contain select-none"
-                          onContextMenu={preventContextMenu}
-                          onDragStart={preventDrag}
                           draggable={false}
                           loading="eager"
                         />
