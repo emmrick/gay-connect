@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import SavedRepliesSheet from '@/components/support/SavedRepliesSheet';
+import FAQSearchPanel from '@/components/support/FAQSearchPanel';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -834,6 +835,11 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
             ⏸️ En attente de réponse du client
           </span>
         </div>
+      )}
+
+      {/* FAQ Search Panel for agents */}
+      {isAgent && !isClosed && !isWaitingClient && (
+        <FAQSearchPanel onInsertResponse={(text) => setInputValue(prev => prev ? prev + '\n' + text : text)} />
       )}
 
       {/* Input (only when not closed and not waiting_client for agent) */}

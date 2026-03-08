@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, ChevronDown, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset, MessageSquareText } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ChevronDown, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset, MessageSquareText, Scale } from 'lucide-react';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -277,6 +277,8 @@ const Help = ({ embedded = false }: HelpProps) => {
       const options: ChatOption[] = [
         { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
         { label: '📋 Changer de sujet', value: 'change_category' },
+        { label: '📖 Centre d\'aide complet', value: 'view_help_center' },
+        { label: '📜 Consulter les règles', value: 'view_rules' },
         { label: '👤 Contacter un agent', value: 'contact_agent' },
       ];
       addBotMessage(
@@ -375,6 +377,15 @@ const Help = ({ embedded = false }: HelpProps) => {
       setChatMessages(prev => [...prev, { type: 'user', text: 'Contacter un agent' }]);
       setShowEscalationButton(true);
       addBotMessage("D'accord ! Tu peux **contacter un agent** du support en cliquant sur le bouton ci-dessous. Un membre de notre équipe te répondra dès que possible. 💬");
+    } else if (value === 'view_rules') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Consulter les règles' }]);
+      navigate('/regles');
+    } else if (value === 'view_help_center') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Centre d\'aide complet' }]);
+      navigate('/aide/centre');
+    } else if (value === 'view_legal') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Mentions légales' }]);
+      navigate('/legal');
     }
   }, [allFaqArticles, currentCategory, showCategoryQuestions, showCategoryOptions, showFaqAnswer, addBotMessage]);
 
@@ -1042,6 +1053,33 @@ const Help = ({ embedded = false }: HelpProps) => {
                   </div>
                 </button>
               </motion.div>
+            )}
+
+            {/* Quick navigation links */}
+            {!searchQuery && (
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => navigate('/aide/centre')}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
+                >
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  <span className="text-[11px] font-medium">Centre d'aide</span>
+                </button>
+                <button
+                  onClick={() => navigate('/regles')}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
+                >
+                  <Shield className="w-5 h-5 text-primary" />
+                  <span className="text-[11px] font-medium">Règles</span>
+                </button>
+                <button
+                  onClick={() => navigate('/legal')}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
+                >
+                  <Scale className="w-5 h-5 text-primary" />
+                  <span className="text-[11px] font-medium">Mentions légales</span>
+                </button>
+              </div>
             )}
 
             {/* FAQ articles */}

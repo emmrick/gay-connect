@@ -39,6 +39,8 @@ const MemberProfile = lazy(() => import("./pages/MemberProfile"));
 const RegionPage = lazy(() => import("./pages/RegionPage"));
 const Regions = lazy(() => import("./pages/Regions"));
 const Help = lazy(() => import("./pages/Help"));
+const Rules = lazy(() => import("./pages/Rules"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
@@ -116,6 +118,9 @@ const AuthenticatedApp = () => {
                     <Route path="/regions" element={<Suspense fallback={<PageFallback />}><Regions /></Suspense>} />
                     <Route path="/region/:slug" element={<Suspense fallback={<PageFallback />}><RegionPage /></Suspense>} />
                     <Route path="/aide" element={<Suspense fallback={<PageFallback />}><Help /></Suspense>} />
+                    <Route path="/aide/centre" element={<Suspense fallback={<PageFallback />}><HelpCenter /></Suspense>} />
+                    <Route path="/aide/centre/:category" element={<Suspense fallback={<PageFallback />}><HelpCenter /></Suspense>} />
+                    <Route path="/regles" element={<Suspense fallback={<PageFallback />}><Rules /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>
