@@ -113,12 +113,15 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
         onClick={() => setIsOpen(true)}
       >
         {mediaType === 'image' ? (
-          <img
-            src={signedUrl}
-            alt="Photo partagée"
-            className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
-            onError={() => setImageError(true)}
-          />
+          <div className="relative">
+            <img
+              src={signedUrl}
+              alt="Photo partagée"
+              className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
+              onError={() => setImageError(true)}
+            />
+            <GayConnectWatermark />
+          </div>
         ) : (
           <div className="relative">
             <video
@@ -126,6 +129,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
               className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
               preload="metadata"
             />
+            <GayConnectWatermark />
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
               <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
                 <Play className="w-6 h-6 text-foreground fill-current ml-1" />
