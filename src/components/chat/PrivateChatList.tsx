@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
@@ -22,8 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MessageCircle, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen } from 'lucide-react';
+import { MessageCircle, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ConversationAutoDeleteSheet from './ConversationAutoDeleteSheet';
 
 interface PrivateChatListProps {
   onSelectConversation: (userId: string) => void;
