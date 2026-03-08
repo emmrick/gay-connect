@@ -509,50 +509,49 @@ const SnapCaptureDialog = ({
 
               {/* Snap capture button + lock zone + instructions */}
               <div
-                className="flex flex-col items-center py-6 bg-black/80"
+                className="flex flex-col items-center bg-black/80"
                 onPointerMove={handlePointerMove}
+                style={{ paddingTop: 12, paddingBottom: 20 }}
               >
-                <p className="text-white/60 text-xs mb-3">
-                  {isLocked
-                    ? 'Enregistrement verrouillé • Appuie sur le bouton pour arrêter'
-                    : isRecording
-                    ? 'Glisse vers le cadenas pour verrouiller 🔒'
-                    : 'Tap = Photo • Appui long = Vidéo (max 60s)'}
-                </p>
-
-                {/* Lock zone - fixed height container to prevent layout shift */}
-                <div className="h-16 flex items-center justify-center mb-2">
-                  <AnimatePresence mode="wait">
-                    {isRecording && !isLocked && lockHintVisible && (
-                      <motion.div
-                        ref={lockZoneRef}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="flex flex-col items-center gap-1"
-                      >
-                        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center animate-bounce">
-                          <LockOpen className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-[10px] text-white/60">Verrouiller</span>
-                      </motion.div>
-                    )}
-                    {isLocked && (
-                      <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30"
-                      >
-                        <Lock className="w-3.5 h-3.5 text-white" />
-                        <span className="text-xs text-white font-medium">Verrouillé</span>
-                      </motion.div>
-                    )}
-                    {!isRecording && (
-                      <div className="h-full" />
-                    )}
-                  </AnimatePresence>
+                {/* Instruction text - fixed height to prevent shift */}
+                <div className="h-5 flex items-center justify-center mb-2">
+                  <p className="text-white/60 text-xs text-center">
+                    {isLocked
+                      ? 'Enregistrement verrouillé • Appuie sur le bouton pour arrêter'
+                      : isRecording
+                      ? 'Glisse vers le cadenas pour verrouiller 🔒'
+                      : 'Tap = Photo • Appui long = Vidéo (max 60s)'}
+                  </p>
                 </div>
 
+                {/* Lock zone - fixed height container always reserved */}
+                <div className="h-[60px] flex items-center justify-center">
+                  {isRecording && !isLocked && lockHintVisible ? (
+                    <motion.div
+                      ref={lockZoneRef}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex flex-col items-center gap-0.5"
+                    >
+                      <div className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center animate-bounce">
+                        <LockOpen className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-[10px] text-white/60">Verrouiller</span>
+                    </motion.div>
+                  ) : isLocked ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30"
+                    >
+                      <Lock className="w-3.5 h-3.5 text-white" />
+                      <span className="text-xs text-white font-medium">Verrouillé</span>
+                    </motion.div>
+                  ) : null}
+                </div>
+
+                {/* Capture button - no scale transform to avoid shift */}
                 <button
                   onPointerDown={isLocked ? undefined : handlePointerDown}
                   onPointerUp={isLocked ? undefined : handlePointerUp}
@@ -560,10 +559,10 @@ const SnapCaptureDialog = ({
                   onPointerLeave={isLocked ? undefined : handlePointerUp}
                   onClick={isLocked ? handleStopLockedRecording : undefined}
                   className={cn(
-                    "w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-all select-none touch-none",
+                    "w-20 h-20 rounded-full border-4 flex items-center justify-center select-none touch-none transition-colors duration-200",
                     isRecording
-                      ? "bg-red-600 scale-110 border-red-400"
-                      : "bg-white/20 backdrop-blur-sm active:scale-95"
+                      ? "bg-red-600 border-red-400"
+                      : "bg-white/20 backdrop-blur-sm border-white active:bg-white/30"
                   )}
                 >
                   {isRecording ? (
@@ -572,11 +571,15 @@ const SnapCaptureDialog = ({
                     <div className="w-14 h-14 rounded-full bg-white" />
                   )}
                 </button>
-                {isRecording && !isLocked && (
-                  <p className="text-amber-400 text-xs animate-pulse mt-2">
-                    ↑ Glisse vers le cadenas
-                  </p>
-                )}
+
+                {/* Bottom hint - fixed height to prevent shift */}
+                <div className="h-5 flex items-center justify-center mt-2">
+                  {isRecording && !isLocked && (
+                    <p className="text-amber-400 text-xs animate-pulse">
+                      ↑ Glisse vers le cadenas
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
