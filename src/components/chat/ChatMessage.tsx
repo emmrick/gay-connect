@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Reply, CornerUpLeft, Flag, Trash2, Loader2 } from 'lucide-react';
 import EphemeralMessage from './EphemeralMessage';
+import EmojiMessageEffect, { isEmojiOnlyMessage } from './EmojiMessageEffect';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import MessageReadReceipts from './MessageReadReceipts';
