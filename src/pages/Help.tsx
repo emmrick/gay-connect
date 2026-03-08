@@ -1082,23 +1082,63 @@ const Help = ({ embedded = false }: HelpProps) => {
               </div>
             )}
 
-            {/* Link to full help center */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.15 }}
-              className="text-center py-6"
-            >
-              <p className="text-sm text-muted-foreground mb-3">Consultez toutes nos ressources d'aide</p>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/aide')}
-                className="gap-2 rounded-full border-primary/30 text-primary hover:bg-primary/5"
-              >
-                <BookOpen className="w-4 h-4" />
-                Ouvrir le centre d'aide
-              </Button>
-            </motion.div>
+            {/* FAQ Categories directly on page */}
+            {!searchQuery && faqCategories.length > 0 && (
+              <div>
+                <h2 className="font-semibold text-sm text-muted-foreground mb-3">Catégories d'aide</h2>
+                <div className="space-y-2">
+                  {faqCategories.map((name, i) => {
+                    const count = allFaqArticles.filter(a => a.category === name).length;
+                    return (
+                      <motion.button
+                        key={name}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={() => navigate(`/aide/${encodeURIComponent(name)}`)}
+                        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                          {getCategoryIcon(name)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm">{name}</p>
+                          <p className="text-xs text-muted-foreground">{count} article{count > 1 ? 's' : ''}</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Search results */}
+            {searchQuery && faqArticles.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">{faqArticles.length} résultat{faqArticles.length !== 1 ? 's' : ''}</p>
+                {faqArticles.map(article => (
+                  <button
+                    key={article.id}
+                    onClick={() => navigate(`/aide?article=${article.id}`)}
+                    className="w-full flex items-center justify-between p-4 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <div className="min-w-0 pr-3">
+                      <p className="text-xs text-muted-foreground">{article.category}</p>
+                      <p className="font-medium text-sm">{article.question}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {searchQuery && faqArticles.length === 0 && !faqLoading && (
+              <div className="text-center py-8">
+                <Search className="w-10 h-10 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">Aucun article trouvé</p>
+              </div>
+            )}
           </div>
       </ScrollArea>
 
