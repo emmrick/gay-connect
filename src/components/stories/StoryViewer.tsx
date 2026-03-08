@@ -36,13 +36,6 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasNotifiedScreenshot = useRef(false);
 
-  const {
-    isBlocked,
-    preventContextMenu,
-    handleViolation: baseHandleViolation,
-    enableProtection,
-    disableProtection,
-  } = useScreenshotProtection(true, true);
 
   const currentStory = group.stories[currentIndex];
   const isOwn = currentStory?.user_id === user?.id;
