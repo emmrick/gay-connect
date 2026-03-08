@@ -345,15 +345,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 nextMsg.sender_id !== message.sender_id ||
                 new Date(nextMsg.created_at).getTime() - new Date(message.created_at).getTime() > 120000;
 
-              // Wrap ephemeral messages in visibility guard
-              const ephemeralRow = isEphemeralMedia ? (
-                <EphemeralMessageRow messageId={message.id} senderId={message.sender_id}>
-                  {null}
-                </EphemeralMessageRow>
-              ) : null;
-
-              return (
-                <div key={message.id}>
+              // For ephemeral media, wrap entire row in visibility guard
+              const messageContent = (
+                <>
                   {/* Date separator */}
                   {showDate && (
                     <div className="flex justify-center py-3">
