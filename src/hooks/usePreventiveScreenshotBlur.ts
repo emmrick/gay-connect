@@ -61,7 +61,7 @@ export const usePreventiveScreenshotBlur = ({
     if (!enabled) return;
 
     // Check for screen recording periodically
-    const recordingCheckInterval = setInterval(checkScreenRecording, 5000);
+    const recordingCheckInterval = setInterval(checkScreenRecording, 15000);
 
     // Visual shield when app goes to background (app switcher)
     // This does NOT trigger onThreatDetected - just a visual protection

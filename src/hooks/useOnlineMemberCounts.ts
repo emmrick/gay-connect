@@ -55,8 +55,8 @@ export const useOnlineMemberCounts = () => {
 
       return counts;
     },
-    refetchInterval: 30000, // Fallback refresh every 30 seconds
+    refetchInterval: 60000,
     refetchOnMount: 'always',
-    staleTime: 0,
+    staleTime: 30000,
   });
 };

@@ -214,7 +214,7 @@ export const useActiveTask = () => {
       } as ModerationTask;
     },
     enabled: !!user?.id,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
 };
 
