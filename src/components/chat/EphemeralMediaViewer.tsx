@@ -13,6 +13,8 @@ interface EphemeralMediaViewerProps {
   duration?: number; // 0 = unlimited
   mediaId?: string;
   autoStart?: boolean; // Skip pre-view screen and start immediately
+  totalItems?: number; // Total media items in sequence
+  currentItemIndex?: number; // Current item index in sequence
   onClose: () => void;
   onViewed: () => void;
   onSaveToConversation?: () => Promise<void>;
