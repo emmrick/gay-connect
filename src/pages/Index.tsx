@@ -261,6 +261,37 @@ const Index = () => {
     setCurrentView('messages');
   };
 
+  // Global back handler: routes hardware back button through internal navigation
+  const handleGlobalBack = useCallback(() => {
+    // Sub-views → go back to their parent
+    if (currentView === 'private') {
+      handleBackFromPrivateChat();
+      return;
+    }
+    if (currentView === 'chat') {
+      handleBackToRegions();
+      return;
+    }
+    if (currentView === 'chatbot-config') {
+      setCurrentView('profile');
+      setActiveTab('profile');
+      return;
+    }
+    // Secondary tabs → go back to home
+    if (activeTab !== 'home' && currentView !== 'landing') {
+      handleTabChange('home');
+      return;
+    }
+    // On home/landing → do nothing (don't exit app)
+  }, [currentView, activeTab]);
+
+  // Intercept hardware back button globally
+  useMobileNavigation({ 
+    onBack: handleGlobalBack, 
+    enabled: !!user && currentView !== 'landing',
+    enableSwipeBack: currentView === 'private' || currentView === 'chat' || currentView === 'chatbot-config',
+  });
+
 
   // Render chatbot config view
   if (currentView === 'chatbot-config') {
