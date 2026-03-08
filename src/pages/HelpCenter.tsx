@@ -304,7 +304,7 @@ const HelpCenter = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.04 }}
-                      onClick={() => navigate(`/aide/centre/${encodeURIComponent(name)}`)}
+                      onClick={() => navigate(`/aide/${encodeURIComponent(name)}`)}
                       className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors text-left"
                     >
                       <div className={`w-10 h-10 rounded-xl ${meta.bg} flex items-center justify-center ${meta.color} flex-shrink-0`}>
