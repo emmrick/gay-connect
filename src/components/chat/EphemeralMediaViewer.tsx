@@ -418,30 +418,27 @@ const EphemeralMediaViewer = ({
                 WebkitTouchCallout: 'none',
               }}
             >
-              {/* Story-style segmented progress bar - one segment per media item */}
+              {/* Story-style segmented progress bar - smooth continuous */}
               {!isUnlimited && (
                 <div className="absolute top-2 left-3 right-3 z-20 flex gap-1">
                   {totalItems && totalItems > 1 ? (
-                    // Multiple media: show one bar per media item
                     Array.from({ length: totalItems }, (_, i) => (
                       <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
                         <div 
-                          className="h-full bg-white rounded-full transition-all ease-linear"
+                          className="h-full bg-white rounded-full"
                           style={{ 
                             width: i < (currentItemIndex ?? 0) ? '100%' 
-                              : i === (currentItemIndex ?? 0) ? `${((duration - timeLeft) / duration) * 100}%` 
+                              : i === (currentItemIndex ?? 0) ? `${progressFraction * 100}%` 
                               : '0%',
-                            transitionDuration: i === (currentItemIndex ?? 0) ? '1000ms' : '300ms'
                           }}
                         />
                       </div>
                     ))
                   ) : (
-                    // Single media: show one full bar that progresses
                     <div className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
                       <div 
-                        className="h-full bg-white rounded-full transition-all duration-1000 ease-linear"
-                        style={{ width: `${((duration - timeLeft) / duration) * 100}%` }}
+                        className="h-full bg-white rounded-full"
+                        style={{ width: `${progressFraction * 100}%` }}
                       />
                     </div>
                   )}
