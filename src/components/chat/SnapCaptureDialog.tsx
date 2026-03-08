@@ -632,7 +632,7 @@ const SnapCaptureDialog = ({
                     {seg.type === 'photo' ? (
                       <img src={seg.url} alt={`Segment ${i + 1}`} className="w-full h-full object-cover" />
                     ) : (
-                      <video src={seg.url} className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`} muted playsInline />
+                      <video src={seg.url} className="w-full h-full object-cover" muted playsInline />
                     )}
                     <div className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] text-white font-medium">
                       {seg.type === 'photo' ? '📷' : `🎥 ${Math.round(seg.duration || 0)}s`}
