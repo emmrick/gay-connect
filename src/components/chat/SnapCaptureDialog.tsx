@@ -48,6 +48,7 @@ const SnapCaptureDialog = ({
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
   const [lockHintVisible, setLockHintVisible] = useState(false);
+  const [flashVisible, setFlashVisible] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -64,6 +65,7 @@ const SnapCaptureDialog = ({
   const autoSplitTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recordingStartTimeRef = useRef(0);
   const lockZoneRef = useRef<HTMLDivElement>(null);
+  const viewfinderRef = useRef<HTMLDivElement>(null);
 
   const { uploadEphemeralMedia, isUploading, progress, creditsNeeded } = useEphemeralMediaUpload();
   const { permissions, isCameraDenied } = useCameraPermission();
