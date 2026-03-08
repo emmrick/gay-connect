@@ -77,13 +77,13 @@ const PromoPopup = () => {
 
   return (
     <Dialog open={!!currentPopup} onOpenChange={(open) => { if (!open) dismiss(currentPopup.id); }}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden">
+      <DialogContent className="sm:max-w-sm w-[calc(100%-2.5rem)] mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden rounded-3xl">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative rounded-2xl border border-border bg-card overflow-hidden shadow-2xl"
+          className="relative rounded-3xl border border-border bg-card overflow-hidden shadow-2xl"
         >
           {/* Decorative gradient header */}
           <div className="relative h-32 bg-gradient-to-br from-primary via-primary/80 to-accent overflow-hidden">
