@@ -104,96 +104,74 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     if (otherUserId) markAsRead.mutate(otherUserId);
   }, [otherUserId]);
 
-  const isInitialLoad = useRef(true);
-  const previousMessagesLength = useRef(0);
-  const previousOtherUserId = useRef(otherUserId);
+  const prevMsgCount = useRef(0);
 
   useEffect(() => {
-    if (previousOtherUserId.current !== otherUserId) {
-      isInitialLoad.current = true;
-      previousMessagesLength.current = 0;
-      previousOtherUserId.current = otherUserId;
-    }
+    prevMsgCount.current = 0;
   }, [otherUserId]);
 
-  const scrollToBottom = useCallback((instant: boolean = false) => {
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.scrollTop = container.scrollHeight;
-      if (!instant) {
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      }
-    }
+  // Simple scroll helper — like Google Messages: just pin to bottom
+  const scrollToBottom = useCallback(() => {
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, []);
 
-  // Track container mutations (images loading, ephemeral media appearing) to re-scroll
+  // 1. On open / messages load → snap to bottom
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container || isLoading) return;
-    const observer = new MutationObserver(() => {
-      // Only auto-scroll if user is near the bottom
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      if (scrollHeight - scrollTop - clientHeight < 200) {
-        container.scrollTop = scrollHeight;
-      }
-    });
-    observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'style', 'class'] });
-    return () => observer.disconnect();
-  }, [isLoading]);
-
-  useLayoutEffect(() => {
-    if (isLoading || messages.length === 0) return;
-    if (isInitialLoad.current) {
-      scrollToBottom(true);
-      const timers = [50, 150, 300, 500, 800, 1200].map((d) => setTimeout(() => scrollToBottom(true), d));
-      setTimeout(() => {
-        isInitialLoad.current = false;
-        previousMessagesLength.current = messages.length;
-      }, 1250);
-      return () => timers.forEach(clearTimeout);
+    if (!isLoading && messages.length > 0) {
+      scrollToBottom();
+      prevMsgCount.current = messages.length;
     }
-  }, [messages, isLoading, scrollToBottom]);
+  }, [isLoading, messages.length, scrollToBottom]);
 
+  // 2. New message arrives → scroll down
   useEffect(() => {
-    if (isLoading || isInitialLoad.current) return;
-    if (messages.length > previousMessagesLength.current) {
-      scrollToBottom(false);
-      // Extra delayed scroll for media that loads after the message appears
-      setTimeout(() => scrollToBottom(false), 300);
-      setTimeout(() => scrollToBottom(false), 600);
-      previousMessagesLength.current = messages.length;
+    if (messages.length > prevMsgCount.current) {
+      requestAnimationFrame(scrollToBottom);
+      prevMsgCount.current = messages.length;
     }
-  }, [messages, isLoading, scrollToBottom]);
+  }, [messages.length, scrollToBottom]);
 
+  // 3. Typing indicator → scroll
   useEffect(() => {
-    if (isOtherTyping) scrollToBottom(false);
+    if (isOtherTyping) requestAnimationFrame(scrollToBottom);
   }, [isOtherTyping, scrollToBottom]);
 
-  const handleInputFocus = useCallback(() => {
-    // Multiple delays to catch keyboard animation on various mobile devices
-    setTimeout(() => scrollToBottom(true), 100);
-    setTimeout(() => scrollToBottom(true), 300);
-    setTimeout(() => scrollToBottom(true), 500);
-    setTimeout(() => scrollToBottom(true), 800);
-  }, [scrollToBottom]);
+  // 4. Media / ephemeral content loads (changes DOM height) → keep pinned
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const isNearBottom = () => el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+    const observer = new ResizeObserver(() => {
+      if (isNearBottom()) el.scrollTop = el.scrollHeight;
+    });
+    // Observe every child so when images load & resize, we catch it
+    Array.from(el.children).forEach(child => observer.observe(child));
+    const mo = new MutationObserver(() => {
+      // Re-observe new children
+      observer.disconnect();
+      Array.from(el.children).forEach(child => observer.observe(child));
+      if (isNearBottom()) el.scrollTop = el.scrollHeight;
+    });
+    mo.observe(el, { childList: true });
+    return () => { observer.disconnect(); mo.disconnect(); };
+  }, [messages.length]);
 
-  // Scroll to bottom when mobile keyboard opens (visualViewport resize)
+  // 5. Keyboard opens (visualViewport shrinks) → scroll
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    let prevHeight = vv.height;
+    let prev = vv.height;
     const onResize = () => {
-      const newHeight = vv.height;
-      if (newHeight < prevHeight - 50) {
-        // Keyboard opened
-        setTimeout(() => scrollToBottom(true), 80);
-        setTimeout(() => scrollToBottom(true), 250);
-        setTimeout(() => scrollToBottom(true), 500);
-      }
-      prevHeight = newHeight;
+      if (vv.height < prev - 50) scrollToBottom();
+      prev = vv.height;
     };
     vv.addEventListener('resize', onResize);
     return () => vv.removeEventListener('resize', onResize);
+  }, [scrollToBottom]);
+
+  const handleInputFocus = useCallback(() => {
+    requestAnimationFrame(scrollToBottom);
   }, [scrollToBottom]);
 
   const handleScroll = useCallback(() => {
