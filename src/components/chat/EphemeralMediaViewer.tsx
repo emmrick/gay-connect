@@ -362,7 +362,7 @@ const EphemeralMediaViewer = ({
               transition={{ duration: 0.3 }}
               ref={containerRef}
               className="absolute inset-0 bg-black flex items-center justify-center select-none"
-              onContextMenu={preventContextMenu}
+              
               onPointerDown={handlePointerDown}
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerUp}
