@@ -105,7 +105,7 @@ const AuthenticatedApp = () => {
           <ProfilePhotoGuard>
             <TooltipProvider>
               <MaintenanceBanner />
-              <BackgroundRefreshIndicator />
+              
               <Toaster />
               <Sonner />
               <BrowserRouter>
