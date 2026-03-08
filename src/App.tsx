@@ -19,6 +19,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
+import ForcedSupportChat from "@/components/moderation/ForcedSupportChat";
 import PromoPopup from "@/components/popups/PromoPopup";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
@@ -130,6 +131,7 @@ const AuthenticatedApp = () => {
                 <LowCreditsAlert />
                 <AgeConfirmationModal />
                 <InvestigationNoticeDialog />
+                <ForcedSupportChat />
                 <PromoPopup />
               </BrowserRouter>
             </TooltipProvider>

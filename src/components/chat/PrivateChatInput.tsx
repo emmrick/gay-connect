@@ -8,6 +8,7 @@ import SavedMessagesDialog from './SavedMessagesDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import SnapCaptureDialog from './SnapCaptureDialog';
 import { cn } from '@/lib/utils';
+import { useForbiddenWords } from '@/hooks/useForbiddenWords';
 
 interface PrivateChatInputProps {
   onSendMessage: (content: string) => void;
@@ -25,6 +26,7 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
   const [showShareAlbum, setShowShareAlbum] = useState(false);
   const [showSnapCapture, setShowSnapCapture] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { checkMessage } = useForbiddenWords();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -35,9 +37,11 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
     }
   }, [message]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmedMessage = message.trim();
     if (trimmedMessage) {
+      const result = await checkMessage(trimmedMessage);
+      if (result.blocked) return;
       onSendMessage(trimmedMessage);
       setMessage('');
       setShowOptions(false);

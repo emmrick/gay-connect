@@ -7,6 +7,7 @@ import SavedMessagesDialog from './SavedMessagesDialog';
 import MentionAutocomplete from './MentionAutocomplete';
 import { useMentionAutocomplete } from '@/hooks/useMentionAutocomplete';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useForbiddenWords } from '@/hooks/useForbiddenWords';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -25,6 +26,7 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   const [message, setMessage] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { checkMessage } = useForbiddenWords();
   
   // Only enable mentions for group chats, not private conversations
   const {
@@ -51,13 +53,18 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     }
   }, [message]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmedMessage = message.trim();
     if (trimmedMessage) {
+      // Check for forbidden words before sending
+      const result = await checkMessage(trimmedMessage);
+      if (result.blocked) {
+        // Message blocked - don't send
+        return;
+      }
       onSendMessage(trimmedMessage);
       setMessage('');
       closeMention();
-      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }

@@ -5,10 +5,12 @@ import { notifySupportTicketAssigned } from '@/services/pushNotificationService'
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
+import InfractionsSidebar from '@/components/admin/InfractionsSidebar';
 import { SupportTicket } from '@/hooks/useSupportTickets';
 import { useAuth } from '@/contexts/AuthContext';
-import { Headphones, Loader2, User } from 'lucide-react';
+import { Headphones, Loader2, User, Shield } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 interface AdminSupportChatPanelProps {
   onBack: () => void;
@@ -22,6 +24,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   const ticketId = (activeTask?.metadata as any)?.ticket_id as string | undefined;
   const autoMessageSentRef = useRef<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showInfractions, setShowInfractions] = useState(false);
 
   const { data: ticket, isLoading } = useQuery({
     queryKey: ['support-ticket-detail', ticketId],
@@ -130,7 +133,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   // Desktop: side-by-side layout (mission left, chat right)
   if (!isMobile) {
     return (
-      <div className="flex gap-4 w-full max-w-6xl mx-auto">
+      <div className="flex gap-4 w-full max-w-7xl mx-auto">
         {/* Left: Mission panel */}
         <div className="w-[340px] shrink-0">
           <div className="sticky top-4">
@@ -138,7 +141,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
           </div>
         </div>
 
-        {/* Right: Chat */}
+        {/* Center: Chat */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-col h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
             {/* Client info header */}
@@ -159,6 +162,15 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                     #{ticket.ticket_number} · {ticket.subject || 'Support'}
                   </p>
                 </div>
+                <Button
+                  variant={showInfractions ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setShowInfractions(!showInfractions)}
+                  className="gap-1.5"
+                >
+                  <Shield className="w-4 h-4" />
+                  Infractions
+                </Button>
               </div>
             </div>
 
@@ -168,6 +180,19 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
             </div>
           </div>
         </div>
+
+        {/* Right: Infractions sidebar */}
+        {showInfractions && ticket?.user_id && (
+          <div className="w-[340px] shrink-0">
+            <div className="h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+              <InfractionsSidebar
+                userId={ticket.user_id}
+                ticketId={ticket.id}
+                onClose={() => setShowInfractions(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
