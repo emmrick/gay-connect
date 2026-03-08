@@ -467,6 +467,20 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                 />
                 <p className="text-xs text-muted-foreground text-right">{bio.length}/200</p>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="birthDate">Date de naissance</Label>
+                <Input
+                  id="birthDate"
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  max={new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Utilisé pour afficher ton signe astrologique et ton anniversaire
+                </p>
+              </div>
             </TabsContent>
 
             {/* Physical Tab */}
