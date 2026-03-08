@@ -428,7 +428,7 @@ const AlbumGalleryViewer = ({
                     <div className="relative w-full h-full flex items-center justify-center">
                       <motion.video
                         initial={{ scale: 1, opacity: 1 }}
-                        animate={{ scale: 1, opacity: isBlocked ? 0 : 1 }}
+                        animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.1 }}
                         src={item.media_url}
                         className="max-w-full max-h-full object-contain rounded-lg select-none"
