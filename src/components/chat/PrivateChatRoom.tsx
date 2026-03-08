@@ -261,7 +261,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {hasBlocked ? (
+            {isStaffUser ? (
+              <DropdownMenuItem disabled className="text-muted-foreground">
+                <Ban className="w-4 h-4 mr-2" />
+                Membre de l'équipe (non blocable)
+              </DropdownMenuItem>
+            ) : hasBlocked ? (
               <DropdownMenuItem onClick={handleUnblock} disabled={unblockUser.isPending}>
                 <UserCheck className="w-4 h-4 mr-2" />
                 Débloquer
@@ -272,10 +277,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 Bloquer
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowReportDialog(true)}>
-              <Flag className="w-4 h-4 mr-2" />
-              Signaler
-            </DropdownMenuItem>
+            {!isStaffUser && (
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowReportDialog(true)}>
+                <Flag className="w-4 h-4 mr-2" />
+                Signaler
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
