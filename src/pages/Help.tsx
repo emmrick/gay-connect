@@ -219,10 +219,11 @@ const Help = ({ embedded = false }: HelpProps) => {
     return <BookOpen className="w-4 h-4" />;
   };
 
-  // Simulate bot typing delay based on word count (~1s per word, clamped 2s–15s)
+  // Simulate bot typing delay (2-5 seconds max)
   const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-    const typingDelay = wordCount * 1000;
+    // ~100ms per word, clamped between 2s and 5s
+    const typingDelay = Math.min(Math.max(wordCount * 100, 2000), 5000);
     setIsBotTyping(true);
     setTimeout(() => {
       setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
