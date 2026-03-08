@@ -108,6 +108,8 @@ const EphemeralMediaViewer = ({
       setIsSaving(false);
       setHasSaved(false);
       setShowReplyHint(false);
+      setProgressFraction(0);
+      pausedAtRef.current = 0;
       hasCalledOnViewed.current = false;
       hasNotifiedScreenshot.current = false;
       if (autoStart && type === 'video' && videoRef.current) {
