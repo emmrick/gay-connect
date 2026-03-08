@@ -345,7 +345,33 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                     </div>
                   )}
 
-                  {/* Message bubble */}
+                  {/* System screenshot message - centered warning */}
+                  {isSystemScreenshot ? (
+                    <div className="flex justify-center my-3">
+                      <div className="max-w-[90%] bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <AlertTriangle className="w-4 h-4 text-destructive" />
+                          <span className="text-xs font-bold text-destructive">Capture d'écran détectée</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                          {message.content?.split('\n\n').map((part, i) => {
+                            const rendered = part.replace(/\*\*([^*]+)\*\*/g, '').replace(/⚠️ |🚨 /g, '');
+                            return <span key={i}>{i > 0 && <><br/><br/></>}{
+                              part.split(/(\*\*[^*]+\*\*)/g).map((seg, j) =>
+                                seg.startsWith('**') && seg.endsWith('**')
+                                  ? <strong key={j} className="font-semibold text-destructive">{seg.slice(2, -2)}</strong>
+                                  : <span key={j}>{seg.replace(/⚠️ |🚨 /g, '')}</span>
+                              )
+                            }</span>;
+                          })}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                  /* Message bubble */
                   <div className={cn(
                     "flex",
                     isOwn ? "justify-end" : "justify-start",
