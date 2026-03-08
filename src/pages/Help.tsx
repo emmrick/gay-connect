@@ -278,7 +278,6 @@ const Help = ({ embedded = false }: HelpProps) => {
       const options: ChatOption[] = [
         { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
         { label: '📋 Changer de sujet', value: 'change_category' },
-        { label: '📖 Centre d\'aide complet', value: 'view_help_center' },
         { label: '📜 Consulter les règles', value: 'view_rules' },
         { label: '👤 Contacter un agent', value: 'contact_agent' },
       ];
@@ -1057,14 +1056,7 @@ const Help = ({ embedded = false }: HelpProps) => {
 
             {/* Quick navigation links */}
             {!searchQuery && (
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => navigate('/aide')}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
-                >
-                  <BookOpen className="w-5 h-5 text-primary" />
-                  <span className="text-[11px] font-medium">Centre d'aide</span>
-                </button>
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => navigate('/regles')}
                   className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
