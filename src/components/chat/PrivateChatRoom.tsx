@@ -465,6 +465,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       )}
                     </div>
                   </div>
+                  )}
                 </div>
               );
             })
