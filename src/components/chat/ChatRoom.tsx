@@ -9,7 +9,6 @@ import { usePinnedMessages } from '@/hooks/usePinnedMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
-import EphemeralMedia from './EphemeralMedia';
 import EphemeralMessageRow from './EphemeralMessageRow';
 import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';

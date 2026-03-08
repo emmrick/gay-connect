@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Mic } from 'lucide-react';
-import MediaUploadButton from './MediaUploadButton';
+import { Send, Loader2, Plus, Mic, Camera } from 'lucide-react';
 import SavedMessagesDialog from './SavedMessagesDialog';
+import SnapCaptureDialog from './SnapCaptureDialog';
 import MentionAutocomplete from './MentionAutocomplete';
 import { useMentionAutocomplete } from '@/hooks/useMentionAutocomplete';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useForbiddenWords } from '@/hooks/useForbiddenWords';
+import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -25,11 +26,12 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [showOptions, setShowOptions] = useState(false);
+  const [showSnapCapture, setShowSnapCapture] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const conversationId = chatRoomId || recipientId || 'unknown';
   const { checkMessage } = useForbiddenWords(conversationId);
   
-  // Only enable mentions for group chats, not private conversations
   const {
     suggestions,
     isLoading: isMentionLoading,
@@ -39,17 +41,14 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     closeMention,
   } = useMentionAutocomplete(isPrivate ? undefined : chatRoomId);
 
-  // Reset selected index when suggestions change
   useEffect(() => {
     setSelectedSuggestionIndex(0);
   }, [suggestions]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      // Max height of 120px (about 4 lines)
       textareaRef.current.style.height = Math.min(scrollHeight, 120) + 'px';
     }
   }, [message]);
@@ -57,14 +56,11 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   const handleSend = async () => {
     const trimmedMessage = message.trim();
     if (trimmedMessage) {
-      // Check for forbidden words before sending
       const result = await checkMessage(trimmedMessage);
-      if (result.blocked) {
-        // Message blocked - don't send
-        return;
-      }
+      if (result.blocked) return;
       onSendMessage(trimmedMessage);
       setMessage('');
+      setShowOptions(false);
       closeMention();
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
@@ -76,31 +72,21 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     const newMessage = insertMention(message, user);
     setMessage(newMessage);
     closeMention();
-    // Focus back on textarea
     textareaRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Ignore events during IME composition (mobile keyboards, autocomplete, predictive text)
-    // This prevents issues where space or other keys trigger unintended actions
-    if (e.nativeEvent.isComposing) {
-      return;
-    }
+    if (e.nativeEvent.isComposing) return;
 
-    // Handle mention autocomplete navigation (only for group chats)
     if (!isPrivate && isMentionActive && suggestions.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
-          prev < suggestions.length - 1 ? prev + 1 : 0
-        );
+        setSelectedSuggestionIndex(prev => prev < suggestions.length - 1 ? prev + 1 : 0);
         return;
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedSuggestionIndex(prev => 
-          prev > 0 ? prev - 1 : suggestions.length - 1
-        );
+        setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : suggestions.length - 1);
         return;
       }
       if (e.key === 'Enter' || e.key === 'Tab') {
@@ -115,8 +101,6 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
       }
     }
 
-    // Send on Enter only on desktop (Shift+Enter for new line)
-    // On mobile, only the send button sends the message - Enter creates a new line
     if (!isMobile) {
       const isEnterKey = e.key === 'Enter' || e.keyCode === 13;
       if (isEnterKey && !e.shiftKey) {
@@ -129,33 +113,26 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     const cursorPosition = e.target.selectionStart || 0;
-    
     setMessage(newValue);
-    
-    // Only process mentions for group chats
     if (!isPrivate) {
       handleTextChange(newValue, cursorPosition);
     }
-    
-    // Pass whether there's text to the typing handler
     onTyping?.(newValue.trim().length > 0);
   };
 
   const handleInputFocus = () => {
+    setShowOptions(false);
     onFocus?.();
-    setTimeout(() => {
-      onFocus?.();
-    }, 300);
+    setTimeout(() => onFocus?.(), 300);
   };
 
   const handleSelectSavedMessage = (content: string) => {
     onSendMessage(content);
+    setShowOptions(false);
   };
 
-  const placeholder = "Écris ton message...";
-
   return (
-    <div className="p-3 border-t border-border bg-card/50 backdrop-blur-lg relative">
+    <div className="border-t border-border bg-card/50 backdrop-blur-lg relative">
       {/* Mention autocomplete dropdown - only for group chats */}
       {!isPrivate && (
         <MentionAutocomplete
@@ -167,48 +144,79 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
         />
       )}
 
-      <div className="flex items-end gap-2">
-        {/* Media upload button */}
-        <MediaUploadButton 
-          chatRoomId={chatRoomId}
-          recipientId={recipientId}
-          isPrivate={isPrivate}
-        />
+      {/* Expanded options panel */}
+      {showOptions && (
+        <div className="px-4 py-4 flex items-center justify-center gap-8 border-b border-border/50 animate-in slide-in-from-bottom-2 duration-200">
+          <div className="flex flex-col items-center gap-1.5">
+            <SavedMessagesDialog onSelectMessage={handleSelectSavedMessage} />
+            <span className="text-[10px] text-muted-foreground">Messages</span>
+          </div>
 
-        {/* Saved messages button */}
-        <SavedMessagesDialog onSelectMessage={handleSelectSavedMessage} />
-
-        {/* Voice button */}
-        {showVoiceButton && onVoiceToggle && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 flex-shrink-0 text-muted-foreground hover:text-primary"
-            onClick={onVoiceToggle}
+          <button
+            className="flex flex-col items-center gap-1.5"
+            onClick={() => { setShowSnapCapture(true); setShowOptions(false); }}
           >
-            <Mic className="w-5 h-5" />
-          </Button>
-        )}
-        
-        {/* Message input - Textarea for multiline */}
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <Camera className="w-6 h-6 text-primary" />
+            </div>
+            <span className="text-[10px] text-muted-foreground">Selfie</span>
+          </button>
+
+          {showVoiceButton && onVoiceToggle && (
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => { onVoiceToggle(); setShowOptions(false); }}
+            >
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <Mic className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-[10px] text-muted-foreground">Vocal</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Snap capture dialog */}
+      <SnapCaptureDialog
+        isOpen={showSnapCapture}
+        onClose={() => setShowSnapCapture(false)}
+        chatRoomId={chatRoomId}
+        isPrivate={isPrivate}
+      />
+
+      <div className="flex items-end gap-2 p-3">
+        {/* Plus / Close button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "flex-shrink-0 w-10 h-10 rounded-full transition-transform duration-200",
+            showOptions && "rotate-45"
+          )}
+          onClick={() => setShowOptions(!showOptions)}
+        >
+          <Plus className="w-5 h-5" />
+        </Button>
+
+        {/* Message input */}
         <Textarea
           ref={textareaRef}
           value={message}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onFocus={handleInputFocus}
-          placeholder={placeholder}
+          placeholder="Écris ton message..."
           className="flex-1 bg-secondary border-none min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none rounded-2xl text-sm leading-5"
           rows={1}
         />
-        
+
         {/* Send button */}
-        <Button 
-          variant="gradient" 
-          size="icon" 
+        <Button
+          variant="gradient"
+          size="icon"
           onClick={handleSend}
           disabled={!message.trim() || isSending}
-          className="w-10 h-10 flex-shrink-0 rounded-full relative"
+          className="w-10 h-10 flex-shrink-0 rounded-full"
         >
           {isSending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
