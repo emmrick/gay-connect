@@ -14,7 +14,7 @@ import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';
 import MessageReply from './MessageReply';
 import MessageSearch from './MessageSearch';
-import UserProfilePreview from './UserProfilePreview';
+import { useNavigate } from 'react-router-dom';
 import MediaGallerySheet from './MediaGallerySheet';
 import PinnedMessagesBanner from './PinnedMessagesBanner';
 import GroupSettingsDialog from './GroupSettingsDialog';
@@ -98,7 +98,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [previewUserId, setPreviewUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -189,7 +189,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
 
   const handleStartPrivateChat = (userId: string) => {
     setShowMembers(false);
-    setPreviewUserId(null);
     onStartPrivateChat(userId);
   };
 
@@ -198,7 +197,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   };
 
   const handleAvatarClick = (userId: string) => {
-    setPreviewUserId(userId);
+    navigate(`/profile/${userId}`);
   };
 
   const handleToggleReaction = (messageId: string, emoji: string) => {
@@ -220,13 +219,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
         />
       )}
 
-      {/* User profile preview */}
-      <UserProfilePreview
-        userId={previewUserId}
-        isOpen={!!previewUserId}
-        onClose={() => setPreviewUserId(null)}
-        onStartPrivateChat={handleStartPrivateChat}
-      />
 
       {/* Suspension banner */}
 

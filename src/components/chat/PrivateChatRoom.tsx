@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown, AlertTriangle } from 'lucide-react';
@@ -32,7 +33,7 @@ import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
-import UserProfilePreview from './UserProfilePreview';
+
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +52,7 @@ const formatDateLabel = (date: Date): string => {
 const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
+  const navigate = useNavigate();
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { getReactionsForMessage, toggleReaction } = usePrivateMessageReactions(otherUserId);
   const { markAsRead } = useUnreadMessages();
@@ -62,7 +64,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [showProfilePreview, setShowProfilePreview] = useState(false);
+  
   const screenshotNotifiedRef = useRef(false);
 
   // Screenshot detection for private conversations
@@ -215,7 +217,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           </div>
         ) : (
           <button
-            onClick={() => setShowProfilePreview(true)}
+            onClick={() => navigate(`/profile/${otherUserId}`)}
             className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
           >
             <div className="relative flex-shrink-0">
@@ -294,7 +296,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           <BlockUserDialog open={showBlockDialog} onOpenChange={setShowBlockDialog} userId={otherUserId} username={otherUserProfile.username} onBlocked={() => { refetchBlockStatus(); onBack(); }} />
         </>
       )}
-      <UserProfilePreview userId={otherUserId} isOpen={showProfilePreview} onClose={() => setShowProfilePreview(false)} onStartPrivateChat={() => setShowProfilePreview(false)} />
+      
 
       {/* Messages area */}
       <div
