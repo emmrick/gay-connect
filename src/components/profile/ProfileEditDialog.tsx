@@ -144,6 +144,9 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   const [hivStatus, setHivStatus] = useState('');
   const [acceptsNsfw, setAcceptsNsfw] = useState(true);
   const [showFace, setShowFace] = useState(true);
+  // Birthday
+  const [birthDate, setBirthDate] = useState('');
+  const [showBirthday, setShowBirthday] = useState(true);
   
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -172,6 +175,8 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
       setHivStatus((profile as any).hiv_status || '');
       setAcceptsNsfw((profile as any).accepts_nsfw !== false);
       setShowFace((profile as any).show_face !== false);
+      setBirthDate((profile as any).birth_date || '');
+      setShowBirthday((profile as any).show_birthday !== false);
     }
   }, [open, profile]);
 
@@ -330,6 +335,8 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
         hiv_status: hivStatus || null,
         accepts_nsfw: acceptsNsfw,
         show_face: showFace,
+        birth_date: birthDate || null,
+        show_birthday: showBirthday,
       } as any);
 
       if (error) throw error;
@@ -459,6 +466,20 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                   rows={3}
                 />
                 <p className="text-xs text-muted-foreground text-right">{bio.length}/200</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="birthDate">Date de naissance</Label>
+                <Input
+                  id="birthDate"
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  max={new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Utilisé pour afficher ton signe astrologique et ton anniversaire
+                </p>
               </div>
             </TabsContent>
 
@@ -626,6 +647,16 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                   </p>
                 </div>
                 <Switch checked={showFace} onCheckedChange={setShowFace} />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50">
+                <div className="space-y-0.5">
+                  <Label>Afficher mon anniversaire</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Les autres verront ta date d'anniversaire
+                  </p>
+                </div>
+                <Switch checked={showBirthday} onCheckedChange={setShowBirthday} />
               </div>
 
               <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">

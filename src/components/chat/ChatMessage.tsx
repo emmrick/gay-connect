@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Reply, CornerUpLeft, Flag, Trash2, Loader2 } from 'lucide-react';
 import EphemeralMessage from './EphemeralMessage';
+import EmojiMessageEffect, { isEmojiOnlyMessage } from './EmojiMessageEffect';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import MessageReadReceipts from './MessageReadReceipts';
@@ -175,6 +176,8 @@ const ChatMessage = ({
                 isOwn={isOwn}
                 chatRoomId={chatRoomId}
               />
+            ) : isEmojiOnlyMessage(message.content) ? (
+              <EmojiMessageEffect content={message.content} isOwn={isOwn} />
             ) : (
               <div className={`message-bubble ${isOwn ? 'message-bubble-sent' : 'message-bubble-received'}`}>
                 <MentionHighlight 

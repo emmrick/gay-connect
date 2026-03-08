@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   MapPin, Calendar, Edit2, Sparkles, Star, Heart,
-  MessageCircle, Users, Camera, Verified
+  MessageCircle, Users, Camera, Verified, Cake
 } from 'lucide-react';
+import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ProfileEditDialog from './ProfileEditDialog';
@@ -198,6 +199,20 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
                   <MapPin className="w-3 h-3" />
                   {profile.region}
                 </span>
+                {(profile as any).birth_date && (() => {
+                  const zodiac = getZodiacSign((profile as any).birth_date);
+                  return zodiac ? (
+                    <span className="flex items-center gap-1" title={zodiac.label}>
+                      {zodiac.emoji} {zodiac.label}
+                    </span>
+                  ) : null;
+                })()}
+                {(profile as any).birth_date && (profile as any).show_birthday && (
+                  <span className="flex items-center gap-1">
+                    <Cake className="w-3 h-3" />
+                    {formatBirthday((profile as any).birth_date)}
+                  </span>
+                )}
                 {((profile as any).height || (profile as any).weight) && (
                   <span>
                     {(profile as any).height && `${(profile as any).height}cm`}

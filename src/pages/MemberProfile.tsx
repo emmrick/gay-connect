@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Ban, Sparkles, Info, Bot } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Ban, Sparkles, Info, Bot, Cake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/hooks/useProfiles';
@@ -25,6 +25,9 @@ import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { toast } from 'sonner';
 import { useChatbotConfig } from '@/hooks/useChatbotConfig';
 import ChatBotDialog from '@/components/chatbot/ChatBotDialog';
+import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
+import BirthdayGiftButton from '@/components/profile/BirthdayGiftButton';
+import { motion as m } from 'framer-motion';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
@@ -400,7 +403,24 @@ const MemberProfile = () => {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="w-3.5 h-3.5" />
             <span>{profile.region}</span>
-            <span className="text-muted-foreground/50">•</span>
+            {extendedProfile?.birth_date && (() => {
+              const zodiac = getZodiacSign(extendedProfile.birth_date);
+              return zodiac ? (
+                <>
+                  <span className="text-muted-foreground/50">•</span>
+                  <span title={zodiac.label}>{zodiac.emoji} {zodiac.label}</span>
+                </>
+              ) : null;
+            })()}
+            {extendedProfile?.birth_date && extendedProfile?.show_birthday && (
+              <>
+                <span className="text-muted-foreground/50">•</span>
+                <Cake className="w-3.5 h-3.5" />
+                <span>{formatBirthday(extendedProfile.birth_date)}</span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
             <span className={isTrulyOnline ? 'text-green-500' : ''}>
               {getLastSeenText()}
             </span>
@@ -410,6 +430,31 @@ const MemberProfile = () => {
 
       {/* Profile Content */}
       <div className="px-4 pt-4 space-y-5">
+        {/* Birthday Banner */}
+        {extendedProfile?.birth_date && extendedProfile?.show_birthday && isBirthdayToday(extendedProfile.birth_date) && (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500/20 via-rose-500/20 to-amber-500/20 border border-pink-500/30 p-4 text-center"
+          >
+            <div className="absolute inset-0 flex items-center justify-around opacity-20 text-4xl pointer-events-none">
+              <span className="animate-bounce" style={{ animationDelay: '0s' }}>🎂</span>
+              <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>🎉</span>
+              <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>🎈</span>
+              <span className="animate-bounce" style={{ animationDelay: '0.6s' }}>🎁</span>
+            </div>
+            <div className="relative">
+              <p className="text-lg font-bold">🎂 C'est son anniversaire ! 🎉</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Souhaite-lui un joyeux anniversaire
+              </p>
+              <div className="mt-3 flex justify-center">
+                <BirthdayGiftButton recipientId={userId!} recipientUsername={profile.username} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Profile Reactions */}
         {userId && (
           <motion.div
