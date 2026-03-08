@@ -335,6 +335,8 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
         hiv_status: hivStatus || null,
         accepts_nsfw: acceptsNsfw,
         show_face: showFace,
+        birth_date: birthDate || null,
+        show_birthday: showBirthday,
       } as any);
 
       if (error) throw error;
