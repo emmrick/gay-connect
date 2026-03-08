@@ -22,8 +22,6 @@ import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoti
 import PromoPopup from "@/components/popups/PromoPopup";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
-import { useScreenshotProtection } from "@/hooks/useScreenshotProtection";
-import ScreenshotProtectionOverlay from "@/components/security/ScreenshotProtectionOverlay";
 import BackgroundRefreshIndicator from "@/components/loading/BackgroundRefreshIndicator";
 import MaintenanceGuard from "@/components/maintenance/MaintenanceGuard";
 import MaintenanceBanner from "@/components/maintenance/MaintenanceBanner";
