@@ -319,8 +319,16 @@ const HelpCenter = () => {
                   );
                 })}
               </div>
+
+              {/* Contact support button */}
+              <div className="mt-6 p-4 rounded-2xl bg-primary/5 border border-primary/20 text-center">
+                <p className="text-sm text-muted-foreground mb-3">Vous ne trouvez pas la réponse ?</p>
+                <Button onClick={() => navigate('/aide/chat')} className="gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  Contacter le support
+                </Button>
+              </div>
             </>
-          )}
         </div>
       </div>
     </>
