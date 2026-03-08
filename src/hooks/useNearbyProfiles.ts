@@ -58,7 +58,7 @@ export const useNearbyProfiles = (
     staleTime: 30000,
     gcTime: 300000,
     refetchOnWindowFocus: false,
-    refetchInterval: 600000,
+    refetchInterval: 300000, // 5 minutes
   });
 
   // Query 2: When geolocation is available, fetch with distances (runs in parallel / replaces)
