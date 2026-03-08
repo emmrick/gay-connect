@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { memo } from 'react';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
@@ -50,16 +49,13 @@ import { cn } from '@/lib/utils';
 
 type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
 
-// Tab order for determining animation direction
-const tabOrder: NavTab[] = ['home', 'swipe', 'messages', 'premium', 'help', 'profile'];
-
-// Minimal animation variants - instant transitions
-const pageVariants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
+// Slide animation only for sub-views (chat, private)
+const slideIn = {
+  initial: { x: '100%', opacity: 0 },
+  animate: { x: 0, opacity: 1 },
+  exit: { x: '100%', opacity: 0 },
+  transition: { type: 'tween' as const, duration: 0.15, ease: 'easeOut' as const },
 };
-const fadeVariants = pageVariants;
 
 const Index = () => {
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
@@ -135,12 +131,6 @@ const Index = () => {
     }
   }, [location.state, user, navigate, markAsRead, getOrCreateConversation]);
 
-  // Calculate animation direction based on tab order
-  const direction = useMemo(() => {
-    const prevIndex = tabOrder.indexOf(previousTab);
-    const currIndex = tabOrder.indexOf(activeTab);
-    return currIndex > prevIndex ? 1 : -1;
-  }, [previousTab, activeTab]);
 
   // Process pending referral code after signup
   useEffect(() => {
@@ -391,15 +381,7 @@ const Index = () => {
       
       case 'home':
         return user ? (
-          <motion.div
-            key="home"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 flex flex-col min-h-0"
-          >
+          <div className="flex-1 flex flex-col min-h-0">
             {/* Header */}
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
@@ -412,39 +394,23 @@ const Index = () => {
                 onStartPrivateChat={handleStartPrivateChat}
               />
             </div>
-          </motion.div>
+          </div>
         ) : null;
 
       case 'swipe':
         return user ? (
-          <motion.div
-            key="swipe"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 flex flex-col min-h-0"
-          >
+          <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
               onNavigateToProfile={() => handleTabChange('profile')}
             />
             <SwipePage onStartChat={handleStartPrivateChat} />
-          </motion.div>
+          </div>
         ) : null;
 
       case 'messages':
         return (
-          <motion.div
-            key="messages"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 flex flex-col relative min-h-0"
-          >
+          <div className="flex-1 flex flex-col relative min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
               onNavigateToProfile={() => handleTabChange('profile')}
@@ -523,7 +489,6 @@ const Index = () => {
               open={showCreateGroup}
               onOpenChange={setShowCreateGroup}
               onGroupCreated={(groupId) => {
-                // Navigate to the custom group chat
                 setSelectedRegion(groupId);
                 setCurrentView('chat');
               }}
@@ -540,20 +505,12 @@ const Index = () => {
                 />
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         );
 
       case 'profile':
         return user ? (
-          <motion.div
-            key="profile"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 flex flex-col min-h-0"
-          >
+          <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
               onNavigateToProfile={() => handleTabChange('profile')}
@@ -573,20 +530,12 @@ const Index = () => {
                 isModerator={isModerator}
               />
             </ScrollArea>
-          </motion.div>
+          </div>
         ) : null;
 
       case 'premium':
         return user ? (
-          <motion.div
-            key="premium"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 flex flex-col min-h-0"
-          >
+          <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
               onNavigateToProfile={() => handleTabChange('profile')}
@@ -595,22 +544,14 @@ const Index = () => {
             <ScrollArea className="flex-1 min-h-0">
               <CreditsPage />
             </ScrollArea>
-          </motion.div>
+          </div>
         ) : null;
 
       case 'help':
         return user ? (
-          <motion.div
-            key="help"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="flex-1 flex flex-col min-h-0"
-          >
+          <div className="flex-1 flex flex-col min-h-0">
             <Help embedded />
-          </motion.div>
+          </div>
         ) : null;
 
       default:
@@ -640,24 +581,14 @@ const Index = () => {
         paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
       }}
       >
-        <AnimatePresence mode="popLayout">
-          {content ?? (
-            <motion.div
-              key="fallback"
-              variants={fadeVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.2 }}
-              className="flex-1 flex items-center justify-center"
-            >
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Chargement...</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {content ?? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Chargement...</p>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Bottom Navigation Bar */}

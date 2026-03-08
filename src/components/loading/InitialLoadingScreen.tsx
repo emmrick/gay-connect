@@ -2,46 +2,24 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const InitialLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
-  const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    let frame: number;
-    let start: number | null = null;
-    const duration = 500; // Fast splash
-
-    const tick = (timestamp: number) => {
-      if (!start) start = timestamp;
-      const elapsed = timestamp - start;
-      const raw = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - raw, 3);
-      setProgress(Math.min(eased * 100, 100));
-
-      if (raw < 1) {
-        frame = requestAnimationFrame(tick);
-      } else {
-        setVisible(false);
-        setTimeout(onComplete, 200);
-      }
-    };
-
-    const startLoading = () => {
-      frame = requestAnimationFrame(tick);
+    // Minimal splash - just wait for DOM ready then fade out
+    const complete = () => {
+      setVisible(false);
+      setTimeout(onComplete, 150);
     };
 
     if (document.readyState === 'complete') {
-      startLoading();
+      // Already loaded, show splash briefly
+      requestAnimationFrame(() => setTimeout(complete, 200));
     } else {
-      window.addEventListener('load', startLoading);
-      const fallback = setTimeout(startLoading, 300);
-      return () => {
-        clearTimeout(fallback);
-        window.removeEventListener('load', startLoading);
-        cancelAnimationFrame(frame);
-      };
+      window.addEventListener('load', () => setTimeout(complete, 100));
+      // Fallback: don't block more than 400ms
+      const fallback = setTimeout(complete, 400);
+      return () => clearTimeout(fallback);
     }
-
-    return () => cancelAnimationFrame(frame);
   }, [onComplete]);
 
   return (
@@ -50,27 +28,16 @@ const InitialLoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
           className="fixed inset-0 z-[99999] bg-background flex flex-col items-center justify-center"
         >
-          <div className="flex flex-col items-center gap-4 mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <span className="text-2xl">💬</span>
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <span className="text-xl">💬</span>
             </div>
-            <div className="text-center">
-              <h1 className="text-lg font-bold text-foreground tracking-tight">
-                Gay Connect
-              </h1>
-            </div>
-          </div>
-
-          <div className="w-48 max-w-[70vw]">
-            <div className="h-1 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-100"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            <h1 className="text-lg font-bold text-foreground tracking-tight">
+              Gay Connect
+            </h1>
           </div>
         </motion.div>
       )}
