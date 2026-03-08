@@ -78,7 +78,8 @@ export const initGlobalErrorCapture = () => {
       : undefined;
     // Only log actual errors, not warnings or debug info
     const isReactWarning = message.startsWith("Warning:") || message.includes("React.forwardRef") || message.includes("Function components cannot be given refs");
-    if (!isReactWarning && (message.includes("Error") || message.includes("error") || message.includes("failed"))) {
+    const isVagueRejection = message === "Rejected" || message === "undefined" || message === "[object Object]";
+    if (!isReactWarning && !isVagueRejection && (message.includes("Error") || message.includes("error") || message.includes("failed"))) {
       deduplicatedLog(message.slice(0, 2000), stack, "console_error");
     }
   };

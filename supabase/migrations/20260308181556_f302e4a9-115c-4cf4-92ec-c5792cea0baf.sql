@@ -1,0 +1,1 @@
+DELETE FROM error_logs;
