@@ -174,6 +174,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     setTimeout(() => scrollToBottom(true), 100);
     setTimeout(() => scrollToBottom(true), 300);
     setTimeout(() => scrollToBottom(true), 500);
+    setTimeout(() => scrollToBottom(true), 800);
   }, [scrollToBottom]);
 
   // Scroll to bottom when mobile keyboard opens (visualViewport resize)
