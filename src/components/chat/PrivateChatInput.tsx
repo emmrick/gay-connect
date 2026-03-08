@@ -90,13 +90,6 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
             <span className="text-[10px] text-muted-foreground">Messages</span>
           </div>
 
-          <div className="flex flex-col items-center gap-1.5">
-            <MediaUploadButton
-              recipientId={recipientId}
-              isPrivate={true}
-            />
-            <span className="text-[10px] text-muted-foreground">Médias</span>
-          </div>
 
           <button
             className="flex flex-col items-center gap-1.5"
