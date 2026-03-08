@@ -175,6 +175,8 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
       setHivStatus((profile as any).hiv_status || '');
       setAcceptsNsfw((profile as any).accepts_nsfw !== false);
       setShowFace((profile as any).show_face !== false);
+      setBirthDate((profile as any).birth_date || '');
+      setShowBirthday((profile as any).show_birthday !== false);
     }
   }, [open, profile]);
 
