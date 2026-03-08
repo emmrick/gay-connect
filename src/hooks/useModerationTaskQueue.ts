@@ -114,7 +114,7 @@ export const usePendingTasksHistory = () => {
       })) as ModerationTask[];
     },
     enabled: !!user?.id,
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 };
 
