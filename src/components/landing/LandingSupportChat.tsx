@@ -90,13 +90,33 @@ const LandingSupportChat = () => {
     }
   }, [freeText]);
 
-  const addBotMessage = useCallback((text: string, options?: ChatOption[], delay = 500) => {
+  const playMessageSound = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      // Two-tone chime: D5 → F5
+      osc.frequency.setValueAtTime(587, ctx.currentTime);
+      osc.frequency.setValueAtTime(698, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.25);
+    } catch {}
+  }, []);
+
+  const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     setIsBotTyping(true);
+    const delay = Math.floor(Math.random() * 3000) + 2000; // 2-5 seconds
     setTimeout(() => {
       setMessages(prev => [...prev, { type: 'bot', text, options }]);
       setIsBotTyping(false);
+      playMessageSound();
     }, delay);
-  }, []);
+  }, [playMessageSound]);
 
   const showCategoryOptions = useCallback(() => {
     const options: ChatOption[] = faqCategories.map(cat => ({
@@ -106,8 +126,7 @@ const LandingSupportChat = () => {
     }));
     addBotMessage(
       "Sur quel **sujet** as-tu une question ? Tu peux aussi **taper ta question** directement ! 👇",
-      options,
-      400
+      options
     );
   }, [faqCategories, addBotMessage]);
 
@@ -133,7 +152,7 @@ const LandingSupportChat = () => {
     const article = allFaqArticles.find(a => a.id === articleId);
     if (!article) return;
     setNoMatchCount(0);
-    addBotMessage(`**${article.question}**\n\n${article.answer}`, undefined, 400);
+    addBotMessage(`**${article.question}**\n\n${article.answer}`);
 
     setTimeout(() => {
       const options: ChatOption[] = [
@@ -141,7 +160,7 @@ const LandingSupportChat = () => {
         { label: '📋 Changer de sujet', value: 'change_category' },
         { label: '👤 Contacter un agent', value: 'contact_agent' },
       ];
-      addBotMessage("Ça répond à ta question ? 😊", options, 600);
+      addBotMessage("Ça répond à ta question ? 😊", options);
     }, 800);
   }, [allFaqArticles, addBotMessage]);
 
