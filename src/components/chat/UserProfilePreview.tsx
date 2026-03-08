@@ -43,6 +43,7 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const { data: hasBlocked } = useHasBlockedUser(userId || '');
+  const { data: isStaffUser } = useIsStaffUser(userId || '');
   const { photos: userPhotos } = useProfilePhotos(userId || undefined);
   const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId || undefined);
   
