@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationDeadline } from '@/hooks/useVerificationDeadline';
 import VerificationRequiredScreen from './VerificationRequiredScreen';
+import PendingApprovalScreen from './PendingApprovalScreen';
 
 interface VerificationGuardProps {
   children: ReactNode;
@@ -32,9 +33,9 @@ const VerificationGuard = ({ children }: VerificationGuardProps) => {
     return <>{children}</>;
   }
 
-  // If verification is pending (submitted), allow access
+  // If verification is pending (submitted), show pending approval screen
   if (isVerificationPending) {
-    return <>{children}</>;
+    return <PendingApprovalScreen />;
   }
 
   // If deadline passed or can't access, show verification screen
