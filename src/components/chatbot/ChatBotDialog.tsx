@@ -83,8 +83,8 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
       });
 
       // Simulate typing delay based on response length
-      // ~30ms per character, min 800ms, max 4000ms
-      const typingDelay = Math.min(4000, Math.max(800, reply.length * 30));
+      // ~60ms per character, min 1500ms, max 8000ms
+      const typingDelay = Math.min(8000, Math.max(1500, reply.length * 60));
       setIsTyping(true);
       await new Promise(resolve => setTimeout(resolve, typingDelay));
       setIsTyping(false);
