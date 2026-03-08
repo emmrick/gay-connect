@@ -27,7 +27,6 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
   const queryClient = useQueryClient();
 
   const isUnlimited = media?.view_duration === 0;
-  const canReplay = !isOwn && media?.is_viewed && !isUnlimited && (media?.replay_count ?? 0) < 1;
 
   const handleView = useCallback(() => {
     if (media && (!media.is_viewed || canReplay)) {
