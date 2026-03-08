@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Play, Eye, EyeOff, Shield } from 'lucide-react';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
+
 import { Button } from '@/components/ui/button';
 
 interface EphemeralMediaProps {
