@@ -100,13 +100,6 @@ const AlbumGalleryViewer = ({
   const [videoPlaying, setVideoPlaying] = useState<string | null>(null);
   const [zoomState, setZoomState] = useState<ZoomState>({ scale: 1, x: 0, y: 0 });
   
-  // Screenshot protection with mobile detection + preventive blur
-  const {
-    isBlocked,
-    preventContextMenu,
-    enableProtection,
-    disableProtection,
-  } = useScreenshotProtection(true); // Enable native blocking on Capacitor
   
   // Touch/gesture refs
   const imageContainerRef = useRef<HTMLDivElement>(null);
