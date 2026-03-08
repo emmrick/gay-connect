@@ -197,6 +197,33 @@ export type Database = {
           },
         ]
       }
+      birthday_gifts: {
+        Row: {
+          amount: number
+          created_at: string
+          gift_year: number
+          id: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          gift_year?: number
+          id?: string
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          gift_year?: number
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       broadcast_notifications: {
         Row: {
           action_url: string | null
@@ -1807,6 +1834,7 @@ export type Database = {
           age: number | null
           avatar_url: string | null
           bio: string | null
+          birth_date: string | null
           body_type: string | null
           created_at: string
           endowment: string | null
@@ -1830,6 +1858,7 @@ export type Database = {
           region: string
           relationship_status: string | null
           sexual_position: string | null
+          show_birthday: boolean | null
           show_face: boolean | null
           theme_preference: string | null
           tribes: string[] | null
@@ -1843,6 +1872,7 @@ export type Database = {
           age?: number | null
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           body_type?: string | null
           created_at?: string
           endowment?: string | null
@@ -1866,6 +1896,7 @@ export type Database = {
           region: string
           relationship_status?: string | null
           sexual_position?: string | null
+          show_birthday?: boolean | null
           show_face?: boolean | null
           theme_preference?: string | null
           tribes?: string[] | null
@@ -1879,6 +1910,7 @@ export type Database = {
           age?: number | null
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           body_type?: string | null
           created_at?: string
           endowment?: string | null
@@ -1902,6 +1934,7 @@ export type Database = {
           region?: string
           relationship_status?: string | null
           sexual_position?: string | null
+          show_birthday?: boolean | null
           show_face?: boolean | null
           theme_preference?: string | null
           tribes?: string[] | null
