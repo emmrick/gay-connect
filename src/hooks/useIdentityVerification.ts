@@ -33,13 +33,11 @@ export const useIdentityVerification = () => {
     queryKey: ['identity-verification', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      
       const { data, error } = await supabase
         .from('identity_verifications')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
-
       if (error) throw error;
       return data as IdentityVerification | null;
     },
@@ -49,13 +47,11 @@ export const useIdentityVerification = () => {
   const createVerification = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase
         .from('identity_verifications')
         .insert({ user_id: user.id })
         .select()
         .single();
-
       if (error) throw error;
       return data;
     },
@@ -64,30 +60,18 @@ export const useIdentityVerification = () => {
     },
   });
 
-  // Delete rejected verification to allow retry
   const deleteRejectedVerification = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
-
-      // Delete any old documents from storage first
-      const { data: files } = await supabase.storage
-        .from('identity-documents')
-        .list(user.id);
-
+      const { data: files } = await supabase.storage.from('identity-documents').list(user.id);
       if (files && files.length > 0) {
-        const filePaths = files.map(f => `${user.id}/${f.name}`);
-        await supabase.storage
-          .from('identity-documents')
-          .remove(filePaths);
+        await supabase.storage.from('identity-documents').remove(files.map(f => `${user.id}/${f.name}`));
       }
-
-      // Delete the rejected verification record
       const { error } = await supabase
         .from('identity_verifications')
         .delete()
         .eq('user_id', user.id)
         .eq('status', 'rejected');
-
       if (error) throw error;
     },
     onSuccess: () => {
@@ -97,86 +81,49 @@ export const useIdentityVerification = () => {
 
   const uploadDocument = async (file: File, type: 'selfie' | 'id_front' | 'id_back') => {
     if (!user) throw new Error('Not authenticated');
-
     const fileExt = file.name.split('.').pop() || 'jpg';
     const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
 
-    console.log('Uploading document:', fileName, 'Size:', file.size);
-
-    // Retry logic for Navigator LockManager timeout (common on mobile browsers)
     const maxRetries = 3;
-    let lastError: Error | null = null;
-
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const { error: uploadError, data: uploadData } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('identity-documents')
-          .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: attempt > 1, // Allow overwrite on retry
-          });
-
+          .upload(fileName, file, { cacheControl: '3600', upsert: attempt > 1 });
         if (uploadError) {
-          // Check if it's a LockManager timeout error
           if (uploadError.message?.includes('LockManager') || uploadError.message?.includes('timed out')) {
-            console.warn(`Upload attempt ${attempt}/${maxRetries} failed (LockManager timeout), retrying...`);
-            lastError = new Error(uploadError.message);
-            // Wait before retry with exponential backoff
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
             continue;
           }
           throw new Error(`Erreur d'upload: ${uploadError.message}`);
         }
-
-        console.log('Upload successful:', uploadData);
         return fileName;
       } catch (err: any) {
-        // Catch navigator lock errors that may be thrown outside Supabase
         if (err?.message?.includes('LockManager') || err?.message?.includes('timed out')) {
-          console.warn(`Upload attempt ${attempt}/${maxRetries} failed (lock error), retrying...`);
-          lastError = err;
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           continue;
         }
         throw err;
       }
     }
-
-    // All retries failed
-    throw new Error(
-      'L\'envoi a échoué après plusieurs tentatives. Vérifie ta connexion internet et réessaie.'
-    );
+    throw new Error('L\'envoi a échoué après plusieurs tentatives.');
   };
 
   const submitVerification = useMutation({
-    mutationFn: async ({ 
-      selfieUrl, 
-      idFrontUrl, 
-      idBackUrl 
-    }: { 
-      selfieUrl: string; 
-      idFrontUrl: string; 
-      idBackUrl: string;
-    }) => {
+    mutationFn: async ({ selfieUrl }: { selfieUrl: string }) => {
       if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase
         .from('identity_verifications')
         .update({
           selfie_url: selfieUrl,
-          id_front_url: idFrontUrl,
-          id_back_url: idBackUrl,
           submitted_at: new Date().toISOString(),
           status: 'pending',
         })
         .eq('user_id', user.id)
         .select()
         .single();
-
       if (error) throw error;
-      if (!data) throw new Error('La mise à jour a échoué. Veuillez réessayer.');
-
-      // Send confirmation notification to the user
+      if (!data) throw new Error('La mise à jour a échoué.');
       await notifyVerificationSubmitted(user.id);
     },
     onSuccess: () => {
@@ -202,27 +149,22 @@ export const useAdminVerifications = () => {
   const { data: pendingVerifications, isLoading } = useQuery({
     queryKey: ['admin-verifications'],
     queryFn: async () => {
-      // First get verifications
       const { data: verifications, error: verError } = await supabase
         .from('identity_verifications')
         .select('*')
         .eq('status', 'pending')
         .not('submitted_at', 'is', null)
         .order('submitted_at', { ascending: false });
-
       if (verError) throw verError;
       if (!verifications || verifications.length === 0) return [];
 
-      // Then get profiles for those users
       const userIds = verifications.map(v => v.user_id);
       const { data: profiles, error: profError } = await supabase
         .from('profiles')
         .select('user_id, username, avatar_url, age, region')
         .in('user_id', userIds);
-
       if (profError) throw profError;
 
-      // Combine data
       return verifications.map(v => ({
         ...v,
         profiles: profiles?.find(p => p.user_id === v.user_id) || null
@@ -236,7 +178,6 @@ export const useAdminVerifications = () => {
         .from('identity_verifications')
         .update({ admin_viewed_at: new Date().toISOString() })
         .eq('id', verificationId);
-
       if (error) throw error;
     },
   });
@@ -247,14 +188,12 @@ export const useAdminVerifications = () => {
         .from('identity_verifications')
         .update({ admin_screenshot_detected: true })
         .eq('id', verificationId);
-
       if (error) throw error;
     },
   });
 
   const approveVerification = useMutation({
     mutationFn: async ({ verificationId, userId }: { verificationId: string; userId: string }) => {
-      // Update verification status
       const { error: verifyError } = await supabase
         .from('identity_verifications')
         .update({
@@ -267,30 +206,18 @@ export const useAdminVerifications = () => {
           id_back_url: null,
         })
         .eq('id', verificationId);
-
       if (verifyError) throw verifyError;
 
-      // Update profile to verified
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ is_verified: true })
         .eq('user_id', userId);
-
       if (profileError) throw profileError;
 
-      // Delete documents from storage
-      const { data: files } = await supabase.storage
-        .from('identity-documents')
-        .list(userId);
-
+      const { data: files } = await supabase.storage.from('identity-documents').list(userId);
       if (files && files.length > 0) {
-        const filePaths = files.map(f => `${userId}/${f.name}`);
-        await supabase.storage
-          .from('identity-documents')
-          .remove(filePaths);
+        await supabase.storage.from('identity-documents').remove(files.map(f => `${userId}/${f.name}`));
       }
-
-      // Notify user that verification is approved
       await notifyVerificationApproved(userId);
     },
     onSuccess: () => {
@@ -306,26 +233,16 @@ export const useAdminVerifications = () => {
         .select('user_id')
         .eq('id', verificationId)
         .single();
-
       if (fetchError) throw fetchError;
 
       const targetUserId = userId || verification?.user_id;
-
-      // RGPD Compliance: Delete documents from storage on rejection
       if (targetUserId) {
-        const { data: files } = await supabase.storage
-          .from('identity-documents')
-          .list(targetUserId);
-
+        const { data: files } = await supabase.storage.from('identity-documents').list(targetUserId);
         if (files && files.length > 0) {
-          const filePaths = files.map(f => `${targetUserId}/${f.name}`);
-          await supabase.storage
-            .from('identity-documents')
-            .remove(filePaths);
+          await supabase.storage.from('identity-documents').remove(files.map(f => `${targetUserId}/${f.name}`));
         }
       }
 
-      // Update verification status and clear document URLs
       const { error } = await supabase
         .from('identity_verifications')
         .update({
@@ -339,10 +256,8 @@ export const useAdminVerifications = () => {
           id_back_url: null,
         })
         .eq('id', verificationId);
-
       if (error) throw error;
 
-      // Notify user that verification was rejected
       if (targetUserId) {
         await notifyVerificationRejected(targetUserId, reason);
       }
