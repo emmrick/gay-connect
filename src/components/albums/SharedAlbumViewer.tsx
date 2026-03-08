@@ -13,7 +13,7 @@ import { fr } from 'date-fns/locale';
 import { Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
+
 import { useAuth } from '@/contexts/AuthContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
