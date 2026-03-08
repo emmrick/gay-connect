@@ -265,10 +265,7 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
             animate={{ opacity: 1, scale: isPaused ? 1.02 : 1 }}
             transition={{ duration: 0.2 }}
             className="w-full h-full flex items-center justify-center"
-            style={{
-              filter: isBlocked ? 'brightness(0)' : 'none',
-              transition: 'filter 0.1s ease',
-            }}
+            style={{}}
           >
             {currentStory.media_type === 'image' ? (
               <img

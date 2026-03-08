@@ -481,25 +481,6 @@ const EphemeralMediaViewer = ({
                 )}
               </AnimatePresence>
 
-              {/* Screenshot detected overlay */}
-              <AnimatePresence>
-                {isBlocked && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black z-20 flex items-center justify-center"
-                  >
-                    <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center">
-                      <div className="w-24 h-24 mx-auto rounded-full bg-destructive/30 flex items-center justify-center mb-6">
-                        <AlertTriangle className="w-12 h-12 text-destructive" />
-                      </div>
-                      <p className="text-destructive text-2xl font-bold mb-2">Capture détectée !</p>
-                      <p className="text-destructive/70 text-sm">Votre compte a été suspendu</p>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Swipe up reply hint */}
               <AnimatePresence>

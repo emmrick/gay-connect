@@ -495,28 +495,6 @@ const AlbumGalleryViewer = ({
           </button>
         )}
 
-        {/* Screenshot blocked overlay */}
-        <AnimatePresence>
-          {isBlocked && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 bg-black flex items-center justify-center"
-            >
-              <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                className="text-center"
-              >
-                <div className="w-24 h-24 mx-auto rounded-full bg-white/10 flex items-center justify-center mb-6">
-                  <Shield className="w-12 h-12 text-white/70" />
-                </div>
-                <p className="text-white text-2xl font-bold mb-2">Contenu protégé</p>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Thumbnails - Bottom navigation (hidden when zoomed) */}
         {media.length > 1 && !isZoomed && (

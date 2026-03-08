@@ -465,7 +465,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                         className="max-w-full max-h-full select-none"
                         controls
                         autoPlay={index === currentSlide}
-                        onContextMenu={preventContextMenu}
+                        
                         controlsList="nodownload"
                       />
                     )}

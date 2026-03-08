@@ -175,14 +175,6 @@ const EphemeralMedia = ({
       </div>
 
       {/* Black overlay when screenshot detected */}
-      {isBlocked && (
-        <div className="absolute inset-0 bg-black z-20 flex items-center justify-center">
-          <div className="text-center">
-            <Shield className="w-16 h-16 text-white/50 mx-auto mb-4" />
-            <p className="text-white text-xl font-bold">Contenu protégé</p>
-          </div>
-        </div>
-      )}
       
       {/* Warning overlay */}
       <div className="absolute bottom-8 left-0 right-0 text-center">
