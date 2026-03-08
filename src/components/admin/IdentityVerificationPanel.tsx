@@ -489,68 +489,18 @@ const IdentityVerificationPanel = () => {
                   onContextMenu={(e) => e.preventDefault()}
                   style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
                 >
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
+                  <div className="flex justify-center">
+                    <div className="space-y-2 w-full max-w-xs">
                       <p className="text-sm font-medium text-center">Selfie</p>
                       <div 
-                        className="aspect-square bg-secondary rounded-xl overflow-hidden cursor-pointer relative group"
-                        onClick={() => signedUrls.selfie && openImageViewer(signedUrls.selfie, 'Selfie')}
+                        className="aspect-[3/4] bg-secondary rounded-xl overflow-hidden cursor-pointer relative group"
+                        onClick={() => signedSelfieUrl && openImageViewer(signedSelfieUrl, 'Selfie')}
                       >
-                        {signedUrls.selfie ? (
+                        {signedSelfieUrl ? (
                           <>
                             <img 
-                              src={signedUrls.selfie} 
+                              src={signedSelfieUrl} 
                               alt="Selfie" 
-                              className="w-full h-full object-cover pointer-events-none"
-                              draggable={false}
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Maximize2 className="w-6 h-6 text-white" />
-                            </div>
-                          </>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-center">Recto ID</p>
-                      <div 
-                        className="aspect-square bg-secondary rounded-xl overflow-hidden cursor-pointer relative group"
-                        onClick={() => signedUrls.idFront && openImageViewer(signedUrls.idFront, 'Recto ID')}
-                      >
-                        {signedUrls.idFront ? (
-                          <>
-                            <img 
-                              src={signedUrls.idFront} 
-                              alt="ID Recto" 
-                              className="w-full h-full object-cover pointer-events-none"
-                              draggable={false}
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Maximize2 className="w-6 h-6 text-white" />
-                            </div>
-                          </>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-center">Verso ID</p>
-                      <div 
-                        className="aspect-square bg-secondary rounded-xl overflow-hidden cursor-pointer relative group"
-                        onClick={() => signedUrls.idBack && openImageViewer(signedUrls.idBack, 'Verso ID')}
-                      >
-                        {signedUrls.idBack ? (
-                          <>
-                            <img 
-                              src={signedUrls.idBack} 
-                              alt="ID Verso" 
                               className="w-full h-full object-cover pointer-events-none"
                               draggable={false}
                             />
@@ -569,11 +519,11 @@ const IdentityVerificationPanel = () => {
 
                   <div className="bg-primary/10 rounded-xl p-3 text-xs text-center flex items-center justify-center gap-2">
                     <Maximize2 className="w-4 h-4" />
-                    Cliquez sur une image pour l'agrandir et zoomer
+                    Cliquez sur l'image pour l'agrandir et zoomer
                   </div>
 
                   <div className="bg-muted/50 rounded-xl p-3 text-xs text-muted-foreground text-center">
-                    Vérifiez que le selfie correspond à la photo d'identité et que l'âge est ≥ 18 ans
+                    Vérifiez que le selfie correspond à une personne réelle et que l'utilisateur semble avoir ≥ 18 ans
                   </div>
                 </div>
               )}
