@@ -219,10 +219,11 @@ const Help = ({ embedded = false }: HelpProps) => {
     return <BookOpen className="w-4 h-4" />;
   };
 
-  // Simulate bot typing delay based on word count (~1s per word, clamped 2s–15s)
+  // Simulate bot typing delay (2-5 seconds max)
   const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-    const typingDelay = wordCount * 1000;
+    // ~100ms per word, clamped between 2s and 5s
+    const typingDelay = Math.min(Math.max(wordCount * 100, 2000), 5000);
     setIsBotTyping(true);
     setTimeout(() => {
       setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
@@ -263,7 +264,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     );
   }, [allFaqArticles, addBotMessage, showCategoryOptions]);
 
-  // Show an FAQ answer
+  // Show an FAQ answer (single message with follow-up options to avoid stacking delays)
   const showFaqAnswer = useCallback((articleId: string) => {
     const article = allFaqArticles.find(a => a.id === articleId);
     if (!article) return;
@@ -271,21 +272,13 @@ const Help = ({ embedded = false }: HelpProps) => {
     setAnsweredArticleIds(prev => new Set(prev).add(articleId));
     setNoMatchCount(0);
 
-    addBotMessage(`**${article.question}**\n\n${article.answer}`);
-
-    // After answer, ask if they need more help
-    setTimeout(() => {
-      const options: ChatOption[] = [
-        { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
-        { label: '📋 Changer de sujet', value: 'change_category' },
-        { label: '📜 Consulter les règles', value: 'view_rules' },
-        { label: '👤 Contacter un agent', value: 'contact_agent' },
-      ];
-      addBotMessage(
-        "Est-ce que ça répond à ta question ? Tu peux **continuer** sur le même sujet ou **changer de catégorie**.",
-        options
-      );
-    }, 1000);
+    const options: ChatOption[] = [
+      { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
+      { label: '📋 Changer de sujet', value: 'change_category' },
+      { label: '📜 Consulter les règles', value: 'view_rules' },
+      { label: '👤 Contacter un agent', value: 'contact_agent' },
+    ];
+    addBotMessage(`**${article.question}**\n\n${article.answer}\n\nÇa répond à ta question ? 😊`, options);
   }, [allFaqArticles, addBotMessage]);
 
   // Search FAQ articles by keywords
