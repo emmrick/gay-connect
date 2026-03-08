@@ -1059,7 +1059,7 @@ const Help = ({ embedded = false }: HelpProps) => {
             {!searchQuery && (
               <div className="grid grid-cols-3 gap-2">
                 <button
-                  onClick={() => navigate('/aide/centre')}
+                  onClick={() => navigate('/aide')}
                   className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
                 >
                   <BookOpen className="w-5 h-5 text-primary" />
