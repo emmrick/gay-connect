@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown, AlertTriangle } from 'lucide-react';
+import { useMobileScreenshotDetection } from '@/hooks/useMobileScreenshotDetection';
+import { notifyScreenshotInChat } from '@/services/screenshotNotificationService';
 import MuteButton from './MuteButton';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';

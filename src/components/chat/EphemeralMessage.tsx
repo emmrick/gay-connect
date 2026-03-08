@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import SequentialEphemeralViewer, { EphemeralMediaItem } from './SequentialEphemeralViewer';
 import { notifyEphemeralScreenshot } from '@/services/pushNotificationService';
+import { notifyScreenshotInChat } from '@/services/screenshotNotificationService';
 
 interface EphemeralMessageProps {
   messageId: string;
