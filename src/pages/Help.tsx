@@ -375,6 +375,15 @@ const Help = ({ embedded = false }: HelpProps) => {
       setChatMessages(prev => [...prev, { type: 'user', text: 'Contacter un agent' }]);
       setShowEscalationButton(true);
       addBotMessage("D'accord ! Tu peux **contacter un agent** du support en cliquant sur le bouton ci-dessous. Un membre de notre équipe te répondra dès que possible. 💬");
+    } else if (value === 'view_rules') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Consulter les règles' }]);
+      navigate('/regles');
+    } else if (value === 'view_help_center') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Centre d\'aide complet' }]);
+      navigate('/aide/centre');
+    } else if (value === 'view_legal') {
+      setChatMessages(prev => [...prev, { type: 'user', text: 'Mentions légales' }]);
+      navigate('/legal');
     }
   }, [allFaqArticles, currentCategory, showCategoryQuestions, showCategoryOptions, showFaqAnswer, addBotMessage]);
 
