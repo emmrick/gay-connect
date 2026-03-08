@@ -70,7 +70,7 @@ const ImageWithLoader = ({ src, alt, zoomState, isZoomed }: {
         style={{
           WebkitUserSelect: 'none',
           WebkitTouchCallout: 'none',
-          filter: isBlocked ? 'brightness(0)' : 'none',
+          filter: 'none',
         }}
       />
     </>
