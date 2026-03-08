@@ -958,7 +958,7 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   // ============ DEFAULT: FAQ page ============
   return (
-    <div className={cn("bg-background flex flex-col", embedded ? "flex-1" : "min-h-dvh")}>
+    <div className={cn("bg-background flex flex-col overflow-hidden", embedded ? "flex-1" : "h-dvh")}>
       {/* Modern Header */}
       <div
         className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/30"
