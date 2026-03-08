@@ -495,8 +495,19 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                     </div>
                   </div>
                   )}
-                </div>
+                </>
               );
+
+              // Wrap ephemeral messages in visibility guard that hides entire row after viewing
+              if (isEphemeralMedia) {
+                return (
+                  <EphemeralMessageRow key={message.id} messageId={message.id} senderId={message.sender_id}>
+                    {messageContent}
+                  </EphemeralMessageRow>
+                );
+              }
+
+              return <div key={message.id}>{messageContent}</div>;
             })
           )}
 
