@@ -56,6 +56,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { markAsRead } = useUnreadMessages();
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
   const unblockUser = useUnblockUserAction();
+  const { data: isStaffUser } = useIsStaffUser(otherUserId);
   const { isOtherTyping, startTyping, stopTyping } = usePrivateTypingIndicator(otherUserId);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
