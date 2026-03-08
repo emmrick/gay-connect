@@ -447,6 +447,8 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                             mediaType={message.message_type as 'image' | 'video'}
                             isOwn={isOwn}
                           />
+                        ) : isEmojiOnlyMessage(message.content || '') ? (
+                          <EmojiMessageEffect content={message.content!} isOwn={isOwn} />
                         ) : (
                           <div className={cn(
                             "px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm",
