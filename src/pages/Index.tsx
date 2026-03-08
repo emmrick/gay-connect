@@ -593,11 +593,7 @@ const Index = () => {
               rightContent={<ReferralDialog />}
             />
             <ScrollArea className="flex-1 min-h-0">
-              <PremiumPage onNavigateToSupport={() => {
-                setPreviousTab(activeTab);
-                setActiveTab('help');
-                setCurrentView('help');
-              }} />
+              <CreditsPage />
             </ScrollArea>
           </motion.div>
         ) : null;
