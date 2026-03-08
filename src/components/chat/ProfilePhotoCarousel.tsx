@@ -106,6 +106,7 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
                     className="w-full h-full object-cover select-none"
                     draggable={false}
                   />
+                  <GayConnectWatermark />
                 </div>
               </div>
             ))}
