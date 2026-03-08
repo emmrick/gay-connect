@@ -68,11 +68,18 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   });
 
   // Auto-assign ticket + send welcome message when moderator opens it
+  // Only send welcome message if ticket is freshly opened (not already assigned to this moderator)
   useEffect(() => {
     if (!ticket || !activeTask?.reserved_by || !moderatorProfile?.username) return;
     if (autoMessageSentRef.current === ticket.id) return;
 
     const assignAndNotify = async () => {
+      // If already assigned to this moderator, skip (page refresh case)
+      if (ticket.status === 'assigned' && ticket.assigned_to === activeTask.reserved_by) {
+        autoMessageSentRef.current = ticket.id;
+        return;
+      }
+
       if (ticket.status === 'open') {
         await supabase
           .from('support_tickets' as any)
@@ -88,7 +95,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
         .insert({
           ticket_id: ticket.id,
           sender_id: activeTask.reserved_by,
-          content: `${moderatorProfile.username} a rejoint la conversation et consulte votre demande. 🙏`,
+          content: `**${moderatorProfile.username}** a rejoint la conversation et consulte votre demande. 🙏`,
           message_type: 'system',
         } as any);
     };
