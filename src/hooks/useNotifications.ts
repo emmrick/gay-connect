@@ -17,7 +17,7 @@ export interface Notification {
 export const useNotifications = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const pollIntervalRef = useRef(5000);
+  const pollIntervalRef = useRef(2000);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const lastSyncRef = useRef<string | null>(null);
 
