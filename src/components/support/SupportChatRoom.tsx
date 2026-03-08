@@ -712,7 +712,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
                         )}
                         style={{ wordBreak: 'break-word' }}
                         >
-                          {message.content}
+                          {formatBoldText(message.content)}
                         </div>
                       )}
 
