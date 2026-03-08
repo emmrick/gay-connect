@@ -649,6 +649,16 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                 <Switch checked={showFace} onCheckedChange={setShowFace} />
               </div>
 
+              <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50">
+                <div className="space-y-0.5">
+                  <Label>Afficher mon anniversaire</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Les autres verront ta date d'anniversaire
+                  </p>
+                </div>
+                <Switch checked={showBirthday} onCheckedChange={setShowBirthday} />
+              </div>
+
               <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
                 <p className="text-sm text-muted-foreground">
                   🔒 Tes informations de santé et préférences ne sont visibles que par les personnes avec qui tu choisis de les partager.
