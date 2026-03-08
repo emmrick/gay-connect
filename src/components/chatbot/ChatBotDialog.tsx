@@ -33,6 +33,7 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
   const [input, setInput] = useState('');
   const [localMessages, setLocalMessages] = useState<{ role: string; content: string }[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef(false);
 
