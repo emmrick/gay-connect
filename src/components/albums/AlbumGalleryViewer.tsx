@@ -415,10 +415,8 @@ const AlbumGalleryViewer = ({
                       <ImageWithLoader
                         src={item.media_url}
                         alt=""
-                        isBlocked={isBlocked}
                         zoomState={index === selectedIndex ? zoomState : { scale: 1, x: 0, y: 0 }}
                         isZoomed={isZoomed}
-                        preventContextMenu={preventContextMenu}
                       />
                       {!isZoomed && index === selectedIndex && (
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-3 py-1 rounded-full pointer-events-none">
