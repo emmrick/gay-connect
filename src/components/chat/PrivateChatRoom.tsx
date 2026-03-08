@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, Check, CheckCheck, ChevronDown, AlertTriangle } from 'lucide-react';
 import { useMobileScreenshotDetection } from '@/hooks/useMobileScreenshotDetection';
 import EmojiMessageEffect, { isEmojiOnlyMessage } from './EmojiMessageEffect';
 import { notifyScreenshotInChat } from '@/services/screenshotNotificationService';
@@ -22,7 +22,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import PrivateChatInput from './PrivateChatInput';
@@ -44,7 +43,6 @@ interface PrivateChatRoomProps {
   onBack: () => void;
 }
 
-// Format date for separator labels
 const formatDateLabel = (date: Date): string => {
   if (isToday(date)) return "Aujourd'hui";
   if (isYesterday(date)) return 'Hier';
@@ -69,7 +67,14 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   
   const screenshotNotifiedRef = useRef(false);
 
-  // Screenshot detection for private conversations
+  // Find the last own message id for read receipt display (Google Messages style)
+  const lastOwnMessageId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].sender_id === user?.id) return messages[i].id;
+    }
+    return null;
+  }, [messages, user?.id]);
+
   const handleScreenshotDetected = useCallback(async () => {
     if (!user || screenshotNotifiedRef.current) return;
     screenshotNotifiedRef.current = true;
@@ -88,7 +93,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     } catch (e) {
       console.error('[PrivateChat] Screenshot notification error:', e);
     }
-    // Allow re-detection after 30s
     setTimeout(() => { screenshotNotifiedRef.current = false; }, 30000);
   }, [user, otherUserId]);
 
@@ -99,7 +103,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
   useMobileNavigation({ onBack, enabled: true });
 
-  // Mark as read on enter
   useEffect(() => {
     if (otherUserId) markAsRead.mutate(otherUserId);
   }, [otherUserId]);
@@ -110,13 +113,11 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     prevMsgCount.current = 0;
   }, [otherUserId]);
 
-  // Simple scroll helper — like Google Messages: just pin to bottom
   const scrollToBottom = useCallback(() => {
     const el = messagesContainerRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, []);
 
-  // 1. On open / messages load → snap to bottom
   useEffect(() => {
     if (!isLoading && messages.length > 0) {
       scrollToBottom();
@@ -124,7 +125,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, [isLoading, messages.length, scrollToBottom]);
 
-  // 2. New message arrives → scroll down
   useEffect(() => {
     if (messages.length > prevMsgCount.current) {
       requestAnimationFrame(scrollToBottom);
@@ -132,12 +132,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   }, [messages.length, scrollToBottom]);
 
-  // 3. Typing indicator → scroll
   useEffect(() => {
     if (isOtherTyping) requestAnimationFrame(scrollToBottom);
   }, [isOtherTyping, scrollToBottom]);
 
-  // 4. Media / ephemeral content loads (changes DOM height) → keep pinned
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (!el) return;
@@ -145,10 +143,8 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     const observer = new ResizeObserver(() => {
       if (isNearBottom()) el.scrollTop = el.scrollHeight;
     });
-    // Observe every child so when images load & resize, we catch it
     Array.from(el.children).forEach(child => observer.observe(child));
     const mo = new MutationObserver(() => {
-      // Re-observe new children
       observer.disconnect();
       Array.from(el.children).forEach(child => observer.observe(child));
       if (isNearBottom()) el.scrollTop = el.scrollHeight;
@@ -157,7 +153,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     return () => { observer.disconnect(); mo.disconnect(); };
   }, [messages.length]);
 
-  // 5. Keyboard opens (visualViewport shrinks) → scroll
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
@@ -193,7 +188,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     refetchBlockStatus();
   };
 
-  // Determine if we should show a date separator before this message
   const shouldShowDateSeparator = (index: number): boolean => {
     if (index === 0) return true;
     const current = new Date(messages[index].created_at);
@@ -298,28 +292,26 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           <BlockUserDialog open={showBlockDialog} onOpenChange={setShowBlockDialog} userId={otherUserId} username={otherUserProfile.username} onBlocked={() => { refetchBlockStatus(); onBack(); }} />
         </>
       )}
-      
 
       {/* Messages area */}
       <div
         className="flex-1 overflow-y-auto overscroll-contain relative"
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        style={{ background: 'var(--gradient-subtle, hsl(var(--background)))' }}
       >
         <div className="px-3 py-2 space-y-0.5">
           {isLoading ? (
             <div className="space-y-4 p-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-                  <Skeleton className="h-12 w-48 rounded-2xl" />
+                  <Skeleton className="h-10 w-44 rounded-2xl" />
                 </div>
               ))}
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-20 text-center">
               <p className="text-muted-foreground text-sm">
-                Envoyer un message à {otherUserProfile?.username}
+                Envoie un message à {otherUserProfile?.username}
               </p>
             </div>
           ) : (
@@ -340,25 +332,27 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 } catch { /* ignore */ }
               }
 
-              // Check if next message is same sender and within 2min for grouping
+              // Grouping: next message same sender within 2min
               const nextMsg = messages[index + 1];
               const isLastInGroup = !nextMsg ||
                 nextMsg.sender_id !== message.sender_id ||
                 new Date(nextMsg.created_at).getTime() - new Date(message.created_at).getTime() > 120000;
 
-              // For ephemeral media, wrap entire row in visibility guard
+              // Google Messages: show read status only on the LAST own message
+              const isLastOwnMessage = isOwn && message.id === lastOwnMessageId;
+
               const messageContent = (
                 <>
                   {/* Date separator */}
                   {showDate && (
                     <div className="flex justify-center py-3">
-                      <span className="text-[11px] font-medium text-muted-foreground bg-muted/80 px-3 py-1 rounded-full">
+                      <span className="text-[11px] font-medium text-muted-foreground bg-muted/60 px-3 py-1 rounded-full">
                         {formatDateLabel(new Date(message.created_at))}
                       </span>
                     </div>
                   )}
 
-                  {/* System screenshot message - centered warning */}
+                  {/* System screenshot message */}
                   {isSystemScreenshot ? (
                     <div className="flex justify-center my-3">
                       <div className="max-w-[90%] bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3 text-center">
@@ -367,16 +361,15 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                           <span className="text-xs font-bold text-destructive">Capture d'écran détectée</span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                          {message.content?.split('\n\n').map((part, i) => {
-                            const rendered = part.replace(/\*\*([^*]+)\*\*/g, '').replace(/⚠️ |🚨 /g, '');
-                            return <span key={i}>{i > 0 && <><br/><br/></>}{
+                          {message.content?.split('\n\n').map((part, i) => (
+                            <span key={i}>{i > 0 && <><br/><br/></>}{
                               part.split(/(\*\*[^*]+\*\*)/g).map((seg, j) =>
                                 seg.startsWith('**') && seg.endsWith('**')
                                   ? <strong key={j} className="font-semibold text-destructive">{seg.slice(2, -2)}</strong>
                                   : <span key={j}>{seg.replace(/⚠️ |🚨 /g, '')}</span>
                               )
-                            }</span>;
-                          })}
+                            }</span>
+                          ))}
                         </p>
                         <p className="text-[10px] text-muted-foreground mt-2">
                           {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
@@ -384,15 +377,15 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       </div>
                     </div>
                   ) : (
-                  /* Message bubble */
+                  /* Message row — Google Messages style */
                   <div className={cn(
                     "flex items-end gap-2",
                     isOwn ? "justify-end" : "justify-start",
-                    isLastInGroup ? "mb-2" : "mb-0.5"
+                    isLastInGroup ? "mb-2" : "mb-px"
                   )}>
-                    {/* Avatar for received messages (only on last in group) */}
+                    {/* Avatar for received — only last in group */}
                     {!isOwn && (
-                      <div className="flex-shrink-0 w-7 h-7">
+                      <div className="flex-shrink-0 w-7">
                         {isLastInGroup && otherUserProfile?.avatar_url ? (
                           <img
                             src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
@@ -403,14 +396,13 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                           <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">
                             {otherUserProfile?.username?.charAt(0).toUpperCase()}
                           </div>
-                        ) : null}
+                        ) : <div className="w-7" />}
                       </div>
                     )}
 
                     <div className={cn("max-w-[78%] flex flex-col", isOwn ? "items-end" : "items-start")}>
-                      {/* Message content with reaction picker */}
+                      {/* Bubble + reaction picker */}
                       <div className="group/msg relative flex items-center gap-1">
-                        {/* Reaction picker - left for own messages */}
                         {isOwn && !isEphemeralMedia && (
                           <div className="md:opacity-0 md:group-hover/msg:opacity-100 transition-opacity">
                             <EmojiReactionPicker onSelect={(emoji) => toggleReaction.mutate({ messageId: message.id, emoji })} />
@@ -450,20 +442,19 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                         ) : isEmojiOnlyMessage(message.content || '') ? (
                           <EmojiMessageEffect content={message.content!} isOwn={isOwn} />
                         ) : (
-                          <div className={cn(
-                            "px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm",
-                            isOwn
-                              ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm"
-                              : "bg-secondary text-foreground rounded-2xl rounded-bl-sm",
-                            "max-w-full"
-                          )}
-                          style={{ wordBreak: 'break-word' }}
+                          <div
+                            className={cn(
+                              "px-3.5 py-2 text-[14.5px] leading-[1.4] whitespace-pre-wrap break-words",
+                              isOwn
+                                ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
+                                : "bg-secondary text-foreground rounded-2xl rounded-bl-md",
+                            )}
+                            style={{ wordBreak: 'break-word' }}
                           >
                             {message.content}
                           </div>
                         )}
 
-                        {/* Reaction picker - right for received messages */}
                         {!isOwn && !isEphemeralMedia && (
                           <div className="md:opacity-0 md:group-hover/msg:opacity-100 transition-opacity">
                             <EmojiReactionPicker onSelect={(emoji) => toggleReaction.mutate({ messageId: message.id, emoji })} />
@@ -471,14 +462,14 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                         )}
                       </div>
 
-                      {/* Reactions display */}
+                      {/* Reactions */}
                       <MessageReactions
                         reactions={getReactionsForMessage(message.id)}
                         onToggleReaction={(emoji) => toggleReaction.mutate({ messageId: message.id, emoji })}
                         isOwn={isOwn}
                       />
 
-                      {/* Timestamp + read status - only on last in group */}
+                      {/* Timestamp + read — Google Messages: time on last in group, read on last own msg only */}
                       {isLastInGroup && (
                         <div className={cn(
                           "flex items-center gap-1 mt-0.5 px-1",
@@ -487,11 +478,13 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                           <span className="text-[10px] text-muted-foreground">
                             {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
                           </span>
-                          {isOwn && (
-                            <CheckCheck className={cn(
-                              "w-3.5 h-3.5",
-                              message.read_at ? "text-primary" : "text-muted-foreground/50"
-                            )} />
+                          {/* Read receipt: only on last own message */}
+                          {isLastOwnMessage && (
+                            message.read_at ? (
+                              <CheckCheck className="w-3.5 h-3.5 text-primary" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5 text-muted-foreground/50" />
+                            )
                           )}
                         </div>
                       )}
@@ -501,7 +494,6 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 </>
               );
 
-              // Wrap ephemeral messages in visibility guard that hides entire row after viewing
               if (isEphemeralMedia) {
                 return (
                   <EphemeralMessageRow key={message.id} messageId={message.id} senderId={message.sender_id}>
@@ -516,11 +508,20 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
 
           {/* Typing indicator */}
           {isOtherTyping && (
-            <div className="flex justify-start mb-2">
-              <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-2.5 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="flex items-end gap-2 mb-2">
+              <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+                {otherUserProfile?.avatar_url ? (
+                  <img src={otherUserProfile.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">
+                    {otherUserProfile?.username?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="bg-secondary rounded-2xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           )}
