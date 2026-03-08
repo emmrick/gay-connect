@@ -62,7 +62,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [showProfilePreview, setShowProfilePreview] = useState(false);
+  
   const screenshotNotifiedRef = useRef(false);
 
   // Screenshot detection for private conversations
