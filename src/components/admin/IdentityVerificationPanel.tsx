@@ -250,29 +250,19 @@ const IdentityVerificationPanel = () => {
   const handleViewVerification = async (verification: VerificationWithProfile) => {
     setSelectedVerification(verification);
     setHasViewed(false);
-    setSignedUrls({ selfie: null, idFront: null, idBack: null });
+    setSignedSelfieUrl(null);
     
-    // Get signed URLs for the documents
+    // Get signed URL for the selfie
     try {
-      const getSignedUrl = async (path: string | null) => {
-        if (!path) return null;
-        // Extract the file path from the URL or use as-is if it's already a path
-        const filePath = path.includes('/') ? path.split('/').slice(-2).join('/') : path;
+      if (verification.selfie_url) {
+        const filePath = verification.selfie_url.includes('/') ? verification.selfie_url.split('/').slice(-2).join('/') : verification.selfie_url;
         const { data } = await supabase.storage
           .from('identity-documents')
-          .createSignedUrl(filePath, 300); // 5 minutes
-        return data?.signedUrl || null;
-      };
-
-      const [selfie, idFront, idBack] = await Promise.all([
-        getSignedUrl(verification.selfie_url),
-        getSignedUrl(verification.id_front_url),
-        getSignedUrl(verification.id_back_url),
-      ]);
-
-      setSignedUrls({ selfie, idFront, idBack });
+          .createSignedUrl(filePath, 300);
+        setSignedSelfieUrl(data?.signedUrl || null);
+      }
     } catch (error) {
-      console.error('Error getting signed URLs:', error);
+      console.error('Error getting signed URL:', error);
     }
 
     setViewDialogOpen(true);
