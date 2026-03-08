@@ -211,47 +211,51 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
 
         if (error) throw error;
 
-        // Get chat room info and sender profile
-        const { data: roomData } = await supabase
-          .from('chat_rooms')
-          .select('region_name, region_code, is_custom, id')
-          .eq('id', chatRoomId)
-          .single();
+        // Fire-and-forget: send notifications in background without blocking
+        (async () => {
+          try {
+            // Get chat room info and sender profile in parallel
+            const [roomResult, senderResult] = await Promise.all([
+              supabase
+                .from('chat_rooms')
+                .select('region_name, region_code, is_custom, id')
+                .eq('id', chatRoomId)
+                .single(),
+              supabase
+                .from('profiles')
+                .select('username')
+                .eq('user_id', user.id)
+                .single(),
+            ]);
 
-        const { data: senderProfile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('user_id', user.id)
-          .single();
+            const roomName = roomResult.data?.region_name || 'Groupe';
+            const senderName = senderResult.data?.username || 'Quelqu\'un';
+            const regionCode = roomResult.data?.region_code;
 
-        const roomName = roomData?.region_name || 'Groupe';
-        const senderName = senderProfile?.username || 'Quelqu\'un';
-        const regionCode = roomData?.region_code;
+            // Get all members of this group to notify them
+            const { data: roomMembers } = await supabase
+              .from('chat_room_members')
+              .select('user_id')
+              .eq('chat_room_id', chatRoomId);
 
-        // Get all members of this group to notify them
-        const { data: roomMembers } = await supabase
-          .from('chat_room_members')
-          .select('user_id')
-          .eq('chat_room_id', chatRoomId);
+            const memberIds = (roomMembers || [])
+              .map(m => m.user_id)
+              .filter(id => id !== user.id);
 
-        const memberIds = (roomMembers || [])
-          .map(m => m.user_id)
-          .filter(id => id !== user.id); // Exclude sender
+            const messagePreview = messageType === 'text'
+              ? (content || '').substring(0, 50)
+              : messageType === 'image' ? '📷 Photo' : '🎥 Vidéo';
 
-        // Send push notification to all group members (not just mentions)
-        const messagePreview = messageType === 'text'
-          ? (content || '').substring(0, 50)
-          : messageType === 'image' ? '📷 Photo' : '🎥 Vidéo';
-
-        for (const memberId of memberIds) {
-          notifyNewGroupMessage(
-            memberId,
-            roomName,
-            senderName,
-            messagePreview,
-            regionCode
-          );
-        }
+            // Send push notifications in parallel (fire-and-forget)
+            Promise.allSettled(
+              memberIds.map(memberId =>
+                notifyNewGroupMessage(memberId, roomName, senderName, messagePreview, regionCode)
+              )
+            );
+          } catch (e) {
+            console.error('Error sending group notifications:', e);
+          }
+        })();
 
         // Detect mentions for additional in-app notifications
         if (content && messageType === 'text') {
