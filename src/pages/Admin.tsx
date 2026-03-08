@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import AdminSidebar, { AdminSection } from '@/components/admin/AdminSidebar';
 import AdminMobileNav from '@/components/admin/AdminMobileNav';
+import AdminDashboard from '@/components/admin/AdminDashboard';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import ReportCard from '@/components/admin/ReportCard';
 import BlockedUserCard from '@/components/admin/BlockedUserCard';
@@ -65,7 +66,7 @@ const Admin = () => {
   const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
-  const [activeSection, setActiveSection] = useState<AdminSection | '__home__'>('__home__' as any);
+  const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
 
@@ -136,6 +137,16 @@ const Admin = () => {
 
   const renderContent = () => {
     switch (activeSection) {
+      case 'dashboard':
+        return (
+          <AdminDashboard
+            onNavigate={handleSectionChange as (s: AdminSection) => void}
+            pendingReports={pendingReportsCount}
+            pendingVerifications={pendingVerificationsCount}
+            pendingPurchases={pendingPurchasesCount}
+            isAdmin={!!isAdmin}
+          />
+        );
       case 'wallet': return <ModeratorWalletPanel />;
       case 'rates': return <TaskRatesPanel />;
       case 'withdrawals': return <WithdrawalRequestsPanel />;
@@ -179,11 +190,11 @@ const Admin = () => {
             </div>
             <Tabs value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as ReportStatus | 'all')}>
               <TabsList className="w-full grid grid-cols-5 h-9">
-                <TabsTrigger value="pending" className="text-xs data-[state=active]:shadow-sm">En attente</TabsTrigger>
-                <TabsTrigger value="reviewed" className="text-xs data-[state=active]:shadow-sm">En cours</TabsTrigger>
-                <TabsTrigger value="resolved" className="text-xs data-[state=active]:shadow-sm">Résolus</TabsTrigger>
-                <TabsTrigger value="dismissed" className="text-xs data-[state=active]:shadow-sm">Rejetés</TabsTrigger>
-                <TabsTrigger value="all" className="text-xs data-[state=active]:shadow-sm">Tous</TabsTrigger>
+                <TabsTrigger value="pending" className="text-xs">En attente</TabsTrigger>
+                <TabsTrigger value="reviewed" className="text-xs">En cours</TabsTrigger>
+                <TabsTrigger value="resolved" className="text-xs">Résolus</TabsTrigger>
+                <TabsTrigger value="dismissed" className="text-xs">Rejetés</TabsTrigger>
+                <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
               </TabsList>
               <TabsContent value={selectedStatus} className="mt-3">
                 <ScrollArea className="h-[calc(100dvh-280px)]">
@@ -219,7 +230,7 @@ const Admin = () => {
       case 'credit-costs': return <CreditCostsPanel />;
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
-      case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('__home__')} onNavigateToSection={handleSectionChange} />;
+      case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('dashboard')} onNavigateToSection={handleSectionChange} />;
       case 'support-ratings': return <SupportRatingsPanel />;
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;
@@ -232,19 +243,18 @@ const Admin = () => {
 
   // Mobile Layout
   if (isMobile) {
-    const isHome = activeSection === ('__home__' as any);
-
-    if (isHome) {
+    if (activeSection === 'dashboard') {
       return (
         <>
           <TaskQueuePopup onNavigateToSection={handleSectionChange} />
           <AdminMobileNav
-            activeSection={'__home__' as any}
+            activeSection={'dashboard'}
             onSectionChange={handleSectionChange}
             pendingReports={pendingReportsCount}
             blockedCount={blockedUsers?.length || 0}
             pendingPurchases={pendingPurchasesCount}
             pendingVerifications={pendingVerificationsCount}
+            isAdmin={!!isAdmin}
           />
         </>
       );
@@ -253,12 +263,13 @@ const Admin = () => {
     return (
       <div className="min-h-[100dvh] bg-background flex flex-col">
         <AdminMobileNav
-          activeSection={activeSection as AdminSection}
+          activeSection={activeSection}
           onSectionChange={handleSectionChange}
           pendingReports={pendingReportsCount}
           blockedCount={blockedUsers?.length || 0}
           pendingPurchases={pendingPurchasesCount}
           pendingVerifications={pendingVerificationsCount}
+          isAdmin={!!isAdmin}
         />
         <main className="flex-1 overflow-auto">
           <div className="p-3 pb-8">
@@ -281,12 +292,13 @@ const Admin = () => {
   return (
     <div className="h-screen bg-background flex overflow-hidden">
       <AdminSidebar
-        activeSection={activeSection as AdminSection}
+        activeSection={activeSection}
         onSectionChange={handleSectionChange}
         pendingReports={pendingReportsCount}
         blockedCount={blockedUsers?.length || 0}
         pendingPurchases={pendingPurchasesCount}
         pendingVerifications={pendingVerificationsCount}
+        isAdmin={!!isAdmin}
       />
 
       <main className="flex-1 overflow-auto bg-muted/20">
