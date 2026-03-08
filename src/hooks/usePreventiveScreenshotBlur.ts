@@ -105,11 +105,11 @@ export const usePreventiveScreenshotBlur = ({
       if (document.visibilityState === 'hidden') {
         // Show protection immediately when going to background
         // This ensures the screenshot in app switcher shows black
+        // But do NOT trigger onThreatDetected - this is just a visual shield
         setShowProtection(true);
-        onThreatDetected?.();
       } else {
-        // When returning, keep protection briefly then remove
-        setTimeout(() => setShowProtection(false), 500);
+        // When returning, remove protection quickly
+        setTimeout(() => setShowProtection(false), 300);
       }
     };
 
