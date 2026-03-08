@@ -436,7 +436,7 @@ const SnapCaptureDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-md max-h-[90vh] p-0 gap-0 overflow-hidden bg-black border-border [&>button:last-child]:hidden">
+      <DialogContent className="max-w-md max-h-[90vh] p-0 gap-0 overflow-hidden bg-black border-border [&>button:last-child]:hidden !duration-0 !animate-none">
         <canvas ref={canvasRef} className="hidden" />
 
         <DialogHeader className="p-4 border-b border-border bg-background/80 backdrop-blur-sm">
