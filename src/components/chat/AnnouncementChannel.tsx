@@ -201,7 +201,7 @@ const AnnouncementChannel = ({ roomId, onBack }: AnnouncementChannelProps) => {
                 type: message.message_type as 'text' | 'image',
                 replyToMessage: message.replyToMessage,
               }}
-              isOwn={message.sender_id === user?.id}
+              isOwn={false}
               reactions={getReactionsForMessage(message.id)}
               chatRoomId={roomId}
               onToggleReaction={handleToggleReaction}
