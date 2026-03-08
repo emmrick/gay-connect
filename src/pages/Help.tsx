@@ -264,7 +264,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     );
   }, [allFaqArticles, addBotMessage, showCategoryOptions]);
 
-  // Show an FAQ answer
+  // Show an FAQ answer (single message with follow-up options to avoid stacking delays)
   const showFaqAnswer = useCallback((articleId: string) => {
     const article = allFaqArticles.find(a => a.id === articleId);
     if (!article) return;
@@ -272,21 +272,13 @@ const Help = ({ embedded = false }: HelpProps) => {
     setAnsweredArticleIds(prev => new Set(prev).add(articleId));
     setNoMatchCount(0);
 
-    addBotMessage(`**${article.question}**\n\n${article.answer}`);
-
-    // After answer, ask if they need more help
-    setTimeout(() => {
-      const options: ChatOption[] = [
-        { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
-        { label: '📋 Changer de sujet', value: 'change_category' },
-        { label: '📜 Consulter les règles', value: 'view_rules' },
-        { label: '👤 Contacter un agent', value: 'contact_agent' },
-      ];
-      addBotMessage(
-        "Est-ce que ça répond à ta question ? Tu peux **continuer** sur le même sujet ou **changer de catégorie**.",
-        options
-      );
-    }, 1000);
+    const options: ChatOption[] = [
+      { label: '🔄 Autre question sur ce sujet', value: 'same_category' },
+      { label: '📋 Changer de sujet', value: 'change_category' },
+      { label: '📜 Consulter les règles', value: 'view_rules' },
+      { label: '👤 Contacter un agent', value: 'contact_agent' },
+    ];
+    addBotMessage(`**${article.question}**\n\n${article.answer}\n\nÇa répond à ta question ? 😊`, options);
   }, [allFaqArticles, addBotMessage]);
 
   // Search FAQ articles by keywords
