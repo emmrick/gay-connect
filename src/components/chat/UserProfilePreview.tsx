@@ -14,7 +14,7 @@ import BlockUserDialog from './BlockUserDialog';
 import ProfilePhotoCarousel from './ProfilePhotoCarousel';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
-import { useHasBlockedUser } from '@/hooks/useUserBlock';
+import { useHasBlockedUser, useIsStaffUser } from '@/hooks/useUserBlock';
 
 interface UserProfile {
   user_id: string;
