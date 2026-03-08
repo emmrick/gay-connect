@@ -26,14 +26,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
-interface EphemeralMediaData {
-  type: 'image' | 'video';
-  src: string;
-  senderName: string;
-  duration: number;
-  mediaId?: string;
-}
-
 interface ReplyMessage {
   id: string;
   content: string;
