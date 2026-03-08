@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import SavedRepliesSheet from '@/components/support/SavedRepliesSheet';
+import FAQSearchPanel from '@/components/support/FAQSearchPanel';
 import { toast } from 'sonner';
 import {
   Dialog,
