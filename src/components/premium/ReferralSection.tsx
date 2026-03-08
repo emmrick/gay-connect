@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Gift, Copy, Share2, Users, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { Gift, Copy, Share2, Users, CheckCircle, Clock, Loader2, Lightbulb, MessageCircle, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +66,36 @@ const ReferralSection = () => {
             <li>Il vérifie son identité</li>
             <li><span className="text-primary font-medium">Vous recevez tous les deux {referralReward} crédits !</span></li>
           </ol>
+        </div>
+
+        {/* Conseils pour inviter */}
+        <div className="p-4 rounded-lg border border-accent/30 bg-accent/5 space-y-3">
+          <h4 className="font-medium flex items-center gap-2 text-sm">
+            <Lightbulb className="w-4 h-4 text-amber-500" />
+            Astuces pour inviter facilement
+          </h4>
+          <ul className="text-xs text-muted-foreground space-y-2">
+            <li className="flex items-start gap-2">
+              <MessageCircle className="w-3.5 h-3.5 mt-0.5 text-primary flex-shrink-0" />
+              <span><strong>Envoyez le lien en privé</strong> — un message perso sur WhatsApp, Telegram ou Instagram est plus efficace qu'un post public.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Heart className="w-3.5 h-3.5 mt-0.5 text-pink-500 flex-shrink-0" />
+              <span><strong>Parlez de votre expérience</strong> — dites ce que vous aimez sur GayConnect, ça donne envie de rejoindre.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Gift className="w-3.5 h-3.5 mt-0.5 text-green-500 flex-shrink-0" />
+              <span><strong>Mentionnez la récompense</strong> — « On gagne {referralReward} crédits chacun ! » ça motive tout de suite.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Users className="w-3.5 h-3.5 mt-0.5 text-blue-500 flex-shrink-0" />
+              <span><strong>Ciblez vos amis célibataires</strong> — pensez à ceux qui cherchent à faire des rencontres, c'est pour eux !</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Share2 className="w-3.5 h-3.5 mt-0.5 text-violet-500 flex-shrink-0" />
+              <span><strong>Partagez dans vos stories</strong> — ajoutez votre lien dans une story Instagram ou Snapchat pour toucher plus de monde.</span>
+            </li>
+          </ul>
         </div>
 
         {/* Code et lien */}
