@@ -381,11 +381,28 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                   ) : (
                   /* Message bubble */
                   <div className={cn(
-                    "flex",
+                    "flex items-end gap-2",
                     isOwn ? "justify-end" : "justify-start",
                     isLastInGroup ? "mb-2" : "mb-0.5"
                   )}>
-                    <div className={cn("max-w-[80%] flex flex-col", isOwn ? "items-end" : "items-start")}>
+                    {/* Avatar for received messages (only on last in group) */}
+                    {!isOwn && (
+                      <div className="flex-shrink-0 w-7 h-7">
+                        {isLastInGroup && otherUserProfile?.avatar_url ? (
+                          <img
+                            src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
+                            alt=""
+                            className="w-7 h-7 rounded-full object-cover"
+                          />
+                        ) : isLastInGroup ? (
+                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">
+                            {otherUserProfile?.username?.charAt(0).toUpperCase()}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+
+                    <div className={cn("max-w-[78%] flex flex-col", isOwn ? "items-end" : "items-start")}>
                       {/* Message content with reaction picker */}
                       <div className="group/msg relative flex items-center gap-1">
                         {/* Reaction picker - left for own messages */}
@@ -427,10 +444,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                           />
                         ) : (
                           <div className={cn(
-                            "px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words",
+                            "px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm",
                             isOwn
-                              ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
-                              : "bg-card border border-border text-foreground rounded-2xl rounded-bl-md",
+                              ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm"
+                              : "bg-secondary text-foreground rounded-2xl rounded-bl-sm",
                             "max-w-full"
                           )}
                           style={{ wordBreak: 'break-word' }}
