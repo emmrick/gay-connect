@@ -439,7 +439,7 @@ const AlbumGalleryViewer = ({
                           e.stopPropagation();
                           toggleVideoPlay(item.id);
                         }}
-                        onContextMenu={preventContextMenu}
+                        
                         style={{
                           WebkitUserSelect: 'none',
                           WebkitTouchCallout: 'none',
