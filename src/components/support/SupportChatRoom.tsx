@@ -695,7 +695,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
                       ) : isSystem ? (
                         <div className="flex items-start gap-2 px-3 py-2 text-xs text-muted-foreground bg-muted/50 rounded-2xl border border-border/50 italic max-w-full">
                           <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                          <span style={{ wordBreak: 'break-word' }}>{message.content}</span>
+                          <span style={{ wordBreak: 'break-word' }}>{formatBoldText(message.content)}</span>
                         </div>
                       ) : isChatbotBot ? (
                         <div className="px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words bg-muted/60 border border-border/30 text-foreground rounded-2xl rounded-bl-md max-w-full"
