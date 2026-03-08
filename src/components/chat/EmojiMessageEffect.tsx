@@ -12,9 +12,7 @@ function getGraphemes(str: string): string[] {
   // Fallback: spread (imperfect for ZWJ sequences)
   return [...str];
 }
-  // Fallback: spread (imperfect for ZWJ sequences)
-  return [...str];
-}
+
 
 /**
  * Detects if a message is emoji-only (1-5 emoji graphemes, no text).
