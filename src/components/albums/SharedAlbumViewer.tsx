@@ -18,7 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
+
 
 interface SharedAlbumViewerProps {
   albumId: string;
