@@ -985,7 +985,6 @@ const Legal = () => {
           <p className="text-xs text-muted-foreground mb-4">
             Pour toute question, contactez-nous via la messagerie de l'application ou à pipaselfie@gmail.com.
           </p>
-          </p>
           <Button variant="outline" onClick={() => navigate('/')}>
             Retour à l'accueil
           </Button>
