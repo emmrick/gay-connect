@@ -83,16 +83,15 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
         conversationHistory: allMessages,
       });
 
-      // Stream words: 1 second per 3 words
+      // Fast streaming: reveal words quickly (~50ms per word)
       const words = reply.split(/(\s+)/);
       setIsTyping(true);
       setStreamingText('');
       
       for (let i = 0; i < words.length; i++) {
         setStreamingText(prev => prev + words[i]);
-        // Every 3 actual words (not whitespace), wait ~333ms (1s / 3 words)
-        if (words[i].trim() && (i + 1) % 2 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 333));
+        if (words[i].trim()) {
+          await new Promise(resolve => setTimeout(resolve, 40));
         }
       }
       
