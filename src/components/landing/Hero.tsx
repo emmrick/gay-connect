@@ -8,6 +8,9 @@ import { useTotalMemberCount, useOnlineMemberCount } from '@/hooks/useTotalMembe
 import { useNavigate, Link } from 'react-router-dom';
 import SEOHead, { websiteJsonLd, organizationJsonLd, faqPageJsonLd } from '@/components/seo/SEOHead';
 import React, { useEffect, useState, useRef } from 'react';
+import mockupChat from '@/assets/mockup-chat.png';
+import mockupSwipe from '@/assets/mockup-swipe.png';
+import mockupProfiles from '@/assets/mockup-profiles.png';
 import { motion, useInView } from 'framer-motion';
 import { useTheme } from 'next-themes';
 
