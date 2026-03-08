@@ -152,6 +152,15 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
         jsonLd={combinedJsonLd}
       />
 
+      {/* Top bar with branding */}
+      <div className="bg-background/95 backdrop-blur-lg border-b border-border/50 py-3 px-5 relative z-20">
+        <div className="container mx-auto flex items-center">
+          <h1 className="font-display text-2xl font-extrabold rainbow-text leading-tight">
+            Gay Connect
+          </h1>
+        </div>
+      </div>
+
       {/* 18+ Warning Banner */}
       <div className="bg-destructive/90 text-destructive-foreground py-2.5 px-4 text-center relative z-20">
         <div className="container mx-auto flex items-center justify-center gap-2 flex-wrap">
