@@ -32,9 +32,9 @@ const VerificationGuard = ({ children }: VerificationGuardProps) => {
     return <>{children}</>;
   }
 
-  // If verification is pending (submitted), allow access
+  // If verification is pending (submitted), show pending approval screen
   if (isVerificationPending) {
-    return <>{children}</>;
+    return <PendingApprovalScreen />;
   }
 
   // If deadline passed or can't access, show verification screen
