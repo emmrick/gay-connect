@@ -149,11 +149,14 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
           <div className="relative w-full h-full flex items-center justify-center min-h-[50vh]">
             {mediaType === 'image' ? (
-              <img
-                src={signedUrl}
-                alt="Photo partagée"
-                className="max-w-full max-h-[85vh] object-contain"
-              />
+              <div className="relative inline-block">
+                <img
+                  src={signedUrl}
+                  alt="Photo partagée"
+                  className="max-w-full max-h-[85vh] object-contain"
+                />
+                <GayConnectWatermark />
+              </div>
             ) : (
               <video
                 src={signedUrl}
