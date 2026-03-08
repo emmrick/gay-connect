@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Image, Video, Eye, Loader2, Infinity } from 'lucide-react';
+import { Image, Video, Eye, Loader2, Infinity, AlertTriangle } from 'lucide-react';
 import { useEphemeralMedia } from '@/hooks/useEphemeralMedia';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -78,9 +78,15 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
   const handleScreenshotDetected = useCallback(async () => {
     if (!media || !user || isOwn) return;
     try {
+      // Mark screenshot + preserve media for admin review (set expires_at far in future)
       await supabase
         .from('ephemeral_media')
-        .update({ screenshot_detected: true, screenshot_detected_at: new Date().toISOString() })
+        .update({ 
+          screenshot_detected: true, 
+          screenshot_detected_at: new Date().toISOString(),
+          // Preserve media for admin investigation - extend expiry by 30 days
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        })
         .eq('id', media.id);
       const { data: msg } = await supabase
         .from('messages').select('sender_id').eq('id', messageId).single();
@@ -97,10 +103,12 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
           context: 'ephemeral_media',
         });
       }
+      // Invalidate to refresh UI with screenshot_detected state
+      queryClient.invalidateQueries({ queryKey: ['ephemeral-media', messageId] });
     } catch (e) {
       console.error('Screenshot notification error:', e);
     }
-  }, [media, user, isOwn, messageId]);
+  }, [media, user, isOwn, messageId, queryClient]);
 
   // Build sequential items for the viewer
   const sequentialItems: EphemeralMediaItem[] = useMemo(() => {
@@ -140,11 +148,37 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
     );
   }
 
+  // After viewing: hide from conversation (media disappears)
+  // Exception: if screenshot was detected, show warning to the screenshotter
   if (media.is_viewed && !isOwn && !isUnlimited && !canReplay) {
+    if (media.screenshot_detected) {
+      return (
+        <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl bg-destructive/10 border border-destructive/30 max-w-[280px]">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
+            <span className="text-xs font-bold text-destructive">Capture d'écran détectée</span>
+          </div>
+          <p className="text-[11px] text-destructive/80 leading-relaxed">
+            Vous avez fait une capture d'écran. Suite à cette infraction, elle sera notée dans votre dossier pour non-respect des règlements du site.
+          </p>
+        </div>
+      );
+    }
+    // Media viewed normally → disappear from conversation
+    return null;
+  }
+
+  // For sender: show screenshot warning if detected
+  if (isOwn && media.screenshot_detected) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/30 text-muted-foreground">
-        {messageType === 'image' ? <Image className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-        <span className="text-xs">{messageType === 'image' ? 'Photo' : 'Vidéo'} déjà vue</span>
+      <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl bg-destructive/10 border border-destructive/30 max-w-[280px]">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
+          <span className="text-xs font-bold text-destructive">⚠️ Capture d'écran détectée</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Le destinataire a effectué une capture d'écran de votre {messageType === 'image' ? 'photo' : 'vidéo'}. Le média a été conservé pour l'équipe de modération.
+        </p>
       </div>
     );
   }
