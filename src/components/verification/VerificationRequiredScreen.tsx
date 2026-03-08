@@ -103,8 +103,8 @@ const VerificationRequiredScreen = () => {
                 </p>
                 <p className="text-muted-foreground mt-1">
                   {isVerificationRejected 
-                    ? 'Assure-toi que ton selfie soit net, bien éclairé et que ton visage soit clairement visible.'
-                    : 'Un simple selfie suffit ! Cette vérification permet de garantir que tu es une personne réelle et que tu as bien 18 ans ou plus.'
+                    ? 'Assure-toi que tes photos soient nettes, bien éclairées et que ton visage soit clairement visible sur le selfie.'
+                    : 'La vérification d\'identité est une étape essentielle pour empêcher les mineurs de s\'inscrire. Notre site étant axé sur du contenu adulte, nous avons l\'obligation de nous assurer que tous nos membres ont bien 18 ans ou plus. Nous ne pouvons être tenus responsables de toute navigation non protégée.'
                   }
                 </p>
               </div>
