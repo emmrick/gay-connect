@@ -48,6 +48,7 @@ const SnapCaptureDialog = ({
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
   const [lockHintVisible, setLockHintVisible] = useState(false);
+  const [flashVisible, setFlashVisible] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -64,6 +65,7 @@ const SnapCaptureDialog = ({
   const autoSplitTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recordingStartTimeRef = useRef(0);
   const lockZoneRef = useRef<HTMLDivElement>(null);
+  const viewfinderRef = useRef<HTMLDivElement>(null);
 
   const { uploadEphemeralMedia, isUploading, progress, creditsNeeded } = useEphemeralMediaUpload();
   const { permissions, isCameraDenied } = useCameraPermission();
@@ -117,21 +119,43 @@ const SnapCaptureDialog = ({
     if (isOpen && capturedSegments.length === 0) startCamera();
   }, [facingMode, isOpen, capturedSegments.length, startCamera]);
 
-  // Take photo (tap)
+  // Take photo (tap) - captures exactly what the viewfinder shows (object-cover crop)
   const takePhoto = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !viewfinderRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Flash feedback
+    setFlashVisible(true);
+    setTimeout(() => setFlashVisible(false), 150);
+
+    // Calculate the object-cover crop to match exactly what the user sees
+    const viewRect = viewfinderRef.current.getBoundingClientRect();
+    const viewAspect = viewRect.width / viewRect.height;
+    const videoAspect = video.videoWidth / video.videoHeight;
+
+    let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight;
+
+    if (videoAspect > viewAspect) {
+      // Video is wider than viewfinder → crop sides
+      sw = video.videoHeight * viewAspect;
+      sx = (video.videoWidth - sw) / 2;
+    } else {
+      // Video is taller than viewfinder → crop top/bottom
+      sh = video.videoWidth / viewAspect;
+      sy = (video.videoHeight - sh) / 2;
+    }
+
+    canvas.width = sw;
+    canvas.height = sh;
+
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
 
     canvas.toBlob((blob) => {
       if (blob) {
@@ -144,7 +168,7 @@ const SnapCaptureDialog = ({
         segmentsRef.current = [segment];
         stopCamera();
       }
-    }, 'image/jpeg', 0.9);
+    }, 'image/jpeg', 0.92);
   }, [facingMode, stopCamera]);
 
   // Force stop all recording (called when max duration reached)
@@ -458,7 +482,11 @@ const SnapCaptureDialog = ({
           {/* Live camera preview */}
           {!hasCapture && !cameraError && !isInitializing && (
             <div className="relative">
-              <div className="aspect-[3/4] bg-black overflow-hidden relative">
+              <div ref={viewfinderRef} className="aspect-[3/4] bg-black overflow-hidden relative">
+                {/* Flash overlay */}
+                {flashVisible && (
+                  <div className="absolute inset-0 bg-white z-30 pointer-events-none animate-fade-out" />
+                )}
                 <video
                   ref={videoRef}
                   autoPlay
@@ -604,7 +632,7 @@ const SnapCaptureDialog = ({
                     {seg.type === 'photo' ? (
                       <img src={seg.url} alt={`Segment ${i + 1}`} className="w-full h-full object-cover" />
                     ) : (
-                      <video src={seg.url} className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`} muted playsInline />
+                      <video src={seg.url} className="w-full h-full object-cover" muted playsInline />
                     )}
                     <div className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] text-white font-medium">
                       {seg.type === 'photo' ? '📷' : `🎥 ${Math.round(seg.duration || 0)}s`}
