@@ -214,69 +214,6 @@ const CreditsPage = () => {
           ))}
         </motion.div>
 
-        {/* ── ACHETER ─────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="relative overflow-hidden rounded-3xl bg-card border border-border/50"
-        >
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-
-          <div className="relative p-5 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
-                <ShoppingCart className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <p className="font-bold text-base">Acheter des crédits</p>
-                <p className="text-xs text-muted-foreground">Permanents · Sans expiration</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              {packages.map((p) => (
-                <div
-                  key={p.amount}
-                  className={`relative rounded-2xl p-3.5 border-2 transition-all ${
-                    p.best
-                      ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                      : 'border-border/60 bg-muted/30'
-                  }`}
-                >
-                  {p.best && (
-                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-[9px] px-2 py-0.5 font-bold shadow-sm">
-                        <Star className="w-2.5 h-2.5 mr-0.5" />
-                        MEILLEUR
-                      </Badge>
-                    </div>
-                  )}
-                  <div className={`text-2xl font-black ${p.best ? 'text-primary' : ''}`}>{p.amount}</div>
-                  <div className="text-xs text-muted-foreground font-medium">crédits</div>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-sm font-bold">{p.price}</span>
-                    <span className="text-[10px] text-muted-foreground">({p.perCredit}/cr.)</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <BuyCreditDialog
-              trigger={
-                <Button className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold h-12 rounded-2xl shadow-lg shadow-primary/20 text-sm">
-                  <ShoppingCart className="w-4.5 h-4.5 mr-2" />
-                  Acheter des crédits
-                </Button>
-              }
-            />
-            <p className="text-[10px] text-center text-muted-foreground">
-              Crédits ajoutés après validation administrateur
-            </p>
-          </div>
-        </motion.div>
-
         {/* ── GAGNER ──────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
