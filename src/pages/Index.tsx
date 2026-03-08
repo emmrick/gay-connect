@@ -49,16 +49,13 @@ import { cn } from '@/lib/utils';
 
 type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
 
-// Tab order for determining animation direction
-const tabOrder: NavTab[] = ['home', 'swipe', 'messages', 'premium', 'help', 'profile'];
-
-// Minimal animation variants - instant transitions
-const pageVariants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
+// Slide animation only for sub-views (chat, private)
+const slideIn = {
+  initial: { x: '100%', opacity: 0 },
+  animate: { x: 0, opacity: 1 },
+  exit: { x: '100%', opacity: 0 },
+  transition: { type: 'tween' as const, duration: 0.15, ease: 'easeOut' as const },
 };
-const fadeVariants = pageVariants;
 
 const Index = () => {
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
