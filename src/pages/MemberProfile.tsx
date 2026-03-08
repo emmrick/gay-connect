@@ -186,13 +186,9 @@ const MemberProfile = () => {
 
   const extendedProfile = profile as any;
   
-  // Safe back navigation - always go to home instead of risking app exit
+  // Safe back navigation - always go to main page to restore persisted state
   const handleBack = useCallback(() => {
-    if (window.history.length > 2) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
+    navigate('/', { replace: true });
   }, [navigate]);
 
   // Enable swipe-to-go-back gesture on mobile
