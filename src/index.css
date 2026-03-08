@@ -147,20 +147,21 @@
   }
 
   .message-bubble {
-    @apply rounded-2xl px-3 py-2;
-    max-width: min(80%, 340px);
+    @apply rounded-2xl px-4 py-2.5;
+    max-width: min(78%, 340px);
     min-width: fit-content;
     word-break: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
   }
 
   .message-bubble-sent {
-    @apply bg-primary text-primary-foreground rounded-br-md;
+    @apply bg-primary text-primary-foreground rounded-br-sm;
   }
 
   .message-bubble-received {
-    @apply bg-card text-foreground border border-border rounded-bl-md;
+    @apply bg-secondary text-foreground rounded-bl-sm;
   }
 
   .message-bubble p {
