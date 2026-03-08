@@ -61,6 +61,35 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
+  const screenshotNotifiedRef = useRef(false);
+
+  // Screenshot detection for private conversations
+  const handleScreenshotDetected = useCallback(async () => {
+    if (!user || screenshotNotifiedRef.current) return;
+    screenshotNotifiedRef.current = true;
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      await notifyScreenshotInChat({
+        screenshotterUserId: user.id,
+        screenshotterUsername: profile?.username || 'Un membre',
+        otherUserId,
+        context: 'chat',
+      });
+    } catch (e) {
+      console.error('[PrivateChat] Screenshot notification error:', e);
+    }
+    // Allow re-detection after 30s
+    setTimeout(() => { screenshotNotifiedRef.current = false; }, 30000);
+  }, [user, otherUserId]);
+
+  useMobileScreenshotDetection({
+    enabled: true,
+    onScreenshotDetected: handleScreenshotDetected,
+  });
 
   useMobileNavigation({ onBack, enabled: true });
 
