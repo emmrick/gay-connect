@@ -38,6 +38,24 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
   const { archiveConversation, unarchiveConversation, deleteConversation } = useConversationStatus();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [autoDeleteSheet, setAutoDeleteSheet] = useState<{ conversationId: string; username: string } | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const wasLongPressRef = useRef(false);
+
+  const handleLongPressStart = useCallback((conversationId: string, username: string) => {
+    wasLongPressRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      wasLongPressRef.current = true;
+      setAutoDeleteSheet({ conversationId, username });
+    }, 500);
+  }, []);
+
+  const handleLongPressEnd = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
 
   const displayConversations = showArchived ? archivedConversations : conversations;
 
