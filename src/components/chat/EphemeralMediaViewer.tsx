@@ -12,6 +12,7 @@ interface EphemeralMediaViewerProps {
   senderName: string;
   duration?: number; // 0 = unlimited
   mediaId?: string;
+  autoStart?: boolean; // Skip pre-view screen and start immediately
   onClose: () => void;
   onViewed: () => void;
   onSaveToConversation?: () => Promise<void>;
@@ -60,6 +61,7 @@ const EphemeralMediaViewer = ({
   senderName, 
   duration = 10,
   mediaId,
+  autoStart = false,
   onClose, 
   onViewed,
   onSaveToConversation,
@@ -69,7 +71,7 @@ const EphemeralMediaViewer = ({
   onScreenshotDetected,
 }: EphemeralMediaViewerProps) => {
   const isUnlimited = duration === 0;
-  const [isViewing, setIsViewing] = useState(false);
+  const [isViewing, setIsViewing] = useState(autoStart);
   const [timeLeft, setTimeLeft] = useState(isUnlimited ? -1 : duration);
   const [hasEnded, setHasEnded] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -94,7 +96,7 @@ const EphemeralMediaViewer = ({
   // Reset state when opening
   useEffect(() => {
     if (isOpen) {
-      setIsViewing(false);
+      setIsViewing(autoStart);
       setTimeLeft(isUnlimited ? -1 : duration);
       setHasEnded(false);
       setIsClosing(false);
@@ -104,8 +106,11 @@ const EphemeralMediaViewer = ({
       setShowReplyHint(false);
       hasCalledOnViewed.current = false;
       hasNotifiedScreenshot.current = false;
+      if (autoStart && type === 'video' && videoRef.current) {
+        videoRef.current.play();
+      }
     }
-  }, [isOpen, duration, isUnlimited]);
+  }, [isOpen, duration, isUnlimited, autoStart, type]);
 
   // Timer countdown - pauses on hold
   useEffect(() => {
