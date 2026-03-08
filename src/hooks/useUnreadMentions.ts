@@ -61,7 +61,7 @@ export const useUnreadMentions = () => {
       }));
     },
     enabled: !!user && !!profile?.username,
-    refetchInterval: 30000,
+    refetchInterval: 60000,
   });
 
   // Real-time subscription for new mentions

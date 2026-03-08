@@ -35,7 +35,7 @@ export const useBlockedStatus = () => {
       };
     },
     enabled: !!user,
-    refetchInterval: 30000, // Check every 30 seconds for faster status updates
+    refetchInterval: 120000, // Check every 2 minutes
   });
 
   return {

@@ -41,7 +41,7 @@ export const usePendingVerifications = () => {
       if (error) throw error;
       return count || 0;
     },
-    staleTime: 10000, // Consider data fresh for 10 seconds
-    refetchInterval: 30000,
+    staleTime: 30000,
+    refetchInterval: 60000,
   });
 };

@@ -31,8 +31,8 @@ export const useRegionMemberCounts = () => {
 
       return counts;
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 15000,
+    refetchInterval: 60000,
+    staleTime: 30000,
   });
 };
 
