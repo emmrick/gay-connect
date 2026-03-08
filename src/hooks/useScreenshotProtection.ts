@@ -2,17 +2,21 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import { useMobileScreenshotDetection } from './useMobileScreenshotDetection';
 import { usePreventiveScreenshotBlur } from './usePreventiveScreenshotBlur';
 import { enableScreenshotProtection, disableScreenshotProtection } from '@/plugins/ScreenshotBlocker';
+import { reportScreenshotGlobal } from '@/services/screenshotNotificationService';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * Screenshot protection hook - Shows black screen on detection
- * No suspension/sanctions, just visual protection
+ * Reports to moderation automatically
  */
 export const useScreenshotProtection = (enableNativeBlock = false, aggressiveDetection = false) => {
   const [isBlocked, setIsBlocked] = useState(false);
   const blockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isProtectionActive, setIsProtectionActive] = useState(false);
+  const reportCooldownRef = useRef<boolean>(false);
+  const { user, profile } = useAuth();
 
-  // Handle screenshot detection - just show black screen
+  // Handle screenshot detection - show black screen + report
   const handleViolation = useCallback(() => {
     console.log('[ScreenshotProtection] Screenshot detected - showing black screen');
     setIsBlocked(true);
@@ -24,7 +28,19 @@ export const useScreenshotProtection = (enableNativeBlock = false, aggressiveDet
     blockTimeoutRef.current = setTimeout(() => {
       setIsBlocked(false);
     }, 10000);
-  }, []);
+
+    // Report to moderation (with cooldown to avoid spam)
+    if (user?.id && !reportCooldownRef.current) {
+      reportCooldownRef.current = true;
+      setTimeout(() => { reportCooldownRef.current = false; }, 30000); // 30s cooldown
+
+      reportScreenshotGlobal({
+        userId: user.id,
+        username: profile?.username || 'Inconnu',
+        pageUrl: window.location.href,
+      });
+    }
+  }, [user?.id, profile?.username]);
 
   // Use advanced mobile screenshot detection - ALWAYS active for maximum protection
   useMobileScreenshotDetection({
