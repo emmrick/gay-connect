@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown, AlertTriangle } from 'lucide-react';
