@@ -90,13 +90,6 @@ const AuthenticatedApp = () => {
   useRealtimeProfileSync();
   useAnnouncementNotifications();
 
-  // Global screenshot protection - active on the entire site
-  const { isBlocked, enableProtection } = useScreenshotProtection(true);
-
-  // Enable protection on mount
-  useEffect(() => {
-    enableProtection();
-  }, [enableProtection]);
   
   return (
     <MaintenanceGuard>
