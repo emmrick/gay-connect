@@ -126,8 +126,7 @@ const LandingSupportChat = () => {
     }));
     addBotMessage(
       "Sur quel **sujet** as-tu une question ? Tu peux aussi **taper ta question** directement ! 👇",
-      options,
-      400
+      options
     );
   }, [faqCategories, addBotMessage]);
 
