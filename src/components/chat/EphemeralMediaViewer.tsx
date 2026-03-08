@@ -13,6 +13,8 @@ interface EphemeralMediaViewerProps {
   duration?: number; // 0 = unlimited
   mediaId?: string;
   autoStart?: boolean; // Skip pre-view screen and start immediately
+  totalItems?: number; // Total media items in sequence
+  currentItemIndex?: number; // Current item index in sequence
   onClose: () => void;
   onViewed: () => void;
   onSaveToConversation?: () => Promise<void>;
@@ -69,6 +71,8 @@ const EphemeralMediaViewer = ({
   onReplay,
   onSwipeReply,
   onScreenshotDetected,
+  totalItems,
+  currentItemIndex,
 }: EphemeralMediaViewerProps) => {
   const isUnlimited = duration === 0;
   const [isViewing, setIsViewing] = useState(autoStart);
@@ -132,9 +136,13 @@ const EphemeralMediaViewer = ({
     }
   }, [isViewing, timeLeft, onClose, onViewed, hasEnded, isUnlimited, isPaused]);
 
-  // Hold to pause (long press)
+  // Hold to pause (long press) / Tap to advance
+  const wasLongPress = useRef(false);
+
   const handlePointerDown = useCallback(() => {
+    wasLongPress.current = false;
     holdTimerRef.current = setTimeout(() => {
+      wasLongPress.current = true;
       setIsPaused(true);
       if (type === 'video' && videoRef.current) {
         videoRef.current.pause();
@@ -152,8 +160,16 @@ const EphemeralMediaViewer = ({
       if (type === 'video' && videoRef.current) {
         videoRef.current.play();
       }
+    } else if (!wasLongPress.current) {
+      // Tap detected → advance to next media
+      if (!hasCalledOnViewed.current) {
+        hasCalledOnViewed.current = true;
+        onViewed();
+      }
+      setIsClosing(true);
+      setTimeout(() => onClose(), 200);
     }
-  }, [isPaused, type]);
+  }, [isPaused, type, onViewed, onClose]);
 
   // Swipe up to reply
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
@@ -377,19 +393,33 @@ const EphemeralMediaViewer = ({
                 WebkitTouchCallout: 'none',
               }}
             >
-              {/* Snapchat-style segmented progress bar */}
+              {/* Story-style segmented progress bar - one segment per media item */}
               {!isUnlimited && (
-                <div className="absolute top-2 left-3 right-3 z-20 flex gap-0.5">
-                  {Array.from({ length: duration }, (_, i) => (
-                    <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
+                <div className="absolute top-2 left-3 right-3 z-20 flex gap-1">
+                  {totalItems && totalItems > 1 ? (
+                    // Multiple media: show one bar per media item
+                    Array.from({ length: totalItems }, (_, i) => (
+                      <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
+                        <div 
+                          className="h-full bg-white rounded-full transition-all ease-linear"
+                          style={{ 
+                            width: i < (currentItemIndex ?? 0) ? '100%' 
+                              : i === (currentItemIndex ?? 0) ? `${((duration - timeLeft) / duration) * 100}%` 
+                              : '0%',
+                            transitionDuration: i === (currentItemIndex ?? 0) ? '1000ms' : '300ms'
+                          }}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    // Single media: show one full bar that progresses
+                    <div className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
                       <div 
                         className="h-full bg-white rounded-full transition-all duration-1000 ease-linear"
-                        style={{ 
-                          width: i < (duration - timeLeft) ? '100%' : i === (duration - timeLeft) ? '100%' : '0%'
-                        }}
+                        style={{ width: `${((duration - timeLeft) / duration) * 100}%` }}
                       />
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
               
