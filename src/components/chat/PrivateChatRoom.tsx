@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown, AlertTriangle } from 'lucide-react';
 import { useMobileScreenshotDetection } from '@/hooks/useMobileScreenshotDetection';
 import { notifyScreenshotInChat } from '@/services/screenshotNotificationService';
+import { supabase } from '@/integrations/supabase/client';
 import MuteButton from './MuteButton';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
