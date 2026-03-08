@@ -32,7 +32,7 @@ import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
-import UserProfilePreview from './UserProfilePreview';
+
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
 import { cn } from '@/lib/utils';
 
