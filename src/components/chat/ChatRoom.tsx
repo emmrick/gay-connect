@@ -220,13 +220,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
         />
       )}
 
-      {/* User profile preview */}
-      <UserProfilePreview
-        userId={previewUserId}
-        isOpen={!!previewUserId}
-        onClose={() => setPreviewUserId(null)}
-        onStartPrivateChat={handleStartPrivateChat}
-      />
 
       {/* Suspension banner */}
 

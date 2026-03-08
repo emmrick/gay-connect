@@ -294,7 +294,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           <BlockUserDialog open={showBlockDialog} onOpenChange={setShowBlockDialog} userId={otherUserId} username={otherUserProfile.username} onBlocked={() => { refetchBlockStatus(); onBack(); }} />
         </>
       )}
-      <UserProfilePreview userId={otherUserId} isOpen={showProfilePreview} onClose={() => setShowProfilePreview(false)} onStartPrivateChat={() => setShowProfilePreview(false)} />
+      
 
       {/* Messages area */}
       <div
