@@ -116,7 +116,7 @@ const LandingSupportChat = () => {
 
   const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     setIsBotTyping(true);
-    const delay = Math.floor(Math.random() * 3000) + 2000; // 2-5 seconds
+    const delay = Math.floor(Math.random() * 800) + 700; // 0.7-1.5 seconds
     setTimeout(() => {
       setMessages(prev => [...prev, { type: 'bot', text, options }]);
       setIsBotTyping(false);
