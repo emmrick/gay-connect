@@ -199,6 +199,20 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
                   <MapPin className="w-3 h-3" />
                   {profile.region}
                 </span>
+                {(profile as any).birth_date && (() => {
+                  const zodiac = getZodiacSign((profile as any).birth_date);
+                  return zodiac ? (
+                    <span className="flex items-center gap-1" title={zodiac.label}>
+                      {zodiac.emoji} {zodiac.label}
+                    </span>
+                  ) : null;
+                })()}
+                {(profile as any).birth_date && (profile as any).show_birthday && (
+                  <span className="flex items-center gap-1">
+                    <Cake className="w-3 h-3" />
+                    {formatBirthday((profile as any).birth_date)}
+                  </span>
+                )}
                 {((profile as any).height || (profile as any).weight) && (
                   <span>
                     {(profile as any).height && `${(profile as any).height}cm`}
