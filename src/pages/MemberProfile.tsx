@@ -247,7 +247,7 @@ const MemberProfile = () => {
     return (
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border p-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </div>
