@@ -119,21 +119,43 @@ const SnapCaptureDialog = ({
     if (isOpen && capturedSegments.length === 0) startCamera();
   }, [facingMode, isOpen, capturedSegments.length, startCamera]);
 
-  // Take photo (tap)
+  // Take photo (tap) - captures exactly what the viewfinder shows (object-cover crop)
   const takePhoto = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !viewfinderRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Flash feedback
+    setFlashVisible(true);
+    setTimeout(() => setFlashVisible(false), 150);
+
+    // Calculate the object-cover crop to match exactly what the user sees
+    const viewRect = viewfinderRef.current.getBoundingClientRect();
+    const viewAspect = viewRect.width / viewRect.height;
+    const videoAspect = video.videoWidth / video.videoHeight;
+
+    let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight;
+
+    if (videoAspect > viewAspect) {
+      // Video is wider than viewfinder → crop sides
+      sw = video.videoHeight * viewAspect;
+      sx = (video.videoWidth - sw) / 2;
+    } else {
+      // Video is taller than viewfinder → crop top/bottom
+      sh = video.videoWidth / viewAspect;
+      sy = (video.videoHeight - sh) / 2;
+    }
+
+    canvas.width = sw;
+    canvas.height = sh;
+
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
 
     canvas.toBlob((blob) => {
       if (blob) {
@@ -146,7 +168,7 @@ const SnapCaptureDialog = ({
         segmentsRef.current = [segment];
         stopCamera();
       }
-    }, 'image/jpeg', 0.9);
+    }, 'image/jpeg', 0.92);
   }, [facingMode, stopCamera]);
 
   // Force stop all recording (called when max duration reached)
