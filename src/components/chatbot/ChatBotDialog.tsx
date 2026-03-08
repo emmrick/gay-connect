@@ -215,7 +215,7 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
               </AnimatePresence>
 
               {/* Typing indicator */}
-              {sendMessage.isPending && (
+              {(sendMessage.isPending || isTyping) && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
