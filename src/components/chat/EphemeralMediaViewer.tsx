@@ -71,6 +71,8 @@ const EphemeralMediaViewer = ({
   onReplay,
   onSwipeReply,
   onScreenshotDetected,
+  totalItems,
+  currentItemIndex,
 }: EphemeralMediaViewerProps) => {
   const isUnlimited = duration === 0;
   const [isViewing, setIsViewing] = useState(autoStart);
