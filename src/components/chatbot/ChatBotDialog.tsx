@@ -33,6 +33,7 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
   const [input, setInput] = useState('');
   const [localMessages, setLocalMessages] = useState<{ role: string; content: string }[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef(false);
 
@@ -82,13 +83,21 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
         conversationHistory: allMessages,
       });
 
-      // Simulate typing delay based on response length
-      // ~60ms per character, min 1500ms, max 8000ms
-      const typingDelay = Math.min(8000, Math.max(1500, reply.length * 60));
+      // Stream words: 1 second per 3 words
+      const words = reply.split(/(\s+)/);
       setIsTyping(true);
-      await new Promise(resolve => setTimeout(resolve, typingDelay));
+      setStreamingText('');
+      
+      for (let i = 0; i < words.length; i++) {
+        setStreamingText(prev => prev + words[i]);
+        // Every 3 actual words (not whitespace), wait ~333ms (1s / 3 words)
+        if (words[i].trim() && (i + 1) % 2 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 333));
+        }
+      }
+      
       setIsTyping(false);
-
+      setStreamingText('');
       setLocalMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (error) {
       setIsTyping(false);
@@ -214,7 +223,7 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
                 ))}
               </AnimatePresence>
 
-              {/* Typing indicator */}
+              {/* Typing / Streaming indicator */}
               {(sendMessage.isPending || isTyping) && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
@@ -224,13 +233,17 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
                   <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/20">
                     <Bot className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="bg-secondary/60 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 border border-border/30">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      <span className="text-[10px] text-muted-foreground ml-1.5">en train d'écrire...</span>
-                    </div>
+                  <div className="bg-secondary/60 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 border border-border/30 max-w-[80%]">
+                    {streamingText ? (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamingText}<span className="inline-block w-1.5 h-4 bg-primary/60 rounded-sm animate-pulse ml-0.5 align-middle" /></p>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="text-[10px] text-muted-foreground ml-1.5">en train d'écrire...</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
