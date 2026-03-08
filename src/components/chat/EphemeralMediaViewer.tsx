@@ -435,10 +435,7 @@ const EphemeralMediaViewer = ({
                 animate={{ scale: isPaused ? 1.02 : 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
                 className="w-full h-full flex items-center justify-center pointer-events-auto"
-                style={{ 
-                  filter: isBlocked ? 'brightness(0)' : 'none',
-                  transition: 'filter 0.1s ease',
-                }}
+                style={{}}
               >
                 {type === 'image' ? (
                   <div className="relative w-full h-full">
