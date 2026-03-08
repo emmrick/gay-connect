@@ -73,19 +73,6 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
     staleTime: 10000,
   });
 
-  // Wrap violation to notify
-  const handleViolation = useCallback(() => {
-    baseHandleViolation();
-    if (!hasNotifiedScreenshot.current && currentStory) {
-      hasNotifiedScreenshot.current = true;
-      reportScreenshot.mutate(currentStory.id);
-    }
-  }, [baseHandleViolation, currentStory, reportScreenshot]);
-
-  useEffect(() => {
-    enableProtection();
-    return () => { disableProtection(); };
-  }, [enableProtection, disableProtection]);
 
   // Mark as viewed
   useEffect(() => {
