@@ -3,6 +3,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { User, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import GayConnectWatermark from '@/components/security/GayConnectWatermark';
 
 interface ProfilePhotoCarouselProps {
   photos: string[];
