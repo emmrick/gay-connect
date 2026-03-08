@@ -92,8 +92,6 @@ const EphemeralMedia = ({
     <div 
       ref={containerRef}
       className="fixed inset-0 z-50 bg-black flex items-center justify-center select-none"
-      onContextMenu={preventContextMenu}
-      onDragStart={preventDrag}
       style={{ 
         userSelect: 'none', 
         WebkitUserSelect: 'none',
