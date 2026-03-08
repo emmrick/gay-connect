@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Image, Play, Download, ExternalLink, Loader2 } from 'lucide-react';
+import GayConnectWatermark from '@/components/security/GayConnectWatermark';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
