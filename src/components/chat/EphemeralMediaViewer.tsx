@@ -71,7 +71,7 @@ const EphemeralMediaViewer = ({
   onScreenshotDetected,
 }: EphemeralMediaViewerProps) => {
   const isUnlimited = duration === 0;
-  const [isViewing, setIsViewing] = useState(false);
+  const [isViewing, setIsViewing] = useState(autoStart);
   const [timeLeft, setTimeLeft] = useState(isUnlimited ? -1 : duration);
   const [hasEnded, setHasEnded] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
