@@ -189,26 +189,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
   }, [emblaApi, isZoomed]);
   const notificationSentRef = useRef(false);
   
-  const { 
-    isBlocked,
-    preventContextMenu, 
-    preventDrag,
-    enableProtection,
-    disableProtection,
-  } = useScreenshotProtection(true); // Enable native blocking on Capacitor
-
-  // Enable/disable protection based on viewer state
-  useEffect(() => {
-    if (isOpen) {
-      enableProtection();
-    } else {
-      disableProtection();
-    }
-    
-    return () => {
-      disableProtection();
-    };
-  }, [isOpen, enableProtection, disableProtection]);
 
   // Subscribe to album_shares changes in real-time
   useEffect(() => {
