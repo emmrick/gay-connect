@@ -381,12 +381,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 relative p-1">
-              {/* Screenshot block overlay */}
-              {isBlocked && (
-                <div className="absolute inset-0 z-50 bg-black rounded-xl flex items-center justify-center">
-                  <p className="text-white text-lg font-medium">Capture détectée</p>
-                </div>
-              )}
               {media.map((item, index) => (
                 <div 
                   key={item.id} 
