@@ -131,12 +131,6 @@ const Index = () => {
     }
   }, [location.state, user, navigate, markAsRead, getOrCreateConversation]);
 
-  // Calculate animation direction based on tab order
-  const direction = useMemo(() => {
-    const prevIndex = tabOrder.indexOf(previousTab);
-    const currIndex = tabOrder.indexOf(activeTab);
-    return currIndex > prevIndex ? 1 : -1;
-  }, [previousTab, activeTab]);
 
   // Process pending referral code after signup
   useEffect(() => {
