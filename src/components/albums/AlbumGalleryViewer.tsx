@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Play, Pause, Trash2, ZoomIn, ZoomOut, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
-import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
 
 interface AlbumMedia {
   id: string;
@@ -31,13 +29,11 @@ const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 
 /** Image component with loading state */
-const ImageWithLoader = ({ src, alt, isBlocked, zoomState, isZoomed, preventContextMenu }: {
+const ImageWithLoader = ({ src, alt, zoomState, isZoomed }: {
   src: string;
   alt: string;
-  isBlocked: boolean;
   zoomState: ZoomState;
   isZoomed: boolean;
-  preventContextMenu: (e: React.SyntheticEvent) => void;
 }) => {
   const [loaded, setLoaded] = useState(false);
 
@@ -52,7 +48,7 @@ const ImageWithLoader = ({ src, alt, isBlocked, zoomState, isZoomed, preventCont
         initial={{ scale: 1, opacity: 0 }}
         animate={{
           scale: zoomState.scale,
-          opacity: isBlocked ? 0 : loaded ? 1 : 0,
+          opacity: loaded ? 1 : 0,
           x: zoomState.x,
           y: zoomState.y,
         }}
@@ -74,7 +70,7 @@ const ImageWithLoader = ({ src, alt, isBlocked, zoomState, isZoomed, preventCont
         style={{
           WebkitUserSelect: 'none',
           WebkitTouchCallout: 'none',
-          filter: isBlocked ? 'brightness(0)' : 'none',
+          filter: 'none',
         }}
       />
     </>
@@ -102,13 +98,6 @@ const AlbumGalleryViewer = ({
   const [videoPlaying, setVideoPlaying] = useState<string | null>(null);
   const [zoomState, setZoomState] = useState<ZoomState>({ scale: 1, x: 0, y: 0 });
   
-  // Screenshot protection with mobile detection + preventive blur
-  const {
-    isBlocked,
-    preventContextMenu,
-    enableProtection,
-    disableProtection,
-  } = useScreenshotProtection(true); // Enable native blocking on Capacitor
   
   // Touch/gesture refs
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -117,18 +106,6 @@ const AlbumGalleryViewer = ({
   const initialScaleRef = useRef<number>(1);
   const lastPanRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   
-  // Enable/disable protection based on viewer state
-  useEffect(() => {
-    if (isOpen) {
-      enableProtection();
-    } else {
-      disableProtection();
-    }
-    
-    return () => {
-      disableProtection();
-    };
-  }, [isOpen, enableProtection, disableProtection]);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -350,10 +327,7 @@ const AlbumGalleryViewer = ({
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm"
         data-protected="true"
-        onContextMenu={preventContextMenu}
       >
-        {/* Banking-style protection overlay */}
-        <ScreenshotProtectionOverlay isActive={isBlocked} />
         
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
@@ -441,10 +415,8 @@ const AlbumGalleryViewer = ({
                       <ImageWithLoader
                         src={item.media_url}
                         alt=""
-                        isBlocked={isBlocked}
                         zoomState={index === selectedIndex ? zoomState : { scale: 1, x: 0, y: 0 }}
                         isZoomed={isZoomed}
-                        preventContextMenu={preventContextMenu}
                       />
                       {!isZoomed && index === selectedIndex && (
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-3 py-1 rounded-full pointer-events-none">
@@ -456,7 +428,7 @@ const AlbumGalleryViewer = ({
                     <div className="relative w-full h-full flex items-center justify-center">
                       <motion.video
                         initial={{ scale: 1, opacity: 1 }}
-                        animate={{ scale: 1, opacity: isBlocked ? 0 : 1 }}
+                        animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.1 }}
                         src={item.media_url}
                         className="max-w-full max-h-full object-contain rounded-lg select-none"
@@ -467,11 +439,11 @@ const AlbumGalleryViewer = ({
                           e.stopPropagation();
                           toggleVideoPlay(item.id);
                         }}
-                        onContextMenu={preventContextMenu}
+                        
                         style={{
                           WebkitUserSelect: 'none',
                           WebkitTouchCallout: 'none',
-                          filter: isBlocked ? 'brightness(0)' : 'none',
+                          filter: 'none',
                         }}
                       />
                       {videoPlaying !== item.id && (
@@ -523,28 +495,6 @@ const AlbumGalleryViewer = ({
           </button>
         )}
 
-        {/* Screenshot blocked overlay */}
-        <AnimatePresence>
-          {isBlocked && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 bg-black flex items-center justify-center"
-            >
-              <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                className="text-center"
-              >
-                <div className="w-24 h-24 mx-auto rounded-full bg-white/10 flex items-center justify-center mb-6">
-                  <Shield className="w-12 h-12 text-white/70" />
-                </div>
-                <p className="text-white text-2xl font-bold mb-2">Contenu protégé</p>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Thumbnails - Bottom navigation (hidden when zoomed) */}
         {media.length > 1 && !isZoomed && (

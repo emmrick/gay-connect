@@ -13,12 +13,12 @@ import { fr } from 'date-fns/locale';
 import { Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
+
 import { useAuth } from '@/contexts/AuthContext';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
+
 
 interface SharedAlbumViewerProps {
   albumId: string;
@@ -189,26 +189,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
   }, [emblaApi, isZoomed]);
   const notificationSentRef = useRef(false);
   
-  const { 
-    isBlocked,
-    preventContextMenu, 
-    preventDrag,
-    enableProtection,
-    disableProtection,
-  } = useScreenshotProtection(true); // Enable native blocking on Capacitor
-
-  // Enable/disable protection based on viewer state
-  useEffect(() => {
-    if (isOpen) {
-      enableProtection();
-    } else {
-      disableProtection();
-    }
-    
-    return () => {
-      disableProtection();
-    };
-  }, [isOpen, enableProtection, disableProtection]);
 
   // Subscribe to album_shares changes in real-time
   useEffect(() => {
@@ -298,12 +278,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
     notifyOwnerMutation.mutate();
   }, [notifyOwnerMutation]);
 
-  // Watch for isBlocked changes to notify owner
-  const prevBlockedRef = useRef(false);
-  if (isBlocked && !prevBlockedRef.current) {
-    handleScreenshotDetected();
-  }
-  prevBlockedRef.current = isBlocked;
 
   // Fetch album media with signed URLs
   const { data: media = [], isLoading, error: mediaError } = useQuery({
@@ -407,19 +381,11 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 relative p-1">
-              {/* Screenshot block overlay */}
-              {isBlocked && (
-                <div className="absolute inset-0 z-50 bg-black rounded-xl flex items-center justify-center">
-                  <p className="text-white text-lg font-medium">Capture détectée</p>
-                </div>
-              )}
               {media.map((item, index) => (
                 <div 
                   key={item.id} 
                   className="aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
                   onClick={() => setFullscreenIndex(index)}
-                  onContextMenu={preventContextMenu}
-                  onDragStart={preventDrag}
                 >
                   {item.media_type === 'image' ? (
                     <img 
@@ -445,10 +411,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
         {fullscreenIndex !== null && media.length > 0 && (
           <div 
             className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
-            onContextMenu={preventContextMenu}
           >
-            {/* Banking-style protection overlay */}
-            <ScreenshotProtectionOverlay isActive={isBlocked} />
             
             {/* Header with close button and counter */}
             <div className="absolute top-0 left-0 right-0 z-[102] flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
@@ -492,8 +455,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                           src={item.signed_url} 
                           alt="" 
                           className="max-w-full max-h-full object-contain select-none"
-                          onContextMenu={preventContextMenu}
-                          onDragStart={preventDrag}
                           draggable={false}
                           loading="eager"
                         />
@@ -504,7 +465,7 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                         className="max-w-full max-h-full select-none"
                         controls
                         autoPlay={index === currentSlide}
-                        onContextMenu={preventContextMenu}
+                        
                         controlsList="nodownload"
                       />
                     )}

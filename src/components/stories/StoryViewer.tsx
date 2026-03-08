@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Trash2, Globe, MapPin, Lock, Shield, Plus, Users } from 'lucide-react';
 import { useStories, StoryGroup, Story } from '@/hooks/useStories';
 import { useAuth } from '@/contexts/AuthContext';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
-import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,13 +36,6 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasNotifiedScreenshot = useRef(false);
 
-  const {
-    isBlocked,
-    preventContextMenu,
-    handleViolation: baseHandleViolation,
-    enableProtection,
-    disableProtection,
-  } = useScreenshotProtection(true, true);
 
   const currentStory = group.stories[currentIndex];
   const isOwn = currentStory?.user_id === user?.id;
@@ -82,19 +73,6 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
     staleTime: 10000,
   });
 
-  // Wrap violation to notify
-  const handleViolation = useCallback(() => {
-    baseHandleViolation();
-    if (!hasNotifiedScreenshot.current && currentStory) {
-      hasNotifiedScreenshot.current = true;
-      reportScreenshot.mutate(currentStory.id);
-    }
-  }, [baseHandleViolation, currentStory, reportScreenshot]);
-
-  useEffect(() => {
-    enableProtection();
-    return () => { disableProtection(); };
-  }, [enableProtection, disableProtection]);
 
   // Mark as viewed
   useEffect(() => {
@@ -195,10 +173,7 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
         className="fixed inset-0 z-[100] bg-black select-none"
-        onContextMenu={preventContextMenu}
-        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
       >
-        <ScreenshotProtectionOverlay isActive={isBlocked} />
 
         {/* Segmented progress bars */}
         <div className="absolute top-2 left-3 right-3 z-20 flex gap-1">
@@ -290,10 +265,7 @@ const StoryViewer = ({ group, onClose, onNextGroup, onAddStory }: StoryViewerPro
             animate={{ opacity: 1, scale: isPaused ? 1.02 : 1 }}
             transition={{ duration: 0.2 }}
             className="w-full h-full flex items-center justify-center"
-            style={{
-              filter: isBlocked ? 'brightness(0)' : 'none',
-              transition: 'filter 0.1s ease',
-            }}
+            style={{}}
           >
             {currentStory.media_type === 'image' ? (
               <img

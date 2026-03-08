@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Play, Eye, EyeOff, Shield } from 'lucide-react';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
+
 import { Button } from '@/components/ui/button';
 
 interface EphemeralMediaProps {
@@ -24,12 +24,6 @@ const EphemeralMedia = ({
 }: EphemeralMediaProps) => {
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(duration);
-  const { 
-    isBlocked, 
-    preventContextMenu, 
-    preventDrag, 
-    handleViolation 
-  } = useScreenshotProtection();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -46,53 +40,7 @@ const EphemeralMedia = ({
     }
   }, [isViewing, timeLeft, onClose, onViewed]);
 
-  // Disable DevTools detection
-  useEffect(() => {
-    if (!isViewing) return;
 
-    const detectDevTools = () => {
-      const threshold = 160;
-      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-      
-      if (widthThreshold || heightThreshold) {
-        handleViolation();
-      }
-    };
-
-    // Check periodically while viewing
-    const interval = setInterval(detectDevTools, 1000);
-    
-    return () => clearInterval(interval);
-  }, [isViewing, handleViolation]);
-
-  // Prevent copy operations
-  useEffect(() => {
-    if (!isViewing) return;
-
-    const preventCopy = (e: ClipboardEvent) => {
-      e.preventDefault();
-      handleViolation();
-    };
-
-    const preventKeyShortcuts = (e: KeyboardEvent) => {
-      // Prevent Ctrl+C, Ctrl+S, Ctrl+P, etc.
-      if (e.ctrlKey || e.metaKey) {
-        if (['c', 's', 'p', 'a'].includes(e.key.toLowerCase())) {
-          e.preventDefault();
-          handleViolation();
-        }
-      }
-    };
-
-    document.addEventListener('copy', preventCopy);
-    document.addEventListener('keydown', preventKeyShortcuts);
-
-    return () => {
-      document.removeEventListener('copy', preventCopy);
-      document.removeEventListener('keydown', preventKeyShortcuts);
-    };
-  }, [isViewing, handleViolation]);
 
   const handleStartViewing = () => {
     setIsViewing(true);
@@ -144,8 +92,6 @@ const EphemeralMedia = ({
     <div 
       ref={containerRef}
       className="fixed inset-0 z-50 bg-black flex items-center justify-center select-none"
-      onContextMenu={preventContextMenu}
-      onDragStart={preventDrag}
       style={{ 
         userSelect: 'none', 
         WebkitUserSelect: 'none',
@@ -188,9 +134,7 @@ const EphemeralMedia = ({
       <div 
         className="max-w-full max-h-full p-16 pointer-events-none relative"
         style={{ 
-          // Content goes BLACK immediately on screenshot attempt
-          filter: isBlocked ? 'brightness(0)' : 'none',
-          transition: 'filter 0.1s ease',
+          filter: 'none',
         }}
       >
         {/* Invisible watermark overlay for tracking */}
@@ -231,14 +175,6 @@ const EphemeralMedia = ({
       </div>
 
       {/* Black overlay when screenshot detected */}
-      {isBlocked && (
-        <div className="absolute inset-0 bg-black z-20 flex items-center justify-center">
-          <div className="text-center">
-            <Shield className="w-16 h-16 text-white/50 mx-auto mb-4" />
-            <p className="text-white text-xl font-bold">Contenu protégé</p>
-          </div>
-        </div>
-      )}
       
       {/* Warning overlay */}
       <div className="absolute bottom-8 left-0 right-0 text-center">

@@ -2,10 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity as InfinityIcon, Check, Send, RotateCcw } from 'lucide-react';
 import GayConnectWatermark from '@/components/security/GayConnectWatermark';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
 
 interface EphemeralMediaViewerProps {
   isOpen: boolean;
@@ -79,13 +77,6 @@ const EphemeralMediaViewer = ({
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [showReplyHint, setShowReplyHint] = useState(false);
-  const { 
-    isBlocked,
-    preventContextMenu, 
-    handleViolation: baseHandleViolation,
-    enableProtection,
-    disableProtection,
-  } = useScreenshotProtection(true, true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasCalledOnViewed = useRef(false);
@@ -94,21 +85,11 @@ const EphemeralMediaViewer = ({
 
   // Wrap violation handler to also notify sender
   const handleViolation = useCallback(() => {
-    baseHandleViolation();
     if (onScreenshotDetected && !hasNotifiedScreenshot.current) {
       hasNotifiedScreenshot.current = true;
       onScreenshotDetected();
     }
-  }, [baseHandleViolation, onScreenshotDetected]);
-
-  // Enable protection when viewing starts
-  useEffect(() => {
-    if (isViewing && isOpen) {
-      enableProtection();
-    } else {
-      disableProtection();
-    }
-  }, [isViewing, isOpen, enableProtection, disableProtection]);
+  }, [onScreenshotDetected]);
 
   // Reset state when opening
   useEffect(() => {
@@ -369,8 +350,6 @@ const EphemeralMediaViewer = ({
           )}
         </AnimatePresence>
 
-        {/* Protection overlay */}
-        <ScreenshotProtectionOverlay isActive={isBlocked} />
 
         {/* Full-screen immersive viewing */}
         <AnimatePresence>
@@ -383,7 +362,7 @@ const EphemeralMediaViewer = ({
               transition={{ duration: 0.3 }}
               ref={containerRef}
               className="absolute inset-0 bg-black flex items-center justify-center select-none"
-              onContextMenu={preventContextMenu}
+              
               onPointerDown={handlePointerDown}
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerUp}
@@ -456,10 +435,7 @@ const EphemeralMediaViewer = ({
                 animate={{ scale: isPaused ? 1.02 : 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
                 className="w-full h-full flex items-center justify-center pointer-events-auto"
-                style={{ 
-                  filter: isBlocked ? 'brightness(0)' : 'none',
-                  transition: 'filter 0.1s ease',
-                }}
+                style={{}}
               >
                 {type === 'image' ? (
                   <div className="relative w-full h-full">
@@ -505,25 +481,6 @@ const EphemeralMediaViewer = ({
                 )}
               </AnimatePresence>
 
-              {/* Screenshot detected overlay */}
-              <AnimatePresence>
-                {isBlocked && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black z-20 flex items-center justify-center"
-                  >
-                    <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-center">
-                      <div className="w-24 h-24 mx-auto rounded-full bg-destructive/30 flex items-center justify-center mb-6">
-                        <AlertTriangle className="w-12 h-12 text-destructive" />
-                      </div>
-                      <p className="text-destructive text-2xl font-bold mb-2">Capture détectée !</p>
-                      <p className="text-destructive/70 text-sm">Votre compte a été suspendu</p>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Swipe up reply hint */}
               <AnimatePresence>
