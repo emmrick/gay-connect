@@ -7,6 +7,7 @@ import SavedMessagesDialog from './SavedMessagesDialog';
 import MentionAutocomplete from './MentionAutocomplete';
 import { useMentionAutocomplete } from '@/hooks/useMentionAutocomplete';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useForbiddenWords } from '@/hooks/useForbiddenWords';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
