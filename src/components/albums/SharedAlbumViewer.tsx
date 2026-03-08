@@ -386,8 +386,6 @@ const SharedAlbumViewer = ({ albumId, albumName, expiresAt, isOpen, onClose }: S
                   key={item.id} 
                   className="aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
                   onClick={() => setFullscreenIndex(index)}
-                  onContextMenu={preventContextMenu}
-                  onDragStart={preventDrag}
                 >
                   {item.media_type === 'image' ? (
                     <img 
