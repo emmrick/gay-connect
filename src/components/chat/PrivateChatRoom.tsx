@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import PrivateChatInput from './PrivateChatInput';
 import EphemeralMessage from './EphemeralMessage';
+import EphemeralMessageRow from './EphemeralMessageRow';
 import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
 import CreditRequestMessage from './CreditRequestMessage';
