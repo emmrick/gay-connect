@@ -17,7 +17,7 @@ export interface Notification {
 export const useNotifications = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const pollIntervalRef = useRef(5000);
+  const pollIntervalRef = useRef(2000);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const lastSyncRef = useRef<string | null>(null);
 
@@ -85,13 +85,13 @@ export const useNotifications = () => {
         const { count } = await q;
 
         if (count && count > 0) {
-          pollIntervalRef.current = 5000;
+          pollIntervalRef.current = 2000; // Fast polling when new notifications found
           invalidateAll();
         } else {
-          pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.5, 30000);
+          pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.3, 15000);
         }
       } catch {
-        pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.5, 30000);
+        pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.3, 15000);
       } finally {
         timeoutRef.current = setTimeout(poll, pollIntervalRef.current);
       }

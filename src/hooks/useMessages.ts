@@ -211,79 +211,80 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
 
         if (error) throw error;
 
-        // Get chat room info and sender profile
-        const { data: roomData } = await supabase
-          .from('chat_rooms')
-          .select('region_name, region_code, is_custom, id')
-          .eq('id', chatRoomId)
-          .single();
+        // Fire-and-forget: send notifications in background without blocking
+        (async () => {
+          try {
+            // Get chat room info and sender profile in parallel
+            const [roomResult, senderResult] = await Promise.all([
+              supabase
+                .from('chat_rooms')
+                .select('region_name, region_code, is_custom, id')
+                .eq('id', chatRoomId)
+                .single(),
+              supabase
+                .from('profiles')
+                .select('username')
+                .eq('user_id', user.id)
+                .single(),
+            ]);
 
-        const { data: senderProfile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('user_id', user.id)
-          .single();
+            const roomName = roomResult.data?.region_name || 'Groupe';
+            const senderName = senderResult.data?.username || 'Quelqu\'un';
+            const regionCode = roomResult.data?.region_code;
 
-        const roomName = roomData?.region_name || 'Groupe';
-        const senderName = senderProfile?.username || 'Quelqu\'un';
-        const regionCode = roomData?.region_code;
+            // Get all members of this group to notify them
+            const { data: roomMembers } = await supabase
+              .from('chat_room_members')
+              .select('user_id')
+              .eq('chat_room_id', chatRoomId);
 
-        // Get all members of this group to notify them
-        const { data: roomMembers } = await supabase
-          .from('chat_room_members')
-          .select('user_id')
-          .eq('chat_room_id', chatRoomId);
+            const memberIds = (roomMembers || [])
+              .map(m => m.user_id)
+              .filter(id => id !== user.id);
 
-        const memberIds = (roomMembers || [])
-          .map(m => m.user_id)
-          .filter(id => id !== user.id); // Exclude sender
+            const messagePreview = messageType === 'text'
+              ? (content || '').substring(0, 50)
+              : messageType === 'image' ? '📷 Photo' : '🎥 Vidéo';
 
-        // Send push notification to all group members (not just mentions)
-        const messagePreview = messageType === 'text'
-          ? (content || '').substring(0, 50)
-          : messageType === 'image' ? '📷 Photo' : '🎥 Vidéo';
+            // Send push notifications in parallel (fire-and-forget)
+            Promise.allSettled(
+              memberIds.map(memberId =>
+                notifyNewGroupMessage(memberId, roomName, senderName, messagePreview, regionCode)
+              )
+            );
 
-        for (const memberId of memberIds) {
-          notifyNewGroupMessage(
-            memberId,
-            roomName,
-            senderName,
-            messagePreview,
-            regionCode
-          );
-        }
+            // Detect mentions for additional in-app notifications
+            if (content && messageType === 'text') {
+              const mentionRegex = /@(\w+)/g;
+              const mentions = content.match(mentionRegex);
+              
+              if (mentions && mentions.length > 0) {
+                const usernames = mentions.map(m => m.substring(1).toLowerCase());
 
-        // Detect mentions for additional in-app notifications
-        if (content && messageType === 'text') {
-          const mentionRegex = /@(\w+)/g;
-          const mentions = content.match(mentionRegex);
-          
-          if (mentions && mentions.length > 0) {
-            const usernames = mentions.map(m => m.substring(1).toLowerCase());
+                const { data: mentionedProfiles } = await supabase
+                  .from('profiles')
+                  .select('user_id, username')
+                  .in('username', usernames.map(u => u.toLowerCase()));
 
-            // Find users with matching usernames
-            const { data: mentionedProfiles } = await supabase
-              .from('profiles')
-              .select('user_id, username')
-              .in('username', usernames.map(u => u.toLowerCase()));
+                if (mentionedProfiles && mentionedProfiles.length > 0) {
+                  for (const mentionedUser of mentionedProfiles) {
+                    if (mentionedUser.user_id === user.id) continue;
 
-            if (mentionedProfiles && mentionedProfiles.length > 0) {
-              for (const mentionedUser of mentionedProfiles) {
-                // Don't notify yourself
-                if (mentionedUser.user_id === user.id) continue;
-
-                // Create in-app notification for mentions
-                await supabase.from('notifications').insert({
-                  user_id: mentionedUser.user_id,
-                  type: 'group_mention',
-                  title: `💬 Mention dans ${roomName}`,
-                  message: `${senderName} t'a mentionné: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
-                  action_url: '/',
-                });
+                    await supabase.from('notifications').insert({
+                      user_id: mentionedUser.user_id,
+                      type: 'group_mention',
+                      title: `💬 Mention dans ${roomName}`,
+                      message: `${senderName} t'a mentionné: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+                      action_url: '/',
+                    });
+                  }
+                }
               }
             }
+          } catch (e) {
+            console.error('Error sending group notifications:', e);
           }
-        }
+        })();
 
         return data;
       } finally {

@@ -220,7 +220,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         sendingRef.current = false;
       }
     },
-    onSuccess: async (newMessage) => {
+    onSuccess: (newMessage) => {
       if (newMessage) {
         const messageWithProfile: PrivateMessageWithProfile = {
           ...newMessage,
@@ -238,32 +238,41 @@ export const usePrivateMessages = (otherUserId: string | null) => {
 
         queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
 
+        // Fire-and-forget: send notifications in background without blocking
         if (otherUserId && user) {
-          const { data: senderProfile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          const messagePreview = newMessage.message_type === 'text' 
-            ? newMessage.content 
-            : newMessage.message_type === 'image' 
-              ? '📷 Photo' 
-              : '🎥 Vidéo';
-          
-          notifyNewPrivateMessage(
-            otherUserId,
-            senderProfile?.username || 'Quelqu\'un',
-            user.id,
-            messagePreview || undefined
-          );
-          
-          notifyPrivateMessageInApp(
-            otherUserId,
-            senderProfile?.username || 'Quelqu\'un',
-            user.id,
-            messagePreview || undefined
-          );
+          (async () => {
+            try {
+              const { data: senderProfile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('user_id', user.id)
+                .maybeSingle();
+              
+              const messagePreview = newMessage.message_type === 'text' 
+                ? newMessage.content 
+                : newMessage.message_type === 'image' 
+                  ? '📷 Photo' 
+                  : '🎥 Vidéo';
+              
+              // Send push + in-app in parallel
+              Promise.allSettled([
+                notifyNewPrivateMessage(
+                  otherUserId,
+                  senderProfile?.username || 'Quelqu\'un',
+                  user.id,
+                  messagePreview || undefined
+                ),
+                notifyPrivateMessageInApp(
+                  otherUserId,
+                  senderProfile?.username || 'Quelqu\'un',
+                  user.id,
+                  messagePreview || undefined
+                ),
+              ]);
+            } catch (e) {
+              console.error('Error sending private notifications:', e);
+            }
+          })();
         }
       }
       
