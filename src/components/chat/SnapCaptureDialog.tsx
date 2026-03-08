@@ -482,9 +482,11 @@ const SnapCaptureDialog = ({
           {/* Live camera preview */}
           {!hasCapture && !cameraError && !isInitializing && (
             <div className="relative">
-              <div className="aspect-[3/4] bg-black overflow-hidden relative">
-                <video
-                  ref={videoRef}
+              <div ref={viewfinderRef} className="aspect-[3/4] bg-black overflow-hidden relative">
+                {/* Flash overlay */}
+                {flashVisible && (
+                  <div className="absolute inset-0 bg-white z-30 pointer-events-none animate-fade-out" />
+                )}
                   autoPlay
                   playsInline
                   muted
