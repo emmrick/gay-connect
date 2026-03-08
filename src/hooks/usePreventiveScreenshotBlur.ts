@@ -25,18 +25,21 @@ export const usePreventiveScreenshotBlur = ({
   const [showProtection, setShowProtection] = useState(false);
   const cooldownRef = useRef<boolean>(false);
 
-  const triggerProtection = useCallback(() => {
+  const triggerProtection = useCallback((isRealThreat = true) => {
     // Cooldown to prevent rapid re-triggers
     if (cooldownRef.current) return;
     cooldownRef.current = true;
 
     setShowProtection(true);
-    onThreatDetected?.();
+    // Only notify parent for real threats, not visibility changes
+    if (isRealThreat) {
+      onThreatDetected?.();
+    }
 
     setTimeout(() => {
       setShowProtection(false);
       cooldownRef.current = false;
-    }, 5000);
+    }, isRealThreat ? 5000 : 800);
   }, [onThreatDetected]);
 
   // Detect screen recording via navigator.mediaDevices
@@ -102,11 +105,11 @@ export const usePreventiveScreenshotBlur = ({
       if (document.visibilityState === 'hidden') {
         // Show protection immediately when going to background
         // This ensures the screenshot in app switcher shows black
+        // But do NOT trigger onThreatDetected - this is just a visual shield
         setShowProtection(true);
-        onThreatDetected?.();
       } else {
-        // When returning, keep protection briefly then remove
-        setTimeout(() => setShowProtection(false), 500);
+        // When returning, remove protection quickly
+        setTimeout(() => setShowProtection(false), 300);
       }
     };
 
