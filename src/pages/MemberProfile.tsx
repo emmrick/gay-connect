@@ -295,7 +295,7 @@ const MemberProfile = () => {
         </motion.div>
         <h2 className="text-xl font-semibold mb-2">Profil non trouvé</h2>
         <p className="text-muted-foreground mb-4">Ce profil n'existe pas ou a été supprimé.</p>
-        <Button onClick={() => navigate(-1)}>
+        <Button onClick={handleBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
