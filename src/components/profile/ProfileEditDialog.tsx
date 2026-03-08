@@ -144,6 +144,9 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   const [hivStatus, setHivStatus] = useState('');
   const [acceptsNsfw, setAcceptsNsfw] = useState(true);
   const [showFace, setShowFace] = useState(true);
+  // Birthday
+  const [birthDate, setBirthDate] = useState('');
+  const [showBirthday, setShowBirthday] = useState(true);
   
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
