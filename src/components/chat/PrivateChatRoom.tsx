@@ -1,7 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, CheckCheck, ChevronDown, AlertTriangle } from 'lucide-react';
+import { useMobileScreenshotDetection } from '@/hooks/useMobileScreenshotDetection';
+import { notifyScreenshotInChat } from '@/services/screenshotNotificationService';
+import { supabase } from '@/integrations/supabase/client';
 import MuteButton from './MuteButton';
 import { usePrivateMessages } from '@/hooks/usePrivateMessages';
 import { useProfile } from '@/hooks/useProfiles';
@@ -59,6 +62,35 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [showProfilePreview, setShowProfilePreview] = useState(false);
+  const screenshotNotifiedRef = useRef(false);
+
+  // Screenshot detection for private conversations
+  const handleScreenshotDetected = useCallback(async () => {
+    if (!user || screenshotNotifiedRef.current) return;
+    screenshotNotifiedRef.current = true;
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      await notifyScreenshotInChat({
+        screenshotterUserId: user.id,
+        screenshotterUsername: profile?.username || 'Un membre',
+        otherUserId,
+        context: 'chat',
+      });
+    } catch (e) {
+      console.error('[PrivateChat] Screenshot notification error:', e);
+    }
+    // Allow re-detection after 30s
+    setTimeout(() => { screenshotNotifiedRef.current = false; }, 30000);
+  }, [user, otherUserId]);
+
+  useMobileScreenshotDetection({
+    enabled: true,
+    onScreenshotDetected: handleScreenshotDetected,
+  });
 
   useMobileNavigation({ onBack, enabled: true });
 
@@ -286,6 +318,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && message.content.startsWith('http');
               const isAlbumShare = message.message_type === 'album_share';
               const isCreditRequest = message.message_type === 'credit_request';
+              const isSystemScreenshot = message.message_type === 'system_screenshot';
 
               let albumShareData: { shareId: string; albumId: string; albumName: string; expiresAt: string | null } | null = null;
               if (isAlbumShare && message.content) {
@@ -312,7 +345,33 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                     </div>
                   )}
 
-                  {/* Message bubble */}
+                  {/* System screenshot message - centered warning */}
+                  {isSystemScreenshot ? (
+                    <div className="flex justify-center my-3">
+                      <div className="max-w-[90%] bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <AlertTriangle className="w-4 h-4 text-destructive" />
+                          <span className="text-xs font-bold text-destructive">Capture d'écran détectée</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                          {message.content?.split('\n\n').map((part, i) => {
+                            const rendered = part.replace(/\*\*([^*]+)\*\*/g, '').replace(/⚠️ |🚨 /g, '');
+                            return <span key={i}>{i > 0 && <><br/><br/></>}{
+                              part.split(/(\*\*[^*]+\*\*)/g).map((seg, j) =>
+                                seg.startsWith('**') && seg.endsWith('**')
+                                  ? <strong key={j} className="font-semibold text-destructive">{seg.slice(2, -2)}</strong>
+                                  : <span key={j}>{seg.replace(/⚠️ |🚨 /g, '')}</span>
+                              )
+                            }</span>;
+                          })}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                  /* Message bubble */
                   <div className={cn(
                     "flex",
                     isOwn ? "justify-end" : "justify-start",
@@ -406,6 +465,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                       )}
                     </div>
                   </div>
+                  )}
                 </div>
               );
             })

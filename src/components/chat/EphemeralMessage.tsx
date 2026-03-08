@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import SequentialEphemeralViewer, { EphemeralMediaItem } from './SequentialEphemeralViewer';
 import { notifyEphemeralScreenshot } from '@/services/pushNotificationService';
+import { notifyScreenshotInChat } from '@/services/screenshotNotificationService';
 
 interface EphemeralMessageProps {
   messageId: string;
@@ -85,7 +86,15 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
       if (msg?.sender_id) {
         const { data: profile } = await supabase
           .from('profiles').select('username').eq('user_id', user.id).single();
-        await notifyEphemeralScreenshot(msg.sender_id, profile?.username || 'Un membre');
+        const username = profile?.username || 'Un membre';
+        await notifyEphemeralScreenshot(msg.sender_id, username);
+        // Send chat notification + auto-report
+        await notifyScreenshotInChat({
+          screenshotterUserId: user.id,
+          screenshotterUsername: username,
+          otherUserId: msg.sender_id,
+          context: 'ephemeral_media',
+        });
       }
     } catch (e) {
       console.error('Screenshot notification error:', e);
