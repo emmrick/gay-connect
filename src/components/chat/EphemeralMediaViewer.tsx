@@ -136,9 +136,13 @@ const EphemeralMediaViewer = ({
     }
   }, [isViewing, timeLeft, onClose, onViewed, hasEnded, isUnlimited, isPaused]);
 
-  // Hold to pause (long press)
+  // Hold to pause (long press) / Tap to advance
+  const wasLongPress = useRef(false);
+
   const handlePointerDown = useCallback(() => {
+    wasLongPress.current = false;
     holdTimerRef.current = setTimeout(() => {
+      wasLongPress.current = true;
       setIsPaused(true);
       if (type === 'video' && videoRef.current) {
         videoRef.current.pause();
@@ -156,8 +160,16 @@ const EphemeralMediaViewer = ({
       if (type === 'video' && videoRef.current) {
         videoRef.current.play();
       }
+    } else if (!wasLongPress.current) {
+      // Tap detected → advance to next media
+      if (!hasCalledOnViewed.current) {
+        hasCalledOnViewed.current = true;
+        onViewed();
+      }
+      setIsClosing(true);
+      setTimeout(() => onClose(), 200);
     }
-  }, [isPaused, type]);
+  }, [isPaused, type, onViewed, onClose]);
 
   // Swipe up to reply
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
