@@ -32,6 +32,7 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
   const { user } = useAuth();
   const [input, setInput] = useState('');
   const [localMessages, setLocalMessages] = useState<{ role: string; content: string }[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef(false);
 
