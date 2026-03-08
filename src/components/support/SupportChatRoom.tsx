@@ -700,7 +700,7 @@ const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideH
                       ) : isChatbotBot ? (
                         <div className="px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words bg-muted/60 border border-border/30 text-foreground rounded-2xl rounded-bl-md max-w-full"
                           style={{ wordBreak: 'break-word' }}>
-                          {message.content}
+                          {formatBoldText(message.content)}
                         </div>
                       ) : (
                         <div className={cn(
