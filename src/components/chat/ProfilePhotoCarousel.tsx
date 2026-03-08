@@ -3,6 +3,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { User, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import GayConnectWatermark from '@/components/security/GayConnectWatermark';
 
 interface ProfilePhotoCarouselProps {
   photos: string[];
@@ -105,6 +106,7 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
                     className="w-full h-full object-cover select-none"
                     draggable={false}
                   />
+                  <GayConnectWatermark />
                 </div>
               </div>
             ))}
@@ -182,6 +184,7 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
                 draggable={false}
                 onClick={closeFullscreen}
               />
+              <GayConnectWatermark />
             </motion.div>
 
             {/* Navigation arrows */}

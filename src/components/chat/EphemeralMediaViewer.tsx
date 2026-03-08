@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity as InfinityIcon, Check, Send, RotateCcw } from 'lucide-react';
+import GayConnectWatermark from '@/components/security/GayConnectWatermark';
 import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -461,13 +462,16 @@ const EphemeralMediaViewer = ({
                 }}
               >
                 {type === 'image' ? (
-                  <img 
-                    src={src} 
-                    alt="Ephemeral content" 
-                    className="w-full h-full object-contain"
-                    draggable={false}
-                    style={{ pointerEvents: 'none' }}
-                  />
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={src} 
+                      alt="Ephemeral content" 
+                      className="w-full h-full object-contain"
+                      draggable={false}
+                      style={{ pointerEvents: 'none' }}
+                    />
+                    <GayConnectWatermark />
+                  </div>
                 ) : (
                   <video 
                     ref={videoRef}

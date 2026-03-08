@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Image, Play, Download, ExternalLink, Loader2 } from 'lucide-react';
+import GayConnectWatermark from '@/components/security/GayConnectWatermark';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -112,12 +113,15 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
         onClick={() => setIsOpen(true)}
       >
         {mediaType === 'image' ? (
-          <img
-            src={signedUrl}
-            alt="Photo partagée"
-            className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
-            onError={() => setImageError(true)}
-          />
+          <div className="relative">
+            <img
+              src={signedUrl}
+              alt="Photo partagée"
+              className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
+              onError={() => setImageError(true)}
+            />
+            <GayConnectWatermark />
+          </div>
         ) : (
           <div className="relative">
             <video
@@ -125,6 +129,7 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
               className="w-full h-auto max-h-[300px] object-cover rounded-2xl"
               preload="metadata"
             />
+            <GayConnectWatermark />
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
               <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
                 <Play className="w-6 h-6 text-foreground fill-current ml-1" />
@@ -144,11 +149,14 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
           <div className="relative w-full h-full flex items-center justify-center min-h-[50vh]">
             {mediaType === 'image' ? (
-              <img
-                src={signedUrl}
-                alt="Photo partagée"
-                className="max-w-full max-h-[85vh] object-contain"
-              />
+              <div className="relative inline-block">
+                <img
+                  src={signedUrl}
+                  alt="Photo partagée"
+                  className="max-w-full max-h-[85vh] object-contain"
+                />
+                <GayConnectWatermark />
+              </div>
             ) : (
               <video
                 src={signedUrl}

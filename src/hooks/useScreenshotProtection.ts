@@ -26,18 +26,18 @@ export const useScreenshotProtection = (enableNativeBlock = false, aggressiveDet
     }, 10000);
   }, []);
 
-  // Use advanced mobile screenshot detection - ONLY when aggressive mode is on (ephemeral media)
+  // Use advanced mobile screenshot detection - ALWAYS active for maximum protection
   useMobileScreenshotDetection({
-    enabled: isProtectionActive && aggressiveDetection,
+    enabled: isProtectionActive,
     onScreenshotDetected: () => {
       console.log('[ScreenshotProtection] Mobile screenshot detected!');
       handleViolation();
     },
   });
 
-  // Use preventive blur (banking-style frame detection) - ONLY when aggressive mode is on
+  // Use preventive blur (banking-style frame detection) - ALWAYS active
   usePreventiveScreenshotBlur({
-    enabled: isProtectionActive && aggressiveDetection,
+    enabled: isProtectionActive,
     onThreatDetected: () => {
       console.log('[ScreenshotProtection] Preventive blur triggered!');
       handleViolation();

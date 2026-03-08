@@ -36,7 +36,7 @@ export const usePreventiveScreenshotBlur = ({
     setTimeout(() => {
       setShowProtection(false);
       cooldownRef.current = false;
-    }, 10000);
+    }, 5000);
   }, [onThreatDetected]);
 
   // Detect screen recording via navigator.mediaDevices
