@@ -26,7 +26,8 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
   const [message, setMessage] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { checkMessage } = useForbiddenWords();
+  const conversationId = chatRoomId || recipientId || 'unknown';
+  const { checkMessage } = useForbiddenWords(conversationId);
   
   // Only enable mentions for group chats, not private conversations
   const {
