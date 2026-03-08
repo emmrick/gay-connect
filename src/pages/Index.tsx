@@ -305,7 +305,7 @@ const Index = () => {
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: '100%', opacity: 0 }}
         transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
+        className="min-h-screen w-full overflow-hidden"
       >
         <AnnouncementChannel
           roomId={announcementChannel.id}
