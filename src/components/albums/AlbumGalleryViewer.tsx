@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Play, Pause, Trash2, ZoomIn, ZoomOut, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
-import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
 
 interface AlbumMedia {
   id: string;
