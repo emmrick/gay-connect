@@ -189,7 +189,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
 
   const handleStartPrivateChat = (userId: string) => {
     setShowMembers(false);
-    setPreviewUserId(null);
     onStartPrivateChat(userId);
   };
 
