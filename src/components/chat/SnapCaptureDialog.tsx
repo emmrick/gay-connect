@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Send, Clock, Loader2, SwitchCamera, ShieldAlert, Settings, Infinity, RotateCcw
+  X, Send, Loader2, SwitchCamera, ShieldAlert, Settings, RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,13 +11,14 @@ import { useCameraPermission } from '@/hooks/useCameraPermission';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-const MAX_SEGMENT_DURATION = 10; // seconds
+const MAX_SEGMENT_DURATION = 10; // seconds per segment
+const MAX_TOTAL_DURATION = 60; // max total recording time
 
 interface CapturedSegment {
   type: 'photo' | 'video';
   blob: Blob;
   url: string;
-  duration?: number; // video duration in seconds
+  duration?: number;
 }
 
 interface SnapCaptureDialogProps {
@@ -26,7 +27,6 @@ interface SnapCaptureDialogProps {
   chatRoomId?: string;
   recipientId?: string;
   isPrivate: boolean;
-  /** If true, returns files instead of uploading (for stories) */
   onCaptureForStory?: (segments: { file: File; type: 'image' | 'video' }[]) => void;
 }
 
@@ -44,7 +44,6 @@ const SnapCaptureDialog = ({
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [capturedSegments, setCapturedSegments] = useState<CapturedSegment[]>([]);
-  const [viewDuration, setViewDuration] = useState(10);
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
 
@@ -60,11 +59,10 @@ const SnapCaptureDialog = ({
   const totalRecordingTimeRef = useRef(0);
   const segmentsRef = useRef<CapturedSegment[]>([]);
   const autoSplitTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingStartTimeRef = useRef(0);
 
   const { uploadEphemeralMedia, isUploading, progress } = useEphemeralMediaUpload();
   const { permissions, isCameraDenied } = useCameraPermission();
-
-  const durations = [5, 10, 15, 30, 0];
 
   // Start camera
   const startCamera = useCallback(async () => {
@@ -91,7 +89,7 @@ const SnapCaptureDialog = ({
       } else if (error.name === 'NotFoundError') {
         setCameraError('Aucune caméra détectée');
       } else {
-        setCameraError('Impossible d\'accéder à la caméra');
+        setCameraError("Impossible d'accéder à la caméra");
       }
       setIsInitializing(false);
     }
@@ -145,39 +143,58 @@ const SnapCaptureDialog = ({
     }, 'image/jpeg', 0.9);
   }, [facingMode, stopCamera]);
 
+  // Force stop all recording (called when max duration reached)
+  const forceStopRecording = useCallback(() => {
+    isHoldingRef.current = false;
+    if (autoSplitTimerRef.current) clearTimeout(autoSplitTimerRef.current);
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+  }, []);
+
   // Start a single video segment recording
   const startSegmentRecording = useCallback(() => {
     if (!streamRef.current) return;
+
+    // Check if we've exceeded max total duration
+    const elapsed = (Date.now() - recordingStartTimeRef.current) / 1000;
+    if (elapsed >= MAX_TOTAL_DURATION) {
+      forceStopRecording();
+      return;
+    }
+
     chunksRef.current = [];
-    
+
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
       ? 'video/webm;codecs=vp9'
       : 'video/webm';
-    
+
     const mediaRecorder = new MediaRecorder(streamRef.current, { mimeType });
-    
+
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
 
     mediaRecorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-      const elapsed = (Date.now() - segmentStartTimeRef.current) / 1000;
+      const segElapsed = (Date.now() - segmentStartTimeRef.current) / 1000;
       const segment: CapturedSegment = {
         type: 'video',
         blob,
         url: URL.createObjectURL(blob),
-        duration: Math.min(elapsed, MAX_SEGMENT_DURATION),
+        duration: Math.min(segElapsed, MAX_SEGMENT_DURATION),
       };
       segmentsRef.current = [...segmentsRef.current, segment];
       setCapturedSegments([...segmentsRef.current]);
 
-      // If still holding, start next segment
-      if (isHoldingRef.current) {
+      // If still holding and under max duration, start next segment
+      const totalElapsed = (Date.now() - recordingStartTimeRef.current) / 1000;
+      if (isHoldingRef.current && totalElapsed < MAX_TOTAL_DURATION) {
         segmentStartTimeRef.current = Date.now();
         startSegmentRecording();
       } else {
         // Done recording
+        isHoldingRef.current = false;
         setIsRecording(false);
         if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
         stopCamera();
@@ -188,13 +205,18 @@ const SnapCaptureDialog = ({
     mediaRecorder.start();
     segmentStartTimeRef.current = Date.now();
 
-    // Auto-split after MAX_SEGMENT_DURATION seconds
+    // Calculate remaining time for this segment
+    const totalElapsed = (Date.now() - recordingStartTimeRef.current) / 1000;
+    const remaining = MAX_TOTAL_DURATION - totalElapsed;
+    const segmentDuration = Math.min(MAX_SEGMENT_DURATION, remaining);
+
+    // Auto-split after segment duration
     autoSplitTimerRef.current = setTimeout(() => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
-    }, MAX_SEGMENT_DURATION * 1000);
-  }, [stopCamera]);
+    }, segmentDuration * 1000);
+  }, [stopCamera, forceStopRecording]);
 
   // Handle hold start (video recording)
   const handlePointerDown = useCallback(() => {
@@ -202,21 +224,26 @@ const SnapCaptureDialog = ({
     segmentsRef.current = [];
     setCapturedSegments([]);
 
-    // Start video after 300ms hold
     holdTimerRef.current = setTimeout(() => {
       isHoldingRef.current = true;
       setIsRecording(true);
       setRecordingTime(0);
       totalRecordingTimeRef.current = 0;
+      recordingStartTimeRef.current = Date.now();
 
       recordingIntervalRef.current = setInterval(() => {
-        totalRecordingTimeRef.current += 1;
-        setRecordingTime(totalRecordingTimeRef.current);
+        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
+        setRecordingTime(elapsed);
+
+        // Auto-stop at max duration
+        if (elapsed >= MAX_TOTAL_DURATION) {
+          forceStopRecording();
+        }
       }, 1000);
 
       startSegmentRecording();
     }, 300);
-  }, [startSegmentRecording]);
+  }, [startSegmentRecording, forceStopRecording]);
 
   // Handle hold end
   const handlePointerUp = useCallback(() => {
@@ -226,7 +253,6 @@ const SnapCaptureDialog = ({
     }
 
     if (!isHoldingRef.current) {
-      // Was a tap, take photo
       takePhoto();
       return;
     }
@@ -250,11 +276,10 @@ const SnapCaptureDialog = ({
     startCamera();
   };
 
-  // Send all segments as ephemeral media
+  // Send all segments — video view duration = video actual duration
   const handleSend = async () => {
     if (capturedSegments.length === 0) return;
 
-    // Story mode - return files to parent
     if (onCaptureForStory) {
       const files = capturedSegments.map((seg, i) => ({
         file: new File(
@@ -280,6 +305,9 @@ const SnapCaptureDialog = ({
           `snap-${Date.now()}-${i}.${seg.type === 'photo' ? 'jpg' : 'webm'}`,
           { type: seg.type === 'photo' ? 'image/jpeg' : 'video/webm' }
         );
+
+        // For videos, view duration = video duration. For photos, default 10s.
+        const viewDuration = seg.type === 'video' ? Math.ceil(seg.duration || MAX_SEGMENT_DURATION) : 10;
 
         await uploadEphemeralMedia.mutateAsync({
           file,
@@ -321,6 +349,7 @@ const SnapCaptureDialog = ({
   const formatTime = (s: number) =>
     `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
+  const totalDuration = capturedSegments.reduce((sum, s) => sum + (s.duration || 0), 0);
   const hasCapture = capturedSegments.length > 0;
 
   return (
@@ -388,6 +417,16 @@ const SnapCaptureDialog = ({
                   </div>
                 )}
 
+                {/* Max duration progress bar */}
+                {isRecording && (
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 z-10">
+                    <div
+                      className="h-full bg-red-500 transition-all duration-1000 ease-linear"
+                      style={{ width: `${Math.min((recordingTime / MAX_TOTAL_DURATION) * 100, 100)}%` }}
+                    />
+                  </div>
+                )}
+
                 {/* Segment count indicator */}
                 {isRecording && segmentsRef.current.length > 0 && (
                   <div className="absolute top-4 right-16 bg-primary px-2.5 py-1 rounded-full z-10">
@@ -413,7 +452,9 @@ const SnapCaptureDialog = ({
               {/* Snap capture button + instructions */}
               <div className="flex flex-col items-center gap-3 py-6 bg-black/80">
                 <p className="text-white/60 text-xs">
-                  {isRecording ? 'Relâche pour arrêter' : 'Tap = Photo • Appui long = Vidéo'}
+                  {isRecording
+                    ? `Relâche pour arrêter • Max ${MAX_TOTAL_DURATION}s`
+                    : 'Tap = Photo • Appui long = Vidéo (max 60s)'}
                 </p>
                 <button
                   onPointerDown={handlePointerDown}
@@ -435,7 +476,7 @@ const SnapCaptureDialog = ({
                 </button>
                 {isRecording && (
                   <p className="text-amber-400 text-xs animate-pulse">
-                    Découpage auto toutes les {MAX_SEGMENT_DURATION}s
+                    Découpage auto en segments de {MAX_SEGMENT_DURATION}s
                   </p>
                 )}
               </div>
@@ -445,18 +486,17 @@ const SnapCaptureDialog = ({
           {/* Captured media preview */}
           {hasCapture && (
             <div className="space-y-4">
-              {/* Preview segments */}
               <div className="px-4 pt-4">
                 <p className="text-sm text-muted-foreground mb-2">
                   {capturedSegments.length} {capturedSegments.length > 1 ? 'segments' : 'média'}
-                  {capturedSegments.some(s => s.type === 'video') && capturedSegments.length > 1 && (
-                    <span className="text-amber-400 ml-1">
-                      (vidéo découpée en {capturedSegments.length} parties)
+                  {capturedSegments.some(s => s.type === 'video') && (
+                    <span className="text-muted-foreground ml-1">
+                      — durée totale : {Math.round(totalDuration)}s
                     </span>
                   )}
                 </p>
               </div>
-              
+
               <div className="flex gap-2 px-4 overflow-x-auto pb-2">
                 {capturedSegments.map((seg, i) => (
                   <div key={i} className="relative flex-shrink-0 w-24 h-32 rounded-xl overflow-hidden bg-black border border-border/50">
@@ -475,39 +515,12 @@ const SnapCaptureDialog = ({
                 ))}
               </div>
 
-              {/* Duration selector (for ephemeral, not story) */}
-              {!onCaptureForStory && (
-                <div className="px-4 pb-2">
-                  <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Durée d'affichage
+              {/* Info text — no duration selector anymore */}
+              {capturedSegments.some(s => s.type === 'video') && (
+                <div className="px-4 pb-1">
+                  <p className="text-xs text-muted-foreground">
+                    ⏱ La durée d'affichage correspond à la durée de chaque vidéo. Les photos s'affichent 10s.
                   </p>
-                  <div className="flex gap-2 mb-2">
-                    {durations.filter(d => d > 0).map((d) => (
-                      <button
-                        key={d}
-                        onClick={() => setViewDuration(d)}
-                        disabled={isSending}
-                        className={`flex-1 py-2 rounded-lg font-medium transition-all text-sm ${
-                          viewDuration === d
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                        } disabled:opacity-50`}
-                      >
-                        {d}s
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => setViewDuration(0)}
-                    disabled={isSending}
-                    className={`w-full py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                      viewDuration === 0
-                        ? 'bg-green-500 text-white'
-                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                    } disabled:opacity-50`}
-                  >
-                    <Infinity className="w-4 h-4" /> Illimité
-                  </button>
                 </div>
               )}
 
