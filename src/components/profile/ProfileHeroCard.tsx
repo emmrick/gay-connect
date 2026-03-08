@@ -137,7 +137,7 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
 
           {/* Bio */}
           {profile.bio && (
-            <p className="text-sm text-muted-foreground mt-4 leading-relaxed bg-secondary/30 rounded-xl px-3 py-2.5">
+            <p className="text-sm text-muted-foreground mt-3 leading-relaxed bg-secondary/30 rounded-xl px-3 py-2.5">
               {profile.bio}
             </p>
           )}
