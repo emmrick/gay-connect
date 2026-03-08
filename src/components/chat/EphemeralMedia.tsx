@@ -134,9 +134,7 @@ const EphemeralMedia = ({
       <div 
         className="max-w-full max-h-full p-16 pointer-events-none relative"
         style={{ 
-          // Content goes BLACK immediately on screenshot attempt
-          filter: isBlocked ? 'brightness(0)' : 'none',
-          transition: 'filter 0.1s ease',
+          filter: 'none',
         }}
       >
         {/* Invisible watermark overlay for tracking */}
