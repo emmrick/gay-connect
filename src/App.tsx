@@ -21,6 +21,7 @@ import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
 import ForcedSupportChat from "@/components/moderation/ForcedSupportChat";
 import PromoPopup from "@/components/popups/PromoPopup";
+import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 import BackgroundRefreshIndicator from "@/components/loading/BackgroundRefreshIndicator";
