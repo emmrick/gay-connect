@@ -37,9 +37,11 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
     }
   }, [message]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmedMessage = message.trim();
     if (trimmedMessage) {
+      const result = await checkMessage(trimmedMessage);
+      if (result.blocked) return;
       onSendMessage(trimmedMessage);
       setMessage('');
       setShowOptions(false);

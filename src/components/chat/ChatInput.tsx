@@ -53,13 +53,18 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
     }
   }, [message]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmedMessage = message.trim();
     if (trimmedMessage) {
+      // Check for forbidden words before sending
+      const result = await checkMessage(trimmedMessage);
+      if (result.blocked) {
+        // Message blocked - don't send
+        return;
+      }
       onSendMessage(trimmedMessage);
       setMessage('');
       closeMention();
-      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
