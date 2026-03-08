@@ -78,9 +78,15 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
   const handleScreenshotDetected = useCallback(async () => {
     if (!media || !user || isOwn) return;
     try {
+      // Mark screenshot + preserve media for admin review (set expires_at far in future)
       await supabase
         .from('ephemeral_media')
-        .update({ screenshot_detected: true, screenshot_detected_at: new Date().toISOString() })
+        .update({ 
+          screenshot_detected: true, 
+          screenshot_detected_at: new Date().toISOString(),
+          // Preserve media for admin investigation - extend expiry by 30 days
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        })
         .eq('id', media.id);
       const { data: msg } = await supabase
         .from('messages').select('sender_id').eq('id', messageId).single();
@@ -97,10 +103,12 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
           context: 'ephemeral_media',
         });
       }
+      // Invalidate to refresh UI with screenshot_detected state
+      queryClient.invalidateQueries({ queryKey: ['ephemeral-media', messageId] });
     } catch (e) {
       console.error('Screenshot notification error:', e);
     }
-  }, [media, user, isOwn, messageId]);
+  }, [media, user, isOwn, messageId, queryClient]);
 
   // Build sequential items for the viewer
   const sequentialItems: EphemeralMediaItem[] = useMemo(() => {
