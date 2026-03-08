@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Trash2, Globe, MapPin, Lock, Shield, Plus, Users } from 'lucide-react';
 import { useStories, StoryGroup, Story } from '@/hooks/useStories';
 import { useAuth } from '@/contexts/AuthContext';
-import { useScreenshotProtection } from '@/hooks/useScreenshotProtection';
-import ScreenshotProtectionOverlay from '@/components/security/ScreenshotProtectionOverlay';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
