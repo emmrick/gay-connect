@@ -13,7 +13,7 @@ import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
 import ProfileView from '@/components/profile/ProfileView';
 import ChatBotConfigPage from '@/components/chatbot/ChatBotConfigPage';
-import PremiumPage from '@/components/premium/PremiumPage';
+import CreditsPage from '@/components/credits/CreditsPage';
 import ReferralDialog from '@/components/premium/ReferralDialog';
 import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
 import SwipePage from '@/components/swipe/SwipePage';
@@ -593,11 +593,7 @@ const Index = () => {
               rightContent={<ReferralDialog />}
             />
             <ScrollArea className="flex-1 min-h-0">
-              <PremiumPage onNavigateToSupport={() => {
-                setPreviousTab(activeTab);
-                setActiveTab('help');
-                setCurrentView('help');
-              }} />
+              <CreditsPage />
             </ScrollArea>
           </motion.div>
         ) : null;
