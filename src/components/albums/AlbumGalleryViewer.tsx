@@ -329,7 +329,6 @@ const AlbumGalleryViewer = ({
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm"
         data-protected="true"
-        onContextMenu={preventContextMenu}
       >
         {/* Banking-style protection overlay */}
         <ScreenshotProtectionOverlay isActive={isBlocked} />
