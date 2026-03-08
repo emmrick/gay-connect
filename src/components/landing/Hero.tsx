@@ -617,6 +617,9 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
           </div>
         </div>
       </footer>
+
+      {/* Floating support chat widget */}
+      <LandingSupportChat />
     </section>
   );
 };
