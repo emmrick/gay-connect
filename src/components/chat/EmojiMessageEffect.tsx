@@ -6,9 +6,12 @@ import { motion } from 'framer-motion';
  */
 function getGraphemes(str: string): string[] {
   if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
-    const segmenter = new Intl.Segmenter('fr', { granularity: 'grapheme' });
-    return [...segmenter.segment(str)].map(s => s.segment);
+    const segmenter = new (Intl as any).Segmenter('fr', { granularity: 'grapheme' });
+    return [...segmenter.segment(str)].map((s: any) => s.segment);
   }
+  // Fallback: spread (imperfect for ZWJ sequences)
+  return [...str];
+}
   // Fallback: spread (imperfect for ZWJ sequences)
   return [...str];
 }
