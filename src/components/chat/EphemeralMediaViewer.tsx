@@ -96,7 +96,7 @@ const EphemeralMediaViewer = ({
   // Reset state when opening
   useEffect(() => {
     if (isOpen) {
-      setIsViewing(false);
+      setIsViewing(autoStart);
       setTimeLeft(isUnlimited ? -1 : duration);
       setHasEnded(false);
       setIsClosing(false);
@@ -106,8 +106,11 @@ const EphemeralMediaViewer = ({
       setShowReplyHint(false);
       hasCalledOnViewed.current = false;
       hasNotifiedScreenshot.current = false;
+      if (autoStart && type === 'video' && videoRef.current) {
+        videoRef.current.play();
+      }
     }
-  }, [isOpen, duration, isUnlimited]);
+  }, [isOpen, duration, isUnlimited, autoStart, type]);
 
   // Timer countdown - pauses on hold
   useEffect(() => {

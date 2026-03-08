@@ -39,8 +39,11 @@ const SequentialEphemeralViewer = ({
   const effectiveIndex = Math.min(currentIndex, items.length - 1);
   const currentItem = items[effectiveIndex];
 
+  // Track if we've advanced past the first item (auto-start subsequent ones)
+  const isAutoStart = effectiveIndex > startIndex;
+
   const handleClose = useCallback(() => {
-    // Advance to next media on tap/close
+    // Advance to next media automatically
     const nextIndex = effectiveIndex + 1;
     if (nextIndex < items.length) {
       setCurrentIndex(nextIndex);
@@ -67,6 +70,7 @@ const SequentialEphemeralViewer = ({
       senderName={currentItem.senderName}
       duration={currentItem.duration}
       mediaId={currentItem.mediaId}
+      autoStart={isAutoStart}
       onClose={handleClose}
       onViewed={currentItem.onViewed}
       onSaveToConversation={currentItem.onSaveToConversation}
