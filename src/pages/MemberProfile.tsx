@@ -186,13 +186,17 @@ const MemberProfile = () => {
 
   const extendedProfile = profile as any;
   
-  // Handle back navigation with swipe gesture support
+  // Safe back navigation - always go to home instead of risking app exit
   const handleBack = useCallback(() => {
-    navigate(-1);
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
   }, [navigate]);
 
   // Enable swipe-to-go-back gesture on mobile
-  useMobileNavigation({ onBack: handleBack, enabled: true });
+  useMobileNavigation({ onBack: handleBack, enabled: true, enableSwipeBack: true });
 
   // Build photos array
   const allPhotos = photos.length > 0 
@@ -243,7 +247,7 @@ const MemberProfile = () => {
     return (
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border p-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </div>
@@ -272,7 +276,7 @@ const MemberProfile = () => {
         <p className="text-muted-foreground mb-4 text-center max-w-xs">
           Ce compte a été suspendu ou désactivé et n'est plus accessible.
         </p>
-        <Button onClick={() => navigate(-1)}>
+        <Button onClick={handleBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
@@ -291,7 +295,7 @@ const MemberProfile = () => {
         </motion.div>
         <h2 className="text-xl font-semibold mb-2">Profil non trouvé</h2>
         <p className="text-muted-foreground mb-4">Ce profil n'existe pas ou a été supprimé.</p>
-        <Button onClick={() => navigate(-1)}>
+        <Button onClick={handleBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
@@ -317,7 +321,7 @@ const MemberProfile = () => {
               variant="secondary" 
               size="icon" 
               className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg"
-              onClick={() => navigate(-1)}
+              onClick={handleBack}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>

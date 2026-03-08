@@ -1,37 +1,49 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 
 interface UseMobileNavigationOptions {
   onBack?: () => void;
   enabled?: boolean;
+  enableSwipeBack?: boolean;
 }
 
-export const useMobileNavigation = ({ onBack, enabled = true }: UseMobileNavigationOptions) => {
-  // Handle hardware back button (Android/Browser)
-  const handlePopState = useCallback((e: PopStateEvent) => {
-    if (enabled && onBack) {
-      e.preventDefault();
-      onBack();
-      // Push a new state to prevent actual navigation
-      window.history.pushState(null, '', window.location.href);
-    }
-  }, [onBack, enabled]);
+/**
+ * Mobile navigation hook:
+ * - Intercepts hardware/browser back button via popstate
+ * - Optional swipe-from-left-edge gesture
+ * - Prevents the app from closing by always keeping a history entry
+ */
+export const useMobileNavigation = ({ 
+  onBack, 
+  enabled = true, 
+  enableSwipeBack = true 
+}: UseMobileNavigationOptions) => {
+  const hasSetup = useRef(false);
 
   useEffect(() => {
     if (!enabled || !onBack) return;
 
-    // Push initial state to capture back button
-    window.history.pushState(null, '', window.location.href);
-    
-    window.addEventListener('popstate', handlePopState);
+    // Push a sentinel state so pressing back triggers popstate instead of leaving
+    if (!hasSetup.current) {
+      window.history.pushState({ appGuard: true }, '', window.location.href);
+      hasSetup.current = true;
+    }
 
+    const handlePopState = (e: PopStateEvent) => {
+      // Re-push sentinel so subsequent back presses are also caught
+      window.history.pushState({ appGuard: true }, '', window.location.href);
+      onBack();
+    };
+
+    window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      hasSetup.current = false;
     };
-  }, [handlePopState, enabled, onBack]);
+  }, [onBack, enabled]);
 
-  // Swipe gesture detection
+  // Swipe gesture detection (left edge → right)
   useEffect(() => {
-    if (!enabled || !onBack) return;
+    if (!enabled || !onBack || !enableSwipeBack) return;
 
     let touchStartX = 0;
     let touchStartY = 0;
@@ -55,16 +67,14 @@ export const useMobileNavigation = ({ onBack, enabled = true }: UseMobileNavigat
       const deltaX = touchEndX - touchStartX;
       const deltaY = Math.abs(touchEndY - touchStartY);
       
-      // Check for right swipe from left edge (back gesture)
       if (
-        touchStartX < 30 && // Started from left edge
-        deltaX > minSwipeDistance && // Swiped right enough
-        deltaY < maxVerticalMovement // Mostly horizontal
+        touchStartX < 30 &&
+        deltaX > minSwipeDistance &&
+        deltaY < maxVerticalMovement
       ) {
         onBack();
       }
       
-      // Reset values
       touchStartX = 0;
       touchStartY = 0;
       touchEndX = 0;
@@ -80,7 +90,7 @@ export const useMobileNavigation = ({ onBack, enabled = true }: UseMobileNavigat
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [enabled, onBack]);
+  }, [enabled, onBack, enableSwipeBack]);
 };
 
 export default useMobileNavigation;

@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { memo } from 'react';
+import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
 import ChatRoom from '@/components/chat/ChatRoom';
@@ -179,6 +180,41 @@ const Index = () => {
       return () => clearTimeout(timer);
     }
   }, [user, verification, verificationLoading]);
+
+  // Global back handler: routes hardware back button through internal navigation
+  const handleGlobalBack = useCallback(() => {
+    if (currentView === 'private') {
+      setSelectedPrivateUserId(null);
+      setCurrentView('messages');
+      return;
+    }
+    if (currentView === 'chat') {
+      setSelectedRegion(null);
+      setCurrentView('messages');
+      setActiveTab('messages');
+      setMessageSubTab('groups');
+      return;
+    }
+    if (currentView === 'chatbot-config') {
+      setCurrentView('profile');
+      setActiveTab('profile');
+      return;
+    }
+    if (activeTab !== 'home' && currentView !== 'landing') {
+      setPreviousTab(activeTab);
+      setActiveTab('home');
+      setCurrentView('home');
+      return;
+    }
+    // On home/landing → do nothing (don't exit app)
+  }, [currentView, activeTab, setCurrentView, setActiveTab, setPreviousTab, setSelectedRegion, setSelectedPrivateUserId]);
+
+  // Intercept hardware back button globally
+  useMobileNavigation({ 
+    onBack: handleGlobalBack, 
+    enabled: !!user && currentView !== 'landing',
+    enableSwipeBack: currentView === 'private' || currentView === 'chat' || currentView === 'chatbot-config',
+  });
 
   // Skeleton already shown by parent Suspense, just return null briefly
   if (authLoading) {
