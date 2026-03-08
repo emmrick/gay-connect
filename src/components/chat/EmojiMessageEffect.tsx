@@ -1,13 +1,32 @@
 import { motion } from 'framer-motion';
 
 /**
- * Detects if a message is emoji-only (1-5 emojis, no text)
+ * Segments text into grapheme clusters for proper emoji splitting,
+ * including compound emojis (ZWJ, flags, skin tones).
  */
-const EMOJI_REGEX = /^(?:\p{Emoji_Presentation}|\p{Extended_Pictographic}){1,5}$/u;
+function getGraphemes(str: string): string[] {
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    const segmenter = new (Intl as any).Segmenter('fr', { granularity: 'grapheme' });
+    return [...segmenter.segment(str)].map((s: any) => s.segment);
+  }
+  // Fallback: spread (imperfect for ZWJ sequences)
+  return [...str];
+}
 
+
+/**
+ * Detects if a message is emoji-only (1-5 emoji graphemes, no text).
+ */
 export function isEmojiOnlyMessage(content: string): boolean {
   const trimmed = content.trim();
-  return EMOJI_REGEX.test(trimmed);
+  if (!trimmed) return false;
+
+  const graphemes = getGraphemes(trimmed);
+  if (graphemes.length < 1 || graphemes.length > 5) return false;
+
+  // Each grapheme must be an emoji (no letters, digits, punctuation)
+  const textPattern = /[\p{L}\p{N}\p{P}\p{Z}]/u;
+  return graphemes.every(g => !textPattern.test(g));
 }
 
 interface EmojiMessageEffectProps {
@@ -16,8 +35,8 @@ interface EmojiMessageEffectProps {
 }
 
 const EmojiMessageEffect = ({ content, isOwn }: EmojiMessageEffectProps) => {
-  const emojis = [...content.trim()];
-  
+  const emojis = getGraphemes(content.trim());
+
   return (
     <div className={`flex gap-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
       {emojis.map((emoji, i) => (
