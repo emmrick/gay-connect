@@ -1,6 +1,6 @@
 import { 
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
-  MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, 
+  MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, Home,
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, 
   ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut
 } from 'lucide-react';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/tooltip';
 
 export type AdminSection = 
+  | 'dashboard'
   | 'wallet' | 'withdrawals' | 'rates' | 'global' 
   | 'stats' | 'users' | 'reports' | 'moderation' | 'blocked' 
   | 'verification' | 'promo' | 'history' | 'credits'
@@ -32,60 +33,74 @@ interface AdminSidebarProps {
   blockedCount?: number;
   pendingPurchases?: number;
   pendingVerifications?: number;
+  isAdmin?: boolean;
 }
+
+type NavGroup = 'tasks' | 'moderation' | 'users' | 'finances' | 'communication' | 'config' | 'logs';
 
 interface NavItem {
   id: AdminSection;
   label: string;
   icon: React.ElementType;
-  group: 'finances' | 'users' | 'moderation' | 'help' | 'settings';
+  group: NavGroup;
+  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
+  // Tâches quotidiennes (visible par tous)
+  { id: 'pending-tasks', label: "File d'attente", icon: ListOrdered, group: 'tasks' },
+  { id: 'support', label: 'Support client', icon: Headphones, group: 'tasks' },
+  { id: 'support-ratings', label: 'Avis support', icon: Star, group: 'tasks' },
+
+  // Modération
+  { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
+  { id: 'verification', label: 'Vérification identité', icon: IdCard, group: 'moderation' },
+  { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
+  { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation' },
+  { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation' },
+  { id: 'history', label: 'Historique', icon: History, group: 'moderation' },
+
+  // Utilisateurs (admin only)
+  { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users', adminOnly: true },
+  { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users', adminOnly: true },
+  { id: 'stats', label: 'Statistiques', icon: BarChart3, group: 'users', adminOnly: true },
+  { id: 'moderators', label: 'Modérateurs', icon: UserCog, group: 'users', adminOnly: true },
+
   // Finances
   { id: 'wallet', label: 'Portefeuille', icon: Wallet, group: 'finances' },
-  { id: 'rates', label: 'Tarifs missions', icon: Euro, group: 'finances' },
-  { id: 'withdrawals', label: 'Demandes de retrait', icon: ArrowUpRight, group: 'finances' },
-  { id: 'global', label: 'Gains globaux', icon: PieChart, group: 'finances' },
-  // Users
-  { id: 'stats', label: 'Statistiques', icon: BarChart3, group: 'users' },
-  { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users' },
-  { id: 'credits', label: 'Gestion crédits', icon: Coins, group: 'users' },
-  { id: 'credits-surveillance', label: 'Surveillance crédits', icon: Activity, group: 'users' },
-  { id: 'credit-purchases', label: 'Achats crédits', icon: ShoppingCart, group: 'users' },
-  { id: 'blocked', label: 'Bloqués', icon: Ban, group: 'users' },
-  // Moderation
-  { id: 'pending-tasks', label: "File d'attente", icon: ListOrdered, group: 'moderation' },
-  { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
-  { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation' },
-  { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
-  { id: 'verification', label: 'Vérification identité', icon: IdCard, group: 'moderation' },
-  { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation' },
-  { id: 'history', label: 'Historique actions', icon: History, group: 'moderation' },
-  // Help
-  { id: 'support', label: 'Support client', icon: Headphones, group: 'help' },
-  { id: 'support-ratings', label: 'Avis support', icon: Star, group: 'help' },
-  { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'help' },
-  // Settings
-  { id: 'moderators', label: 'Gestion modérateurs', icon: UserCog, group: 'settings' },
-  { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'settings' },
-  { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'settings' },
-  { id: 'broadcast', label: 'Notifications push', icon: Bell, group: 'settings' },
-  { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'settings' },
-  { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'settings' },
-  { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'settings' },
-  { id: 'flyers', label: 'Flyers promo', icon: FileImage, group: 'settings' },
-  { id: 'error-logs', label: "Logs d'erreurs", icon: Activity, group: 'settings' },
-  { id: 'security', label: 'Événements sécurité', icon: ShieldAlert, group: 'settings' },
+  { id: 'credits', label: 'Gestion crédits', icon: Coins, group: 'finances', adminOnly: true },
+  { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'finances', adminOnly: true },
+  { id: 'credit-purchases', label: 'Achats crédits', icon: ShoppingCart, group: 'finances' },
+  { id: 'rates', label: 'Tarifs missions', icon: Euro, group: 'finances', adminOnly: true },
+  { id: 'withdrawals', label: 'Retraits', icon: ArrowUpRight, group: 'finances', adminOnly: true },
+  { id: 'global', label: 'Gains globaux', icon: PieChart, group: 'finances', adminOnly: true },
+
+  // Communication (admin only)
+  { id: 'broadcast', label: 'Notifications push', icon: Bell, group: 'communication', adminOnly: true },
+  { id: 'popups', label: 'Pop-ups promo', icon: Bell, group: 'communication', adminOnly: true },
+  { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'communication', adminOnly: true },
+  { id: 'flyers', label: 'Flyers promo', icon: FileImage, group: 'communication', adminOnly: true },
+  { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'communication', adminOnly: true },
+
+  // Config & Logs (admin only)
+  { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'config', adminOnly: true },
+  { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'config', adminOnly: true },
+  { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'config', adminOnly: true },
+  { id: 'error-logs', label: "Logs d'erreurs", icon: Activity, group: 'logs', adminOnly: true },
+  { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true },
 ];
 
-const groupConfig: Record<string, { label: string; color: string }> = {
-  finances: { label: 'Finances', color: 'text-emerald-500' },
-  users: { label: 'Utilisateurs', color: 'text-blue-500' },
+const groupConfig: Record<NavGroup, { label: string; color: string }> = {
+  tasks: { label: 'Mes tâches', color: 'text-orange-500' },
   moderation: { label: 'Modération', color: 'text-amber-500' },
-  help: { label: 'Aide & Support', color: 'text-violet-500' },
-  settings: { label: 'Configuration', color: 'text-muted-foreground' },
+  users: { label: 'Utilisateurs', color: 'text-blue-500' },
+  finances: { label: 'Finances', color: 'text-emerald-500' },
+  communication: { label: 'Communication', color: 'text-violet-500' },
+  config: { label: 'Configuration', color: 'text-muted-foreground' },
+  logs: { label: 'Monitoring', color: 'text-red-400' },
 };
+
+const groupOrder: NavGroup[] = ['tasks', 'moderation', 'users', 'finances', 'communication', 'config', 'logs'];
 
 const AdminSidebar = ({ 
   activeSection, 
@@ -93,9 +108,12 @@ const AdminSidebar = ({
   pendingReports = 0,
   blockedCount = 0,
   pendingPurchases = 0,
-  pendingVerifications = 0 
+  pendingVerifications = 0,
+  isAdmin = false,
 }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
+
+  const visibleItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
   const getBadge = (id: AdminSection) => {
     if (id === 'reports' && pendingReports > 0) return pendingReports;
@@ -105,7 +123,7 @@ const AdminSidebar = ({
     return undefined;
   };
 
-  const groupedItems = navItems.reduce((acc, item) => {
+  const groupedItems = visibleItems.reduce((acc, item) => {
     if (!acc[item.group]) acc[item.group] = [];
     acc[item.group].push({ ...item, badge: getBadge(item.id) });
     return acc;
@@ -178,7 +196,9 @@ const AdminSidebar = ({
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-sm leading-none">Admin</span>
-                <span className="text-[10px] text-muted-foreground leading-none mt-0.5">Tableau de bord</span>
+                <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
+                  {isAdmin ? 'Administrateur' : 'Modérateur'}
+                </span>
               </div>
             </div>
           )}
@@ -192,28 +212,40 @@ const AdminSidebar = ({
           </Button>
         </div>
 
+        {/* Dashboard Home Button */}
+        <div className={cn("border-b border-border/50", collapsed ? "p-1.5" : "p-2")}>
+          <NavButton
+            item={{ id: 'dashboard', label: 'Tableau de bord', icon: Home, group: 'tasks' }}
+            isActive={activeSection === 'dashboard'}
+          />
+        </div>
+
         {/* Navigation */}
         <ScrollArea className="flex-1">
           <nav className={cn("py-3", collapsed ? "px-1" : "px-2")}>
-            {Object.entries(groupedItems).map(([group, items], groupIndex) => (
-              <div key={group} className={groupIndex > 0 ? "mt-5" : ""}>
-                {!collapsed ? (
-                  <div className="flex items-center gap-1.5 px-3 mb-1.5">
-                    <span className={cn("text-[10px] font-bold uppercase tracking-[0.08em]", groupConfig[group]?.color || 'text-muted-foreground')}>
-                      {groupConfig[group]?.label || group}
-                    </span>
-                    <div className="flex-1 h-px bg-border/50" />
+            {groupOrder.map((group, groupIndex) => {
+              const items = groupedItems[group];
+              if (!items?.length) return null;
+              return (
+                <div key={group} className={groupIndex > 0 ? "mt-4" : ""}>
+                  {!collapsed ? (
+                    <div className="flex items-center gap-1.5 px-3 mb-1.5">
+                      <span className={cn("text-[10px] font-bold uppercase tracking-[0.08em]", groupConfig[group]?.color)}>
+                        {groupConfig[group]?.label}
+                      </span>
+                      <div className="flex-1 h-px bg-border/50" />
+                    </div>
+                  ) : (
+                    groupIndex > 0 && <div className="h-px bg-border/50 mx-1.5 my-2" />
+                  )}
+                  <div className="space-y-0.5">
+                    {items.map((item) => (
+                      <NavButton key={item.id} item={item} isActive={activeSection === item.id} />
+                    ))}
                   </div>
-                ) : (
-                  groupIndex > 0 && <div className="h-px bg-border/50 mx-1.5 my-2" />
-                )}
-                <div className="space-y-0.5">
-                  {items.map((item) => (
-                    <NavButton key={item.id} item={item} isActive={activeSection === item.id} />
-                  ))}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </nav>
         </ScrollArea>
 
