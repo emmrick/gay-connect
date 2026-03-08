@@ -25,34 +25,33 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     queryFn: async (): Promise<PrivateMessageWithProfile[]> => {
       if (!user || !otherUserId) return [];
 
-      // Check auto-delete setting for this conversation
-      const { data: convStatus } = await supabase
-        .from('private_conversation_status')
-        .select('messages_hidden_before, auto_delete_mode')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Run conversation lookup and profiles fetch in parallel
+      const [convResult, profilesResult] = await Promise.all([
+        supabase
+          .from('private_conversations')
+          .select('id')
+          .or(`and(user1_id.eq.${user.id},user2_id.eq.${otherUserId}),and(user1_id.eq.${otherUserId},user2_id.eq.${user.id})`)
+          .maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('user_id, username, avatar_url')
+          .in('user_id', [user.id, otherUserId]),
+      ]);
 
-      // Get the conversation ID for filtering
-      const { data: conv } = await supabase
-        .from('private_conversations')
-        .select('id')
-        .or(`and(user1_id.eq.${user.id},user2_id.eq.${otherUserId}),and(user1_id.eq.${otherUserId},user2_id.eq.${user.id})`)
-        .maybeSingle();
-
-      // Check if this specific conversation has auto-delete
+      // Check auto-delete only if conversation exists
       let messagesHiddenBefore: string | null = null;
-      if (conv) {
+      if (convResult.data) {
         const { data: specificStatus } = await supabase
           .from('private_conversation_status')
-          .select('messages_hidden_before, auto_delete_mode')
+          .select('messages_hidden_before')
           .eq('user_id', user.id)
-          .eq('conversation_id', conv.id)
+          .eq('conversation_id', convResult.data.id)
           .maybeSingle();
         messagesHiddenBefore = specificStatus?.messages_hidden_before || null;
       }
 
       // Get messages between the two users
-      let query = supabase
+      let messagesQuery = supabase
         .from('messages')
         .select('*')
         .eq('is_private', true)
@@ -61,25 +60,18 @@ export const usePrivateMessages = (otherUserId: string | null) => {
           `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
         );
 
-      // Apply auto-delete filter
       if (messagesHiddenBefore) {
-        query = query.gt('created_at', messagesHiddenBefore);
+        messagesQuery = messagesQuery.gt('created_at', messagesHiddenBefore);
       }
 
-      const { data: messages, error } = await query
+      const { data: messages, error } = await messagesQuery
         .order('created_at', { ascending: false })
         .limit(100);
 
       if (error) throw error;
       if (!messages) return [];
 
-      // Get profiles for both users
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, username, avatar_url')
-        .in('user_id', [user.id, otherUserId]);
-
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      const profileMap = new Map(profilesResult.data?.map(p => [p.user_id, p]) || []);
 
       // We fetched DESC for correct pagination, now re-sort for display (old -> new)
       const ordered = [...messages].reverse();
@@ -91,6 +83,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
       }));
     },
     enabled: !!user && !!otherUserId,
+    staleTime: 15_000,
   });
 
   // Real-time subscription for new messages AND updates (for read status)
@@ -109,21 +102,16 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         async (payload) => {
           const newMsg = payload.new as Message;
           
-          // Only handle messages for this conversation
           if (
             newMsg.is_private &&
             ((newMsg.sender_id === user.id && newMsg.recipient_id === otherUserId) ||
               (newMsg.sender_id === otherUserId && newMsg.recipient_id === user.id))
           ) {
-            // Check if message already exists to prevent duplicates
             const existingMessages = queryClient.getQueryData<PrivateMessageWithProfile[]>(
               ['private-messages', user.id, otherUserId]
             );
-            if (existingMessages?.some(m => m.id === newMsg.id)) {
-              return;
-            }
+            if (existingMessages?.some(m => m.id === newMsg.id)) return;
 
-            // Fetch sender profile
             const { data: profile } = await supabase
               .from('profiles')
               .select('username, avatar_url')
@@ -139,18 +127,15 @@ export const usePrivateMessages = (otherUserId: string | null) => {
             queryClient.setQueryData<PrivateMessageWithProfile[]>(
               ['private-messages', user.id, otherUserId],
               (old) => {
-                // Double-check for duplicates before adding
                 if (old?.some(m => m.id === newMsg.id)) return old;
                 return [...(old || []), messageWithProfile];
               }
             );
 
-            // Play notification sound for incoming messages (not our own)
             if (newMsg.sender_id !== user.id) {
               playNotificationSoundStandalone();
             }
 
-            // Also invalidate conversations to update last message
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
           }
         }
@@ -165,13 +150,11 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         (payload) => {
           const updatedMsg = payload.new as Message;
           
-          // Only handle messages for this conversation
           if (
             updatedMsg.is_private &&
             ((updatedMsg.sender_id === user.id && updatedMsg.recipient_id === otherUserId) ||
               (updatedMsg.sender_id === otherUserId && updatedMsg.recipient_id === user.id))
           ) {
-            // Update the message in cache to reflect read_at change
             queryClient.setQueryData<PrivateMessageWithProfile[]>(
               ['private-messages', user.id, otherUserId],
               (old) => {
@@ -193,33 +176,23 @@ export const usePrivateMessages = (otherUserId: string | null) => {
     };
   }, [user, otherUserId, queryClient]);
 
-  // Ref to prevent double submissions
   const sendingRef = useRef(false);
 
-  // Send private message mutation
   const sendMessage = useMutation({
     mutationFn: async ({ content, messageType }: { content: string; messageType: 'text' | 'image' | 'video' }) => {
       if (!user || !otherUserId) throw new Error('Not authenticated or no recipient');
       
-      // Prevent double submission
-      if (sendingRef.current) {
-        throw new Error('Message already being sent');
-      }
+      if (sendingRef.current) throw new Error('Message already being sent');
       sendingRef.current = true;
 
       try {
-        // Calculate credit cost based on message type
         const creditCost = messageType === 'text' 
           ? CREDIT_COSTS.private_message_text 
           : CREDIT_COSTS.private_message_media;
 
-        // Check if user has enough credits
         const hasCredits = await checkSufficientCredits(user.id, creditCost);
-        if (!hasCredits) {
-          throw new Error('INSUFFICIENT_CREDITS');
-        }
+        if (!hasCredits) throw new Error('INSUFFICIENT_CREDITS');
 
-        // Deduct credits first
         const deductResult = await deductCredits(
           user.id, 
           creditCost, 
@@ -227,9 +200,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
           `Message privé ${messageType === 'text' ? 'texte' : messageType === 'image' ? 'photo' : 'vidéo'}`
         );
 
-        if (!deductResult.success) {
-          throw new Error('INSUFFICIENT_CREDITS');
-        }
+        if (!deductResult.success) throw new Error('INSUFFICIENT_CREDITS');
 
         const { data, error } = await supabase
           .from('messages')
@@ -250,7 +221,6 @@ export const usePrivateMessages = (otherUserId: string | null) => {
       }
     },
     onSuccess: async (newMessage) => {
-      // Immediately add message to cache for instant UI feedback
       if (newMessage) {
         const messageWithProfile: PrivateMessageWithProfile = {
           ...newMessage,
@@ -261,19 +231,14 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         queryClient.setQueryData<PrivateMessageWithProfile[]>(
           ['private-messages', user?.id, otherUserId],
           (old) => {
-            // Avoid duplicates if realtime already added it
             if (old?.some(m => m.id === newMessage.id)) return old;
             return [...(old || []), messageWithProfile];
           }
         );
 
-        // CRITICAL: Immediately invalidate conversations to update last message preview
-        // This ensures the preview updates instantly when leaving the conversation
         queryClient.invalidateQueries({ queryKey: ['private-conversations', user?.id] });
 
-        // Send push notification to recipient
         if (otherUserId && user) {
-          // Get sender's username
           const { data: senderProfile } = await supabase
             .from('profiles')
             .select('username')
@@ -293,7 +258,6 @@ export const usePrivateMessages = (otherUserId: string | null) => {
             messagePreview || undefined
           );
           
-          // Also create in-app notification (bell icon)
           notifyPrivateMessageInApp(
             otherUserId,
             senderProfile?.username || 'Quelqu\'un',
@@ -303,7 +267,6 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         }
       }
       
-      // Record earning for admin/moderator when sending private message
       if (otherUserId) {
         recordEarning.mutate({
           taskType: 'private_message_response',
