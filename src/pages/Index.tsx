@@ -181,6 +181,41 @@ const Index = () => {
     }
   }, [user, verification, verificationLoading]);
 
+  // Global back handler: routes hardware back button through internal navigation
+  const handleGlobalBack = useCallback(() => {
+    if (currentView === 'private') {
+      setSelectedPrivateUserId(null);
+      setCurrentView('messages');
+      return;
+    }
+    if (currentView === 'chat') {
+      setSelectedRegion(null);
+      setCurrentView('messages');
+      setActiveTab('messages');
+      setMessageSubTab('groups');
+      return;
+    }
+    if (currentView === 'chatbot-config') {
+      setCurrentView('profile');
+      setActiveTab('profile');
+      return;
+    }
+    if (activeTab !== 'home' && currentView !== 'landing') {
+      setPreviousTab(activeTab);
+      setActiveTab('home');
+      setCurrentView('home');
+      return;
+    }
+    // On home/landing → do nothing (don't exit app)
+  }, [currentView, activeTab, setCurrentView, setActiveTab, setPreviousTab, setSelectedRegion, setSelectedPrivateUserId]);
+
+  // Intercept hardware back button globally
+  useMobileNavigation({ 
+    onBack: handleGlobalBack, 
+    enabled: !!user && currentView !== 'landing',
+    enableSwipeBack: currentView === 'private' || currentView === 'chat' || currentView === 'chatbot-config',
+  });
+
   // Skeleton already shown by parent Suspense, just return null briefly
   if (authLoading) {
     return null;
@@ -260,37 +295,6 @@ const Index = () => {
     setSelectedPrivateUserId(null);
     setCurrentView('messages');
   };
-
-  // Global back handler: routes hardware back button through internal navigation
-  const handleGlobalBack = useCallback(() => {
-    // Sub-views → go back to their parent
-    if (currentView === 'private') {
-      handleBackFromPrivateChat();
-      return;
-    }
-    if (currentView === 'chat') {
-      handleBackToRegions();
-      return;
-    }
-    if (currentView === 'chatbot-config') {
-      setCurrentView('profile');
-      setActiveTab('profile');
-      return;
-    }
-    // Secondary tabs → go back to home
-    if (activeTab !== 'home' && currentView !== 'landing') {
-      handleTabChange('home');
-      return;
-    }
-    // On home/landing → do nothing (don't exit app)
-  }, [currentView, activeTab]);
-
-  // Intercept hardware back button globally
-  useMobileNavigation({ 
-    onBack: handleGlobalBack, 
-    enabled: !!user && currentView !== 'landing',
-    enableSwipeBack: currentView === 'private' || currentView === 'chat' || currentView === 'chatbot-config',
-  });
 
 
   // Render chatbot config view
