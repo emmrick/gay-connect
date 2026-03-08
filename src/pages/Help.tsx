@@ -1055,6 +1055,33 @@ const Help = ({ embedded = false }: HelpProps) => {
               </motion.div>
             )}
 
+            {/* Quick navigation links */}
+            {!searchQuery && (
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => navigate('/aide/centre')}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
+                >
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  <span className="text-[11px] font-medium">Centre d'aide</span>
+                </button>
+                <button
+                  onClick={() => navigate('/regles')}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
+                >
+                  <Shield className="w-5 h-5 text-primary" />
+                  <span className="text-[11px] font-medium">Règles</span>
+                </button>
+                <button
+                  onClick={() => navigate('/legal')}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors"
+                >
+                  <Scale className="w-5 h-5 text-primary" />
+                  <span className="text-[11px] font-medium">Mentions légales</span>
+                </button>
+              </div>
+            )}
+
             {/* FAQ articles */}
             {faqArticles.length === 0 && !faqLoading ? (
               <motion.div
