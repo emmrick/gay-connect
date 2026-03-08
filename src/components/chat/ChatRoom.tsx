@@ -9,7 +9,6 @@ import { usePinnedMessages } from '@/hooks/usePinnedMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
-import EphemeralMedia from './EphemeralMedia';
 import EphemeralMessageRow from './EphemeralMessageRow';
 import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';
@@ -26,14 +25,6 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-
-interface EphemeralMediaData {
-  type: 'image' | 'video';
-  src: string;
-  senderName: string;
-  duration: number;
-  mediaId?: string;
-}
 
 interface ReplyMessage {
   id: string;
@@ -95,7 +86,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
     }
   }, [messages, user?.id, markAsRead]);
   
-  const [viewingMedia, setViewingMedia] = useState<EphemeralMediaData | null>(null);
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -234,17 +224,6 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
       {/* Fixed container to prevent keyboard shift */}
-      {viewingMedia && (
-        <EphemeralMedia
-          type={viewingMedia.type}
-          src={viewingMedia.src}
-          senderName={viewingMedia.senderName}
-          duration={viewingMedia.duration}
-          mediaId={viewingMedia.mediaId}
-          onClose={() => setViewingMedia(null)}
-          onViewed={() => console.log('Media viewed')}
-        />
-      )}
 
 
       {/* Suspension banner */}
