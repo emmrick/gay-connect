@@ -15,6 +15,7 @@ import fakeProfile6 from '@/assets/fake-profile-6.jpg';
 import { motion, useInView } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import LandingSupportChat from './LandingSupportChat';
+import logoImg from '@/assets/logo.png';
 
 interface HeroProps {
   onGetStarted: () => void;
