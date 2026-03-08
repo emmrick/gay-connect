@@ -8,6 +8,7 @@ import SavedMessagesDialog from './SavedMessagesDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import SnapCaptureDialog from './SnapCaptureDialog';
 import { cn } from '@/lib/utils';
+import { useForbiddenWords } from '@/hooks/useForbiddenWords';
 
 interface PrivateChatInputProps {
   onSendMessage: (content: string) => void;
