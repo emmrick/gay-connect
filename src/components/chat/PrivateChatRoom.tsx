@@ -318,6 +318,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && message.content.startsWith('http');
               const isAlbumShare = message.message_type === 'album_share';
               const isCreditRequest = message.message_type === 'credit_request';
+              const isSystemScreenshot = message.message_type === 'system_screenshot';
 
               let albumShareData: { shareId: string; albumId: string; albumName: string; expiresAt: string | null } | null = null;
               if (isAlbumShare && message.content) {
