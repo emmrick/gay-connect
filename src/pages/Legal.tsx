@@ -980,10 +980,11 @@ const Legal = () => {
           className="mt-12 text-center"
         >
           <p className="text-sm text-muted-foreground mb-2">
-            Dernière mise à jour : Février 2026
+            Dernière mise à jour : Mars 2026
           </p>
           <p className="text-xs text-muted-foreground mb-4">
-            Pour toute question, contactez-nous via la messagerie de l'application.
+            Pour toute question, contactez-nous via la messagerie de l'application ou à pipaselfie@gmail.com.
+          </p>
           </p>
           <Button variant="outline" onClick={() => navigate('/')}>
             Retour à l'accueil
