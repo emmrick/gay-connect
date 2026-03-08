@@ -219,14 +219,16 @@ const Help = ({ embedded = false }: HelpProps) => {
     return <BookOpen className="w-4 h-4" />;
   };
 
-  // Simulate bot typing delay
-  const addBotMessage = useCallback((text: string, options?: ChatOption[], delay = 600) => {
+  // Simulate bot typing delay based on word count (~1s per word, clamped 2s–15s)
+  const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
+    const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+    const typingDelay = Math.min(Math.max(wordCount * 1000, 2000), 15000);
     setIsBotTyping(true);
     setTimeout(() => {
       setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
       setIsBotTyping(false);
       playNotificationSoundStandalone();
-    }, delay);
+    }, typingDelay);
   }, []);
 
   // Show category selection
