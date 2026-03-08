@@ -14,7 +14,7 @@ import BlockUserDialog from './BlockUserDialog';
 import ProfilePhotoCarousel from './ProfilePhotoCarousel';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
-import { useHasBlockedUser } from '@/hooks/useUserBlock';
+import { useHasBlockedUser, useIsStaffUser } from '@/hooks/useUserBlock';
 
 interface UserProfile {
   user_id: string;
@@ -43,6 +43,7 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const { data: hasBlocked } = useHasBlockedUser(userId || '');
+  const { data: isStaffUser } = useIsStaffUser(userId || '');
   const { photos: userPhotos } = useProfilePhotos(userId || undefined);
   const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId || undefined);
   
@@ -186,21 +187,25 @@ const UserProfilePreview = ({ userId, isOpen, onClose, onStartPrivateChat }: Use
                         Message privé
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowBlockDialog(true)}
-                      title={hasBlocked ? 'Déjà bloqué' : 'Bloquer'}
-                    >
-                      <Ban className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowReportDialog(true)}
-                    >
-                      <Flag className="w-4 h-4" />
-                    </Button>
+                    {!isStaffUser && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowBlockDialog(true)}
+                        title={hasBlocked ? 'Déjà bloqué' : 'Bloquer'}
+                      >
+                        <Ban className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {!isStaffUser && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowReportDialog(true)}
+                      >
+                        <Flag className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

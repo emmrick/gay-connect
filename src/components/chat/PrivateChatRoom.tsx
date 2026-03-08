@@ -12,7 +12,7 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
-import { useHasBlockedUser, useUnblockUserAction } from '@/hooks/useUserBlock';
+import { useHasBlockedUser, useUnblockUserAction, useIsStaffUser } from '@/hooks/useUserBlock';
 import { usePrivateTypingIndicator } from '@/hooks/usePrivateTypingIndicator';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -56,6 +56,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { markAsRead } = useUnreadMessages();
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
   const unblockUser = useUnblockUserAction();
+  const { data: isStaffUser } = useIsStaffUser(otherUserId);
   const { isOtherTyping, startTyping, stopTyping } = usePrivateTypingIndicator(otherUserId);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -260,7 +261,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {hasBlocked ? (
+            {isStaffUser ? (
+              <DropdownMenuItem disabled className="text-muted-foreground">
+                <Ban className="w-4 h-4 mr-2" />
+                Membre de l'équipe (non blocable)
+              </DropdownMenuItem>
+            ) : hasBlocked ? (
               <DropdownMenuItem onClick={handleUnblock} disabled={unblockUser.isPending}>
                 <UserCheck className="w-4 h-4 mr-2" />
                 Débloquer
@@ -271,10 +277,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 Bloquer
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowReportDialog(true)}>
-              <Flag className="w-4 h-4 mr-2" />
-              Signaler
-            </DropdownMenuItem>
+            {!isStaffUser && (
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setShowReportDialog(true)}>
+                <Flag className="w-4 h-4 mr-2" />
+                Signaler
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
