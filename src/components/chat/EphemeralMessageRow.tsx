@@ -19,8 +19,11 @@ const EphemeralMessageRow = ({ messageId, senderId, children }: EphemeralMessage
   const isOwn = senderId === user?.id;
   const isUnlimited = media?.view_duration === 0;
 
-  // Still loading - show children (EphemeralMessage handles its own loading state)
-  if (isLoading || !media) return <>{children}</>;
+  // Still loading → render nothing to avoid flash of ephemeral content
+  if (isLoading) return null;
+  
+  // No ephemeral media attached → show children normally (regular message)
+  if (!media) return <>{children}</>;
 
   // Not yet viewed - show normally
   if (!media.is_viewed) return <>{children}</>;
