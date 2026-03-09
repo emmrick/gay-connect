@@ -21,7 +21,7 @@ import {
   Mail,
   MoreVertical,
   ExternalLink,
-  
+  ChevronLeft,
   Trash2,
   RefreshCw,
   Euro,
