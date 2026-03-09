@@ -1221,8 +1221,11 @@ const ActionsSection = ({ userId, blockedStatus, queryClient, verification }: Ac
       const { data: { user: adminUser } } = await supabase.auth.getUser();
       
       if (isCurrentlyBlocked) {
-        await supabase.from('blocked_users' as any).delete()
-          .eq('user_id', userId);
+        // Deactivate all active blocks
+        await supabase.from('user_blocks')
+          .update({ is_active: false, unblocked_at: new Date().toISOString() })
+          .eq('user_id', userId)
+          .eq('is_active', true);
         await supabase.from('moderation_actions').insert({
           performed_by: adminUser?.id || '',
           target_user_id: userId,
@@ -1231,10 +1234,12 @@ const ActionsSection = ({ userId, blockedStatus, queryClient, verification }: Ac
         });
         toast.success('Utilisateur débloqué');
       } else {
-        await supabase.from('blocked_users' as any).insert({
+        await supabase.from('user_blocks').insert({
           user_id: userId,
           blocked_by: adminUser?.id,
           reason: 'Bloqué par un administrateur',
+          is_active: true,
+          suspension_type: 'permanent',
         });
         await supabase.from('moderation_actions').insert({
           performed_by: adminUser?.id || '',
