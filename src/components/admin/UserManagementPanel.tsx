@@ -564,6 +564,7 @@ const UserManagementPanel = ({ initialUserId, onUserSelected }: UserManagementPa
                 user={user}
                 onAction={handleAction}
                 onUnblock={handleUnblock}
+                onOpenDossier={handleOpenDossier}
               />
             ))}
           </div>
