@@ -1265,16 +1265,22 @@ const ActionsSection = ({ userId, blockedStatus, queryClient, verification }: Ac
     try {
       const { data: { user: adminUser } } = await supabase.auth.getUser();
 
-      await supabase.from('profiles').update({
-        is_suspended: !isCurrentlySuspended,
-      }).eq('user_id', userId);
-
-      await supabase.from('moderation_actions').insert({
-        performed_by: adminUser?.id || '',
-        target_user_id: userId,
-        action_type: isCurrentlySuspended ? 'unsuspend' as any : 'suspend' as any,
-        details: isCurrentlySuspended ? 'Réactivation du compte' : 'Suspension du compte',
-      });
+      if (isCurrentlySuspended) {
+        // Remove suspension blocks
+        await supabase.from('user_blocks')
+          .update({ is_active: false, unblocked_at: new Date().toISOString() })
+          .eq('user_id', userId)
+          .eq('is_active', true);
+      } else {
+        await supabase.from('user_blocks').insert({
+          user_id: userId,
+          blocked_by: adminUser?.id,
+          reason: 'Suspendu par un administrateur',
+          is_active: true,
+          suspension_type: 'temporary',
+          suspension_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+      }
 
       // Notify user
       await supabase.from('notifications').insert({
