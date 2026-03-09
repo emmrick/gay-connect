@@ -2,7 +2,7 @@ import {
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, Home,
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, 
-  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut
+  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ export type AdminSection =
   | 'ai-moderation' | 'screenshot-sanctions' | 'moderators'
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
-  | 'error-logs' | 'security';
+  | 'promo-images' | 'error-logs' | 'security';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -80,6 +80,7 @@ const navItems: NavItem[] = [
   { id: 'popups', label: 'Pop-ups promo', icon: Bell, group: 'communication', adminOnly: true },
   { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'communication', adminOnly: true },
   { id: 'flyers', label: 'Flyers promo', icon: FileImage, group: 'communication', adminOnly: true },
+  { id: 'promo-images', label: 'Visuels promo IA', icon: Sparkles, group: 'communication', adminOnly: true },
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'communication', adminOnly: true },
 
   // Config & Logs (admin only)
