@@ -114,9 +114,7 @@ const AdminSidebar = ({
 
   const getBadge = (id: AdminSection) => {
     if (id === 'reports' && pendingReports > 0) return pendingReports;
-    if (id === 'blocked' && blockedCount > 0) return blockedCount;
     if (id === 'credit-purchases' && pendingPurchases > 0) return pendingPurchases;
-    if (id === 'verification' && pendingVerifications > 0) return pendingVerifications;
     return undefined;
   };
 
