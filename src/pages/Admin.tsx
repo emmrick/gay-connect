@@ -59,7 +59,6 @@ const Admin = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { data: stats } = useReportStats();
-  const { data: blockedUsers, isLoading: blockedLoading } = useBlockedUsers();
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
