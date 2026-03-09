@@ -64,7 +64,7 @@ serve(async (req) => {
           code,
           expires_at: expiresAt,
           interrupt_token: interruptToken,
-          created_by: user.id,
+          created_by: authenticatedUserId,
         })
         .select()
         .single();
