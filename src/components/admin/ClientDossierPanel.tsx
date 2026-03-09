@@ -1119,4 +1119,335 @@ const VerificationSection = ({ userId, verification, profile }: VerificationSect
   );
 };
 
+// ---- Actions Section ----
+interface ActionsSectionProps {
+  userId: string;
+  blockedStatus: any;
+  queryClient: any;
+  verification: any;
+}
+
+const ActionsSection = ({ userId, blockedStatus, queryClient, verification }: ActionsSectionProps) => {
+  const [creditAmount, setCreditAmount] = useState('');
+  const [creditType, setCreditType] = useState<'bonus' | 'purchased' | 'daily'>('bonus');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showCreditAdd, setShowCreditAdd] = useState(false);
+  const [showCreditRemove, setShowCreditRemove] = useState(false);
+
+  const handleAddCredits = async () => {
+    const amount = parseFloat(creditAmount);
+    if (!amount || amount <= 0 || amount > 10000) {
+      toast.error('Montant invalide (1 - 10 000)');
+      return;
+    }
+    setActionLoading('add-credits');
+    try {
+      const { data, error } = await supabase.rpc('add_credits', {
+        _user_id: userId,
+        _amount: amount,
+        _credit_type: creditType,
+        _transaction_type: 'admin_adjustment',
+        _description: `Ajout admin : +${amount} crédits (${creditType})`,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (result?.success === false) throw new Error(result.error);
+
+      // Log moderation action
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+      await supabase.from('moderation_actions').insert({
+        performed_by: adminUser?.id || '',
+        target_user_id: userId,
+        action_type: 'credit_adjustment' as any,
+        details: `Ajout de ${amount} crédits (${creditType})`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-credits'] });
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-credit-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-moderation'] });
+      toast.success(`${amount} crédits ajoutés`);
+      setCreditAmount('');
+      setShowCreditAdd(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de l\'ajout');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRemoveCredits = async () => {
+    const amount = parseFloat(creditAmount);
+    if (!amount || amount <= 0 || amount > 10000) {
+      toast.error('Montant invalide (1 - 10 000)');
+      return;
+    }
+    setActionLoading('remove-credits');
+    try {
+      const { data, error } = await supabase.rpc('deduct_credits', {
+        _user_id: userId,
+        _amount: amount,
+        _transaction_type: 'admin_deduction',
+        _description: `Retrait admin : -${amount} crédits`,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (result?.success === false) throw new Error(result.error || 'Crédits insuffisants');
+
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+      await supabase.from('moderation_actions').insert({
+        performed_by: adminUser?.id || '',
+        target_user_id: userId,
+        action_type: 'credit_adjustment' as any,
+        details: `Retrait de ${amount} crédits`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-credits'] });
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-credit-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-moderation'] });
+      toast.success(`${amount} crédits retirés`);
+      setCreditAmount('');
+      setShowCreditRemove(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors du retrait');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleBlock = async () => {
+    const isCurrentlyBlocked = blockedStatus?.isBlocked;
+    setActionLoading('block');
+    try {
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+      
+      if (isCurrentlyBlocked) {
+        await supabase.from('blocked_users' as any).delete()
+          .eq('user_id', userId);
+        await supabase.from('moderation_actions').insert({
+          performed_by: adminUser?.id || '',
+          target_user_id: userId,
+          action_type: 'unblock' as any,
+          details: 'Déblocage du compte',
+        });
+        toast.success('Utilisateur débloqué');
+      } else {
+        await supabase.from('blocked_users' as any).insert({
+          user_id: userId,
+          blocked_by: adminUser?.id,
+          reason: 'Bloqué par un administrateur',
+        });
+        await supabase.from('moderation_actions').insert({
+          performed_by: adminUser?.id || '',
+          target_user_id: userId,
+          action_type: 'block' as any,
+          details: 'Blocage du compte',
+        });
+        toast.success('Utilisateur bloqué');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-blocked'] });
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-moderation'] });
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleSuspend = async () => {
+    const isCurrentlySuspended = blockedStatus?.isSuspended;
+    setActionLoading('suspend');
+    try {
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+
+      await supabase.from('profiles').update({
+        is_suspended: !isCurrentlySuspended,
+      }).eq('user_id', userId);
+
+      await supabase.from('moderation_actions').insert({
+        performed_by: adminUser?.id || '',
+        target_user_id: userId,
+        action_type: isCurrentlySuspended ? 'unsuspend' as any : 'suspend' as any,
+        details: isCurrentlySuspended ? 'Réactivation du compte' : 'Suspension du compte',
+      });
+
+      // Notify user
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        type: 'system',
+        title: isCurrentlySuspended ? '✅ Compte réactivé' : '⚠️ Compte suspendu',
+        message: isCurrentlySuspended 
+          ? 'Votre compte a été réactivé par l\'équipe de modération.'
+          : 'Votre compte a été suspendu par l\'équipe de modération. Contactez le support pour plus d\'informations.',
+        is_read: false,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-blocked'] });
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-moderation'] });
+      queryClient.invalidateQueries({ queryKey: ['client-dossier-profile'] });
+      toast.success(isCurrentlySuspended ? 'Compte réactivé' : 'Compte suspendu');
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Credit Management */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <CreditCard className="w-4 h-4" /> Gestion des crédits
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1.5 text-xs h-auto py-3"
+              onClick={() => { setShowCreditAdd(!showCreditAdd); setShowCreditRemove(false); setCreditAmount(''); }}
+            >
+              <Plus className="w-3.5 h-3.5 text-green-600" />
+              Ajouter crédits
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1.5 text-xs h-auto py-3"
+              onClick={() => { setShowCreditRemove(!showCreditRemove); setShowCreditAdd(false); setCreditAmount(''); }}
+            >
+              <Minus className="w-3.5 h-3.5 text-destructive" />
+              Retirer crédits
+            </Button>
+          </div>
+
+          {showCreditAdd && (
+            <div className="space-y-2 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  placeholder="Montant"
+                  value={creditAmount}
+                  onChange={(e) => setCreditAmount(e.target.value)}
+                  className="flex-1 text-sm"
+                />
+                <Select value={creditType} onValueChange={(v) => setCreditType(v as any)}>
+                  <SelectTrigger className="w-[120px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bonus">Bonus</SelectItem>
+                    <SelectItem value="purchased">Achetés</SelectItem>
+                    <SelectItem value="daily">Quotidiens</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                {[5, 10, 25, 50, 100].map(v => (
+                  <Button key={v} variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setCreditAmount(String(v))}>
+                    {v}
+                  </Button>
+                ))}
+              </div>
+              <Button 
+                onClick={handleAddCredits} 
+                disabled={actionLoading === 'add-credits' || !creditAmount}
+                className="w-full gap-2 text-xs"
+                size="sm"
+              >
+                {actionLoading === 'add-credits' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                Ajouter {creditAmount ? `${creditAmount} crédits` : ''}
+              </Button>
+            </div>
+          )}
+
+          {showCreditRemove && (
+            <div className="space-y-2 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+              <Input
+                type="number"
+                min="1"
+                max="10000"
+                placeholder="Montant à retirer"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+                className="text-sm"
+              />
+              <div className="flex gap-2">
+                {[5, 10, 25, 50].map(v => (
+                  <Button key={v} variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setCreditAmount(String(v))}>
+                    {v}
+                  </Button>
+                ))}
+              </div>
+              <Button 
+                variant="destructive"
+                onClick={handleRemoveCredits} 
+                disabled={actionLoading === 'remove-credits' || !creditAmount}
+                className="w-full gap-2 text-xs"
+                size="sm"
+              >
+                {actionLoading === 'remove-credits' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Minus className="w-3 h-3" />}
+                Retirer {creditAmount ? `${creditAmount} crédits` : ''}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Moderation Actions */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Shield className="w-4 h-4" /> Actions de modération
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`gap-1.5 text-xs h-auto py-3 ${blockedStatus?.isBlocked ? 'border-green-500/30 text-green-600 hover:text-green-600' : 'text-destructive hover:text-destructive'}`}
+              onClick={handleToggleBlock}
+              disabled={actionLoading === 'block'}
+            >
+              {actionLoading === 'block' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : blockedStatus?.isBlocked ? (
+                <Unlock className="w-3.5 h-3.5" />
+              ) : (
+                <Ban className="w-3.5 h-3.5" />
+              )}
+              {blockedStatus?.isBlocked ? 'Débloquer' : 'Bloquer'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`gap-1.5 text-xs h-auto py-3 ${blockedStatus?.isSuspended ? 'border-green-500/30 text-green-600 hover:text-green-600' : 'text-destructive hover:text-destructive'}`}
+              onClick={handleToggleSuspend}
+              disabled={actionLoading === 'suspend'}
+            >
+              {actionLoading === 'suspend' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : blockedStatus?.isSuspended ? (
+                <CheckCircle className="w-3.5 h-3.5" />
+              ) : (
+                <AlertCircle className="w-3.5 h-3.5" />
+              )}
+              {blockedStatus?.isSuspended ? 'Réactiver' : 'Suspendre'}
+            </Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground text-center mt-2">
+            Toutes les actions sont journalisées dans l'historique de modération.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export default ClientDossierPanel;
