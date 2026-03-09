@@ -430,6 +430,21 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Téléphone</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="+33 6 12 34 56 78"
+                  maxLength={20}
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Requis pour la vérification lors du contact support.
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="age">Âge *</Label>
