@@ -88,7 +88,7 @@ export const useNotifications = () => {
           pollIntervalRef.current = 10000; // Reset backoff when new notifications found
           invalidateAll();
         } else {
-          pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.3, 15000);
+          pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.5, 60000);
         }
       } catch {
         pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.3, 15000);
