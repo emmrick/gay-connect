@@ -146,7 +146,7 @@ serve(async (req) => {
         });
       }
 
-      if (otpRecord.code !== req.headers.get('x-otp-code')) {
+      if (otpRecord.code !== submitted_code) {
         return new Response(JSON.stringify({ error: 'Code incorrect' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
