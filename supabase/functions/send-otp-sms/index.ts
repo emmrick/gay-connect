@@ -41,7 +41,8 @@ serve(async (req) => {
       });
     }
 
-    const { action, target_user_id, ticket_id, phone_number, otp_id } = await req.json();
+    const body = await req.json();
+    const { action, target_user_id, ticket_id, phone_number, otp_id, code: submitted_code, interrupt_token } = body;
 
     if (action === 'send') {
       // Generate 6-digit OTP
@@ -145,7 +146,7 @@ serve(async (req) => {
         });
       }
 
-      if (otpRecord.code !== req.headers.get('x-otp-code')) {
+      if (otpRecord.code !== submitted_code) {
         return new Response(JSON.stringify({ error: 'Code incorrect' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -161,9 +162,6 @@ serve(async (req) => {
       });
 
     } else if (action === 'interrupt') {
-      // This can be called by the user themselves
-      const { interrupt_token } = await req.json();
-      
       const { error: updateErr } = await supabase
         .from('support_otp_codes')
         .update({ interrupted_at: new Date().toISOString() })
