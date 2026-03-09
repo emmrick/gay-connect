@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import VisitorSupportChat from './VisitorSupportChat';
 import { cn } from '@/lib/utils';
 
 interface ChatMessage {
