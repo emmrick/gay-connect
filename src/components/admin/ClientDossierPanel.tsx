@@ -197,8 +197,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
     setOtpVerifying(true);
     try {
       const response = await supabase.functions.invoke('send-otp-sms', {
-        body: { action: 'verify', otp_id: otpId },
-        headers: { 'x-otp-code': otpCode },
+        body: { action: 'verify', otp_id: otpId, code: otpCode },
       });
 
       if (response.error) throw new Error(response.error.message);
