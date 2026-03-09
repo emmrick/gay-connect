@@ -49,6 +49,7 @@ import SupportRatingsPanel from '@/components/admin/SupportRatingsPanel';
 import PopupManagementPanel from '@/components/admin/PopupManagementPanel';
 import FAQManagementPanel from '@/components/admin/FAQManagementPanel';
 import FlyerGeneratorPanel from '@/components/admin/FlyerGeneratorPanel';
+import PromoImageGeneratorPanel from '@/components/admin/PromoImageGeneratorPanel';
 import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
 
