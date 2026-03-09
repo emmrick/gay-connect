@@ -171,6 +171,15 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                   <Shield className="w-4 h-4" />
                   Infractions
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigateToSection?.('client-dossier')}
+                  className="gap-1.5"
+                >
+                  <User className="w-4 h-4" />
+                  Dossier
+                </Button>
               </div>
             </div>
 
