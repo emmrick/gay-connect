@@ -1854,6 +1854,7 @@ export type Database = {
           location_updated_at: string | null
           longitude: number | null
           looking_for: string[] | null
+          phone_number: string | null
           position_detail: string | null
           region: string
           relationship_status: string | null
@@ -1892,6 +1893,7 @@ export type Database = {
           location_updated_at?: string | null
           longitude?: number | null
           looking_for?: string[] | null
+          phone_number?: string | null
           position_detail?: string | null
           region: string
           relationship_status?: string | null
@@ -1930,6 +1932,7 @@ export type Database = {
           location_updated_at?: string | null
           longitude?: number | null
           looking_for?: string[] | null
+          phone_number?: string | null
           position_detail?: string | null
           region?: string
           relationship_status?: string | null
@@ -2380,6 +2383,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      support_otp_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          interrupt_token: string | null
+          interrupted_at: string | null
+          ticket_id: string | null
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          interrupt_token?: string | null
+          interrupted_at?: string | null
+          ticket_id?: string | null
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          interrupt_token?: string | null
+          interrupted_at?: string | null
+          ticket_id?: string | null
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
       }
       support_tickets: {
         Row: {
@@ -2835,6 +2877,77 @@ export type Database = {
           saved_messages_count?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      visitor_support_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sender_id: string | null
+          sender_type: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+          sender_type?: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+          sender_type?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitor_support_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "visitor_support_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visitor_support_sessions: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          phone_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          phone_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone_number?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
