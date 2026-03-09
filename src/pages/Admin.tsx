@@ -239,7 +239,7 @@ const Admin = () => {
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
       case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('dashboard')} onNavigateToSection={handleSectionChange} />;
-      case 'client-dossier': return <ClientDossierSearch />;
+      case 'client-dossier': return <ClientDossierSearch onOpenUserDossier={(userId: string) => handleSectionChange('users', userId)} />;
       case 'support-ratings': return <SupportRatingsPanel />;
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;
