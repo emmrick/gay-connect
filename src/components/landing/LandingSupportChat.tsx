@@ -270,7 +270,8 @@ const LandingSupportChat = () => {
   }, [freeText, isBotTyping, searchFaqArticles, showFaqAnswer, addBotMessage, noMatchCount]);
 
   const handleContactAgent = () => {
-    navigate('/auth');
+    setIsOpen(false);
+    setShowVisitorChat(true);
   };
 
   return (
