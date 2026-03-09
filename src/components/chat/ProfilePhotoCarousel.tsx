@@ -63,6 +63,44 @@ const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarou
     return () => window.removeEventListener('keydown', handler);
   }, [fullscreenOpen, photos.length]);
 
+  // Swipe gesture for fullscreen viewer
+  useEffect(() => {
+    if (!fullscreenOpen || photos.length <= 1) return;
+
+    let startX = 0;
+    let startY = 0;
+    let endX = 0;
+    let endY = 0;
+
+    const onTouchStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      endX = startX;
+      endY = startY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      endX = e.touches[0].clientX;
+      endY = e.touches[0].clientY;
+    };
+    const onTouchEnd = () => {
+      const dx = endX - startX;
+      const dy = Math.abs(endY - startY);
+      if (Math.abs(dx) > 50 && dy < 120) {
+        if (dx < 0) goFullscreenNext();
+        else goFullscreenPrev();
+      }
+    };
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: true });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [fullscreenOpen, photos.length]);
+
   // Lock body scroll when fullscreen is open
   useEffect(() => {
     if (fullscreenOpen) {
