@@ -100,10 +100,6 @@ const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
           <div className="space-y-4">
             {!preview ? (
               <div className="space-y-3">
-                {showAIGenerator ? (
-                  <AIStoryGenerator onImageGenerated={handleAIGenerated} />
-                ) : (
-                  <>
                     {/* Snap capture button */}
                     <button
                       onClick={() => setShowSnapCapture(true)}
@@ -128,19 +124,6 @@ const CreateStoryDialog = ({ isOpen, onClose }: CreateStoryDialogProps) => {
                       <Image className="w-5 h-5 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">Choisir depuis la galerie</span>
                     </button>
-
-                    {/* AI Generator button - Admin only */}
-                    {isAdmin && (
-                      <button
-                        onClick={() => setShowAIGenerator(true)}
-                        className="w-full py-4 rounded-2xl border-2 border-dashed border-accent/50 hover:border-accent bg-accent/5 flex items-center justify-center gap-3 transition-colors"
-                      >
-                        <Sparkles className="w-5 h-5 text-accent" />
-                        <span className="text-sm font-medium text-accent">✨ Créer avec l'IA (Promo)</span>
-                      </button>
-                    )}
-                  </>
-                )}
               </div>
             ) : (
               <div className="relative rounded-2xl overflow-hidden bg-black">
