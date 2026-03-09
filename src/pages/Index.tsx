@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -6,27 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
-import ChatRoom from '@/components/chat/ChatRoom';
-import AnnouncementChannel from '@/components/chat/AnnouncementChannel';
-import PrivateChatList from '@/components/chat/PrivateChatList';
-import PrivateChatRoom from '@/components/chat/PrivateChatRoom';
-import ProfileView from '@/components/profile/ProfileView';
-import ChatBotConfigPage from '@/components/chatbot/ChatBotConfigPage';
-import CreditsPage from '@/components/credits/CreditsPage';
-import ReferralDialog from '@/components/premium/ReferralDialog';
 import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
-import SwipePage from '@/components/swipe/SwipePage';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
-import MemberSearch from '@/components/chat/MemberSearch';
-import JoinedGroupsList from '@/components/chat/JoinedGroupsList';
-import GroupPickerDialog from '@/components/chat/GroupPickerDialog';
-import CreateGroupDialog from '@/components/chat/CreateGroupDialog';
-import IdentityVerificationDialog from '@/components/verification/IdentityVerificationDialog';
-import VerificationReminderBanner from '@/components/verification/VerificationReminderBanner';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import Help from '@/pages/Help';
 import { useChatRoom } from '@/hooks/useChatRooms';
 import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
@@ -46,6 +30,24 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Plus, User, Users } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+
+// Lazy-load heavy sub-views to reduce initial JS bundle
+const ChatRoom = lazy(() => import('@/components/chat/ChatRoom'));
+const AnnouncementChannel = lazy(() => import('@/components/chat/AnnouncementChannel'));
+const PrivateChatList = lazy(() => import('@/components/chat/PrivateChatList'));
+const PrivateChatRoom = lazy(() => import('@/components/chat/PrivateChatRoom'));
+const ProfileView = lazy(() => import('@/components/profile/ProfileView'));
+const ChatBotConfigPage = lazy(() => import('@/components/chatbot/ChatBotConfigPage'));
+const CreditsPage = lazy(() => import('@/components/credits/CreditsPage'));
+const ReferralDialog = lazy(() => import('@/components/premium/ReferralDialog'));
+const SwipePage = lazy(() => import('@/components/swipe/SwipePage'));
+const MemberSearch = lazy(() => import('@/components/chat/MemberSearch'));
+const JoinedGroupsList = lazy(() => import('@/components/chat/JoinedGroupsList'));
+const GroupPickerDialog = lazy(() => import('@/components/chat/GroupPickerDialog'));
+const CreateGroupDialog = lazy(() => import('@/components/chat/CreateGroupDialog'));
+const IdentityVerificationDialog = lazy(() => import('@/components/verification/IdentityVerificationDialog'));
+const VerificationReminderBanner = lazy(() => import('@/components/verification/VerificationReminderBanner'));
+const Help = lazy(() => import('@/pages/Help'));
 
 type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
 
