@@ -60,6 +60,7 @@ const LandingSupportChat = () => {
   const [noMatchCount, setNoMatchCount] = useState(0);
   const [showEscalation, setShowEscalation] = useState(false);
   const [started, setStarted] = useState(false);
+  const [showVisitorChat, setShowVisitorChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
