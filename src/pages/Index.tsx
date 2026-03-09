@@ -598,53 +598,55 @@ const Index = () => {
   const content = renderContent();
 
   return (
-    <div 
-      className="h-dvh h-screen bg-background flex flex-col overflow-hidden"
-      style={{
-        paddingLeft: 'env(safe-area-inset-left, 0px)',
-        paddingRight: 'env(safe-area-inset-right, 0px)',
-      }}
-    >
-      {/* Verification Reminder Banner */}
-      {user && currentView !== 'landing' && <VerificationReminderBanner />}
-      
-      {/* Content with AnimatePresence for transitions */}
-      <main className={cn(
-        "flex-1 flex flex-col overflow-hidden",
-        showBottomNav && "pb-24"
-      )}
-      style={{
-        paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
-      }}
+    <Suspense fallback={<LazyFallback />}>
+      <div 
+        className="h-dvh h-screen bg-background flex flex-col overflow-hidden"
+        style={{
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+        }}
       >
-        {content ?? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Chargement...</p>
-            </div>
-          </div>
+        {/* Verification Reminder Banner */}
+        {user && currentView !== 'landing' && <VerificationReminderBanner />}
+        
+        {/* Content with AnimatePresence for transitions */}
+        <main className={cn(
+          "flex-1 flex flex-col overflow-hidden",
+          showBottomNav && "pb-24"
         )}
-      </main>
+        style={{
+          paddingBottom: showBottomNav ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : undefined,
+        }}
+        >
+          {content ?? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Chargement...</p>
+              </div>
+            </div>
+          )}
+        </main>
 
-      {/* Bottom Navigation Bar */}
-      {showBottomNav && (
-        <BottomNavBar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          unreadCount={getTotalUnreadCount()}
-          isPremium={isPremium}
-        />
-      )}
+        {/* Bottom Navigation Bar */}
+        {showBottomNav && (
+          <BottomNavBar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            unreadCount={getTotalUnreadCount()}
+            isPremium={isPremium}
+          />
+        )}
 
-      {/* Identity Verification Dialog */}
-      {showVerificationDialog && (
-        <IdentityVerificationDialog
-          open={showVerificationDialog}
-          onOpenChange={setShowVerificationDialog}
-        />
-      )}
-    </div>
+        {/* Identity Verification Dialog */}
+        {showVerificationDialog && (
+          <IdentityVerificationDialog
+            open={showVerificationDialog}
+            onOpenChange={setShowVerificationDialog}
+          />
+        )}
+      </div>
+    </Suspense>
   );
 };
 
