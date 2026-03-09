@@ -91,7 +91,7 @@ export const useNotifications = () => {
           pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.5, 60000);
         }
       } catch {
-        pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.3, 15000);
+        pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.5, 60000);
       } finally {
         timeoutRef.current = setTimeout(poll, pollIntervalRef.current);
       }
