@@ -95,12 +95,10 @@ const AdminMobileNav = ({
   const getBadge = useCallback((id: AdminSection) => {
     switch (id) {
       case 'reports': return pendingReports > 0 ? pendingReports : undefined;
-      case 'blocked': return blockedCount > 0 ? blockedCount : undefined;
       case 'credit-purchases': return pendingPurchases > 0 ? pendingPurchases : undefined;
-      case 'verification': return pendingVerifications > 0 ? pendingVerifications : undefined;
       default: return undefined;
     }
-  }, [pendingReports, blockedCount, pendingPurchases, pendingVerifications]);
+  }, [pendingReports, pendingPurchases]);
 
   const activeItem = visibleItems.find(item => item.id === activeSection);
 
