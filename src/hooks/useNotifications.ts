@@ -85,7 +85,7 @@ export const useNotifications = () => {
         const { count } = await q;
 
         if (count && count > 0) {
-          pollIntervalRef.current = 2000; // Fast polling when new notifications found
+          pollIntervalRef.current = 10000; // Reset backoff when new notifications found
           invalidateAll();
         } else {
           pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.3, 15000);
