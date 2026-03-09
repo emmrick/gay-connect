@@ -338,59 +338,65 @@ const Index = () => {
   // Render private chat view with slide animation
   if (currentView === 'private' && selectedPrivateUserId) {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
-        <PrivateChatRoom
-          otherUserId={selectedPrivateUserId}
-          onBack={handleBackFromPrivateChat}
-        />
-      </motion.div>
+      <Suspense fallback={<LazyFallback />}>
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          className="min-h-screen"
+        >
+          <PrivateChatRoom
+            otherUserId={selectedPrivateUserId}
+            onBack={handleBackFromPrivateChat}
+          />
+        </motion.div>
+      </Suspense>
     );
   }
 
   // Render announcement channel
   if (currentView === 'chat' && selectedRegion === 'announcement' && announcementChannel) {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen w-full overflow-hidden"
-      >
-        <AnnouncementChannel
-          roomId={announcementChannel.id}
-          onBack={handleBackToRegions}
-        />
-      </motion.div>
+      <Suspense fallback={<LazyFallback />}>
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          className="min-h-screen w-full overflow-hidden"
+        >
+          <AnnouncementChannel
+            roomId={announcementChannel.id}
+            onBack={handleBackToRegions}
+          />
+        </motion.div>
+      </Suspense>
     );
   }
 
   // Render group chat view with slide animation
   if (currentView === 'chat' && selectedRegion && selectedRoomData) {
     return (
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-        className="min-h-screen"
-      >
-        <ChatRoom
-          roomId={selectedRoomData.id}
-          regionCode={selectedRoomData.region_code}
-          regionName={selectedRoomData.is_custom ? (selectedRoomData.custom_name || selectedRoomData.region_name) : selectedRoomData.region_name}
-          memberCount={memberCount}
-          isCustomGroup={selectedRoomData.is_custom}
-          onBack={handleBackToRegions}
-          onStartPrivateChat={handleStartPrivateChat}
-        />
-      </motion.div>
+      <Suspense fallback={<LazyFallback />}>
+        <motion.div
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          className="min-h-screen"
+        >
+          <ChatRoom
+            roomId={selectedRoomData.id}
+            regionCode={selectedRoomData.region_code}
+            regionName={selectedRoomData.is_custom ? (selectedRoomData.custom_name || selectedRoomData.region_name) : selectedRoomData.region_name}
+            memberCount={memberCount}
+            isCustomGroup={selectedRoomData.is_custom}
+            onBack={handleBackToRegions}
+            onStartPrivateChat={handleStartPrivateChat}
+          />
+        </motion.div>
+      </Suspense>
     );
   }
 
