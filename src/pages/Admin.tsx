@@ -166,34 +166,8 @@ const Admin = () => {
       case 'global': return <GlobalEarningsPanel />;
       case 'stats': return <AdminStatsPanel />;
       case 'users': return <UserManagementPanel initialUserId={targetUserId} onUserSelected={setTargetUserId} />;
-      case 'credits': return <CreditsManagementPanel />;
       case 'credits-surveillance': return <CreditsSurveillancePanel />;
       case 'credit-purchases': return <CreditPurchaseRequestsPanel />;
-      case 'blocked':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Ban className="w-5 h-5" />
-              <h2 className="text-lg font-semibold">Utilisateurs bloqués ({blockedUsers?.length || 0})</h2>
-            </div>
-            <ScrollArea className="h-[calc(100dvh-200px)]">
-              {blockedLoading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-                </div>
-              ) : blockedUsers?.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Aucun utilisateur bloqué</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {blockedUsers?.map((block) => <BlockedUserCard key={block.id} block={block} />)}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-        );
       case 'reports':
         return (
           <div className="space-y-4">
@@ -232,8 +206,6 @@ const Admin = () => {
           </div>
         );
       case 'moderation': return <ContentModerationPanel />;
-      case 'verification': return <IdentityVerificationPanel />;
-      case 'history': return <ModerationHistoryPanel />;
       case 'promo': return <PromoCodePanel />;
       case 'broadcast': return <BroadcastNotificationPanel />;
       case 'ai-moderation': return <AIModerationPanel />;
@@ -244,7 +216,6 @@ const Admin = () => {
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
       case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('dashboard')} onNavigateToSection={handleSectionChange} />;
-      case 'client-dossier': return <ClientDossierSearch onOpenUserDossier={(userId: string) => handleSectionChange('users', userId)} />;
       case 'support-ratings': return <SupportRatingsPanel />;
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;
