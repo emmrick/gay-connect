@@ -19,6 +19,8 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    let authenticatedUserId: string | null = null;
+
     // Interrupt action is public (called from SMS link by the user)
     if (action !== 'interrupt') {
       const authHeader = req.headers.get('Authorization');
@@ -35,6 +37,8 @@ serve(async (req) => {
           status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
+      authenticatedUserId = user.id;
 
       const { data: hasAdminRole } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
       const { data: hasModRole } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'moderator' });
@@ -60,7 +64,7 @@ serve(async (req) => {
           code,
           expires_at: expiresAt,
           interrupt_token: interruptToken,
-          created_by: user.id,
+          created_by: authenticatedUserId,
         })
         .select()
         .single();
