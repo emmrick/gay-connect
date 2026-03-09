@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import VisitorSupportChat from './VisitorSupportChat';
 import { cn } from '@/lib/utils';
 
 interface ChatMessage {
@@ -60,6 +61,7 @@ const LandingSupportChat = () => {
   const [noMatchCount, setNoMatchCount] = useState(0);
   const [showEscalation, setShowEscalation] = useState(false);
   const [started, setStarted] = useState(false);
+  const [showVisitorChat, setShowVisitorChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -268,7 +270,8 @@ const LandingSupportChat = () => {
   }, [freeText, isBotTyping, searchFaqArticles, showFaqAnswer, addBotMessage, noMatchCount]);
 
   const handleContactAgent = () => {
-    navigate('/auth');
+    setIsOpen(false);
+    setShowVisitorChat(true);
   };
 
   return (
@@ -300,7 +303,7 @@ const LandingSupportChat = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-6rem)] rounded-2xl border border-border/50 bg-background/98 backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-[360px] sm:max-w-[calc(100vw-2rem)] h-[100dvh] sm:h-[520px] sm:max-h-[calc(100vh-6rem)] sm:rounded-2xl border-0 sm:border border-border/50 bg-background shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="relative flex-shrink-0">
@@ -453,6 +456,16 @@ const LandingSupportChat = () => {
               </div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Visitor Support Chat */}
+      <AnimatePresence>
+        {showVisitorChat && (
+          <VisitorSupportChat 
+            isOpen={showVisitorChat} 
+            onClose={() => setShowVisitorChat(false)} 
+          />
         )}
       </AnimatePresence>
     </>

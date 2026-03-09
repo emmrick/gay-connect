@@ -122,6 +122,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
   const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [bio, setBio] = useState('');
   const [age, setAge] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -157,6 +158,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
       setUsername(profile.username || '');
       setFirstName((profile as any).first_name || '');
       setLastName((profile as any).last_name || '');
+      setPhoneNumber((profile as any).phone_number || '');
       setBio(profile.bio || '');
       setAge(profile.age?.toString() || '');
       setAvatarPreview(profile.avatar_url || null);
@@ -320,6 +322,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
         username: username.trim(),
         first_name: firstName.trim() || null,
         last_name: lastName.trim() || null,
+        phone_number: phoneNumber.trim() || null,
         bio: bio.trim() || null,
         age: ageNum,
         avatar_url: avatarUrl,
@@ -425,6 +428,21 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                     maxLength={50}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Téléphone</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="+33 6 12 34 56 78"
+                  maxLength={20}
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Requis pour la vérification lors du contact support.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

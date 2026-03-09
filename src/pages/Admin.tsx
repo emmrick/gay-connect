@@ -52,6 +52,7 @@ import FlyerGeneratorPanel from '@/components/admin/FlyerGeneratorPanel';
 import PromoImageGeneratorPanel from '@/components/admin/PromoImageGeneratorPanel';
 import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
+import ClientDossierSearch from '@/components/admin/ClientDossierSearch';
 
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
@@ -232,6 +233,7 @@ const Admin = () => {
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
       case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('dashboard')} onNavigateToSection={handleSectionChange} />;
+      case 'client-dossier': return <ClientDossierSearch />;
       case 'support-ratings': return <SupportRatingsPanel />;
       case 'popups': return <PopupManagementPanel />;
       case 'faq': return <FAQManagementPanel />;
