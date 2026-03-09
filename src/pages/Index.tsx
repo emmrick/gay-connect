@@ -108,6 +108,26 @@ const Index = () => {
   // Handle push notification redirects
   useNotificationRedirect();
 
+  // Handle OTP interruption link
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const interruptToken = params.get('interrupt');
+    if (interruptToken) {
+      // Clean URL
+      window.history.replaceState({}, '', '/');
+      // Call interrupt endpoint
+      supabase.functions.invoke('send-otp-sms', {
+        body: { action: 'interrupt', interrupt_token: interruptToken },
+      }).then(({ data }) => {
+        if (data?.interrupted) {
+          import('sonner').then(({ toast }) => {
+            toast.success('Accès à votre dossier interrompu avec succès. Un conseiller supérieur sera assigné.');
+          });
+        }
+      }).catch(console.error);
+    }
+  }, []);
+
   // Handle deep link to open private chat from navigation state
   useEffect(() => {
     const state = location.state as { openPrivateChat?: string } | null;
