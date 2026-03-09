@@ -158,6 +158,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
       setUsername(profile.username || '');
       setFirstName((profile as any).first_name || '');
       setLastName((profile as any).last_name || '');
+      setPhoneNumber((profile as any).phone_number || '');
       setBio(profile.bio || '');
       setAge(profile.age?.toString() || '');
       setAvatarPreview(profile.avatar_url || null);
