@@ -51,6 +51,12 @@ const Help = lazy(() => import('@/pages/Help'));
 
 type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
 
+const LazyFallback = () => (
+  <div className="flex-1 flex items-center justify-center min-h-screen">
+    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+  </div>
+);
+
 // Slide animation only for sub-views (chat, private)
 const slideIn = {
   initial: { x: '100%', opacity: 0 },
