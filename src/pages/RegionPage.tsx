@@ -137,7 +137,7 @@ const RegionPage = () => {
     name: pageTitle,
     description: pageDescription,
     url: canonical,
-    isPartOf: { '@type': 'WebSite', name: 'Gay Connect', url: 'https://gay-connect.lovable.app' },
+    isPartOf: { '@type': 'WebSite', name: 'Gay Connect', url: 'https://gay-connect.fr' },
     about: {
       '@type': 'Place',
       name: `${regionCode} - ${regionName}`,

@@ -81,7 +81,7 @@ const About = () => {
           '@type': 'AboutPage',
           name: 'À propos de Gay Connect - Rencontre Gay & Sexe Gay',
           description: 'Gay Connect : site de rencontre gay et de sexe entre hommes sécurisé en France. Profils vérifiés, médias éphémères, anti-capture d\'écran.',
-          url: 'https://gay-connect.lovable.app/about',
+          url: 'https://gay-connect.fr/about',
         }}
       />
       {/* Header */}

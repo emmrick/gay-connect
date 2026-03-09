@@ -20,7 +20,7 @@ const Regions = () => {
     name: pageTitle,
     description: pageDescription,
     url: canonical,
-    isPartOf: { '@type': 'WebSite', name: 'Gay Connect', url: 'https://gay-connect.lovable.app' },
+    isPartOf: { '@type': 'WebSite', name: 'Gay Connect', url: 'https://gay-connect.fr' },
     numberOfItems: rooms?.length || 101,
   };
 
