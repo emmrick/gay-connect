@@ -1,15 +1,13 @@
 import { useState, useRef } from 'react';
-import { Camera, Image, X, Globe, MapPin, Lock, Loader2, Sparkles } from 'lucide-react';
+import { Camera, Image, X, Globe, MapPin, Lock, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useStories } from '@/hooks/useStories';
 import { useAuth } from '@/contexts/AuthContext';
-import { useIsAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import SnapCaptureDialog from '@/components/chat/SnapCaptureDialog';
-import AIStoryGenerator from '@/components/stories/AIStoryGenerator';
 
 interface CreateStoryDialogProps {
   isOpen: boolean;
