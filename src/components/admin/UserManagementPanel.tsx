@@ -662,10 +662,12 @@ const UserCard = ({
   user,
   onAction,
   onUnblock,
+  onOpenDossier,
 }: {
   user: UserProfile;
   onAction: (user: UserProfile, action: 'suspend' | 'ban' | 'delete') => void;
   onUnblock: (userId: string, username: string) => void;
+  onOpenDossier: (userId: string) => void;
 }) => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { data: isBlocked } = useIsUserBlocked(user.user_id);
