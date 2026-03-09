@@ -162,9 +162,6 @@ serve(async (req) => {
       });
 
     } else if (action === 'interrupt') {
-      // This can be called by the user themselves
-      const { interrupt_token } = await req.json();
-      
       const { error: updateErr } = await supabase
         .from('support_otp_codes')
         .update({ interrupted_at: new Date().toISOString() })
