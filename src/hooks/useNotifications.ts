@@ -64,7 +64,7 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          pollIntervalRef.current = 5000; // Reset backoff
+          pollIntervalRef.current = 10000; // Reset backoff on new notification
           invalidateAll();
         }
       )
