@@ -750,7 +750,10 @@ const UserCard = ({
   };
 
   return (
-    <div className={`p-4 rounded-lg border ${isBlocked ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-card'} hover:bg-secondary/30 transition-colors`}>
+    <div 
+      className={`p-4 rounded-lg border cursor-pointer ${isBlocked ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-card'} hover:bg-secondary/30 hover:border-primary/30 transition-colors`}
+      onClick={() => onOpenDossier(user.user_id)}
+    >
       <div className="flex items-center gap-4">
         <div className="relative">
           <Avatar className="w-12 h-12">
