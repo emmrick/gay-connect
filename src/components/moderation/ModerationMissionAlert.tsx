@@ -102,8 +102,8 @@ const ModerationMissionAlert = () => {
     staleTime: 60000,
   });
 
-  // Don't show if already on admin page (TaskQueuePopup handles it there)
   const isOnAdminPage = location.pathname === '/admin';
+  const isTrulyOnline = isUserTrulyOnline(profile);
 
   // Listen for new moderation tasks via realtime
   useEffect(() => {
