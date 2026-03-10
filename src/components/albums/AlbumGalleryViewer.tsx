@@ -250,7 +250,7 @@ const AlbumGalleryViewer = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={closeViewer}
             className="text-white hover:bg-white/20 rounded-full h-10 w-10"
           >
             <X className="w-6 h-6" />
