@@ -54,16 +54,28 @@ const AlbumGalleryViewer = ({
     index === self.findIndex(m => m.id === item.id)
   );
 
-  // Reset when opening
+  // Push history state when opening, pop to close
   useEffect(() => {
-    if (isOpen) {
-      const safeIndex = Math.min(initialIndex, uniqueMedia.length - 1);
-      setSelectedIndex(Math.max(0, safeIndex));
-      setZoomState({ scale: 1, x: 0, y: 0 });
-      setImageLoaded(false);
-      setVideoPlaying(null);
-    }
-  }, [isOpen, initialIndex, uniqueMedia.length]);
+    if (!isOpen) return;
+
+    const safeIndex = Math.min(initialIndex, uniqueMedia.length - 1);
+    setSelectedIndex(Math.max(0, safeIndex));
+    setZoomState({ scale: 1, x: 0, y: 0 });
+    setImageLoaded(false);
+    setVideoPlaying(null);
+
+    // Push a fake history entry so "back" closes the viewer
+    window.history.pushState({ albumGalleryOpen: true }, '');
+
+    const handlePopState = () => {
+      onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isOpen, initialIndex, uniqueMedia.length, onClose]);
 
   // Reset image loaded state when switching
   useEffect(() => {
