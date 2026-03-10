@@ -90,6 +90,7 @@ const AdminMobileNav = ({
   pendingPurchases = 0,
   pendingVerifications = 0,
   isAdmin = false,
+  dashboardTopSlot,
 }: AdminMobileNavProps) => {
 
   const visibleItems = navItems.filter(item => !item.adminOnly || isAdmin);
