@@ -590,8 +590,8 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   const clearSessionState = useCallback(() => {
     try {
-      sessionStorage.removeItem('help-chat-phase');
-      sessionStorage.removeItem('help-chat-messages');
+      localStorage.removeItem('help-chat-phase');
+      localStorage.removeItem('help-chat-messages');
     } catch { /* noop */ }
   }, []);
 
