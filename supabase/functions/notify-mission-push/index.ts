@@ -56,19 +56,21 @@ serve(async (req) => {
     const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY");
     const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
 
-    // Auth: accept service_role_key OR the internal secret
+    // Auth: accept service_role_key or anon_key (for internal pg_net calls from DB triggers)
     const authHeader = req.headers.get("Authorization");
+    const apikeyHeader = req.headers.get("apikey");
     const token = authHeader?.replace("Bearer ", "") || "";
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
     
-    if (token !== SUPABASE_SERVICE_ROLE_KEY) {
-      // Also accept anon key calls from pg_net (internal)
-      const internalSecret = req.headers.get("x-internal-secret");
-      if (internalSecret !== SUPABASE_SERVICE_ROLE_KEY && token !== Deno.env.get("SUPABASE_ANON_KEY")) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    const isInternalCall = token === SUPABASE_SERVICE_ROLE_KEY || 
+                           token === SUPABASE_ANON_KEY ||
+                           apikeyHeader === SUPABASE_ANON_KEY;
+    
+    if (!isInternalCall) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
