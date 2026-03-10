@@ -275,11 +275,11 @@ const Help = ({ embedded = false }: HelpProps) => {
         }
         // Directly write to sessionStorage since setState won't work during unmount
         try {
-          const saved = sessionStorage.getItem('help-chat-messages');
+          const saved = localStorage.getItem('help-chat-messages');
           const existing: ChatMessage[] = saved ? JSON.parse(saved) : [];
           existing.push({ type: 'bot', text: msg.text, options: msg.options?.map(({ icon, ...rest }) => rest) as any });
-          sessionStorage.setItem('help-chat-messages', JSON.stringify(existing));
-          sessionStorage.setItem('help-bot-typing', 'false');
+          localStorage.setItem('help-chat-messages', JSON.stringify(existing));
+          localStorage.setItem('help-bot-typing', 'false');
         } catch { /* noop */ }
       }
     };
