@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import EstimatedWaitBanner from '@/components/support/EstimatedWaitBanner';
 
 interface SupportTicketListProps {
   onSelectTicket: (ticket: SupportTicket) => void;
