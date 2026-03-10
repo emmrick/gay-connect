@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 
 const TASK_TYPE_LABELS: Record<string, string> = {
   identity_verification: '🪪 Vérification d\'identité',
@@ -103,11 +102,12 @@ const ModerationMissionAlert = () => {
   });
 
   const isOnAdminPage = location.pathname === '/admin';
-  const isTrulyOnline = isUserTrulyOnline(profile);
+  
 
   // Listen for new moderation tasks via realtime
+  // No online check needed here: if this component is mounted, the user is actively using the app
   useEffect(() => {
-    if (!user?.id || !isStaff || isOnAdminPage || !isTrulyOnline) return;
+    if (!user?.id || !isStaff || isOnAdminPage) return;
 
     const channel = supabase
       .channel('mission-alert-global')
@@ -139,7 +139,7 @@ const ModerationMissionAlert = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, isStaff, isOnAdminPage, isTrulyOnline]);
+  }, [user?.id, isStaff, isOnAdminPage]);
 
   // Repeat sound every 4s while mission is visible
   useEffect(() => {
@@ -175,7 +175,7 @@ const ModerationMissionAlert = () => {
     setDismissed(true);
   }, []);
 
-  if (!isStaff || isOnAdminPage || !mission || dismissed || !isTrulyOnline) return null;
+  if (!isStaff || isOnAdminPage || !mission || dismissed) return null;
 
   return (
     <AnimatePresence>
