@@ -56,6 +56,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
   const { data: isAdminUser } = useIsAdmin();
   const { favorites } = useUserFavorites();
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const featureFlags = useFeatureFlags();
 
   if (!profile) {
     return (
