@@ -259,12 +259,41 @@ const Help = ({ embedded = false }: HelpProps) => {
     return <BookOpen className="w-4 h-4" />;
   };
 
+  // Ref to track pending bot message timeout so we can persist if unmounting
+  const pendingBotMessageRef = useRef<{ text: string; options?: ChatOption[] } | null>(null);
+  const pendingBotTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // On unmount, flush any pending bot message into state so sessionStorage captures it
+  useEffect(() => {
+    return () => {
+      if (pendingBotMessageRef.current) {
+        const msg = pendingBotMessageRef.current;
+        pendingBotMessageRef.current = null;
+        if (pendingBotTimeoutRef.current) {
+          clearTimeout(pendingBotTimeoutRef.current);
+          pendingBotTimeoutRef.current = null;
+        }
+        // Directly write to sessionStorage since setState won't work during unmount
+        try {
+          const saved = sessionStorage.getItem('help-chat-messages');
+          const existing: ChatMessage[] = saved ? JSON.parse(saved) : [];
+          existing.push({ type: 'bot', text: msg.text, options: msg.options?.map(({ icon, ...rest }) => rest) as any });
+          sessionStorage.setItem('help-chat-messages', JSON.stringify(existing));
+          sessionStorage.setItem('help-bot-typing', 'false');
+        } catch { /* noop */ }
+      }
+    };
+  }, []);
+
   // Simulate bot typing delay: 1 second per 5 words
   const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
     const typingDelay = Math.ceil(wordCount / 5) * 1000;
     setIsBotTyping(true);
-    setTimeout(() => {
+    pendingBotMessageRef.current = { text, options };
+    pendingBotTimeoutRef.current = setTimeout(() => {
+      pendingBotMessageRef.current = null;
+      pendingBotTimeoutRef.current = null;
       setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
       setIsBotTyping(false);
       playNotificationSoundStandalone();
