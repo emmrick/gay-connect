@@ -20,7 +20,15 @@ const allTabs = [
 ] as const;
 
 const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium = false }: BottomNavBarProps) => {
+  const featureFlags = useFeatureFlags();
   const messageBadge = unreadCount > 0 ? unreadCount : undefined;
+
+  const tabs = useMemo(() => {
+    return allTabs.filter(tab => {
+      if (!tab.featureKey) return true;
+      return featureFlags[tab.featureKey] !== false;
+    });
+  }, [featureFlags]);
 
   const handleTabClick = (tabId: typeof activeTab) => {
     if ('vibrate' in navigator) {
