@@ -105,11 +105,26 @@ const Help = ({ embedded = false }: HelpProps) => {
     if (hasCheckedActiveTicket || !user?.id || ticketsLoading) return;
     setHasCheckedActiveTicket(true);
 
-    const activeTicket = tickets.find(t => t.status === 'open' || t.status === 'assigned');
+    // Include waiting_client tickets so the user can resume conversation
+    const activeTicket = tickets.find(t => t.status === 'open' || t.status === 'assigned' || t.status === 'waiting_client');
     if (activeTicket) {
       setSelectedTicket(activeTicket);
-      agentJoinedRef.current = activeTicket.status === 'assigned';
-      setChatPhase(activeTicket.status === 'assigned' ? 'agent' : 'waiting_agent');
+      if (activeTicket.status === 'assigned') {
+        agentJoinedRef.current = true;
+        setChatPhase('agent');
+      } else if (activeTicket.status === 'waiting_client') {
+        // Restore chatbot history from ticket if available
+        if (activeTicket.chatbot_history && Array.isArray(activeTicket.chatbot_history)) {
+          const restoredMessages: ChatMessage[] = (activeTicket.chatbot_history as Array<{ type: string; text: string }>).map(m => ({
+            type: m.type as 'bot' | 'user' | 'system',
+            text: m.text,
+          }));
+          setChatMessages(restoredMessages);
+        }
+        setChatPhase('waiting_agent');
+      } else {
+        setChatPhase('waiting_agent');
+      }
     }
   }, [tickets, user?.id, hasCheckedActiveTicket, ticketsLoading]);
 
@@ -492,8 +507,8 @@ const Help = ({ embedded = false }: HelpProps) => {
         console.error('[Help] Error cancelling ticket:', err);
       }
       setSelectedTicket(null);
-    } else if (ticketToCancel && (liveStatus === 'assigned')) {
-      // Agent already assigned - keep ticket so user can resume
+    } else if (ticketToCancel && (liveStatus === 'assigned' || liveStatus === 'waiting_client')) {
+      // Agent already assigned or ticket waiting for client - keep ticket so user can resume
     } else {
       setSelectedTicket(null);
     }
@@ -532,15 +547,40 @@ const Help = ({ embedded = false }: HelpProps) => {
     setRatingComment('');
   };
 
-  // Send message to agent (in agent phase)
+  // Send message to agent (in agent or waiting phase)
   const handleSendToAgent = useCallback(async () => {
     if (!freeText.trim() || !selectedTicket?.id || !user?.id) return;
     const text = freeText.trim();
     setFreeText('');
+
+    // If ticket is waiting_client, reopen it so a new mission is created
+    const currentStatus = liveTicket?.status || selectedTicket.status;
+    if (currentStatus === 'waiting_client') {
+      try {
+        // Send system message
+        await supabase
+          .from('support_messages' as any)
+          .insert({
+            ticket_id: selectedTicket.id,
+            sender_id: user.id,
+            content: '🔄 Nous vous mettons en relation avec un agent. Merci de patienter...',
+            message_type: 'system',
+          } as any);
+
+        // Reopen the ticket — the DB trigger handles creating the moderation task
+        await supabase
+          .from('support_tickets' as any)
+          .update({ status: 'open', assigned_to: null } as any)
+          .eq('id', selectedTicket.id);
+      } catch (err) {
+        console.error('Error reopening ticket:', err);
+      }
+    }
+
     await supabase
       .from('support_messages' as any)
       .insert({ ticket_id: selectedTicket.id, sender_id: user.id, content: text, message_type: 'text' } as any);
-  }, [freeText, selectedTicket?.id, user?.id]);
+  }, [freeText, selectedTicket?.id, selectedTicket?.status, liveTicket?.status, user?.id]);
 
   const handleSubmitRating = async () => {
     if (!ratingEmoji || !selectedTicket?.id) return;
@@ -988,7 +1028,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-5 pb-28">
             {/* Resume active conversation banner */}
-            {!searchQuery && selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned') && (
+            {!searchQuery && selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || selectedTicket.status === 'waiting_client' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned' || liveTicket?.status === 'waiting_client') && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}

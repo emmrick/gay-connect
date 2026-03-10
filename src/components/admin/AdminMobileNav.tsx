@@ -19,6 +19,8 @@ interface AdminMobileNavProps {
   pendingPurchases?: number;
   pendingVerifications?: number;
   isAdmin?: boolean;
+  /** Slot rendered at top of dashboard scroll area (for TaskQueuePopup) */
+  dashboardTopSlot?: React.ReactNode;
 }
 
 type NavGroup = 'tasks' | 'moderation' | 'users' | 'finances' | 'communication' | 'config' | 'logs';
@@ -59,6 +61,7 @@ const navItems: NavItem[] = [
   { id: 'faq', label: "Aide", icon: HelpCircle, group: 'communication', adminOnly: true },
   { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'communication', adminOnly: true },
   { id: 'promo', label: 'Promo', icon: Ticket, group: 'communication', adminOnly: true },
+  { id: 'promo-images' as AdminSection, label: 'Visuels promo', shortLabel: 'Visuels', icon: FileImage, group: 'communication', adminOnly: true },
   // Config
   { id: 'credit-costs', label: 'Tarifs crédits', shortLabel: 'Tarifs', icon: Coins, group: 'config', adminOnly: true },
   { id: 'swipe-stats', label: 'Swipe', icon: Heart, group: 'config', adminOnly: true },
@@ -88,6 +91,7 @@ const AdminMobileNav = ({
   pendingPurchases = 0,
   pendingVerifications = 0,
   isAdmin = false,
+  dashboardTopSlot,
 }: AdminMobileNavProps) => {
 
   const visibleItems = navItems.filter(item => !item.adminOnly || isAdmin);
@@ -166,6 +170,8 @@ const AdminMobileNav = ({
       {/* Dashboard Grid */}
       <ScrollArea className="h-[calc(100dvh-56px)]">
         <div className="px-3 py-4 space-y-4 pb-8">
+          {/* Task queue slot at top of dashboard */}
+          {dashboardTopSlot}
           {groupOrder.map((group) => {
             const items = groupedItems[group];
             if (!items?.length) return null;
