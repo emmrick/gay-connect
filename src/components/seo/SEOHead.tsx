@@ -126,7 +126,7 @@ export const websiteJsonLd = {
   url: BASE_URL,
   description: 'Site de rencontre gay et sexe entre hommes en France. Tchat gay gratuit, plan cul gay local, échanges de photos et vidéos entre mecs. Communauté gay vérifiée. +18 ans.',
   inLanguage: 'fr-FR',
-  keywords: 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, site de rencontre gay, gay france, communauté gay, annonce gay, homme gay, drague gay, hookup gay, plan sexe gay, homme cherche homme, sexfriend gay',
+  keywords: 'site gay, rencontre gay, sexe gay, plan cul gay, chat gay, tchat gay, plan gay, site de rencontre gay, gay france, communauté gay, annonce gay, homme gay, drague gay, hookup gay, plan sexe gay, homme cherche homme, sexfriend gay, gay paris, gay lyon, gay marseille, gay toulouse, gay bordeaux, gay nantes, gay lille, gay strasbourg, gay montpellier, gay nice, rencontre gay gratuit, tchat gay gratuit, plan cul gay ce soir, appli gay, application rencontre gay, grindr alternative, gay connect, plan discret gay, mec cherche mec, bi curieux, lgbt france, gay dom tom',
   potentialAction: {
     '@type': 'SearchAction',
     target: `${BASE_URL}/auth`,
