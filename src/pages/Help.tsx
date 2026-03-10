@@ -1003,7 +1003,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-5 pb-28">
             {/* Resume active conversation banner */}
-            {!searchQuery && selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned') && (
+            {!searchQuery && selectedTicket && (selectedTicket.status === 'open' || selectedTicket.status === 'assigned' || selectedTicket.status === 'waiting_client' || liveTicket?.status === 'open' || liveTicket?.status === 'assigned' || liveTicket?.status === 'waiting_client') && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
