@@ -94,6 +94,15 @@ const AlbumGalleryViewer = ({
   const scrollPrev = useCallback(() => goTo(selectedIndex - 1), [goTo, selectedIndex]);
   const scrollNext = useCallback(() => goTo(selectedIndex + 1), [goTo, selectedIndex]);
 
+  // Helper to close via history.back so popstate listener handles it
+  const closeViewer = useCallback(() => {
+    if (window.history.state?.albumGalleryOpen) {
+      window.history.back();
+    } else {
+      onClose();
+    }
+  }, [onClose]);
+
   // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
@@ -104,13 +113,13 @@ const AlbumGalleryViewer = ({
         if (zoomState.scale > 1) {
           setZoomState({ scale: 1, x: 0, y: 0 });
         } else {
-          onClose();
+          closeViewer();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, scrollPrev, scrollNext, onClose, zoomState.scale]);
+  }, [isOpen, scrollPrev, scrollNext, closeViewer, zoomState.scale]);
 
   // Double tap zoom
   const handleDoubleTap = useCallback((e: React.TouchEvent | React.MouseEvent) => {
