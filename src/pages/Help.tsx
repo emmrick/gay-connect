@@ -110,10 +110,15 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, [freeText]);
 
   // Persist chatbot state to sessionStorage
+  // Strip non-serializable React elements (icons) before persisting
   useEffect(() => {
     try {
       sessionStorage.setItem('help-chat-phase', chatPhase);
-      sessionStorage.setItem('help-chat-messages', JSON.stringify(chatMessages));
+      const serializableMessages = chatMessages.map(msg => ({
+        ...msg,
+        options: msg.options?.map(({ icon, ...rest }) => rest),
+      }));
+      sessionStorage.setItem('help-chat-messages', JSON.stringify(serializableMessages));
     } catch { /* noop */ }
   }, [chatPhase, chatMessages]);
 
