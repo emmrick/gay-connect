@@ -541,6 +541,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setAnsweredArticleIds(new Set());
     setNoMatchCount(0);
     agentJoinedRef.current = false;
+    clearSessionState();
   };
 
   const handleCloseTicket = async () => {
