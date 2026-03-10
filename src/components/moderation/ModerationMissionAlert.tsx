@@ -102,7 +102,7 @@ const ModerationMissionAlert = () => {
   });
 
   const isOnAdminPage = location.pathname === '/admin';
-  const isTrulyOnline = isUserTrulyOnline(profile);
+  
 
   // Listen for new moderation tasks via realtime
   // No online check needed here: if this component is mounted, the user is actively using the app
