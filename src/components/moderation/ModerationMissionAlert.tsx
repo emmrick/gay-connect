@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { isUserTrulyOnline } from '@/hooks/useOnlineStatus';
 
 const TASK_TYPE_LABELS: Record<string, string> = {
   identity_verification: '🪪 Vérification d\'identité',
