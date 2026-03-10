@@ -54,16 +54,28 @@ const AlbumGalleryViewer = ({
     index === self.findIndex(m => m.id === item.id)
   );
 
-  // Reset when opening
+  // Push history state when opening, pop to close
   useEffect(() => {
-    if (isOpen) {
-      const safeIndex = Math.min(initialIndex, uniqueMedia.length - 1);
-      setSelectedIndex(Math.max(0, safeIndex));
-      setZoomState({ scale: 1, x: 0, y: 0 });
-      setImageLoaded(false);
-      setVideoPlaying(null);
-    }
-  }, [isOpen, initialIndex, uniqueMedia.length]);
+    if (!isOpen) return;
+
+    const safeIndex = Math.min(initialIndex, uniqueMedia.length - 1);
+    setSelectedIndex(Math.max(0, safeIndex));
+    setZoomState({ scale: 1, x: 0, y: 0 });
+    setImageLoaded(false);
+    setVideoPlaying(null);
+
+    // Push a fake history entry so "back" closes the viewer
+    window.history.pushState({ albumGalleryOpen: true }, '');
+
+    const handlePopState = () => {
+      onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isOpen, initialIndex, uniqueMedia.length, onClose]);
 
   // Reset image loaded state when switching
   useEffect(() => {
@@ -82,6 +94,15 @@ const AlbumGalleryViewer = ({
   const scrollPrev = useCallback(() => goTo(selectedIndex - 1), [goTo, selectedIndex]);
   const scrollNext = useCallback(() => goTo(selectedIndex + 1), [goTo, selectedIndex]);
 
+  // Helper to close via history.back so popstate listener handles it
+  const closeViewer = useCallback(() => {
+    if (window.history.state?.albumGalleryOpen) {
+      window.history.back();
+    } else {
+      onClose();
+    }
+  }, [onClose]);
+
   // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
@@ -92,13 +113,13 @@ const AlbumGalleryViewer = ({
         if (zoomState.scale > 1) {
           setZoomState({ scale: 1, x: 0, y: 0 });
         } else {
-          onClose();
+          closeViewer();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, scrollPrev, scrollNext, onClose, zoomState.scale]);
+  }, [isOpen, scrollPrev, scrollNext, closeViewer, zoomState.scale]);
 
   // Double tap zoom
   const handleDoubleTap = useCallback((e: React.TouchEvent | React.MouseEvent) => {
@@ -229,7 +250,7 @@ const AlbumGalleryViewer = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={closeViewer}
             className="text-white hover:bg-white/20 rounded-full h-10 w-10"
           >
             <X className="w-6 h-6" />
