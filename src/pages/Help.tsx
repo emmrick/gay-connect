@@ -113,12 +113,12 @@ const Help = ({ embedded = false }: HelpProps) => {
   // Strip non-serializable React elements (icons) before persisting
   useEffect(() => {
     try {
-      sessionStorage.setItem('help-chat-phase', chatPhase);
+      localStorage.setItem('help-chat-phase', chatPhase);
       const serializableMessages = chatMessages.map(msg => ({
         ...msg,
         options: msg.options?.map(({ icon, ...rest }) => rest),
       }));
-      sessionStorage.setItem('help-chat-messages', JSON.stringify(serializableMessages));
+      localStorage.setItem('help-chat-messages', JSON.stringify(serializableMessages));
     } catch { /* noop */ }
   }, [chatPhase, chatMessages]);
 
