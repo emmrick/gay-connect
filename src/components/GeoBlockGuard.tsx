@@ -1,31 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Ban, MapPin } from 'lucide-react';
+import { useIsFeatureEnabled } from '@/hooks/useFeatureToggles';
 
 const ALLOWED_COUNTRY_CODES = [
-  'FR', // France métropolitaine
-  'GP', // Guadeloupe
-  'MQ', // Martinique
-  'GF', // Guyane française
-  'RE', // Réunion
-  'YT', // Mayotte
-  'PM', // Saint-Pierre-et-Miquelon
-  'BL', // Saint-Barthélemy
-  'MF', // Saint-Martin
-  'WF', // Wallis-et-Futuna
-  'PF', // Polynésie française
-  'NC', // Nouvelle-Calédonie
+  'FR', 'GP', 'MQ', 'GF', 'RE', 'YT', 'PM', 'BL', 'MF', 'WF', 'PF', 'NC',
 ];
 
 const GEO_CHECK_KEY = 'gc_geo_allowed';
 const GEO_CHECK_EXPIRY_KEY = 'gc_geo_expiry';
-const CACHE_DURATION = 1000 * 60 * 60 * 6; // 6 heures
+const CACHE_DURATION = 1000 * 60 * 60 * 6;
 
 const GeoBlockGuard = ({ children }: { children: React.ReactNode }) => {
+  const geoEnabled = useIsFeatureEnabled('geo_restriction');
   const [status, setStatus] = useState<'loading' | 'allowed' | 'blocked'>('loading');
 
   useEffect(() => {
+    if (!geoEnabled) {
+      setStatus('allowed');
+      return;
+    }
+
     const checkGeo = async () => {
-      // Vérifier le cache
       const cached = localStorage.getItem(GEO_CHECK_KEY);
       const expiry = localStorage.getItem(GEO_CHECK_EXPIRY_KEY);
       if (cached && expiry && Date.now() < parseInt(expiry)) {
@@ -45,13 +40,12 @@ const GeoBlockGuard = ({ children }: { children: React.ReactNode }) => {
 
         setStatus(isAllowed ? 'allowed' : 'blocked');
       } catch {
-        // En cas d'erreur réseau, on laisse passer
         setStatus('allowed');
       }
     };
 
     checkGeo();
-  }, []);
+  }, [geoEnabled]);
 
   if (status === 'loading') return null;
 
