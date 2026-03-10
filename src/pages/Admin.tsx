@@ -219,6 +219,7 @@ const Admin = () => {
       case 'promo-images': return <PromoImageGeneratorPanel />;
       case 'error-logs': return <ErrorLogsPanel />;
       case 'security': return <SecurityEventsPanel />;
+      case 'verification': return <IdentityVerificationPanel />;
       default: return null;
     }
   };
