@@ -579,7 +579,7 @@ const Index = () => {
         ) : null;
 
       case 'premium':
-        return user ? (
+        return user && featureFlags['credits_page'] !== false ? (
           <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
