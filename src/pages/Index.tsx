@@ -325,7 +325,7 @@ const Index = () => {
 
 
   // Render chatbot config view
-  if (currentView === 'chatbot-config') {
+  if (currentView === 'chatbot-config' && featureFlags['personal_chatbot'] !== false) {
     return (
       <Suspense fallback={<LazyFallback />}>
         <motion.div
