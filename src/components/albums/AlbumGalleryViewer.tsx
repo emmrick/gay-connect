@@ -379,7 +379,8 @@ const AlbumGalleryViewer = ({
           </div>
         )}
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 
