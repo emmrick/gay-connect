@@ -255,7 +255,7 @@ const useRequestVerification = () => {
         type: 'verification_request',
         title: 'Vérification d\'identité requise',
         message: 'Un modérateur vous demande de vérifier votre identité. Veuillez soumettre vos documents pour continuer à utiliser l\'application.',
-        action_url: '/profile',
+        action_url: '/',
       });
 
       if (notifError) {
@@ -310,7 +310,7 @@ const useRevokeAndRequestVerification = () => {
         type: 'verification_request',
         title: '⚠️ Nouvelle vérification requise',
         message: 'Un modérateur a des doutes sur votre identité et demande une nouvelle vérification. Veuillez soumettre de nouveaux documents pour continuer à utiliser l\'application.',
-        action_url: '/profile',
+        action_url: '/',
       });
 
       if (notifError) {
