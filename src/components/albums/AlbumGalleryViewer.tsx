@@ -215,7 +215,7 @@ const AlbumGalleryViewer = ({
 
   if (!isOpen || uniqueMedia.length === 0 || !currentMedia) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
