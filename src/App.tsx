@@ -165,6 +165,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
+      <GeoBlockGuard>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           {!appReady && <InitialLoadingScreen onComplete={handleLoadComplete} />}
