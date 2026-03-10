@@ -84,7 +84,7 @@ serve(async (req) => {
       throw new Error("Supabase credentials not configured");
     }
 
-    // Authentication check — accept service_role_key for internal calls (DB triggers via pg_net)
+    // Authentication check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -93,20 +93,17 @@ serve(async (req) => {
       );
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const isServiceRoleCall = token === SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const authClient = createClient(SUPABASE_URL, anonKey || SUPABASE_SERVICE_ROLE_KEY);
+    const { data: { user: caller }, error: authError } = await authClient.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
 
-    if (!isServiceRoleCall) {
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-      const authClient = createClient(SUPABASE_URL, anonKey || SUPABASE_SERVICE_ROLE_KEY);
-      const { data: { user: caller }, error: authError } = await authClient.auth.getUser(token);
-
-      if (authError || !caller) {
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    if (authError || !caller) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Decode the base64url encoded keys
