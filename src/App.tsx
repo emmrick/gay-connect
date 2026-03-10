@@ -176,6 +176,7 @@ const App = () => {
           </div>
         </ThemeProvider>
       </QueryClientProvider>
+      </GeoBlockGuard>
     </ErrorBoundary>
   );
 };
