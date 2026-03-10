@@ -51,7 +51,7 @@ const HomeView = ({
     <div className="pb-4">
       <div className="px-4 py-4 space-y-4">
         {/* Stories bar */}
-        <StoryBar />
+        {featureFlags['stories'] !== false && <StoryBar />}
 
         {/* Ad-free banner */}
         <AdFreeBanner />
