@@ -87,6 +87,7 @@ const CreditsPage = () => {
       icon: Bot,
       gradient: 'from-cyan-500 to-sky-500',
       items: [
+        { icon: Bot, label: 'Message chatbot', cost: CREDIT_COSTS.chatbot_message },
         { icon: Bot, label: 'Activer le chatbot', cost: CREDIT_COSTS.chatbot_activate },
         { icon: Users, label: 'Rejoindre un groupe', cost: CREDIT_COSTS.join_extra_group, note: 'Hors département' },
       ],

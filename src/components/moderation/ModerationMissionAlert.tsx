@@ -79,7 +79,7 @@ interface MissionData {
 }
 
 const ModerationMissionAlert = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mission, setMission] = useState<MissionData | null>(null);
@@ -101,11 +101,10 @@ const ModerationMissionAlert = () => {
     staleTime: 60000,
   });
 
+  // Don't show if already on admin page (TaskQueuePopup handles it there)
   const isOnAdminPage = location.pathname === '/admin';
-  
 
   // Listen for new moderation tasks via realtime
-  // No online check needed here: if this component is mounted, the user is actively using the app
   useEffect(() => {
     if (!user?.id || !isStaff || isOnAdminPage) return;
 

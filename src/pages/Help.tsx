@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, isValidElement } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,13 +74,13 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [chatPhase, setChatPhase] = useState<ChatPhase>(() => {
     try {
-      const saved = localStorage.getItem('help-chat-phase');
+      const saved = sessionStorage.getItem('help-chat-phase');
       return (saved as ChatPhase) || 'idle';
     } catch { return 'idle'; }
   });
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
     try {
-      const saved = localStorage.getItem('help-chat-messages');
+      const saved = sessionStorage.getItem('help-chat-messages');
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
@@ -110,15 +110,10 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, [freeText]);
 
   // Persist chatbot state to sessionStorage
-  // Strip non-serializable React elements (icons) before persisting
   useEffect(() => {
     try {
-      localStorage.setItem('help-chat-phase', chatPhase);
-      const serializableMessages = chatMessages.map(msg => ({
-        ...msg,
-        options: msg.options?.map(({ icon, ...rest }) => rest),
-      }));
-      localStorage.setItem('help-chat-messages', JSON.stringify(serializableMessages));
+      sessionStorage.setItem('help-chat-phase', chatPhase);
+      sessionStorage.setItem('help-chat-messages', JSON.stringify(chatMessages));
     } catch { /* noop */ }
   }, [chatPhase, chatMessages]);
 
@@ -259,41 +254,12 @@ const Help = ({ embedded = false }: HelpProps) => {
     return <BookOpen className="w-4 h-4" />;
   };
 
-  // Ref to track pending bot message timeout so we can persist if unmounting
-  const pendingBotMessageRef = useRef<{ text: string; options?: ChatOption[] } | null>(null);
-  const pendingBotTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // On unmount, flush any pending bot message into state so sessionStorage captures it
-  useEffect(() => {
-    return () => {
-      if (pendingBotMessageRef.current) {
-        const msg = pendingBotMessageRef.current;
-        pendingBotMessageRef.current = null;
-        if (pendingBotTimeoutRef.current) {
-          clearTimeout(pendingBotTimeoutRef.current);
-          pendingBotTimeoutRef.current = null;
-        }
-        // Directly write to sessionStorage since setState won't work during unmount
-        try {
-          const saved = localStorage.getItem('help-chat-messages');
-          const existing: ChatMessage[] = saved ? JSON.parse(saved) : [];
-          existing.push({ type: 'bot', text: msg.text, options: msg.options?.map(({ icon, ...rest }) => rest) as any });
-          localStorage.setItem('help-chat-messages', JSON.stringify(existing));
-          localStorage.setItem('help-bot-typing', 'false');
-        } catch { /* noop */ }
-      }
-    };
-  }, []);
-
   // Simulate bot typing delay: 1 second per 5 words
   const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
     const typingDelay = Math.ceil(wordCount / 5) * 1000;
     setIsBotTyping(true);
-    pendingBotMessageRef.current = { text, options };
-    pendingBotTimeoutRef.current = setTimeout(() => {
-      pendingBotMessageRef.current = null;
-      pendingBotTimeoutRef.current = null;
+    setTimeout(() => {
       setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
       setIsBotTyping(false);
       playNotificationSoundStandalone();
@@ -590,8 +556,8 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   const clearSessionState = useCallback(() => {
     try {
-      localStorage.removeItem('help-chat-phase');
-      localStorage.removeItem('help-chat-messages');
+      sessionStorage.removeItem('help-chat-phase');
+      sessionStorage.removeItem('help-chat-messages');
     } catch { /* noop */ }
   }, []);
 
@@ -862,7 +828,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                               onClick={() => handleOptionClick(opt.value)}
                               className="w-full text-left px-3 py-2.5 text-sm font-medium rounded-xl border border-primary/20 bg-background/80 text-foreground hover:bg-primary/10 hover:border-primary/40 transition-colors active:scale-[0.98] flex items-center gap-2"
                             >
-                              {isValidElement(opt.icon) && <span className="text-primary shrink-0">{opt.icon}</span>}
+                              {opt.icon && <span className="text-primary shrink-0">{opt.icon}</span>}
                               <span className="line-clamp-2">{opt.label}</span>
                             </button>
                           ))}
