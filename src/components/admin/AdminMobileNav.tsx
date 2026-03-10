@@ -169,6 +169,8 @@ const AdminMobileNav = ({
       {/* Dashboard Grid */}
       <ScrollArea className="h-[calc(100dvh-56px)]">
         <div className="px-3 py-4 space-y-4 pb-8">
+          {/* Task queue slot at top of dashboard */}
+          {dashboardTopSlot}
           {groupOrder.map((group) => {
             const items = groupedItems[group];
             if (!items?.length) return null;
