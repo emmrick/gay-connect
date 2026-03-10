@@ -235,11 +235,8 @@ const Admin = () => {
             pendingPurchases={pendingPurchasesCount}
             pendingVerifications={pendingVerificationsCount}
             isAdmin={!!isAdmin}
+            dashboardTopSlot={<TaskQueuePopup onNavigateToSection={handleSectionChange} />}
           />
-          {/* Task Queue integrated inside the mobile dashboard scroll */}
-          <div className="px-3 pt-3">
-            <TaskQueuePopup onNavigateToSection={handleSectionChange} />
-          </div>
           {selectedReport && (
             <ReportDetailDialog
               report={selectedReport}
