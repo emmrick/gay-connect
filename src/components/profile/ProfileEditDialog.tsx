@@ -368,339 +368,389 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
     }
   };
 
+  const SectionCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div className={cn("rounded-xl border border-border/50 bg-card/50 p-4 space-y-3", className)}>
+      {children}
+    </div>
+  );
+
+  const SectionTitle = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
+    <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-1">
+      {icon}
+      {children}
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>Modifier le profil</DialogTitle>
-          <DialogDescription>
-            Complete ton profil pour plus de visibilité
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[480px] max-h-[85vh] p-0 gap-0 overflow-hidden rounded-2xl border-border/50">
+        {/* Header */}
+        <div className="relative px-5 pt-5 pb-3">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-xl font-bold tracking-tight">Modifier le profil</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm">
+              Complète ton profil pour plus de visibilité
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <Tabs defaultValue="photos" className="flex-1">
-          <TabsList className="grid grid-cols-5 mx-6">
-            <TabsTrigger value="photos" className="text-xs">Photos</TabsTrigger>
-            <TabsTrigger value="basic" className="text-xs">Profil</TabsTrigger>
-            <TabsTrigger value="physical" className="text-xs">Physique</TabsTrigger>
-            <TabsTrigger value="preferences" className="text-xs">Préfs</TabsTrigger>
-            <TabsTrigger value="privacy" className="text-xs">Vie privée</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="photos" className="flex flex-col min-h-0 flex-1">
+          <div className="px-5">
+            <TabsList className="grid grid-cols-5 w-full h-9 rounded-lg bg-muted/60 p-0.5">
+              <TabsTrigger value="photos" className="text-[11px] rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">📷</TabsTrigger>
+              <TabsTrigger value="basic" className="text-[11px] rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">Profil</TabsTrigger>
+              <TabsTrigger value="physical" className="text-[11px] rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">Physique</TabsTrigger>
+              <TabsTrigger value="preferences" className="text-[11px] rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">Préfs</TabsTrigger>
+              <TabsTrigger value="privacy" className="text-[11px] rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">🔒</TabsTrigger>
+            </TabsList>
+          </div>
 
-          <ScrollArea className="h-[400px] px-6">
-            {/* Photos Tab */}
-            <TabsContent value="photos" className="mt-4 pb-4">
-              <PhotoGalleryManager />
-            </TabsContent>
+          <ScrollArea className="flex-1 min-h-0" style={{ height: '400px' }}>
+            <div className="px-5 py-4">
+              {/* Photos Tab */}
+              <TabsContent value="photos" className="mt-0 focus-visible:outline-none">
+                <PhotoGalleryManager />
+              </TabsContent>
 
-            {/* Basic Info Tab */}
-            <TabsContent value="basic" className="space-y-4 mt-4 pb-4">
+              {/* Basic Info Tab */}
+              <TabsContent value="basic" className="mt-0 space-y-4 focus-visible:outline-none">
+                <SectionCard>
+                  <SectionTitle icon={<User className="w-4 h-4 text-primary" />}>Identité</SectionTitle>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="username" className="text-xs text-muted-foreground">Pseudo *</Label>
+                      <Input
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="Ton pseudo"
+                        maxLength={30}
+                        className="h-9 bg-background/80"
+                      />
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="username">Pseudo *</Label>
-                <Input
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Ton pseudo"
-                  maxLength={30}
-                />
-              </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="firstName" className="text-xs text-muted-foreground">Prénom</Label>
+                        <Input
+                          id="firstName"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          placeholder="Ton prénom"
+                          maxLength={50}
+                          className="h-9 bg-background/80"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="lastName" className="text-xs text-muted-foreground">Nom</Label>
+                        <Input
+                          id="lastName"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          placeholder="Ton nom"
+                          maxLength={50}
+                          className="h-9 bg-background/80"
+                        />
+                      </div>
+                    </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">Prénom</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="age" className="text-xs text-muted-foreground">Âge *</Label>
+                        <Input
+                          id="age"
+                          type="number"
+                          value={age}
+                          onChange={(e) => setAge(e.target.value)}
+                          placeholder="18-99"
+                          min={18}
+                          max={99}
+                          className="h-9 bg-background/80"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Situation</Label>
+                        <Select value={relationshipStatus} onValueChange={setRelationshipStatus}>
+                          <SelectTrigger className="h-9 bg-background/80">
+                            <SelectValue placeholder="Choisir" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {RELATIONSHIP_STATUS.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">📱</span>}>Contact</SectionTitle>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phoneNumber" className="text-xs text-muted-foreground">Téléphone</Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+33 6 12 34 56 78"
+                      maxLength={20}
+                      className="h-9 bg-background/80"
+                    />
+                    <p className="text-[10px] text-muted-foreground/70">
+                      Requis pour la vérification lors du contact support.
+                    </p>
+                  </div>
+                </SectionCard>
+
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">✍️</span>}>Bio</SectionTitle>
+                  <div className="space-y-1.5">
+                    <Textarea
+                      id="bio"
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Décris-toi en quelques mots..."
+                      maxLength={200}
+                      rows={3}
+                      className="bg-background/80 resize-none"
+                    />
+                    <p className="text-[10px] text-muted-foreground/70 text-right">{bio.length}/200</p>
+                  </div>
+                </SectionCard>
+
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">🎂</span>}>Date de naissance</SectionTitle>
                   <Input
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Ton prénom"
-                    maxLength={50}
+                    id="birthDate"
+                    type="date"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    max={new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
+                    className="h-9 bg-background/80"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Nom</Label>
-                  <Input
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Ton nom"
-                    maxLength={50}
-                  />
-                </div>
-              </div>
+                  <p className="text-[10px] text-muted-foreground/70">
+                    Signe astrologique et anniversaire
+                  </p>
+                </SectionCard>
+              </TabsContent>
 
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Téléphone</Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+33 6 12 34 56 78"
-                  maxLength={20}
-                />
-                <p className="text-[10px] text-muted-foreground">
-                  Requis pour la vérification lors du contact support.
-                </p>
-              </div>
+              {/* Physical Tab */}
+              <TabsContent value="physical" className="mt-0 space-y-4 focus-visible:outline-none">
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">📏</span>}>Mensurations</SectionTitle>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="height" className="text-xs text-muted-foreground">Taille (cm)</Label>
+                      <Input
+                        id="height"
+                        type="number"
+                        value={height}
+                        onChange={(e) => setHeight(e.target.value)}
+                        placeholder="175"
+                        min={100}
+                        max={250}
+                        className="h-9 bg-background/80"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="weight" className="text-xs text-muted-foreground">Poids (kg)</Label>
+                      <Input
+                        id="weight"
+                        type="number"
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value)}
+                        placeholder="75"
+                        min={30}
+                        max={300}
+                        className="h-9 bg-background/80"
+                      />
+                    </div>
+                  </div>
+                </SectionCard>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="age">Âge *</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    placeholder="18-99"
-                    min={18}
-                    max={99}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Situation</Label>
-                  <Select value={relationshipStatus} onValueChange={setRelationshipStatus}>
-                    <SelectTrigger>
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">💪</span>}>Apparence</SectionTitle>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Corpulence</Label>
+                      <Select value={bodyType} onValueChange={setBodyType}>
+                        <SelectTrigger className="h-9 bg-background/80">
+                          <SelectValue placeholder="Sélectionner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {BODY_TYPES.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Origine</Label>
+                      <Select value={ethnicity} onValueChange={setEthnicity}>
+                        <SelectTrigger className="h-9 bg-background/80">
+                          <SelectValue placeholder="Sélectionner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ETHNICITIES.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Attribut 🍆</Label>
+                      <Select value={endowment} onValueChange={setEndowment}>
+                        <SelectTrigger className="h-9 bg-background/80">
+                          <SelectValue placeholder="Sélectionner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ENDOWMENT_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">🏷️</span>}>Tribes / Style</SectionTitle>
+                  <div className="flex flex-wrap gap-1.5">
+                    {TRIBES.map(tribe => (
+                      <Badge
+                        key={tribe.value}
+                        variant={tribes.includes(tribe.value) ? 'default' : 'outline'}
+                        className={cn(
+                          'cursor-pointer transition-all text-xs px-2.5 py-1 rounded-full',
+                          tribes.includes(tribe.value)
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'hover:bg-secondary/80 border-border/60'
+                        )}
+                        onClick={() => toggleArrayValue(tribes, tribe.value, setTribes)}
+                      >
+                        {tribe.label}
+                      </Badge>
+                    ))}
+                  </div>
+                </SectionCard>
+              </TabsContent>
+
+              {/* Preferences Tab */}
+              <TabsContent value="preferences" className="mt-0 space-y-4 focus-visible:outline-none">
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">⚡</span>}>Position sexuelle</SectionTitle>
+                  <Select value={sexualPosition} onValueChange={setSexualPosition}>
+                    <SelectTrigger className="h-9 bg-background/80">
                       <SelectValue placeholder="Sélectionner" />
                     </SelectTrigger>
                     <SelectContent>
-                      {RELATIONSHIP_STATUS.map(opt => (
+                      {SEXUAL_POSITIONS.map(opt => (
                         <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
+                </SectionCard>
 
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Décris-toi en quelques mots..."
-                  maxLength={200}
-                  rows={3}
-                />
-                <p className="text-xs text-muted-foreground text-right">{bio.length}/200</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="birthDate">Date de naissance</Label>
-                <Input
-                  id="birthDate"
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  max={new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Utilisé pour afficher ton signe astrologique et ton anniversaire
-                </p>
-              </div>
-            </TabsContent>
-
-            {/* Physical Tab */}
-            <TabsContent value="physical" className="space-y-4 mt-4 pb-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="height">Taille (cm)</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    value={height}
-                    onChange={(e) => setHeight(e.target.value)}
-                    placeholder="175"
-                    min={100}
-                    max={250}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Poids (kg)</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    placeholder="75"
-                    min={30}
-                    max={300}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Corpulence</Label>
-                <Select value={bodyType} onValueChange={setBodyType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BODY_TYPES.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">🔍</span>}>Je cherche</SectionTitle>
+                  <div className="flex flex-wrap gap-1.5">
+                    {LOOKING_FOR_OPTIONS.map(opt => (
+                      <Badge
+                        key={opt.value}
+                        variant={lookingFor.includes(opt.value) ? 'default' : 'outline'}
+                        className={cn(
+                          'cursor-pointer transition-all text-xs px-2.5 py-1 rounded-full',
+                          lookingFor.includes(opt.value)
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'hover:bg-secondary/80 border-border/60'
+                        )}
+                        onClick={() => toggleArrayValue(lookingFor, opt.value, setLookingFor)}
+                      >
+                        {opt.label}
+                      </Badge>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
+                </SectionCard>
 
-              <div className="space-y-2">
-                <Label>Origine</Label>
-                <Select value={ethnicity} onValueChange={setEthnicity}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ETHNICITIES.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <SectionCard>
+                  <SectionTitle icon={<span className="text-base">🩺</span>}>Statut VIH</SectionTitle>
+                  <Select value={hivStatus} onValueChange={setHivStatus}>
+                    <SelectTrigger className="h-9 bg-background/80">
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HIV_STATUS_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground/70">
+                    Cette information reste privée jusqu'à ce que tu la partages
+                  </p>
+                </SectionCard>
+              </TabsContent>
 
-              <div className="space-y-2">
-                <Label>Attribut 🍆</Label>
-                <Select value={endowment} onValueChange={setEndowment}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ENDOWMENT_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tribes / Style</Label>
-                <div className="flex flex-wrap gap-2">
-                  {TRIBES.map(tribe => (
-                    <Badge
-                      key={tribe.value}
-                      variant={tribes.includes(tribe.value) ? 'default' : 'outline'}
-                      className={cn(
-                        'cursor-pointer transition-all',
-                        tribes.includes(tribe.value) && 'bg-primary'
-                      )}
-                      onClick={() => toggleArrayValue(tribes, tribe.value, setTribes)}
-                    >
-                      {tribe.label}
-                    </Badge>
-                  ))}
+              {/* Privacy Tab */}
+              <TabsContent value="privacy" className="mt-0 space-y-3 focus-visible:outline-none">
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-card border border-border/50 shadow-sm">
+                  <div className="space-y-0.5 pr-3">
+                    <Label className="text-sm font-medium">Contenu NSFW</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Recevoir et partager du contenu adulte
+                    </p>
+                  </div>
+                  <Switch checked={acceptsNsfw} onCheckedChange={setAcceptsNsfw} />
                 </div>
-              </div>
-            </TabsContent>
 
-            {/* Preferences Tab */}
-            <TabsContent value="preferences" className="space-y-4 mt-4 pb-4">
-              <div className="space-y-2">
-                <Label>Position sexuelle</Label>
-                <Select value={sexualPosition} onValueChange={setSexualPosition}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SEXUAL_POSITIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Je cherche</Label>
-                <div className="flex flex-wrap gap-2">
-                  {LOOKING_FOR_OPTIONS.map(opt => (
-                    <Badge
-                      key={opt.value}
-                      variant={lookingFor.includes(opt.value) ? 'default' : 'outline'}
-                      className={cn(
-                        'cursor-pointer transition-all',
-                        lookingFor.includes(opt.value) && 'bg-primary'
-                      )}
-                      onClick={() => toggleArrayValue(lookingFor, opt.value, setLookingFor)}
-                    >
-                      {opt.label}
-                    </Badge>
-                  ))}
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-card border border-border/50 shadow-sm">
+                  <div className="space-y-0.5 pr-3">
+                    <Label className="text-sm font-medium">Montrer mon visage</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Afficher ta photo publiquement
+                    </p>
+                  </div>
+                  <Switch checked={showFace} onCheckedChange={setShowFace} />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label>Statut VIH</Label>
-                <Select value={hivStatus} onValueChange={setHivStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HIV_STATUS_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Cette information reste privée jusqu'à ce que tu la partages
-                </p>
-              </div>
-            </TabsContent>
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-card border border-border/50 shadow-sm">
+                  <div className="space-y-0.5 pr-3">
+                    <Label className="text-sm font-medium">Afficher mon anniversaire</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Les autres verront ta date d'anniversaire
+                    </p>
+                  </div>
+                  <Switch checked={showBirthday} onCheckedChange={setShowBirthday} />
+                </div>
 
-            {/* Privacy Tab */}
-            <TabsContent value="privacy" className="space-y-4 mt-4 pb-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50">
-                <div className="space-y-0.5">
-                  <Label>Contenu NSFW</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Recevoir et partager du contenu adulte
+                <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/15">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    🔒 Tes informations de santé et préférences ne sont visibles que par les personnes avec qui tu choisis de les partager.
                   </p>
                 </div>
-                <Switch checked={acceptsNsfw} onCheckedChange={setAcceptsNsfw} />
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50">
-                <div className="space-y-0.5">
-                  <Label>Montrer mon visage</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Afficher ta photo de profil publiquement
-                  </p>
-                </div>
-                <Switch checked={showFace} onCheckedChange={setShowFace} />
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50">
-                <div className="space-y-0.5">
-                  <Label>Afficher mon anniversaire</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Les autres verront ta date d'anniversaire
-                  </p>
-                </div>
-                <Switch checked={showBirthday} onCheckedChange={setShowBirthday} />
-              </div>
-
-              <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                <p className="text-sm text-muted-foreground">
-                  🔒 Tes informations de santé et préférences ne sont visibles que par les personnes avec qui tu choisis de les partager.
-                </p>
-              </div>
-            </TabsContent>
+              </TabsContent>
+            </div>
           </ScrollArea>
         </Tabs>
 
-        <DialogFooter className="px-6 pb-6 pt-2 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border/50 bg-muted/30">
+          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="text-muted-foreground">
             Annuler
           </Button>
-          <Button onClick={handleSave} disabled={isSaving || isUploading}>
+          <Button size="sm" onClick={handleSave} disabled={isSaving || isUploading} className="min-w-[120px]">
             {isSaving ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                 Enregistrement...
               </>
             ) : (
               'Enregistrer'
             )}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
