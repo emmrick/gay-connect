@@ -221,6 +221,7 @@ const Admin = () => {
       case 'error-logs': return <ErrorLogsPanel />;
       case 'security': return <SecurityEventsPanel />;
       case 'verification': return <IdentityVerificationPanel />;
+      case 'feature-toggles': return <FeatureTogglesPanel />;
       default: return null;
     }
   };
