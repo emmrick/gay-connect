@@ -22,6 +22,7 @@ const HomeView = ({
   onStartPrivateChat 
 }: HomeViewProps) => {
   const [ageRange, setAgeRange] = useState<[number, number]>([18, 99]);
+  const featureFlags = useFeatureFlags();
   const [appliedAgeRange, setAppliedAgeRange] = useState<[number, number]>([18, 99]);
   const [filterOpen, setFilterOpen] = useState(false);
 
