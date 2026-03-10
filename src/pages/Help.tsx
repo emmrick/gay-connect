@@ -553,6 +553,13 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   };
 
+  const clearSessionState = useCallback(() => {
+    try {
+      sessionStorage.removeItem('help-chat-phase');
+      sessionStorage.removeItem('help-chat-messages');
+    } catch { /* noop */ }
+  }, []);
+
   const handleEndChat = () => {
     setChatPhase('idle');
     setChatMessages([]);
@@ -565,6 +572,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     agentJoinedRef.current = false;
     setRatingEmoji(null);
     setRatingComment('');
+    clearSessionState();
   };
 
   // Send message to agent (in agent or waiting phase)
