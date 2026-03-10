@@ -90,6 +90,7 @@ const Index = () => {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
   const { data: isAdmin } = useIsAdmin();
+  const featureFlags = useFeatureFlags();
   const { data: isModerator } = useQuery({
     queryKey: ['is-moderator', user?.id],
     queryFn: async () => {
