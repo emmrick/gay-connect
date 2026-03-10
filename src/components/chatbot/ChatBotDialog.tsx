@@ -1,14 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Loader2, Sparkles, Zap } from 'lucide-react';
+import { Bot, ArrowLeft, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useChatbotConfig, useChatbotConversation, useSendChatbotMessage } from '@/hooks/useChatbotConfig';
+import { useChatbotConfig, useChatbotNodes, ChatbotNode } from '@/hooks/useChatbotConfig';
 import { cn } from '@/lib/utils';
-import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatBotDialogProps {
@@ -18,114 +13,105 @@ interface ChatBotDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const quickQuestions = [
-  "Salut, tu recherches quoi ? 👋",
-  "Tu as quel âge ?",
-  "Tu es d'où ?",
-];
+interface BotMessage {
+  type: 'bot' | 'user';
+  text: string;
+}
 
 const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: ChatBotDialogProps) => {
   const { data: config } = useChatbotConfig(profileUserId);
-  const { data: history = [] } = useChatbotConversation(profileUserId);
-  const sendMessage = useSendChatbotMessage();
-  const { deductCredits, hasEnoughCredits } = useCredits();
-  const { user } = useAuth();
-  const [input, setInput] = useState('');
-  const [localMessages, setLocalMessages] = useState<{ role: string; content: string }[]>([]);
+  const { data: allNodes = [] } = useChatbotNodes(profileUserId);
+  const [messages, setMessages] = useState<BotMessage[]>([]);
+  const [currentParentId, setCurrentParentId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [streamingText, setStreamingText] = useState('');
+  const [navigationStack, setNavigationStack] = useState<(string | null)[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const pendingRef = useRef(false);
 
-  const greeting = config?.greeting_message || `Salut ! Je suis le chatbot de ${profileUsername}. Pose-moi des questions ! 😊`;
+  const greeting = config?.greeting_message || `Salut ! Je suis le chatbot de ${profileUsername}. Comment puis-je t'aider ? 😊`;
 
-  const allMessages = [
-    ...history.map((m: any) => ({ role: m.role, content: m.content })),
-    ...localMessages,
-  ];
+  // Get root nodes or children of current parent
+  const currentOptions = allNodes.filter(n =>
+    currentParentId === null ? n.is_root : n.parent_id === currentParentId
+  );
 
-  const showQuickQuestions = allMessages.length === 0;
+  // Reset on open
+  useEffect(() => {
+    if (open) {
+      setMessages([]);
+      setCurrentParentId(null);
+      setNavigationStack([]);
+      setIsTyping(false);
+    }
+  }, [open]);
 
+  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [allMessages.length]);
+  }, [messages.length, isTyping, currentOptions.length]);
 
-  useEffect(() => {
-    if (open) setLocalMessages([]);
-  }, [open]);
+  const handleOptionClick = (node: ChatbotNode) => {
+    // Add user "click" as message
+    setMessages(prev => [...prev, { type: 'user', text: node.label }]);
 
-  const handleSend = async (overrideMsg?: string) => {
-    const msg = (overrideMsg || input).trim();
-    if (!msg || sendMessage.isPending || pendingRef.current) return;
-    pendingRef.current = true;
-
-    if (!hasEnoughCredits(CREDIT_COSTS.chatbot_message)) {
-      toast.error(`Crédits insuffisants (${CREDIT_COSTS.chatbot_message} crédits par message)`);
-      pendingRef.current = false;
-      return;
-    }
-
-    setInput('');
-    setLocalMessages(prev => [...prev, { role: 'user', content: msg }]);
-
-    try {
-      await deductCredits.mutateAsync({
-        amount: CREDIT_COSTS.chatbot_message,
-        transactionType: 'chatbot_message',
-        description: `Message chatbot de ${profileUsername}`,
-      });
-
-      const reply = await sendMessage.mutateAsync({
-        profileUserId,
-        message: msg,
-        conversationHistory: allMessages,
-      });
-
-      // Fast streaming: reveal words quickly (~50ms per word)
-      const words = reply.split(/(\s+)/);
+    // If node has a response, show it with typing delay
+    if (node.response_text) {
       setIsTyping(true);
-      setStreamingText('');
-      
-      for (let i = 0; i < words.length; i++) {
-        setStreamingText(prev => prev + words[i]);
-        if (words[i].trim()) {
-          await new Promise(resolve => setTimeout(resolve, 40));
+      const wordCount = node.response_text.split(/\s+/).length;
+      const delay = Math.min(Math.max(wordCount * 200, 800), 3000);
+
+      setTimeout(() => {
+        setIsTyping(false);
+        setMessages(prev => [...prev, { type: 'bot', text: node.response_text! }]);
+
+        // Check if this node has children
+        const children = allNodes.filter(n => n.parent_id === node.id);
+        if (children.length > 0) {
+          setNavigationStack(prev => [...prev, currentParentId]);
+          setCurrentParentId(node.id);
         }
+      }, delay);
+    } else {
+      // No response, just navigate to children
+      const children = allNodes.filter(n => n.parent_id === node.id);
+      if (children.length > 0) {
+        setNavigationStack(prev => [...prev, currentParentId]);
+        setCurrentParentId(node.id);
       }
-      
-      setIsTyping(false);
-      setStreamingText('');
-      setLocalMessages(prev => [...prev, { role: 'assistant', content: reply }]);
-    } catch (error) {
-      setIsTyping(false);
-      setLocalMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: 'Désolé, je rencontre un problème technique. Essaie de contacter directement cette personne ! 😅' },
-      ]);
-    } finally {
-      pendingRef.current = false;
     }
   };
+
+  const handleBack = () => {
+    if (navigationStack.length > 0) {
+      const prevParentId = navigationStack[navigationStack.length - 1];
+      setNavigationStack(prev => prev.slice(0, -1));
+      setCurrentParentId(prevParentId);
+    }
+  };
+
+  const handleReset = () => {
+    setMessages([]);
+    setCurrentParentId(null);
+    setNavigationStack([]);
+  };
+
+  const hasNodes = allNodes.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0 gap-0 h-[85vh] max-h-[650px] flex flex-col overflow-hidden border-border/30 bg-background/95 backdrop-blur-xl">
-        {/* Header with gradient */}
+        {/* Header */}
         <DialogHeader className="flex-shrink-0 p-0">
           <div className="relative overflow-hidden">
-            {/* Gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent" />
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
-            
             <div className="relative p-4 pb-3">
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-11 h-11 rounded-2xl bg-primary/15 flex items-center justify-center ring-2 ring-primary/20">
                     <Bot className="w-5 h-5 text-primary" />
                   </div>
-                  {/* Online pulse */}
                   <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-background">
                     <span className="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-40" />
                   </span>
@@ -134,10 +120,9 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
                   <DialogTitle className="text-base font-bold truncate">
                     {profileUsername}
                   </DialogTitle>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <Sparkles className="w-3 h-3 text-primary" />
-                    <p className="text-[11px] text-muted-foreground font-medium">Assistant IA • En ligne</p>
-                  </div>
+                  <p className="text-[11px] text-muted-foreground font-medium">
+                    Assistant • En ligne
+                  </p>
                 </div>
               </div>
             </div>
@@ -145,15 +130,15 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
           </div>
         </DialogHeader>
 
-        {/* Messages area */}
+        {/* Messages */}
         <div className="flex-1 min-h-0 overflow-hidden">
           <ScrollArea className="h-full">
             <div ref={scrollRef} className="p-4 space-y-4">
-              {/* Greeting bubble */}
+              {/* Greeting */}
               <motion.div
                 initial={{ opacity: 0, y: 15, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
+                transition={{ duration: 0.4 }}
                 className="flex gap-2.5"
               >
                 <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5 ring-1 ring-primary/20">
@@ -163,45 +148,20 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
                   <div className="bg-secondary/60 backdrop-blur-sm rounded-2xl rounded-tl-md px-3.5 py-2.5 border border-border/30">
                     <p className="text-sm leading-relaxed">{greeting}</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground/60 pl-1">Maintenant</p>
                 </div>
               </motion.div>
 
-              {/* Quick questions */}
-              {showQuickQuestions && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.4 }}
-                  className="flex flex-wrap gap-2 pl-10"
-                >
-                  {quickQuestions.map((q, i) => (
-                    <motion.button
-                      key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.4 + i * 0.1 }}
-                      onClick={() => handleSend(q)}
-                      disabled={sendMessage.isPending}
-                      className="px-3 py-1.5 text-xs font-medium rounded-full border border-primary/30 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/50 transition-all duration-200 active:scale-95 disabled:opacity-50"
-                    >
-                      {q}
-                    </motion.button>
-                  ))}
-                </motion.div>
-              )}
-
-              {/* Conversation messages */}
+              {/* Messages */}
               <AnimatePresence>
-                {allMessages.map((msg, i) => (
+                {messages.map((msg, i) => (
                   <motion.div
                     key={`msg-${i}`}
                     initial={{ opacity: 0, y: 12, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className={cn('flex gap-2.5', msg.role === 'user' && 'justify-end')}
+                    transition={{ duration: 0.3 }}
+                    className={cn('flex gap-2.5', msg.type === 'user' && 'justify-end')}
                   >
-                    {msg.role === 'assistant' && (
+                    {msg.type === 'bot' && (
                       <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5 ring-1 ring-primary/20">
                         <Bot className="w-4 h-4 text-primary" />
                       </div>
@@ -210,20 +170,20 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
                       <div
                         className={cn(
                           'rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed border',
-                          msg.role === 'user'
+                          msg.type === 'user'
                             ? 'bg-primary text-primary-foreground rounded-tr-md border-primary/80 shadow-sm shadow-primary/20'
                             : 'bg-secondary/60 backdrop-blur-sm rounded-tl-md border-border/30'
                         )}
                       >
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        <p className="whitespace-pre-wrap">{msg.text}</p>
                       </div>
                     </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
 
-              {/* Typing / Streaming indicator */}
-              {(sendMessage.isPending || isTyping) && (
+              {/* Typing indicator */}
+              {isTyping && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -232,59 +192,95 @@ const ChatBotDialog = ({ profileUserId, profileUsername, open, onOpenChange }: C
                   <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/20">
                     <Bot className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="bg-secondary/60 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 border border-border/30 max-w-[80%]">
-                    {streamingText ? (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamingText}<span className="inline-block w-1.5 h-4 bg-primary/60 rounded-sm animate-pulse ml-0.5 align-middle" /></p>
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                        <span className="text-[10px] text-muted-foreground ml-1.5">en train d'écrire...</span>
-                      </div>
-                    )}
+                  <div className="bg-secondary/60 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 border border-border/30">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="text-[10px] text-muted-foreground ml-1.5">en train d'écrire...</span>
+                    </div>
                   </div>
+                </motion.div>
+              )}
+
+              {/* Options buttons */}
+              {!isTyping && hasNodes && currentOptions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-2 pl-10"
+                >
+                  {currentOptions.map((node) => (
+                    <motion.button
+                      key={node.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      onClick={() => handleOptionClick(node)}
+                      className="w-full text-left px-3.5 py-2.5 text-sm font-medium rounded-xl border border-primary/30 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/50 transition-all duration-200 active:scale-[0.98]"
+                    >
+                      {node.label}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+
+              {/* No nodes configured */}
+              {!hasNodes && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="pl-10"
+                >
+                  <p className="text-xs text-muted-foreground italic">
+                    Ce chatbot n'a pas encore été configuré par {profileUsername}.
+                  </p>
+                </motion.div>
+              )}
+
+              {/* No more options (leaf node reached) */}
+              {!isTyping && hasNodes && currentOptions.length === 0 && messages.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="pl-10 space-y-2"
+                >
+                  <p className="text-xs text-muted-foreground">
+                    Pour d'autres questions, contacte {profileUsername} directement 😊
+                  </p>
                 </motion.div>
               )}
             </div>
           </ScrollArea>
         </div>
 
-        {/* Input area */}
+        {/* Bottom bar */}
         <div className="flex-shrink-0">
           <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
-          <div className="p-3 bg-secondary/20 backdrop-blur-sm">
-            <form
-              onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-              className="flex gap-2 items-center"
-            >
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Écris un message..."
-                className="flex-1 text-sm h-11 rounded-xl bg-background/80 border-border/40 focus-visible:ring-primary/30 placeholder:text-muted-foreground/50"
-                maxLength={500}
-                disabled={sendMessage.isPending}
-              />
-              <Button
-                type="submit"
-                size="icon"
-                className="h-11 w-11 rounded-xl bg-primary hover:bg-primary/90 shadow-sm shadow-primary/25 transition-all active:scale-95"
-                disabled={!input.trim() || sendMessage.isPending}
+          <div className="p-3 bg-secondary/20 backdrop-blur-sm flex items-center gap-2">
+            {navigationStack.length > 0 && (
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-lg bg-secondary/60 text-muted-foreground hover:bg-secondary transition-colors"
               >
-                {sendMessage.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
-            </form>
-            <div className="flex items-center justify-center gap-1.5 mt-2">
-              <Zap className="w-3 h-3 text-primary/50" />
-              <p className="text-[10px] text-muted-foreground/70 font-medium">
-                {CREDIT_COSTS.chatbot_message} crédit par message • IA
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Retour
+              </button>
+            )}
+            {messages.length > 0 && (
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-lg bg-secondary/60 text-muted-foreground hover:bg-secondary transition-colors ml-auto"
+              >
+                <X className="w-3.5 h-3.5" />
+                Recommencer
+              </button>
+            )}
+            {messages.length === 0 && (
+              <p className="text-[10px] text-muted-foreground/70 font-medium w-full text-center">
+                Sélectionnez une option pour continuer
               </p>
-            </div>
+            )}
           </div>
         </div>
       </DialogContent>
