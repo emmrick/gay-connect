@@ -175,7 +175,7 @@ const ModerationMissionAlert = () => {
     setDismissed(true);
   }, []);
 
-  if (!isStaff || isOnAdminPage || !mission || dismissed) return null;
+  if (!isStaff || isOnAdminPage || !mission || dismissed || !isTrulyOnline) return null;
 
   return (
     <AnimatePresence>
