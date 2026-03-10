@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MapPin, Star, SlidersHorizontal } from 'lucide-react';
+import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
