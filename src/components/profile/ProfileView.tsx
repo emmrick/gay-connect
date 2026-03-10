@@ -108,14 +108,18 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
         />
 
         {/* Albums */}
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-          <ProfileAlbumsSection />
-        </motion.div>
+        {featureFlags['albums'] !== false && (
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+            <ProfileAlbumsSection />
+          </motion.div>
+        )}
 
         {/* ChatBot */}
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
-          <ChatBotProfileCard onOpen={() => onNavigateToChatbot?.()} />
-        </motion.div>
+        {featureFlags['personal_chatbot'] !== false && (
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
+            <ChatBotProfileCard onOpen={() => onNavigateToChatbot?.()} />
+          </motion.div>
+        )}
 
         {/* Reactions */}
         {profile.user_id && (
