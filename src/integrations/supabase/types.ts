@@ -689,6 +689,42 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_toggles: {
+        Row: {
+          category: string
+          description: string | null
+          feature_key: string
+          icon: string | null
+          id: string
+          is_enabled: boolean
+          label: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string
+          description?: string | null
+          feature_key: string
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          label: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          feature_key?: string
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          label?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       flyer_promo_codes: {
         Row: {
           code: string
