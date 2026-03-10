@@ -105,11 +105,26 @@ const Help = ({ embedded = false }: HelpProps) => {
     if (hasCheckedActiveTicket || !user?.id || ticketsLoading) return;
     setHasCheckedActiveTicket(true);
 
-    const activeTicket = tickets.find(t => t.status === 'open' || t.status === 'assigned');
+    // Include waiting_client tickets so the user can resume conversation
+    const activeTicket = tickets.find(t => t.status === 'open' || t.status === 'assigned' || t.status === 'waiting_client');
     if (activeTicket) {
       setSelectedTicket(activeTicket);
-      agentJoinedRef.current = activeTicket.status === 'assigned';
-      setChatPhase(activeTicket.status === 'assigned' ? 'agent' : 'waiting_agent');
+      if (activeTicket.status === 'assigned') {
+        agentJoinedRef.current = true;
+        setChatPhase('agent');
+      } else if (activeTicket.status === 'waiting_client') {
+        // Restore chatbot history from ticket if available
+        if (activeTicket.chatbot_history && Array.isArray(activeTicket.chatbot_history)) {
+          const restoredMessages: ChatMessage[] = (activeTicket.chatbot_history as Array<{ type: string; text: string }>).map(m => ({
+            type: m.type as 'bot' | 'user' | 'system',
+            text: m.text,
+          }));
+          setChatMessages(restoredMessages);
+        }
+        setChatPhase('waiting_agent');
+      } else {
+        setChatPhase('waiting_agent');
+      }
     }
   }, [tickets, user?.id, hasCheckedActiveTicket, ticketsLoading]);
 
