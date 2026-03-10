@@ -40,6 +40,7 @@ const navItems: NavItem[] = [
   { id: 'support', label: 'Support', icon: Headphones, group: 'tasks' },
   { id: 'support-ratings', label: 'Avis', icon: Star, group: 'tasks' },
   // Modération
+  { id: 'verification', label: 'Vérification ID', shortLabel: 'Vérif. ID', icon: IdCard, group: 'moderation' },
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation' },
   { id: 'ai-moderation', label: 'IA Modération', shortLabel: 'IA', icon: Bot, group: 'moderation' },
