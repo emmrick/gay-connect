@@ -733,7 +733,7 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
                 </div>
               </TabsContent>
             </div>
-          </ScrollArea>
+          </div>
         </Tabs>
 
         <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border/50 bg-muted/30">
