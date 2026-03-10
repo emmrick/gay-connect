@@ -72,8 +72,18 @@ const Help = ({ embedded = false }: HelpProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
-  const [chatPhase, setChatPhase] = useState<ChatPhase>('idle');
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatPhase, setChatPhase] = useState<ChatPhase>(() => {
+    try {
+      const saved = sessionStorage.getItem('help-chat-phase');
+      return (saved as ChatPhase) || 'idle';
+    } catch { return 'idle'; }
+  });
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('help-chat-messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [freeText, setFreeText] = useState('');
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
