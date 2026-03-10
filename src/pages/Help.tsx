@@ -74,13 +74,13 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [chatPhase, setChatPhase] = useState<ChatPhase>(() => {
     try {
-      const saved = sessionStorage.getItem('help-chat-phase');
+      const saved = localStorage.getItem('help-chat-phase');
       return (saved as ChatPhase) || 'idle';
     } catch { return 'idle'; }
   });
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
     try {
-      const saved = sessionStorage.getItem('help-chat-messages');
+      const saved = localStorage.getItem('help-chat-messages');
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
@@ -113,12 +113,12 @@ const Help = ({ embedded = false }: HelpProps) => {
   // Strip non-serializable React elements (icons) before persisting
   useEffect(() => {
     try {
-      sessionStorage.setItem('help-chat-phase', chatPhase);
+      localStorage.setItem('help-chat-phase', chatPhase);
       const serializableMessages = chatMessages.map(msg => ({
         ...msg,
         options: msg.options?.map(({ icon, ...rest }) => rest),
       }));
-      sessionStorage.setItem('help-chat-messages', JSON.stringify(serializableMessages));
+      localStorage.setItem('help-chat-messages', JSON.stringify(serializableMessages));
     } catch { /* noop */ }
   }, [chatPhase, chatMessages]);
 
@@ -275,11 +275,11 @@ const Help = ({ embedded = false }: HelpProps) => {
         }
         // Directly write to sessionStorage since setState won't work during unmount
         try {
-          const saved = sessionStorage.getItem('help-chat-messages');
+          const saved = localStorage.getItem('help-chat-messages');
           const existing: ChatMessage[] = saved ? JSON.parse(saved) : [];
           existing.push({ type: 'bot', text: msg.text, options: msg.options?.map(({ icon, ...rest }) => rest) as any });
-          sessionStorage.setItem('help-chat-messages', JSON.stringify(existing));
-          sessionStorage.setItem('help-bot-typing', 'false');
+          localStorage.setItem('help-chat-messages', JSON.stringify(existing));
+          localStorage.setItem('help-bot-typing', 'false');
         } catch { /* noop */ }
       }
     };
@@ -590,8 +590,8 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   const clearSessionState = useCallback(() => {
     try {
-      sessionStorage.removeItem('help-chat-phase');
-      sessionStorage.removeItem('help-chat-messages');
+      localStorage.removeItem('help-chat-phase');
+      localStorage.removeItem('help-chat-messages');
     } catch { /* noop */ }
   }, []);
 
