@@ -255,7 +255,7 @@ const useRequestVerification = () => {
         type: 'verification_request',
         title: 'Vérification d\'identité requise',
         message: 'Un modérateur vous demande de vérifier votre identité. Veuillez soumettre vos documents pour continuer à utiliser l\'application.',
-        action_url: '/profile',
+        action_url: '/',
       });
 
       if (notifError) {
