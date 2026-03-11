@@ -310,6 +310,8 @@ const Admin = () => {
         pendingPurchases={pendingPurchasesCount}
         pendingVerifications={pendingVerificationsCount}
         isAdmin={!!isAdmin}
+        modPermissions={modPermissions}
+      />
       />
 
       <main className="flex-1 overflow-auto bg-muted/20">
