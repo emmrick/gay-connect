@@ -85,7 +85,6 @@ export const useMissionToggle = () => {
 
   return { isActive, toggle, setActive };
 };
-};
 
 // ─── Shared invalidation helper ───
 export const invalidateAllTaskQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
