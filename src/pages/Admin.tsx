@@ -256,6 +256,7 @@ const Admin = () => {
             pendingPurchases={pendingPurchasesCount}
             pendingVerifications={pendingVerificationsCount}
             isAdmin={!!isAdmin}
+            modPermissions={modPermissions}
             dashboardTopSlot={<TaskQueuePopup onNavigateToSection={handleSectionChange} />}
           />
           {selectedReport && (
