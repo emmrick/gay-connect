@@ -13,6 +13,7 @@ import { Headphones, Loader2, User, Shield, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AdminSupportChatPanelProps {
   onBack: () => void;
