@@ -78,6 +78,23 @@ const Admin = () => {
     enabled: !!user?.id,
   });
 
+  // Fetch moderator permissions for the current user
+  const { data: modPermissions } = useQuery({
+    queryKey: ['moderator-permissions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('moderator_permissions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!user?.id && !isAdmin,
+    staleTime: 60000,
+  });
+
   const isAdminOrMod = isAdmin || isModerator;
 
   const handleSectionChange = useCallback((section: AdminSection | string, userId?: string) => {
