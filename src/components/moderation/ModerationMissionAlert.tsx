@@ -132,7 +132,10 @@ const ModerationMissionAlert = () => {
   const reserveTask = useReserveTask();
   const refuseTask = useRefuseTask();
   const completeTask = useCompleteTask();
-  const { isActive: missionsActive } = useMissionToggle();
+  const { isActive: missionsActive, setActive: setMissionsActive } = useMissionToggle();
+
+  const lastMissionReceivedRef = useRef<number>(Date.now());
+  const autoOfflineTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isOnAdminPage = location.pathname === '/admin';
 
