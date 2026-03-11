@@ -241,6 +241,7 @@ const ModerationMissionAlert = () => {
 
   const showMission = (task: MissionData, taskKey: string) => {
     lastSeenKeyRef.current = taskKey;
+    lastMissionReceivedRef.current = Date.now(); // Reset 2h inactivity timer
     setMission(task);
     setStep('propose');
     setVisible(true);
