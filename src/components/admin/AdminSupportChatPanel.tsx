@@ -175,16 +175,15 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                   Infractions
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={showDossier ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => {
-                    if (ticket?.user_id && onNavigateToSection) {
-                      onNavigateToSection('users:' + ticket.user_id);
-                    }
+                    setShowDossier(!showDossier);
+                    if (!showDossier) setShowInfractions(false);
                   }}
                   className="gap-1.5"
                 >
-                  <User className="w-4 h-4" />
+                  <FolderOpen className="w-4 h-4" />
                   Dossier
                 </Button>
               </div>
@@ -206,6 +205,21 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                 ticketId={ticket.id}
                 onClose={() => setShowInfractions(false)}
               />
+            </div>
+          </div>
+        )}
+
+        {/* Right: Client Dossier sidebar */}
+        {showDossier && ticket?.user_id && (
+          <div className="w-[480px] shrink-0">
+            <div className="h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+              <ScrollArea className="h-full">
+                <ClientDossierPanel
+                  userId={ticket.user_id}
+                  ticketId={ticket.id}
+                  onClose={() => setShowDossier(false)}
+                />
+              </ScrollArea>
             </div>
           </div>
         )}
