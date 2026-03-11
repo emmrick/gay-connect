@@ -131,10 +131,9 @@ const ModerationMissionAlert = () => {
   // Find the first non-dismissed pending task
   const nextAvailableTask = pendingTasks?.find(t => !dismissedIdsRef.current.has(t.id)) ?? null;
 
-  // Trigger alert when a new/recycled pending task appears
+  // Trigger alert when a new/recycled pending task appears (with 5s cooldown after dismiss)
   useEffect(() => {
     if (!nextAvailableTask) {
-      // No more tasks => hide alert
       if (visible) setVisible(false);
       return;
     }
@@ -142,9 +141,26 @@ const ModerationMissionAlert = () => {
     const taskKey = `${nextAvailableTask.id}::${nextAvailableTask.updated_at}`;
     if (taskKey === lastSeenKeyRef.current) return;
 
-    // New task or recycled task detected — clear old dismissed if it's a recycled task
+    // If we're in cooldown after a dismiss, delay the alert
+    const now = Date.now();
+    const cooldownRemaining = cooldownUntilRef.current - now;
+    if (cooldownRemaining > 0) {
+      const delayTimer = setTimeout(() => {
+        // Re-check the key hasn't been set by another effect in the meantime
+        if (lastSeenKeyRef.current === taskKey) return;
+        lastSeenKeyRef.current = taskKey;
+        setMission(nextAvailableTask);
+        setVisible(true);
+        playAlertSound();
+
+        if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = setTimeout(() => setVisible(false), 30000);
+      }, cooldownRemaining);
+      return () => clearTimeout(delayTimer);
+    }
+
+    // New task or recycled task detected
     if (dismissedIdsRef.current.has(nextAvailableTask.id)) {
-      // Same ID but updated_at changed = recycled, so un-dismiss it
       dismissedIdsRef.current.delete(nextAvailableTask.id);
     }
 
