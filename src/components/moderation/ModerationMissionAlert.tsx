@@ -295,6 +295,7 @@ const ModerationMissionAlert = () => {
     }
     setVisible(false);
     setMission(null);
+    missionRef.current = null;
     setStep('propose');
   }, [mission]);
 
