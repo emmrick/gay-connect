@@ -131,6 +131,7 @@ const ModerationMissionAlert = () => {
   const reserveTask = useReserveTask();
   const refuseTask = useRefuseTask();
   const completeTask = useCompleteTask();
+  const { isActive: missionsActive } = useMissionToggle();
 
   const isOnAdminPage = location.pathname === '/admin';
 
