@@ -331,6 +331,9 @@ const ModerationMissionAlert = () => {
 
   const countdownPercent = (countdown / COUNTDOWN_SECONDS) * 100;
   const isUrgent = countdown <= 10;
+  const isWarning = countdown <= 20 && countdown > 10;
+  const countdownColor = isUrgent ? 'text-destructive' : isWarning ? 'text-yellow-500' : 'text-muted-foreground';
+  const barColor = isUrgent ? 'bg-destructive' : isWarning ? 'bg-yellow-500' : 'bg-primary';
 
   return (
     <AnimatePresence>
