@@ -127,10 +127,17 @@ const AdminSidebar = ({
   pendingPurchases = 0,
   pendingVerifications = 0,
   isAdmin = false,
+  modPermissions,
 }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
 
-  const visibleItems = navItems.filter(item => !item.adminOnly || isAdmin);
+  const visibleItems = navItems.filter(item => {
+    if (!item.adminOnly) return true;
+    if (isAdmin) return true;
+    // Moderator: check permission
+    if (item.permissionKey && modPermissions?.[item.permissionKey]) return true;
+    return false;
+  });
 
   const getBadge = (id: AdminSection) => {
     if (id === 'reports' && pendingReports > 0) return pendingReports;
