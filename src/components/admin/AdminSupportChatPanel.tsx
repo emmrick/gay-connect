@@ -250,6 +250,14 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
                 #{ticket.ticket_number} · {ticket.subject || 'Support'}
               </p>
             </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setShowDossier(true)}
+            >
+              <FolderOpen className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 
@@ -258,6 +266,24 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
           <SupportChatRoom ticket={ticket} onBack={onBack} isAgent hideHeader />
         </div>
       </div>
+
+      {/* Mobile dossier sheet */}
+      <Sheet open={showDossier} onOpenChange={setShowDossier}>
+        <SheetContent side="bottom" className="h-[85dvh] p-0">
+          <SheetHeader className="px-4 pt-4 pb-2">
+            <SheetTitle>Dossier client</SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(85dvh-60px)]">
+            {ticket?.user_id && (
+              <ClientDossierPanel
+                userId={ticket.user_id}
+                ticketId={ticket.id}
+                onClose={() => setShowDossier(false)}
+              />
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
