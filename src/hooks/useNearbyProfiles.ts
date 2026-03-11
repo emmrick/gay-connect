@@ -52,13 +52,40 @@ export const useNearbyProfiles = (
         .limit(100);
 
       if (error) throw error;
-      return (data || []).map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
+      const profiles = (data || []).map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
+
+      // Fetch primary photos for profiles missing avatar_url
+      const missingAvatarIds = profiles.filter(p => !p.avatar_url).map(p => p.user_id);
+      if (missingAvatarIds.length > 0) {
+        const { data: photos } = await supabase
+          .from('profile_photos')
+          .select('user_id, photo_url, is_primary, display_order')
+          .in('user_id', missingAvatarIds)
+          .order('is_primary', { ascending: false })
+          .order('display_order', { ascending: true });
+
+        if (photos && photos.length > 0) {
+          const photoMap = new Map<string, string>();
+          for (const photo of photos) {
+            if (!photoMap.has(photo.user_id)) {
+              photoMap.set(photo.user_id, photo.photo_url);
+            }
+          }
+          return profiles.map(p => 
+            !p.avatar_url && photoMap.has(p.user_id) 
+              ? { ...p, avatar_url: photoMap.get(p.user_id)! } 
+              : p
+          );
+        }
+      }
+
+      return profiles;
     },
     enabled: !!user,
     staleTime: 30000,
     gcTime: 300000,
     refetchOnWindowFocus: false,
-    refetchInterval: 300000, // 5 minutes
+    refetchInterval: 300000,
   });
 
   // Query 2: When geolocation is available, fetch with distances (runs in parallel / replaces)
