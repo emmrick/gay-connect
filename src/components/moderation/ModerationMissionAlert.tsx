@@ -126,6 +126,7 @@ const ModerationMissionAlert = () => {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cooldownUntilRef = useRef<number>(0);
   const dismissedIdsRef = useRef<Set<string>>(new Set());
+  const missionRef = useRef<MissionData | null>(null);
 
   const reserveTask = useReserveTask();
   const refuseTask = useRefuseTask();
