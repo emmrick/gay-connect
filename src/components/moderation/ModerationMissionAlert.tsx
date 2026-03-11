@@ -86,10 +86,13 @@ const ModerationMissionAlert = () => {
   const queryClient = useQueryClient();
   const [visible, setVisible] = useState(false);
   const [mission, setMission] = useState<MissionData | null>(null);
-  // Track by id+updated_at so recycled tasks (same id, new updated_at) trigger again
   const lastSeenKeyRef = useRef<string | null>(null);
   const soundIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track dismissed mission IDs so we skip them until a new one arrives
+  const dismissedIdsRef = useRef<Set<string>>(new Set());
+
+  const isOnAdminPage = location.pathname === '/admin';
 
   // Check if user is moderator or admin
   const { data: isStaff } = useQuery({
@@ -105,91 +108,79 @@ const ModerationMissionAlert = () => {
     staleTime: 60000,
   });
 
-  const isOnAdminPage = location.pathname === '/admin';
-
-  // Poll for pending tasks every 10s (always active when staff + not on admin)
-  const { data: pendingTask } = useQuery({
+  // Poll for pending tasks every 10s — ALWAYS active when staff (including on admin page)
+  const { data: pendingTasks, refetch: refetchPending } = useQuery({
     queryKey: ['mission-alert-poll', user?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!user?.id) return [];
       const { data, error } = await supabase
         .from('moderation_tasks')
         .select('id, task_type, description, reward_cents, created_at, updated_at')
         .eq('status', 'pending')
         .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (error) return null;
-      return data as MissionData | null;
+        .limit(5);
+      if (error) return [];
+      return (data || []) as MissionData[];
     },
-    enabled: !!user?.id && !!isStaff && !isOnAdminPage,
+    enabled: !!user?.id && !!isStaff,
     refetchInterval: 10_000,
     staleTime: 8_000,
   });
 
+  // Find the first non-dismissed pending task
+  const nextAvailableTask = pendingTasks?.find(t => !dismissedIdsRef.current.has(t.id)) ?? null;
+
   // Trigger alert when a new/recycled pending task appears
   useEffect(() => {
-    if (!pendingTask || isOnAdminPage) return;
-    
-    const taskKey = `${pendingTask.id}::${pendingTask.updated_at}`;
+    if (!nextAvailableTask) {
+      // No more tasks => hide alert
+      if (visible) setVisible(false);
+      return;
+    }
+
+    const taskKey = `${nextAvailableTask.id}::${nextAvailableTask.updated_at}`;
     if (taskKey === lastSeenKeyRef.current) return;
-    
-    // New task or recycled task detected
+
+    // New task or recycled task detected — clear old dismissed if it's a recycled task
+    if (dismissedIdsRef.current.has(nextAvailableTask.id)) {
+      // Same ID but updated_at changed = recycled, so un-dismiss it
+      dismissedIdsRef.current.delete(nextAvailableTask.id);
+    }
+
     lastSeenKeyRef.current = taskKey;
-    setMission(pendingTask);
+    setMission(nextAvailableTask);
     setVisible(true);
     playAlertSound();
 
-    // Auto-dismiss after 30s
     if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
     dismissTimerRef.current = setTimeout(() => {
       setVisible(false);
     }, 30000);
-  }, [pendingTask, isOnAdminPage]);
+  }, [nextAvailableTask]);
 
   // Realtime: detect new/updated tasks instantly
   useEffect(() => {
-    if (!user?.id || !isStaff || isOnAdminPage) return;
+    if (!user?.id || !isStaff) return;
 
     const channel = supabase
       .channel('mission-alert-global')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'moderation_tasks' },
-        (payload) => {
-          const task = payload.new as any;
-          if (!task || task.status !== 'pending') return;
-          
-          const taskKey = `${task.id}::${task.updated_at}`;
-          if (taskKey === lastSeenKeyRef.current) return;
-
-          lastSeenKeyRef.current = taskKey;
-          setMission({
-            id: task.id,
-            task_type: task.task_type,
-            description: task.description,
-            reward_cents: task.reward_cents,
-            created_at: task.created_at,
-            updated_at: task.updated_at,
-          });
-          setVisible(true);
-          playAlertSound();
-
-          if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-          dismissTimerRef.current = setTimeout(() => setVisible(false), 30000);
-          
-          // Also refresh the poll query
+        () => {
+          // Just invalidate the poll query to pick up changes
+          refetchPending();
           queryClient.invalidateQueries({ queryKey: ['mission-alert-poll'] });
         }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id, isStaff, isOnAdminPage, queryClient]);
+  }, [user?.id, isStaff, queryClient, refetchPending]);
 
   // Repeat sound every 4s while visible
   useEffect(() => {
-    if (visible && mission && !isOnAdminPage) {
+    if (visible && mission) {
       soundIntervalRef.current = setInterval(playAlertSound, 4000);
     } else {
       if (soundIntervalRef.current) {
@@ -203,7 +194,7 @@ const ModerationMissionAlert = () => {
         soundIntervalRef.current = null;
       }
     };
-  }, [visible, mission, isOnAdminPage]);
+  }, [visible, mission]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -215,14 +206,21 @@ const ModerationMissionAlert = () => {
 
   const handleGoToMission = useCallback(() => {
     setVisible(false);
-    navigate('/admin');
-  }, [navigate]);
+    if (!isOnAdminPage) navigate('/admin');
+  }, [navigate, isOnAdminPage]);
 
   const handleDismiss = useCallback(() => {
+    // Dismiss current mission and immediately look for next one
+    if (mission) {
+      dismissedIdsRef.current.add(mission.id);
+      lastSeenKeyRef.current = null; // Reset so next task triggers alert
+    }
     setVisible(false);
-  }, []);
+    setMission(null);
+    // Force re-evaluation — the useEffect on nextAvailableTask will pick up the next one
+  }, [mission]);
 
-  if (!isStaff || isOnAdminPage || !mission || !visible) return null;
+  if (!isStaff || !mission || !visible) return null;
 
   return (
     <AnimatePresence>
@@ -278,7 +276,7 @@ const ModerationMissionAlert = () => {
               size="sm"
             >
               <Zap className="w-4 h-4" />
-              Voir la mission
+              {isOnAdminPage ? 'Traiter la mission' : 'Voir la mission'}
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
