@@ -351,7 +351,7 @@ const ModerationMissionAlert = () => {
           {step === 'propose' && (
             <div className="h-1.5 bg-muted relative overflow-hidden">
               <motion.div
-                className={`h-full ${isUrgent ? 'bg-destructive' : 'bg-primary'}`}
+                className={`h-full ${barColor}`}
                 initial={{ width: '100%' }}
                 animate={{ width: `${countdownPercent}%` }}
                 transition={{ duration: 0.5, ease: 'linear' }}
