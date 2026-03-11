@@ -477,16 +477,21 @@ const Legal = () => {
               </div>
 
               <div>
-                <h4 className="font-semibold text-foreground mb-2">2. Suppression automatique des comptes anciens</h4>
+                <h4 className="font-semibold text-foreground mb-2">2. Suppression automatique des comptes anciens (5 ans d'inactivité)</h4>
                 <p>
-                  Tout compte inscrit depuis plus de <strong className="text-foreground">5 ans</strong> est 
-                  automatiquement et définitivement supprimé, ainsi que l'intégralité des données associées. 
-                  Des notifications de rappel sont envoyées à 90, 30 et 7 jours avant la suppression.
+                  Tout compte dont la <strong className="text-foreground">dernière connexion</strong> remonte à plus de 
+                  <strong className="text-foreground"> 5 ans</strong> est automatiquement et définitivement supprimé, 
+                  ainsi que l'intégralité des données associées. <strong className="text-foreground">Chaque connexion 
+                  repousse automatiquement cette échéance de 5 ans.</strong>
+                </p>
+                <p className="mt-2 text-sm">
+                  Des notifications de rappel sont envoyées à 90, 30 et 7 jours avant la suppression, 
+                  invitant l'utilisateur à se reconnecter pour conserver son compte.
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-foreground mb-2">3. Suppression pour inactivité</h4>
+                <h4 className="font-semibold text-foreground mb-2">3. Suppression pour inactivité prolongée (2 ans)</h4>
                 <p>
                   Tout compte inactif depuis plus de <strong className="text-foreground">2 ans</strong> (aucune connexion) 
                   est automatiquement supprimé. Des notifications de rappel sont envoyées à 90, 30 et 7 jours 
