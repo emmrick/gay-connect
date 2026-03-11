@@ -22,6 +22,7 @@ import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
 import ForcedSupportChat from "@/components/moderation/ForcedSupportChat";
 import PromoPopup from "@/components/popups/PromoPopup";
+import GlobalMissionOverlay from "@/components/moderation/GlobalMissionOverlay";
 import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog";
 
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
@@ -140,7 +141,7 @@ const AuthenticatedApp = () => {
                 <ForcedSupportChat />
                 <PromoPopup />
                 <OnboardingGuideDialog />
-                
+                <GlobalMissionOverlay />
                 <CookieConsentBanner />
               </BrowserRouter>
             </TooltipProvider>
