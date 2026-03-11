@@ -25,6 +25,7 @@ import PromoPopup from "@/components/popups/PromoPopup";
 import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog";
 import ModerationMissionAlert from "@/components/moderation/ModerationMissionAlert";
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 
 import MaintenanceGuard from "@/components/maintenance/MaintenanceGuard";
