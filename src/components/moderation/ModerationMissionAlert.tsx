@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Zap, X, ChevronRight, CheckCircle2, Play, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
