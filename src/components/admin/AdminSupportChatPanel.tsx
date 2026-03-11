@@ -6,11 +6,13 @@ import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import InfractionsSidebar from '@/components/admin/InfractionsSidebar';
+import ClientDossierPanel from '@/components/admin/ClientDossierPanel';
 import { SupportTicket } from '@/hooks/useSupportTickets';
 import { useAuth } from '@/contexts/AuthContext';
-import { Headphones, Loader2, User, Shield } from 'lucide-react';
+import { Headphones, Loader2, User, Shield, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface AdminSupportChatPanelProps {
   onBack: () => void;
