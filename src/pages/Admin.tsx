@@ -78,6 +78,23 @@ const Admin = () => {
     enabled: !!user?.id,
   });
 
+  // Fetch moderator permissions for the current user
+  const { data: modPermissions } = useQuery({
+    queryKey: ['moderator-permissions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('moderator_permissions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!user?.id && !isAdmin,
+    staleTime: 60000,
+  });
+
   const isAdminOrMod = isAdmin || isModerator;
 
   const handleSectionChange = useCallback((section: AdminSection | string, userId?: string) => {
@@ -239,6 +256,7 @@ const Admin = () => {
             pendingPurchases={pendingPurchasesCount}
             pendingVerifications={pendingVerificationsCount}
             isAdmin={!!isAdmin}
+            modPermissions={modPermissions}
             dashboardTopSlot={<TaskQueuePopup onNavigateToSection={handleSectionChange} />}
           />
           {selectedReport && (
@@ -262,6 +280,7 @@ const Admin = () => {
           pendingPurchases={pendingPurchasesCount}
           pendingVerifications={pendingVerificationsCount}
           isAdmin={!!isAdmin}
+          modPermissions={modPermissions}
         />
         <main className="flex-1 overflow-auto">
           <div className="p-3 pb-8">
@@ -291,6 +310,7 @@ const Admin = () => {
         pendingPurchases={pendingPurchasesCount}
         pendingVerifications={pendingVerificationsCount}
         isAdmin={!!isAdmin}
+        modPermissions={modPermissions}
       />
 
       <main className="flex-1 overflow-auto bg-muted/20">
