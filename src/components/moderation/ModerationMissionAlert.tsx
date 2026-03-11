@@ -327,7 +327,8 @@ const ModerationMissionAlert = () => {
     }
   }, [mission, completeTask, queryClient, handleSkip]);
 
-  if (!isStaff || !mission || !visible) return null;
+  // Hide on admin page — TaskQueuePopup handles everything there
+  if (!isStaff || !mission || !visible || isOnAdminPage) return null;
 
   const countdownPercent = (countdown / COUNTDOWN_SECONDS) * 100;
   const isUrgent = countdown <= 10;
