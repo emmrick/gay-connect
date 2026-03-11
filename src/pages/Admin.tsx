@@ -63,7 +63,14 @@ const Admin = () => {
   const { data: stats } = useReportStats();
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
-  const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
+  const [activeSection, setActiveSection] = useState<AdminSection>(() => {
+    const saved = sessionStorage.getItem('admin-navigate-section');
+    if (saved) {
+      sessionStorage.removeItem('admin-navigate-section');
+      return saved as AdminSection;
+    }
+    return 'dashboard';
+  });
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
