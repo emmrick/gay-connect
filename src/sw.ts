@@ -85,21 +85,24 @@ self.addEventListener('push', function(event: PushEvent) {
     console.error('[SW] Error parsing push data:', e);
   }
 
+  // Check if this is a mission notification (in-app sound handles it)
+  const isMissionTag = typeof data.tag === 'string' && data.tag.startsWith('mission-');
+
   // Cast to any to allow Service Worker specific notification options
   const options = {
     body: data.body,
     icon: data.icon,
     badge: data.badge,
     tag: data.tag,
-    renotify: true,
-    requireInteraction: true, // Keep notification visible until user interacts
-    vibrate: [200, 100, 200],
+    renotify: !isMissionTag,
+    requireInteraction: !isMissionTag, // Keep non-mission notifications visible
+    vibrate: isMissionTag ? undefined : [200, 100, 200],
     data: data.data,
     actions: [
       { action: 'open', title: 'Ouvrir' },
       { action: 'close', title: 'Fermer' }
     ],
-    silent: false
+    silent: isMissionTag // Mission sounds are handled in-app
   } as NotificationOptions;
 
   event.waitUntil(

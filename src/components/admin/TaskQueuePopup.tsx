@@ -212,13 +212,17 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
     };
   }, [queueState, nextTask?.id, missionsActive, queryClient]);
 
-  // ── Repeating sound while offering ──
+   // ── Repeating sound while offering (delayed start to avoid overlap with initial sound) ──
   useEffect(() => {
     if (queueState === 'offering' && missionsActive) {
       if (soundIntervalRef.current) clearInterval(soundIntervalRef.current);
-      soundIntervalRef.current = setInterval(() => {
+      // Wait 3s before first repeat to avoid overlapping with the initial sound
+      soundIntervalRef.current = setTimeout(() => {
         playMissionSound();
-      }, 3000);
+        soundIntervalRef.current = setInterval(() => {
+          playMissionSound();
+        }, 3000);
+      }, 3000) as unknown as ReturnType<typeof setInterval>;
     } else {
       if (soundIntervalRef.current) {
         clearInterval(soundIntervalRef.current);
