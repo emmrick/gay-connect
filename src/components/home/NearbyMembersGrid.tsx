@@ -140,8 +140,8 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     );
   }
 
-  // Initial loading state - show skeleton grid
-  if (profilesLoading && allProfiles.length === 0) {
+  // Initial loading state - show skeleton grid (check actual nearby profiles, not allProfiles which includes current user)
+  if (profilesLoading && (!profiles || profiles.length === 0)) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
