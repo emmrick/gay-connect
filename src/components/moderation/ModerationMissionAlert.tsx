@@ -12,6 +12,7 @@ import {
   useCompleteTask,
   getTaskTypeSection,
   invalidateAllTaskQueries,
+  useMissionToggle,
 } from '@/hooks/useModerationTaskQueue';
 
 const TASK_TYPE_LABELS: Record<string, string> = {
@@ -130,6 +131,7 @@ const ModerationMissionAlert = () => {
   const reserveTask = useReserveTask();
   const refuseTask = useRefuseTask();
   const completeTask = useCompleteTask();
+  const { isActive: missionsActive } = useMissionToggle();
 
   const isOnAdminPage = location.pathname === '/admin';
 
@@ -166,8 +168,8 @@ const ModerationMissionAlert = () => {
         updated_at: t.updated_at,
       })) as MissionData[];
     },
-    enabled: !!user?.id && !!isStaff,
-    refetchInterval: 10_000,
+    enabled: !!user?.id && !!isStaff && missionsActive,
+    refetchInterval: missionsActive ? 10_000 : false,
     staleTime: 8_000,
   });
 
@@ -272,6 +274,16 @@ const ModerationMissionAlert = () => {
     };
   }, [visible, step, mission]);
 
+  // Hide mission when toggling offline
+  useEffect(() => {
+    if (!missionsActive && visible) {
+      setVisible(false);
+      setMission(null);
+      setStep('propose');
+      lastSeenKeyRef.current = null;
+    }
+  }, [missionsActive]);
+
   // Cleanup
   useEffect(() => {
     return () => {
@@ -332,7 +344,7 @@ const ModerationMissionAlert = () => {
     }
   }, [mission, completeTask, queryClient, handleSkip]);
 
-  if (!isStaff || !mission || !visible) return null;
+  if (!isStaff || !mission || !visible || !missionsActive) return null;
 
   const countdownPercent = (countdown / COUNTDOWN_SECONDS) * 100;
   const isUrgent = countdown <= 10;
