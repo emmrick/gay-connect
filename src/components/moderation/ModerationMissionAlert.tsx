@@ -147,19 +147,24 @@ const ModerationMissionAlert = () => {
     staleTime: 60000,
   });
 
-  // Poll for pending tasks every 10s
+  // Poll for exclusively offered task via RPC (checks online status server-side)
   const { data: pendingTasks, refetch: refetchPending } = useQuery({
     queryKey: ['mission-alert-poll', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       const { data, error } = await supabase
-        .from('moderation_tasks')
-        .select('id, task_type, description, reward_cents, created_at, updated_at')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: true })
-        .limit(5);
-      if (error) return [];
-      return (data || []) as MissionData[];
+        .rpc('get_exclusive_next_task', { _user_id: user.id, _offer_ttl_seconds: COUNTDOWN_SECONDS });
+      if (error || !data) return [];
+      // RPC returns a set, normalize to array
+      const arr = Array.isArray(data) ? data : [data];
+      return arr.filter(Boolean).map((t: any) => ({
+        id: t.id,
+        task_type: t.task_type,
+        description: t.description,
+        reward_cents: t.reward_cents,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+      })) as MissionData[];
     },
     enabled: !!user?.id && !!isStaff,
     refetchInterval: 10_000,
