@@ -390,13 +390,14 @@ const ModerationMissionAlert = () => {
                     {step === 'accepted' && 'Mission acceptée'}
                     {step === 'resolved' && 'Mission terminée ✓'}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {step === 'propose' && (
-                      <span className={isUrgent ? 'text-destructive font-semibold' : ''}>
-                        <Timer className="w-3 h-3 inline mr-0.5" />
-                        {countdown}s pour accepter
+                  {step === 'propose' && (
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-base font-bold tabular-nums ${countdownColor} transition-colors`}>
+                        {countdown}s
                       </span>
-                    )}
+                      <span className="text-[10px] text-muted-foreground">pour accepter</span>
+                    </div>
+                  )}
                     {step === 'accepted' && 'Cliquez sur Exécuter pour commencer'}
                     {step === 'resolved' && 'Prochaine mission dans 5s...'}
                   </p>
