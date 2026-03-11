@@ -27,7 +27,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 
 const formatReward = (cents: number) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
 
-const COUNTDOWN_SECONDS = 30;
+const COUNTDOWN_SECONDS = 60;
 const COOLDOWN_MS = 5000;
 
 // ── Audio helpers ──
@@ -331,6 +331,9 @@ const ModerationMissionAlert = () => {
 
   const countdownPercent = (countdown / COUNTDOWN_SECONDS) * 100;
   const isUrgent = countdown <= 10;
+  const isWarning = countdown <= 20 && countdown > 10;
+  const countdownColor = isUrgent ? 'text-destructive' : isWarning ? 'text-yellow-500' : 'text-muted-foreground';
+  const barColor = isUrgent ? 'bg-destructive' : isWarning ? 'bg-yellow-500' : 'bg-primary';
 
   return (
     <AnimatePresence>
@@ -348,7 +351,7 @@ const ModerationMissionAlert = () => {
           {step === 'propose' && (
             <div className="h-1.5 bg-muted relative overflow-hidden">
               <motion.div
-                className={`h-full ${isUrgent ? 'bg-destructive' : 'bg-primary'}`}
+                className={`h-full ${barColor}`}
                 initial={{ width: '100%' }}
                 animate={{ width: `${countdownPercent}%` }}
                 transition={{ duration: 0.5, ease: 'linear' }}
@@ -387,16 +390,16 @@ const ModerationMissionAlert = () => {
                     {step === 'accepted' && 'Mission acceptée'}
                     {step === 'resolved' && 'Mission terminée ✓'}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {step === 'propose' && (
-                      <span className={isUrgent ? 'text-destructive font-semibold' : ''}>
-                        <Timer className="w-3 h-3 inline mr-0.5" />
-                        {countdown}s pour accepter
+                  {step === 'propose' && (
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-base font-bold tabular-nums ${countdownColor} transition-colors`}>
+                        {countdown}s
                       </span>
-                    )}
-                    {step === 'accepted' && 'Cliquez sur Exécuter pour commencer'}
-                    {step === 'resolved' && 'Prochaine mission dans 5s...'}
-                  </p>
+                      <span className="text-[10px] text-muted-foreground">pour accepter</span>
+                    </div>
+                  )}
+                  {step === 'accepted' && <p className="text-[10px] text-muted-foreground">Cliquez sur Exécuter pour commencer</p>}
+                  {step === 'resolved' && <p className="text-[10px] text-muted-foreground">Prochaine mission dans 5s...</p>}
                 </div>
               </div>
               {step === 'propose' && (
