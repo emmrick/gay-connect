@@ -232,6 +232,7 @@ const ModerationMissionAlert = () => {
   const showMission = (task: MissionData, taskKey: string) => {
     lastSeenKeyRef.current = taskKey;
     setMission(task);
+    missionRef.current = task;
     setStep('propose');
     setVisible(true);
     playAlertSound();
