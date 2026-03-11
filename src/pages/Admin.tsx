@@ -312,7 +312,6 @@ const Admin = () => {
         isAdmin={!!isAdmin}
         modPermissions={modPermissions}
       />
-      />
 
       <main className="flex-1 overflow-auto bg-muted/20">
         <div className="max-w-5xl mx-auto p-6 space-y-6">
