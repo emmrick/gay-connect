@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MapPin, Star, SlidersHorizontal } from 'lucide-react';
+import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
@@ -21,6 +22,7 @@ const HomeView = ({
   onStartPrivateChat 
 }: HomeViewProps) => {
   const [ageRange, setAgeRange] = useState<[number, number]>([18, 99]);
+  const featureFlags = useFeatureFlags();
   const [appliedAgeRange, setAppliedAgeRange] = useState<[number, number]>([18, 99]);
   const [filterOpen, setFilterOpen] = useState(false);
 
@@ -49,7 +51,7 @@ const HomeView = ({
     <div className="pb-4">
       <div className="px-4 py-4 space-y-4">
         {/* Stories bar */}
-        <StoryBar />
+        {featureFlags['stories'] !== false && <StoryBar />}
 
         {/* Ad-free banner */}
         <AdFreeBanner />

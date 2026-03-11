@@ -48,6 +48,8 @@ import FlyerGeneratorPanel from '@/components/admin/FlyerGeneratorPanel';
 import PromoImageGeneratorPanel from '@/components/admin/PromoImageGeneratorPanel';
 import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
+import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
+import FeatureTogglesPanel from '@/components/admin/FeatureTogglesPanel';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -218,6 +220,8 @@ const Admin = () => {
       case 'promo-images': return <PromoImageGeneratorPanel />;
       case 'error-logs': return <ErrorLogsPanel />;
       case 'security': return <SecurityEventsPanel />;
+      case 'verification': return <IdentityVerificationPanel />;
+      case 'feature-toggles': return <FeatureTogglesPanel />;
       default: return null;
     }
   };

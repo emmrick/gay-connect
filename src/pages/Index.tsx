@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Plus, User, Users } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 
 // Lazy-load heavy sub-views to reduce initial JS bundle
 const ChatRoom = lazy(() => import('@/components/chat/ChatRoom'));
@@ -89,6 +90,7 @@ const Index = () => {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
   const { data: isAdmin } = useIsAdmin();
+  const featureFlags = useFeatureFlags();
   const { data: isModerator } = useQuery({
     queryKey: ['is-moderator', user?.id],
     queryFn: async () => {
@@ -323,7 +325,7 @@ const Index = () => {
 
 
   // Render chatbot config view
-  if (currentView === 'chatbot-config') {
+  if (currentView === 'chatbot-config' && featureFlags['personal_chatbot'] !== false) {
     return (
       <Suspense fallback={<LazyFallback />}>
         <motion.div
@@ -441,7 +443,7 @@ const Index = () => {
         ) : null;
 
       case 'swipe':
-        return user ? (
+        return user && featureFlags['swipe_page'] !== false ? (
           <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
@@ -577,7 +579,7 @@ const Index = () => {
         ) : null;
 
       case 'premium':
-        return user ? (
+        return user && featureFlags['credits_page'] !== false ? (
           <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
               onNavigateToCredits={() => handleTabChange('premium')}
