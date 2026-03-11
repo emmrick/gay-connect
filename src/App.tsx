@@ -23,7 +23,7 @@ import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoti
 import ForcedSupportChat from "@/components/moderation/ForcedSupportChat";
 import PromoPopup from "@/components/popups/PromoPopup";
 import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog";
-import ModerationMissionAlert from "@/components/moderation/ModerationMissionAlert";
+
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
@@ -140,7 +140,7 @@ const AuthenticatedApp = () => {
                 <ForcedSupportChat />
                 <PromoPopup />
                 <OnboardingGuideDialog />
-                <ModerationMissionAlert />
+                
                 <CookieConsentBanner />
               </BrowserRouter>
             </TooltipProvider>
