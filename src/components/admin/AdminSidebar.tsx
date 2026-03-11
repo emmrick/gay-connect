@@ -19,7 +19,7 @@ export type AdminSection =
   | 'dashboard'
   | 'wallet' | 'withdrawals' | 'rates' | 'global' 
   | 'stats' | 'users' | 'reports' | 'moderation'
-  | 'promo' | 'verification'
+  | 'promo'
   | 'credits-surveillance' | 'credit-purchases' | 'broadcast'
   | 'ai-moderation' | 'screenshot-sanctions' | 'moderators'
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
