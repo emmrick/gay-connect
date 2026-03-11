@@ -334,7 +334,7 @@ const ModerationMissionAlert = () => {
     }
   }, [mission, completeTask, queryClient, handleSkip]);
 
-  if (!isStaff || !mission || !visible) return null;
+  if (!isStaff || !mission || !visible || !missionsActive) return null;
 
   const countdownPercent = (countdown / COUNTDOWN_SECONDS) * 100;
   const isUrgent = countdown <= 10;
