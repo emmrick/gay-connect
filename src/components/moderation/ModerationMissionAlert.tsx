@@ -398,9 +398,8 @@ const ModerationMissionAlert = () => {
                       <span className="text-[10px] text-muted-foreground">pour accepter</span>
                     </div>
                   )}
-                    {step === 'accepted' && 'Cliquez sur Exécuter pour commencer'}
-                    {step === 'resolved' && 'Prochaine mission dans 5s...'}
-                  </p>
+                  {step === 'accepted' && <p className="text-[10px] text-muted-foreground">Cliquez sur Exécuter pour commencer</p>}
+                  {step === 'resolved' && <p className="text-[10px] text-muted-foreground">Prochaine mission dans 5s...</p>}
                 </div>
               </div>
               {step === 'propose' && (
