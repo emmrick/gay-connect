@@ -126,6 +126,7 @@ const ModerationMissionAlert = () => {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cooldownUntilRef = useRef<number>(0);
   const dismissedIdsRef = useRef<Set<string>>(new Set());
+  const missionRef = useRef<MissionData | null>(null);
 
   const reserveTask = useReserveTask();
   const refuseTask = useRefuseTask();
@@ -175,10 +176,19 @@ const ModerationMissionAlert = () => {
       countdownRef.current = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
-            // Time's up — auto-skip this mission
+            // Time's up — auto-skip this mission using ref to avoid stale closure
             clearInterval(countdownRef.current!);
             countdownRef.current = null;
-            handleSkip();
+            const currentMission = missionRef.current;
+            if (currentMission) {
+              dismissedIdsRef.current.add(currentMission.id);
+              cooldownUntilRef.current = Date.now() + COOLDOWN_MS;
+            }
+            lastSeenKeyRef.current = null;
+            setVisible(false);
+            setMission(null);
+            missionRef.current = null;
+            setStep('propose');
             return 0;
           }
           return prev - 1;
@@ -231,6 +241,7 @@ const ModerationMissionAlert = () => {
   const showMission = (task: MissionData, taskKey: string) => {
     lastSeenKeyRef.current = taskKey;
     setMission(task);
+    missionRef.current = task;
     setStep('propose');
     setVisible(true);
     playAlertSound();
@@ -284,6 +295,7 @@ const ModerationMissionAlert = () => {
     }
     setVisible(false);
     setMission(null);
+    missionRef.current = null;
     setStep('propose');
   }, [mission]);
 
