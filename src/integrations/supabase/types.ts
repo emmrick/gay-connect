@@ -1876,6 +1876,7 @@ export type Database = {
           endowment: string | null
           ethnicity: string | null
           first_name: string | null
+          first_verified_at: string | null
           height: number | null
           hide_last_seen: boolean | null
           hide_online_status: boolean | null
@@ -1915,6 +1916,7 @@ export type Database = {
           endowment?: string | null
           ethnicity?: string | null
           first_name?: string | null
+          first_verified_at?: string | null
           height?: number | null
           hide_last_seen?: boolean | null
           hide_online_status?: boolean | null
@@ -1954,6 +1956,7 @@ export type Database = {
           endowment?: string | null
           ethnicity?: string | null
           first_name?: string | null
+          first_verified_at?: string | null
           height?: number | null
           hide_last_seen?: boolean | null
           hide_online_status?: boolean | null
