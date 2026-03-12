@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle, FolderLock, 
-  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban
+  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import SettingsDialog from './SettingsDialog';
 import AlbumManager from '@/components/albums/AlbumManager';
 import ProfileEditDialog from './ProfileEditDialog';
 import BlockedUsersSheet from './BlockedUsersSheet';
+import PinManagementSheet from '@/components/security/PinManagementSheet';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 

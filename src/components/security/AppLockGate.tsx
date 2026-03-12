@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppLock } from '@/hooks/useAppLock';
 import PinLockScreen from './PinLockScreen';
@@ -16,6 +17,12 @@ const AppLockGate = ({ children }: { children: React.ReactNode }) => {
     isBiometricAvailable,
     biometricEnabled,
   } = useAppLock();
+
+  const [biometricSupported, setBiometricSupported] = useState(false);
+
+  useEffect(() => {
+    isBiometricAvailable().then(setBiometricSupported);
+  }, [isBiometricAvailable]);
 
   // Not authenticated or still loading
   if (!user || authLoading || isLoading) return <>{children}</>;
@@ -40,7 +47,7 @@ const AppLockGate = ({ children }: { children: React.ReactNode }) => {
       <PinLockScreen
         onUnlock={verifyPin}
         onBiometricUnlock={unlockWithBiometric}
-        biometricAvailable={true}
+        biometricAvailable={biometricSupported}
         biometricEnabled={biometricEnabled}
       />
     );
