@@ -49,8 +49,7 @@ const ProfileSettingsDrawer = ({
     { icon: Ban, label: 'Utilisateurs bloqués', action: () => { setOpen(false); setShowBlockedUsers(true); }, color: 'text-red-500', bgColor: 'bg-red-500/10' },
     { icon: HelpCircle, label: 'Aide & Support', action: () => { setOpen(false); setSettingsType('help'); }, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
     { icon: Lock, label: 'Code PIN & Sécurité', action: () => { setOpen(false); setShowPinManagement(true); }, color: 'text-violet-500', bgColor: 'bg-violet-500/10' },
-
-
+  ];
   const legalItems = [
     { icon: Scale, label: 'Mentions légales', section: 'legal', color: 'text-slate-500', bgColor: 'bg-slate-500/10' },
     { icon: FileText, label: 'CGU & CGV', section: 'cgu', color: 'text-cyan-500', bgColor: 'bg-cyan-500/10' },
