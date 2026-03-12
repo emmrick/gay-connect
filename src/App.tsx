@@ -160,7 +160,9 @@ const AppContent = () => {
   
   return (
     <AuthProvider>
-      <AuthenticatedApp />
+      <AppLockGate>
+        <AuthenticatedApp />
+      </AppLockGate>
     </AuthProvider>
   );
 };
