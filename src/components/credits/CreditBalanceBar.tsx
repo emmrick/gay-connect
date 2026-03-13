@@ -124,40 +124,31 @@ const CreditBalanceBar = ({
 
           {/* Passive credits - lockable */}
           <div className={cn(
-            "flex items-center justify-between p-2 rounded-lg border transition-colors",
+            "flex items-center justify-between gap-2 p-2 rounded-lg border transition-colors",
             lockPassive 
               ? "bg-amber-400/5 border-amber-400/10 opacity-70" 
               : "bg-amber-400/10 border-amber-400/20"
           )}>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-amber-400" />
-              <div>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-3 h-3 rounded-full bg-amber-400 shrink-0" />
+              <div className="min-w-0">
                 <span className="text-sm font-medium">Passif</span>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  +0.1 toutes les 6h
+                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3 shrink-0" />
+                  +0.1 / 6h
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold tabular-nums text-amber-600 dark:text-amber-400">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs font-bold tabular-nums text-amber-600 dark:text-amber-400">
                 {passiveCredits.toFixed(1)}/10.0
               </span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5">
-                    {lockPassive ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
-                    <Switch 
-                      checked={!lockPassive}
-                      onCheckedChange={(checked) => toggleCreditLock('lock_passive', !checked)}
-                      className="scale-75"
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p className="text-xs">{lockPassive ? 'Crédits passifs verrouillés (non utilisés)' : 'Crédits passifs actifs'}</p>
-                </TooltipContent>
-              </Tooltip>
+              {lockPassive ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
+              <Switch 
+                checked={!lockPassive}
+                onCheckedChange={(checked) => toggleCreditLock('lock_passive', !checked)}
+                className="scale-[0.65]"
+              />
             </div>
           </div>
 
