@@ -1,7 +1,8 @@
-import { Coins, Info, Clock } from 'lucide-react';
+import { Coins, Info, Clock, Lock, Unlock } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
 
 interface CreditBalanceBarProps {
@@ -17,7 +18,10 @@ const CreditBalanceBar = ({
   compact = false,
   showDetails = true 
 }: CreditBalanceBarProps) => {
-  const { passiveCredits, dailyCredits, bonusCredits, purchasedCredits, totalCredits, maxDailyCredits, isLoading } = useCredits();
+  const { 
+    passiveCredits, dailyCredits, bonusCredits, purchasedCredits, totalCredits, maxDailyCredits, isLoading,
+    lockPassive, lockBonus, lockPurchased, toggleCreditLock
+  } = useCredits();
 
   if (isLoading) {
     return (
@@ -28,11 +32,11 @@ const CreditBalanceBar = ({
   }
 
   // Calculate percentages for the stacked bar
-  const total = Math.max(totalCredits, 1); // Avoid division by zero
+  const total = Math.max(totalCredits, 1);
+  const purchasedPercent = (purchasedCredits / total) * 100;
+  const bonusPercent = (bonusCredits / total) * 100;
   const passivePercent = (passiveCredits / total) * 100;
   const dailyPercent = (dailyCredits / total) * 100;
-  const bonusPercent = (bonusCredits / total) * 100;
-  const purchasedPercent = (purchasedCredits / total) * 100;
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -55,86 +59,53 @@ const CreditBalanceBar = ({
             </TooltipTrigger>
             <TooltipContent side="left" className="max-w-xs">
               <p className="text-sm">
-                Les crédits sont consommés dans l'ordre : Quotidiens → Bonus → Achetés
+                Les crédits sont consommés dans l'ordre : Quotidiens → Passif → Bonus → Achetés. Vous pouvez verrouiller certains types pour les économiser.
               </p>
             </TooltipContent>
           </Tooltip>
         </div>
       )}
       
-      {/* Stacked progress bar with animation */}
+      {/* Stacked progress bar */}
       <div className={cn(
         "relative w-full overflow-hidden rounded-full bg-muted/50",
         compact ? "h-2" : "h-4"
       )}>
-        {/* Purchased credits - Light Blue (FIRST from left) */}
+        {/* Purchased credits */}
         <motion.div 
           className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-400 to-sky-300"
           initial={{ width: 0 }}
           animate={{ width: `${purchasedPercent}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
-
-        {/* Bonus credits - Dark Blue (second) */}
+        {/* Bonus credits */}
         <motion.div 
           className="absolute top-0 h-full bg-gradient-to-r from-blue-600 to-blue-500"
           initial={{ width: 0 }}
-          animate={{ 
-            left: `${purchasedPercent}%`,
-            width: `${bonusPercent}%` 
-          }}
+          animate={{ left: `${purchasedPercent}%`, width: `${bonusPercent}%` }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
         />
-        
-        {/* Daily credits - Green (third) */}
-        <motion.div 
-          className="absolute top-0 h-full bg-gradient-to-r from-green-500 to-green-400"
-          initial={{ width: 0 }}
-          animate={{ 
-            left: `${purchasedPercent + bonusPercent}%`,
-            width: `${dailyPercent}%` 
-          }}
-          transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
-        />
-        
-        {/* Passive credits - Yellow/Gold (last - used first) */}
+        {/* Passive credits */}
         <motion.div 
           className="absolute top-0 h-full bg-gradient-to-r from-amber-400 to-yellow-300"
           initial={{ width: 0 }}
-          animate={{ 
-            left: `${purchasedPercent + bonusPercent + dailyPercent}%`,
-            width: `${passivePercent}%` 
-          }}
+          animate={{ left: `${purchasedPercent + bonusPercent}%`, width: `${passivePercent}%` }}
+          transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
+        />
+        {/* Daily credits */}
+        <motion.div 
+          className="absolute top-0 h-full bg-gradient-to-r from-green-500 to-green-400"
+          initial={{ width: 0 }}
+          animate={{ left: `${purchasedPercent + bonusPercent + passivePercent}%`, width: `${dailyPercent}%` }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.3 }}
         />
-
-        {/* Shine effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
       {/* Credit breakdown details */}
       {!compact && showDetails && (
         <div className="space-y-2">
-          {/* Passive credits - always show */}
-          <div className="flex items-center justify-between p-2 rounded-lg bg-amber-400/10 border border-amber-400/20">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-amber-400" />
-              <div>
-                <span className="text-sm font-medium">Passif</span>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  +0.1 toutes les 2h (utilisé en premier)
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-sm font-bold tabular-nums text-amber-600 dark:text-amber-400">
-                {passiveCredits.toFixed(1)}/1.0
-              </span>
-            </div>
-          </div>
-
-          {/* Daily credits detail - always show */}
+          {/* Daily credits - NOT lockable */}
           <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/10 border border-green-500/20">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500" />
@@ -142,78 +113,155 @@ const CreditBalanceBar = ({
                 <span className="text-sm font-medium">Quotidien</span>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  Rechargement automatique à minuit
+                  Rechargement automatique (toujours actif)
                 </p>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-sm font-bold tabular-nums text-green-600 dark:text-green-400">
-                {dailyCredits.toFixed(1)}/{maxDailyCredits.toFixed(1)}
+            <span className="text-sm font-bold tabular-nums text-green-600 dark:text-green-400">
+              {dailyCredits.toFixed(1)}/{maxDailyCredits.toFixed(1)}
+            </span>
+          </div>
+
+          {/* Passive credits - lockable */}
+          <div className={cn(
+            "flex items-center justify-between p-2 rounded-lg border transition-colors",
+            lockPassive 
+              ? "bg-amber-400/5 border-amber-400/10 opacity-70" 
+              : "bg-amber-400/10 border-amber-400/20"
+          )}>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-amber-400" />
+              <div>
+                <span className="text-sm font-medium">Passif</span>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  +0.1 toutes les 6h
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                {passiveCredits.toFixed(1)}/10.0
               </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5">
+                    {lockPassive ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
+                    <Switch 
+                      checked={!lockPassive}
+                      onCheckedChange={(checked) => toggleCreditLock('lock_passive', !checked)}
+                      className="scale-75"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p className="text-xs">{lockPassive ? 'Crédits passifs verrouillés (non utilisés)' : 'Crédits passifs actifs'}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
 
-          {/* Bonus credits */}
-          {bonusCredits > 0 && (
-            <div className="flex items-center justify-between p-2 rounded-lg bg-blue-600/10 border border-blue-600/20">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-600" />
-                <div>
-                  <span className="text-sm font-medium">Bonus</span>
-                  <p className="text-xs text-muted-foreground">
-                    Inscription, vérification, parrainage
-                  </p>
-                </div>
+          {/* Bonus credits - lockable */}
+          <div className={cn(
+            "flex items-center justify-between p-2 rounded-lg border transition-colors",
+            lockBonus
+              ? "bg-blue-600/5 border-blue-600/10 opacity-70"
+              : "bg-blue-600/10 border-blue-600/20"
+          )}>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-600" />
+              <div>
+                <span className="text-sm font-medium">Bonus</span>
+                <p className="text-xs text-muted-foreground">
+                  Inscription, vérification, parrainage
+                </p>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
               <span className="text-sm font-bold tabular-nums text-blue-600 dark:text-blue-400">
                 {bonusCredits.toFixed(1)}
               </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5">
+                    {lockBonus ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
+                    <Switch 
+                      checked={!lockBonus}
+                      onCheckedChange={(checked) => toggleCreditLock('lock_bonus', !checked)}
+                      className="scale-75"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p className="text-xs">{lockBonus ? 'Crédits bonus verrouillés (non utilisés)' : 'Crédits bonus actifs'}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-          )}
+          </div>
 
-          {/* Purchased credits */}
-          {purchasedCredits > 0 && (
-            <div className="flex items-center justify-between p-2 rounded-lg bg-sky-400/10 border border-sky-400/20">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-sky-400" />
-                <div>
-                  <span className="text-sm font-medium">Achetés</span>
-                  <p className="text-xs text-muted-foreground">
-                    Crédits achetés via Revolut
-                  </p>
-                </div>
+          {/* Purchased credits - lockable */}
+          <div className={cn(
+            "flex items-center justify-between p-2 rounded-lg border transition-colors",
+            lockPurchased
+              ? "bg-sky-400/5 border-sky-400/10 opacity-70"
+              : "bg-sky-400/10 border-sky-400/20"
+          )}>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-sky-400" />
+              <div>
+                <span className="text-sm font-medium">Achetés</span>
+                <p className="text-xs text-muted-foreground">
+                  Crédits achetés via Revolut
+                </p>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
               <span className="text-sm font-bold tabular-nums text-sky-500 dark:text-sky-400">
                 {purchasedCredits.toFixed(1)}
               </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5">
+                    {lockPurchased ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
+                    <Switch 
+                      checked={!lockPurchased}
+                      onCheckedChange={(checked) => toggleCreditLock('lock_purchased', !checked)}
+                      className="scale-75"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p className="text-xs">{lockPurchased ? 'Crédits achetés verrouillés (non utilisés)' : 'Crédits achetés actifs'}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-          )}
+          </div>
         </div>
       )}
 
       {/* Simple Legend for compact mode */}
       {compact && totalCredits > 0 && (
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-          {passiveCredits > 0 && (
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-amber-400" />
-              <span>Passif: {passiveCredits.toFixed(1)}/1.0</span>
-            </div>
-          )}
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-green-500" />
             <span>Quotidien: {dailyCredits.toFixed(1)}/{maxDailyCredits}</span>
           </div>
+          {passiveCredits > 0 && (
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-amber-400" />
+              <span>Passif: {passiveCredits.toFixed(1)}/10.0{lockPassive ? ' 🔒' : ''}</span>
+            </div>
+          )}
           {bonusCredits > 0 && (
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-blue-600" />
-              <span>Bonus: {bonusCredits.toFixed(1)}</span>
+              <span>Bonus: {bonusCredits.toFixed(1)}{lockBonus ? ' 🔒' : ''}</span>
             </div>
           )}
           {purchasedCredits > 0 && (
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-sky-400" />
-              <span>Achetés: {purchasedCredits.toFixed(1)}</span>
+              <span>Achetés: {purchasedCredits.toFixed(1)}{lockPurchased ? ' 🔒' : ''}</span>
             </div>
           )}
         </div>
