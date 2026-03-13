@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
@@ -48,15 +48,25 @@ interface ProfileViewProps {
   onNavigateToChatbot?: () => void;
   isAdmin?: boolean;
   isModerator?: boolean;
+  openEditProfile?: boolean;
+  onEditProfileHandled?: () => void;
 }
 
-const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, onNavigateToChatbot, isAdmin, isModerator }: ProfileViewProps) => {
+const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, onNavigateToChatbot, isAdmin, isModerator, openEditProfile, onEditProfileHandled }: ProfileViewProps) => {
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
   const { favorites } = useUserFavorites();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const featureFlags = useFeatureFlags();
+
+  // Open edit dialog when triggered from notification redirect
+  useEffect(() => {
+    if (openEditProfile) {
+      setShowEditDialog(true);
+      onEditProfileHandled?.();
+    }
+  }, [openEditProfile, onEditProfileHandled]);
 
   if (!profile) {
     return (

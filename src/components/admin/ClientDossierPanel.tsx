@@ -172,9 +172,22 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
           type: 'system',
           title: '📱 Numéro de téléphone requis',
           message: 'Pour assurer la sécurité de ton compte et te permettre de bénéficier d\'une assistance personnalisée, merci d\'ajouter ton numéro de téléphone dans les paramètres de ton profil. Cette information est indispensable pour que notre équipe puisse vérifier ton identité lors de demandes de support.',
+          action_url: '/?tab=profile&editProfile=true',
           is_read: false,
         });
       if (error) throw error;
+
+      // Also send push notification
+      const { sendPushNotification } = await import('@/services/pushNotificationService');
+      await sendPushNotification({
+        userId,
+        title: '📱 Numéro de téléphone requis',
+        body: 'Ajoute ton numéro de téléphone dans ton profil pour sécuriser ton compte.',
+        url: '/?tab=profile&editProfile=true',
+        tag: 'phone-required',
+        notificationType: 'system',
+      });
+
       toast.success('Notification envoyée au client');
     } catch (err: any) {
       toast.error('Erreur lors de l\'envoi de la notification');

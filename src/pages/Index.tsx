@@ -88,6 +88,7 @@ const Index = () => {
   const [showGroupPicker, setShowGroupPicker] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [openEditProfile, setOpenEditProfile] = useState(false);
   const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
   const { data: isAdmin } = useIsAdmin();
   const featureFlags = useFeatureFlags();
@@ -124,8 +125,9 @@ const Index = () => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get('tab') as NavTab | null;
     const showVerif = params.get('showVerification');
+    const editProfile = params.get('editProfile');
     
-    if (tabParam || showVerif) {
+    if (tabParam || showVerif || editProfile) {
       // Clean URL
       window.history.replaceState({}, '', '/');
       
@@ -134,6 +136,9 @@ const Index = () => {
       }
       if (showVerif === 'true') {
         setShowVerificationDialog(true);
+      }
+      if (editProfile === 'true') {
+        setOpenEditProfile(true);
       }
     }
   }, [location.search, user]);
@@ -593,6 +598,8 @@ const Index = () => {
                 onNavigateToChatbot={() => setCurrentView('chatbot-config')}
                 isAdmin={isAdmin}
                 isModerator={isModerator}
+                openEditProfile={openEditProfile}
+                onEditProfileHandled={() => setOpenEditProfile(false)}
               />
             </ScrollArea>
           </div>
