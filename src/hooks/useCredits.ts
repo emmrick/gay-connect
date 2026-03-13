@@ -196,10 +196,25 @@ export const useCredits = () => {
     staleTime: 30_000,
   });
 
-  // Check if user has enough credits
-  const hasEnoughCredits = (amount: number): boolean => {
+  // Calculate available (unlocked) credits
+  const availableCredits = (() => {
+    if (!query.data) return 0;
+    let available = query.data.daily_credits;
+    if (!query.data.lock_passive) available += query.data.passive_credits;
+    if (!query.data.lock_bonus) available += query.data.bonus_credits;
+    if (!query.data.lock_purchased) available += query.data.purchased_credits;
+    return available;
+  })();
+
+  // Check if some credits are locked
+  const hasLockedCredits = (() => {
     if (!query.data) return false;
-    return query.data.total_credits >= amount;
+    return query.data.lock_passive || query.data.lock_bonus || query.data.lock_purchased;
+  })();
+
+  // Check if user has enough unlocked credits
+  const hasEnoughCredits = (amount: number): boolean => {
+    return availableCredits >= amount;
   };
 
   // Check credits for a specific action
@@ -387,6 +402,9 @@ export const useCredits = () => {
     lockBonus: query.data?.lock_bonus || false,
     lockPurchased: query.data?.lock_purchased || false,
     toggleCreditLock,
+    // Available credits (unlocked only)
+    availableCredits,
+    hasLockedCredits,
     // Checks
     hasEnoughCredits,
     canPerformAction,

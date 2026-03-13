@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import InsufficientCreditsDialog from '@/components/credits/InsufficientCreditsDialog';
+import { useCredits } from '@/hooks/useCredits';
 
 interface CreditDialogContextType {
   showInsufficientCreditsDialog: (requiredCredits: number, actionName: string) => void;
@@ -23,6 +24,7 @@ export const CreditDialogProvider = ({ children }: CreditDialogProviderProps) =>
   const [isOpen, setIsOpen] = useState(false);
   const [requiredCredits, setRequiredCredits] = useState(0);
   const [actionName, setActionName] = useState('');
+  const { hasLockedCredits } = useCredits();
 
   const showInsufficientCreditsDialog = useCallback((credits: number, action: string) => {
     setRequiredCredits(credits);
@@ -38,6 +40,7 @@ export const CreditDialogProvider = ({ children }: CreditDialogProviderProps) =>
         onOpenChange={setIsOpen}
         requiredCredits={requiredCredits}
         actionName={actionName}
+        hasLockedCredits={hasLockedCredits}
       />
     </CreditDialogContext.Provider>
   );
