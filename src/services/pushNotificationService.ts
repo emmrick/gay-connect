@@ -168,7 +168,7 @@ export const notifyVerificationSubmitted = async (userId: string) => {
     '📋 Demande envoyée',
     'Votre demande de vérification d\'identité a été reçue. Un modérateur l\'examinera sous peu.',
     '/?tab=profile',
-    { notificationType: 'verification' }
+    { notificationType: 'verification', url: '/?tab=profile' }
   );
 };
 
