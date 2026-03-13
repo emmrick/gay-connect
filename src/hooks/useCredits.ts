@@ -65,6 +65,9 @@ export interface UserCredits {
   total_credits: number;
   max_daily_credits: number;
   daily_credits_reset_date: string;
+  lock_passive: boolean;
+  lock_bonus: boolean;
+  lock_purchased: boolean;
 }
 
 export interface CreditTransaction {
@@ -357,6 +360,16 @@ export const useCredits = () => {
     };
   };
 
+  // Toggle credit lock
+  const toggleCreditLock = async (lockType: 'lock_passive' | 'lock_bonus' | 'lock_purchased', value: boolean) => {
+    if (!user?.id) return;
+    await supabase
+      .from('user_credits')
+      .update({ [lockType]: value })
+      .eq('user_id', user.id);
+    queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+  };
+
   return {
     credits: query.data,
     isLoading: query.isLoading,
@@ -369,6 +382,11 @@ export const useCredits = () => {
     purchasedCredits: query.data?.purchased_credits || 0,
     totalCredits: query.data?.total_credits || 0,
     maxDailyCredits: query.data?.max_daily_credits || 5,
+    // Lock states
+    lockPassive: query.data?.lock_passive || false,
+    lockBonus: query.data?.lock_bonus || false,
+    lockPurchased: query.data?.lock_purchased || false,
+    toggleCreditLock,
     // Checks
     hasEnoughCredits,
     canPerformAction,
