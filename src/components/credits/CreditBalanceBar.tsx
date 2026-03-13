@@ -106,18 +106,18 @@ const CreditBalanceBar = ({
       {!compact && showDetails && (
         <div className="space-y-2">
           {/* Daily credits - NOT lockable */}
-          <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/10 border border-green-500/20">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
-              <div>
+          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-3 h-3 rounded-full bg-green-500 shrink-0" />
+              <div className="min-w-0">
                 <span className="text-sm font-medium">Quotidien</span>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  Rechargement automatique (toujours actif)
+                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3 shrink-0" />
+                  <span className="truncate">Rechargement auto (actif)</span>
                 </p>
               </div>
             </div>
-            <span className="text-sm font-bold tabular-nums text-green-600 dark:text-green-400">
+            <span className="text-sm font-bold tabular-nums text-green-600 dark:text-green-400 shrink-0">
               {dailyCredits.toFixed(1)}/{maxDailyCredits.toFixed(1)}
             </span>
           </div>
