@@ -154,77 +154,59 @@ const CreditBalanceBar = ({
 
           {/* Bonus credits - lockable */}
           <div className={cn(
-            "flex items-center justify-between p-2 rounded-lg border transition-colors",
+            "flex items-center justify-between gap-2 p-2 rounded-lg border transition-colors",
             lockBonus
               ? "bg-blue-600/5 border-blue-600/10 opacity-70"
               : "bg-blue-600/10 border-blue-600/20"
           )}>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-600" />
-              <div>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-3 h-3 rounded-full bg-blue-600 shrink-0" />
+              <div className="min-w-0">
                 <span className="text-sm font-medium">Bonus</span>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground truncate">
                   Inscription, vérification, parrainage
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold tabular-nums text-blue-600 dark:text-blue-400">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs font-bold tabular-nums text-blue-600 dark:text-blue-400">
                 {bonusCredits.toFixed(1)}
               </span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5">
-                    {lockBonus ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
-                    <Switch 
-                      checked={!lockBonus}
-                      onCheckedChange={(checked) => toggleCreditLock('lock_bonus', !checked)}
-                      className="scale-75"
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p className="text-xs">{lockBonus ? 'Crédits bonus verrouillés (non utilisés)' : 'Crédits bonus actifs'}</p>
-                </TooltipContent>
-              </Tooltip>
+              {lockBonus ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
+              <Switch 
+                checked={!lockBonus}
+                onCheckedChange={(checked) => toggleCreditLock('lock_bonus', !checked)}
+                className="scale-[0.65]"
+              />
             </div>
           </div>
 
           {/* Purchased credits - lockable */}
           <div className={cn(
-            "flex items-center justify-between p-2 rounded-lg border transition-colors",
+            "flex items-center justify-between gap-2 p-2 rounded-lg border transition-colors",
             lockPurchased
               ? "bg-sky-400/5 border-sky-400/10 opacity-70"
               : "bg-sky-400/10 border-sky-400/20"
           )}>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-sky-400" />
-              <div>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-3 h-3 rounded-full bg-sky-400 shrink-0" />
+              <div className="min-w-0">
                 <span className="text-sm font-medium">Achetés</span>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground truncate">
                   Crédits achetés via Revolut
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold tabular-nums text-sky-500 dark:text-sky-400">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs font-bold tabular-nums text-sky-500 dark:text-sky-400">
                 {purchasedCredits.toFixed(1)}
               </span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5">
-                    {lockPurchased ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
-                    <Switch 
-                      checked={!lockPurchased}
-                      onCheckedChange={(checked) => toggleCreditLock('lock_purchased', !checked)}
-                      className="scale-75"
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p className="text-xs">{lockPurchased ? 'Crédits achetés verrouillés (non utilisés)' : 'Crédits achetés actifs'}</p>
-                </TooltipContent>
-              </Tooltip>
+              {lockPurchased ? <Lock className="w-3 h-3 text-muted-foreground" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
+              <Switch 
+                checked={!lockPurchased}
+                onCheckedChange={(checked) => toggleCreditLock('lock_purchased', !checked)}
+                className="scale-[0.65]"
+              />
             </div>
           </div>
         </div>
