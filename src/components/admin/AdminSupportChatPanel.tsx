@@ -138,14 +138,6 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   if (!isMobile) {
     return (
       <div className="flex gap-4 w-full max-w-7xl mx-auto">
-        {/* Left: Mission panel */}
-        <div className="w-[340px] shrink-0">
-          <div className="sticky top-4">
-            <TaskQueuePopup onNavigateToSection={onNavigateToSection || (() => {})} />
-          </div>
-        </div>
-
-        {/* Center: Chat */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-col h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
             {/* Client info header */}
