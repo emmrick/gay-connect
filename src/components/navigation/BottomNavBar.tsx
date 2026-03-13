@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { MessageCircle, User, Home, Crown, Sparkles, HelpCircle } from 'lucide-react';
+import { MessageCircle, User, Home, Coins, Sparkles, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 
@@ -11,15 +11,15 @@ interface BottomNavBarProps {
 }
 
 const allTabs = [
-  { id: 'home' as const, icon: Home, label: 'Accueil', premium: false, featureKey: null },
-  { id: 'swipe' as const, icon: Sparkles, label: 'Swipe', premium: false, featureKey: 'swipe_page' },
-  { id: 'messages' as const, icon: MessageCircle, label: 'Messages', premium: false, featureKey: null },
-  { id: 'premium' as const, icon: Crown, label: 'Crédits', premium: true, featureKey: 'credits_page' },
-  { id: 'help' as const, icon: HelpCircle, label: 'Aide', premium: false, featureKey: null },
-  { id: 'profile' as const, icon: User, label: 'Profil', premium: false, featureKey: null },
+  { id: 'home' as const, icon: Home, label: 'Accueil', featureKey: null },
+  { id: 'swipe' as const, icon: Sparkles, label: 'Swipe', featureKey: 'swipe_page' },
+  { id: 'messages' as const, icon: MessageCircle, label: 'Messages', featureKey: null },
+  { id: 'premium' as const, icon: Coins, label: 'Crédits', featureKey: 'credits_page' },
+  { id: 'help' as const, icon: HelpCircle, label: 'Aide', featureKey: null },
+  { id: 'profile' as const, icon: User, label: 'Profil', featureKey: null },
 ] as const;
 
-const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium = false }: BottomNavBarProps) => {
+const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0 }: BottomNavBarProps) => {
   const featureFlags = useFeatureFlags();
   const messageBadge = unreadCount > 0 ? unreadCount : undefined;
 
@@ -57,19 +57,13 @@ const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium 
                   className={cn(
                     "relative flex flex-col items-center justify-center gap-1 flex-1 h-full py-2 transition-colors duration-150 active:scale-95",
                     isActive
-                      ? tab.premium ? "text-amber-500" : "text-primary"
-                      : "text-muted-foreground active:text-foreground",
-                    tab.premium && !isActive && "text-amber-500/50"
+                      ? "text-primary"
+                      : "text-muted-foreground active:text-foreground"
                   )}
                 >
-                  {/* Active background pill – pure CSS, no layoutId animation */}
+                  {/* Active background pill */}
                   {isActive && (
-                    <div
-                      className={cn(
-                        "absolute inset-x-2 inset-y-1 rounded-xl transition-all duration-150",
-                        tab.premium ? "bg-amber-500/15" : "bg-primary/15"
-                      )}
-                    />
+                    <div className="absolute inset-x-2 inset-y-1 rounded-xl bg-primary/15 transition-all duration-150" />
                   )}
                   
                   <div className="relative z-10 flex items-center justify-center">
