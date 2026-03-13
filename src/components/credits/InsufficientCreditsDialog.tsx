@@ -136,25 +136,31 @@ const InsufficientCreditsDialog = ({
         </AlertDialogHeader>
         
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col mt-4">
-          <Button
-            className="w-full justify-center gap-2 bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600"
-            onClick={() => {
-              onOpenChange(false);
-              window.location.href = '/?tab=credits';
-            }}
-          >
-            <ShoppingCart className="w-4 h-4" />
-            Acheter des crédits
-          </Button>
-          
-          {!isCompletelyOut && (
-            <AlertDialogCancel className="w-full">Annuler</AlertDialogCancel>
+          {hasCreditsButLocked ? (
+            <AlertDialogCancel className="w-full">Compris</AlertDialogCancel>
+          ) : (
+            <>
+              <Button
+                className="w-full justify-center gap-2 bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600"
+                onClick={() => {
+                  onOpenChange(false);
+                  window.location.href = '/?tab=credits';
+                }}
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Acheter des crédits
+              </Button>
+              
+              {!isCompletelyOut && (
+                <AlertDialogCancel className="w-full">Annuler</AlertDialogCancel>
+              )}
+              
+              <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+                <Clock className="w-3 h-3" />
+                {maxDailyCredits} crédits gratuits se rechargent automatiquement à minuit
+              </p>
+            </>
           )}
-          
-          <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
-            <Clock className="w-3 h-3" />
-            {maxDailyCredits} crédits gratuits se rechargent automatiquement à minuit
-          </p>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
