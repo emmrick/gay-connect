@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
