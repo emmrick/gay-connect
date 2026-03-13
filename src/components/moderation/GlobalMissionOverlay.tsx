@@ -415,7 +415,8 @@ const GlobalMissionOverlay = () => {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-2 left-0 right-0 mx-auto w-[90vw] max-w-md z-[60]"
+            className="fixed top-2 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md z-[60]"
+            style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
           >
             <div className="rounded-xl border border-primary/30 bg-card shadow-lg p-3 sm:p-4 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
