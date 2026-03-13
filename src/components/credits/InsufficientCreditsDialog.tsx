@@ -17,6 +17,7 @@ interface InsufficientCreditsDialogProps {
   onOpenChange: (open: boolean) => void;
   requiredCredits: number;
   actionName: string;
+  hasLockedCredits?: boolean;
 }
 
 const InsufficientCreditsDialog = ({

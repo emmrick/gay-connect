@@ -402,6 +402,9 @@ export const useCredits = () => {
     lockBonus: query.data?.lock_bonus || false,
     lockPurchased: query.data?.lock_purchased || false,
     toggleCreditLock,
+    // Available credits (unlocked only)
+    availableCredits,
+    hasLockedCredits,
     // Checks
     hasEnoughCredits,
     canPerformAction,
