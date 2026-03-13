@@ -25,10 +25,12 @@ const InsufficientCreditsDialog = ({
   onOpenChange,
   requiredCredits,
   actionName,
+  hasLockedCredits = false,
 }: InsufficientCreditsDialogProps) => {
-  const { totalCredits, dailyCredits, maxDailyCredits } = useCredits();
-  const missing = requiredCredits - totalCredits;
-  const isCompletelyOut = totalCredits <= 0;
+  const { totalCredits, dailyCredits, maxDailyCredits, availableCredits } = useCredits();
+  const missing = requiredCredits - (availableCredits ?? totalCredits);
+  const isCompletelyOut = (availableCredits ?? totalCredits) <= 0;
+  const hasCreditsButLocked = hasLockedCredits && totalCredits >= requiredCredits && (availableCredits ?? 0) < requiredCredits;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
