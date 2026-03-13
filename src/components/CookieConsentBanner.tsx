@@ -68,42 +68,31 @@ const CookieConsentBanner = () => {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6"
+        className="fixed bottom-0 left-0 right-0 z-[100] p-3 md:p-4"
       >
-        <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+        <div className="max-w-lg mx-auto bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="p-5 pb-3">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <Cookie className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-display font-bold text-base text-foreground">
-                  🍪 Utilisation des cookies
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Gay Connect utilise des cookies et le stockage local pour assurer le bon fonctionnement 
-                  du site et mémoriser vos préférences. Nous n'utilisons <strong>aucun cookie publicitaire 
-                  ni traceur tiers</strong>.{' '}
-                  <button 
-                    onClick={() => {
-                      // Navigate to cookie policy - handled via window.location to avoid router dependency
-                      window.location.href = '/legal#cookies';
-                    }}
-                    className="text-primary hover:underline"
-                  >
-                    En savoir plus
-                  </button>
-                </p>
-              </div>
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-center gap-2">
+              <Cookie className="w-4 h-4 text-primary flex-shrink-0" />
+              <h3 className="font-semibold text-sm text-foreground">🍪 Cookies</h3>
             </div>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              Cookies techniques et fonctionnels uniquement, <strong>aucun traceur tiers</strong>.{' '}
+              <button 
+                onClick={() => { window.location.href = '/legal#cookies'; }}
+                className="text-primary hover:underline"
+              >
+                En savoir plus
+              </button>
+            </p>
           </div>
 
           {/* Details toggle */}
-          <div className="px-5">
+          <div className="px-4">
             <button
               onClick={() => setShowDetails(!showDetails)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
             >
               {showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
               Personnaliser mes choix
@@ -117,41 +106,38 @@ const CookieConsentBanner = () => {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="py-3 space-y-3">
-                    {/* Essential - always on */}
-                    <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/50">
+                  <div className="py-2 space-y-2">
+                    <label className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
                       <div>
-                        <p className="text-sm font-medium text-foreground">Essentiels</p>
-                        <p className="text-xs text-muted-foreground">Authentification, session, sécurité</p>
+                        <p className="text-xs font-medium text-foreground">Essentiels</p>
+                        <p className="text-[11px] text-muted-foreground">Auth, session, sécurité</p>
                       </div>
-                      <div className="text-xs text-muted-foreground italic">Obligatoire</div>
+                      <div className="text-[11px] text-muted-foreground italic">Obligatoire</div>
                     </label>
 
-                    {/* Preferences */}
-                    <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer">
+                    <label className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50 cursor-pointer">
                       <div>
-                        <p className="text-sm font-medium text-foreground">Préférences</p>
-                        <p className="text-xs text-muted-foreground">Thème, langue, navigation mémorisée</p>
+                        <p className="text-xs font-medium text-foreground">Préférences</p>
+                        <p className="text-[11px] text-muted-foreground">Thème, langue, navigation</p>
                       </div>
                       <input
                         type="checkbox"
                         checked={preferences.preferences}
                         onChange={(e) => setPreferences(p => ({ ...p, preferences: e.target.checked }))}
-                        className="w-4 h-4 rounded accent-primary"
+                        className="w-3.5 h-3.5 rounded accent-primary"
                       />
                     </label>
 
-                    {/* Analytics */}
-                    <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer">
+                    <label className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50 cursor-pointer">
                       <div>
-                        <p className="text-sm font-medium text-foreground">Statistiques anonymes</p>
-                        <p className="text-xs text-muted-foreground">Amélioration du service (aucun tiers)</p>
+                        <p className="text-xs font-medium text-foreground">Statistiques anonymes</p>
+                        <p className="text-[11px] text-muted-foreground">Amélioration du service</p>
                       </div>
                       <input
                         type="checkbox"
                         checked={preferences.analytics}
                         onChange={(e) => setPreferences(p => ({ ...p, analytics: e.target.checked }))}
-                        className="w-4 h-4 rounded accent-primary"
+                        className="w-3.5 h-3.5 rounded accent-primary"
                       />
                     </label>
                   </div>
@@ -161,7 +147,7 @@ const CookieConsentBanner = () => {
           </div>
 
           {/* Buttons */}
-          <div className="p-5 pt-3 flex flex-col sm:flex-row gap-2">
+          <div className="px-4 pb-3 pt-2 flex gap-2">
             <Button
               variant="outline"
               size="sm"
