@@ -165,7 +165,7 @@ const CreditsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <CreditBalanceBar showLabel={false} showDetails={false} compact />
+          <CreditBalanceBar showLabel={false} showDetails={true} />
           <div className="grid grid-cols-4 gap-2 mt-3">
             {creditBreakdown.map((item, i) => (
               <motion.div
