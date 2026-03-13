@@ -60,6 +60,14 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
   const [showEditDialog, setShowEditDialog] = useState(false);
   const featureFlags = useFeatureFlags();
 
+  // Open edit dialog when triggered from notification redirect
+  useEffect(() => {
+    if (openEditProfile) {
+      setShowEditDialog(true);
+      onEditProfileHandled?.();
+    }
+  }, [openEditProfile, onEditProfileHandled]);
+
   if (!profile) {
     return (
       <div className="flex items-center justify-center h-64">
