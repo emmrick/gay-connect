@@ -106,12 +106,11 @@ const CookieConsentBanner = () => {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="py-3 space-y-3">
-                    {/* Essential - always on */}
-                    <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/50">
+                  <div className="py-2 space-y-2">
+                    <label className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
                       <div>
-                        <p className="text-sm font-medium text-foreground">Essentiels</p>
-                        <p className="text-xs text-muted-foreground">Authentification, session, sécurité</p>
+                        <p className="text-xs font-medium text-foreground">Essentiels</p>
+                        <p className="text-[11px] text-muted-foreground">Auth, session, sécurité</p>
                       </div>
                       <div className="text-xs text-muted-foreground italic">Obligatoire</div>
                     </label>
