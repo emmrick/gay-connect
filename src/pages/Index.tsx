@@ -88,6 +88,7 @@ const Index = () => {
   const [showGroupPicker, setShowGroupPicker] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [openEditProfile, setOpenEditProfile] = useState(false);
   const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
   const { data: isAdmin } = useIsAdmin();
   const featureFlags = useFeatureFlags();
