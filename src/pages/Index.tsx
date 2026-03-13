@@ -598,6 +598,8 @@ const Index = () => {
                 onNavigateToChatbot={() => setCurrentView('chatbot-config')}
                 isAdmin={isAdmin}
                 isModerator={isModerator}
+                openEditProfile={openEditProfile}
+                onEditProfileHandled={() => setOpenEditProfile(false)}
               />
             </ScrollArea>
           </div>
