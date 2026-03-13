@@ -117,8 +117,8 @@ const Auth = () => {
         if (error) throw error;
         
         // Google Ads conversion tracking
-        if (typeof window.gtag === 'function') {
-          window.gtag('event', 'ads_conversion_Groupes_1', {});
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'ads_conversion_Groupes_1', {});
         }
         
         if (referralValidation?.valid && referralCode) {
