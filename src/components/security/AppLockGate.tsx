@@ -30,14 +30,11 @@ const AppLockGate = ({ children }: { children: React.ReactNode }) => {
   // User has no PIN yet → show setup
   if (hasPin === false) {
     return (
-      <>
-        {children}
-        <PinSetupScreen
-          onSetup={setupPin}
-          onEnableBiometric={enableBiometric}
-          isBiometricAvailable={isBiometricAvailable}
-        />
-      </>
+      <PinSetupScreen
+        onSetup={setupPin}
+        onEnableBiometric={enableBiometric}
+        isBiometricAvailable={isBiometricAvailable}
+      />
     );
   }
 
