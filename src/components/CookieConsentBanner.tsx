@@ -68,35 +68,24 @@ const CookieConsentBanner = () => {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6"
+        className="fixed bottom-0 left-0 right-0 z-[100] p-3 md:p-4"
       >
-        <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+        <div className="max-w-lg mx-auto bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="p-5 pb-3">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <Cookie className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-display font-bold text-base text-foreground">
-                  🍪 Utilisation des cookies
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Gay Connect utilise des cookies et le stockage local pour assurer le bon fonctionnement 
-                  du site et mémoriser vos préférences. Nous n'utilisons <strong>aucun cookie publicitaire 
-                  ni traceur tiers</strong>.{' '}
-                  <button 
-                    onClick={() => {
-                      // Navigate to cookie policy - handled via window.location to avoid router dependency
-                      window.location.href = '/legal#cookies';
-                    }}
-                    className="text-primary hover:underline"
-                  >
-                    En savoir plus
-                  </button>
-                </p>
-              </div>
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-center gap-2">
+              <Cookie className="w-4 h-4 text-primary flex-shrink-0" />
+              <h3 className="font-semibold text-sm text-foreground">🍪 Cookies</h3>
             </div>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              Cookies techniques et fonctionnels uniquement, <strong>aucun traceur tiers</strong>.{' '}
+              <button 
+                onClick={() => { window.location.href = '/legal#cookies'; }}
+                className="text-primary hover:underline"
+              >
+                En savoir plus
+              </button>
+            </p>
           </div>
 
           {/* Details toggle */}
