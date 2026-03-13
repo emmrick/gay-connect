@@ -48,9 +48,11 @@ interface ProfileViewProps {
   onNavigateToChatbot?: () => void;
   isAdmin?: boolean;
   isModerator?: boolean;
+  openEditProfile?: boolean;
+  onEditProfileHandled?: () => void;
 }
 
-const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, onNavigateToChatbot, isAdmin, isModerator }: ProfileViewProps) => {
+const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, onNavigateToChatbot, isAdmin, isModerator, openEditProfile, onEditProfileHandled }: ProfileViewProps) => {
   const { profile } = useAuth();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
