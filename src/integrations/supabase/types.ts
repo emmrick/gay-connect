@@ -2757,9 +2757,6 @@ export type Database = {
           daily_credits_last_reset: string | null
           last_daily_claim: string | null
           last_passive_credit_at: string | null
-          lock_bonus: boolean
-          lock_passive: boolean
-          lock_purchased: boolean
           monthly_daily_credits_given: number | null
           monthly_reset_date: string
           passive_credits: number | null
@@ -2775,9 +2772,6 @@ export type Database = {
           daily_credits_last_reset?: string | null
           last_daily_claim?: string | null
           last_passive_credit_at?: string | null
-          lock_bonus?: boolean
-          lock_passive?: boolean
-          lock_purchased?: boolean
           monthly_daily_credits_given?: number | null
           monthly_reset_date?: string
           passive_credits?: number | null
@@ -2793,9 +2787,6 @@ export type Database = {
           daily_credits_last_reset?: string | null
           last_daily_claim?: string | null
           last_passive_credit_at?: string | null
-          lock_bonus?: boolean
-          lock_passive?: boolean
-          lock_purchased?: boolean
           monthly_daily_credits_given?: number | null
           monthly_reset_date?: string
           passive_credits?: number | null
