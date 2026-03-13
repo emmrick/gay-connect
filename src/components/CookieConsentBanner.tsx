@@ -89,10 +89,10 @@ const CookieConsentBanner = () => {
           </div>
 
           {/* Details toggle */}
-          <div className="px-5">
+          <div className="px-4">
             <button
               onClick={() => setShowDetails(!showDetails)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
             >
               {showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
               Personnaliser mes choix
