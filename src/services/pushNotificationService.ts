@@ -180,7 +180,7 @@ export const notifyVerificationApproved = async (userId: string) => {
     '✅ Vérification approuvée',
     'Félicitations ! Votre identité a été vérifiée. Vous avez maintenant accès à toutes les fonctionnalités.',
     '/?tab=profile',
-    { notificationType: 'verification' }
+    { notificationType: 'verification', url: '/?tab=profile' }
   );
 };
 
