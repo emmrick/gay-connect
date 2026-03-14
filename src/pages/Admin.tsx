@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -50,6 +50,7 @@ import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
 import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
 import FeatureTogglesPanel from '@/components/admin/FeatureTogglesPanel';
+import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -74,6 +75,8 @@ const Admin = () => {
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
+  const { data: activeTask } = useActiveTask();
+  const autoOpenedReportRef = useRef<string | null>(null);
 
   const { data: isModerator } = useQuery({
     queryKey: ['is-moderator', user?.id],
@@ -139,6 +142,26 @@ const Admin = () => {
   const { data: reports, isLoading: reportsLoading } = useAdminReports(
     selectedStatus === 'all' ? undefined : selectedStatus
   );
+
+  // Auto-open report linked to active moderation task
+  useEffect(() => {
+    if (
+      activeSection === 'reports' &&
+      activeTask?.task_type === 'report_review' &&
+      activeTask.target_entity_id &&
+      reports &&
+      reports.length > 0 &&
+      autoOpenedReportRef.current !== activeTask.target_entity_id
+    ) {
+      const matchingReport = reports.find(r => r.id === activeTask.target_entity_id);
+      if (matchingReport) {
+        setSelectedReport(matchingReport);
+        autoOpenedReportRef.current = activeTask.target_entity_id;
+      } else if (selectedStatus !== 'all') {
+        setSelectedStatus('all');
+      }
+    }
+  }, [activeSection, activeTask, reports, selectedStatus]);
 
   if (authLoading || adminLoading) {
     return (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   Flag, 
   Calendar, 
@@ -13,7 +14,10 @@ import {
   ShieldOff,
   Clock,
   AlertTriangle,
-  Euro
+  Euro,
+  Image,
+  EyeOff,
+  User
 } from 'lucide-react';
 import {
   Dialog,
@@ -47,6 +51,7 @@ import {
 import { reportReasonLabels, reportReasonDescriptions } from '@/hooks/useReports';
 import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModeratorEarnings';
 import { useLogModerationAction } from '@/hooks/useModerationActions';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ReportDetailDialogProps {
@@ -72,6 +77,7 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
   const [resolutionNotes, setResolutionNotes] = useState(report.resolution_notes || '');
   const [suspensionReason, setSuspensionReason] = useState('');
   const [selectedDuration, setSelectedDuration] = useState<SuspensionDuration>('24hours');
+  const queryClient = useQueryClient();
   
   const updateStatus = useUpdateReportStatus();
   const suspendUser = useSuspendUser();
@@ -83,6 +89,52 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
   const { data: taskRates } = useTaskRates();
   const reportRate = taskRates?.find(r => r.task_type === 'report_response')?.rate_cents || 10;
   const suspensionRate = taskRates?.find(r => r.task_type === 'user_suspension')?.rate_cents || 15;
+
+  // Fetch reported user's full profile
+  const { data: reportedProfile } = useQuery({
+    queryKey: ['admin-reported-profile', report.reported_user_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', report.reported_user_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: open,
+  });
+
+  // Fetch reported user's profile photos
+  const { data: profilePhotos, refetch: refetchPhotos } = useQuery({
+    queryKey: ['admin-profile-photos', report.reported_user_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profile_photos')
+        .select('*')
+        .eq('user_id', report.reported_user_id)
+        .order('display_order', { ascending: true });
+      return data || [];
+    },
+    enabled: open,
+  });
+
+  // Hide a photo (set is_hidden flag or delete)
+  const handleHidePhoto = async (photoId: string) => {
+    // We'll delete the photo to hide it from everyone
+    const { error } = await supabase
+      .from('profile_photos')
+      .delete()
+      .eq('id', photoId);
+    
+    if (error) {
+      toast.error('Erreur lors de la suppression de la photo');
+      return;
+    }
+    
+    toast.success('Photo supprimée du profil');
+    refetchPhotos();
+    queryClient.invalidateQueries({ queryKey: ['profile-photos'] });
+  };
 
   const handleUpdateStatus = async (status: ReportStatus) => {
     await updateStatus.mutateAsync({
@@ -253,6 +305,63 @@ const ReportDetailDialog = ({ report, open, onOpenChange }: ReportDetailDialogPr
               </div>
             </div>
           </div>
+
+          {/* Profile details for moderation */}
+          {reportedProfile && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                <User className="w-3 h-3 inline mr-1" />
+                Informations du profil
+              </Label>
+              <div className="p-3 rounded-lg bg-muted space-y-2">
+                {reportedProfile.bio && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Bio :</p>
+                    <p className="text-sm whitespace-pre-wrap">{reportedProfile.bio}</p>
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  {reportedProfile.age && <span>Âge : {reportedProfile.age} ans</span>}
+                  {reportedProfile.region && <span>• Région : {reportedProfile.region}</span>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Profile photos for moderation */}
+          {profilePhotos && profilePhotos.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                <Image className="w-3 h-3 inline mr-1" />
+                Photos du profil ({profilePhotos.length})
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {profilePhotos.map((photo) => (
+                  <div key={photo.id} className="relative group rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={photo.photo_url}
+                      alt="Photo profil"
+                      className="w-full h-24 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleHidePhoto(photo.id)}
+                      >
+                        <EyeOff className="w-3 h-3 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground italic">
+                Survolez une photo pour la supprimer du profil
+              </p>
+            </div>
+          )}
 
           {/* Reporter */}
           <div className="space-y-2">

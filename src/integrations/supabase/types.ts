@@ -3286,6 +3286,10 @@ export type Database = {
       }
       is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
       is_user_suspended: { Args: { _user_id: string }; Returns: boolean }
+      is_user_suspended_or_blocked: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       mark_messages_as_read: {
         Args: { _sender_id: string; _user_id: string }
         Returns: number

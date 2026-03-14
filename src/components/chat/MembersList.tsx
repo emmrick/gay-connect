@@ -87,7 +87,13 @@ const useGroupMembers = (roomId: string | undefined, regionCode: string) => {
         .order('last_seen', { ascending: false });
 
       if (error) throw error;
-      return profiles || [];
+      if (!profiles) return [];
+
+      // Filter out suspended/banned users
+      const checks = await Promise.all(
+        profiles.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
+      );
+      return profiles.filter((_, i) => checks[i].data !== true);
     },
     enabled: isCustomGroup && !!targetId,
     staleTime: 30_000,

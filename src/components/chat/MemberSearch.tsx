@@ -30,10 +30,16 @@ const MemberSearch = ({ onSelectUser, onClose }: MemberSearchProps) => {
         .order('is_online', { ascending: false })
         .order('last_seen', { ascending: false, nullsFirst: false })
         .order('username', { ascending: true })
-        .limit(100);
+        .limit(200);
 
       if (error) throw error;
-      return data || [];
+      if (!data) return [];
+
+      // Filter out suspended/banned users
+      const checks = await Promise.all(
+        data.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
+      );
+      return data.filter((_, i) => checks[i].data !== true);
     },
     enabled: !!user,
   });

@@ -16,7 +16,13 @@ export const useProfilesByRegion = (region: string) => {
         .order('last_seen', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      if (!data) return [];
+
+      // Filter out suspended/banned users
+      const checks = await Promise.all(
+        data.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
+      );
+      return data.filter((_, i) => checks[i].data !== true);
     },
     enabled: !!region,
     staleTime: 30_000,
