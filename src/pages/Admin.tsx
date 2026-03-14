@@ -75,6 +75,8 @@ const Admin = () => {
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
+  const { data: activeTask } = useActiveTask();
+  const autoOpenedReportRef = useRef<string | null>(null);
 
   const { data: isModerator } = useQuery({
     queryKey: ['is-moderator', user?.id],
