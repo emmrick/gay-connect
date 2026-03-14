@@ -143,6 +143,26 @@ const Admin = () => {
     selectedStatus === 'all' ? undefined : selectedStatus
   );
 
+  // Auto-open report linked to active moderation task
+  useEffect(() => {
+    if (
+      activeSection === 'reports' &&
+      activeTask?.task_type === 'report_review' &&
+      activeTask.target_entity_id &&
+      reports &&
+      reports.length > 0 &&
+      autoOpenedReportRef.current !== activeTask.target_entity_id
+    ) {
+      const matchingReport = reports.find(r => r.id === activeTask.target_entity_id);
+      if (matchingReport) {
+        setSelectedReport(matchingReport);
+        autoOpenedReportRef.current = activeTask.target_entity_id;
+      } else if (selectedStatus !== 'all') {
+        setSelectedStatus('all');
+      }
+    }
+  }, [activeSection, activeTask, reports, selectedStatus]);
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
