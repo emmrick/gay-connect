@@ -50,6 +50,7 @@ import ErrorLogsPanel from '@/components/admin/ErrorLogsPanel';
 import SecurityEventsPanel from '@/components/admin/SecurityEventsPanel';
 import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPanel';
 import FeatureTogglesPanel from '@/components/admin/FeatureTogglesPanel';
+import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
