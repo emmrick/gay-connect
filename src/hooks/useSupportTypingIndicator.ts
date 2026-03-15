@@ -75,7 +75,7 @@ export const useSupportTypingIndicator = (ticketId: string | null) => {
         type: 'broadcast',
         event: 'typing',
         payload: { user_id: user.id, username },
-      });
+      }).catch(() => {});
     },
     [user?.id]
   );
@@ -86,7 +86,7 @@ export const useSupportTypingIndicator = (ticketId: string | null) => {
       type: 'broadcast',
       event: 'stop_typing',
       payload: { user_id: user.id },
-    });
+    }).catch(() => {});
     isTypingRef.current = false;
   }, [user?.id]);
 
