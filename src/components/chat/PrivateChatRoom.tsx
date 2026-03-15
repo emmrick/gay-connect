@@ -61,6 +61,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const unblockUser = useUnblockUserAction();
   const { data: isStaffUser } = useIsStaffUser(otherUserId);
   const { isOtherTyping, startTyping, stopTyping } = usePrivateTypingIndicator(otherUserId);
+  
+  // Track active conversation for notification suppression
+  useActiveConversation(otherUserId, null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);

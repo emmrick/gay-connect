@@ -46,6 +46,9 @@ interface ChatRoomProps {
 const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, onBack, onStartPrivateChat }: ChatRoomProps) => {
   const { user } = useAuth();
   
+  // Track active conversation for notification suppression
+  useActiveConversation(null, roomId);
+  
   // Track if any overlay is open to prevent back navigation
   const [showMembers, setShowMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
