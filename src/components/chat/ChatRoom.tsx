@@ -7,6 +7,7 @@ import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { usePinnedMessages } from '@/hooks/usePinnedMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveConversation } from '@/hooks/useActiveConversation';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import EphemeralMessageRow from './EphemeralMessageRow';
