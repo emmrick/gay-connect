@@ -142,14 +142,7 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
             }
           );
 
-          // Play notification sound for incoming messages (not our own)
-          if (newMsg.sender_id !== user?.id) {
-            if (isAnnouncementChannel) {
-              playAnnouncementSoundStandalone();
-            } else {
-              playNotificationSoundStandalone();
-            }
-          }
+          // Don't play sound - user is already viewing this chat room
         }
       )
       .subscribe();
