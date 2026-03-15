@@ -133,9 +133,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
               }
             );
 
-            if (newMsg.sender_id !== user.id) {
-              playNotificationSoundStandalone();
-            }
+            // Don't play sound - user is already viewing this conversation
 
             queryClient.invalidateQueries({ queryKey: ['private-conversations', user.id] });
           }
