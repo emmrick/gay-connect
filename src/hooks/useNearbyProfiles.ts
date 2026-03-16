@@ -52,7 +52,13 @@ export const useNearbyProfiles = (
         .limit(100);
 
       if (error) throw error;
-      const profiles = (data || []).map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
+      let profiles = (data || []).map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
+
+      // Filter out suspended/blocked users
+      const checks = await Promise.all(
+        profiles.map(p => supabase.rpc('is_user_suspended_or_blocked', { _user_id: p.user_id }))
+      );
+      profiles = profiles.filter((_, i) => checks[i].data !== true);
 
       // Fetch primary photos for profiles missing avatar_url
       const missingAvatarIds = profiles.filter(p => !p.avatar_url).map(p => p.user_id);
