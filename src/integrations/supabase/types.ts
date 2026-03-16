@@ -3214,6 +3214,7 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: boolean
       }
+      cleanup_expired_suspensions: { Args: never; Returns: number }
       complete_moderation_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: Json
