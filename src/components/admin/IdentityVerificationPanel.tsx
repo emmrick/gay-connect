@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
   Shield, Eye, Check, X, Loader2, AlertTriangle, Clock,
-  User, Trash2, Euro, ZoomIn, ZoomOut, RotateCw, Maximize2, Move, RotateCcw
+  User, Trash2, Euro, ZoomIn, ZoomOut, RotateCw, Maximize2, Move, RotateCcw,
+  Brain, CalendarDays
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
