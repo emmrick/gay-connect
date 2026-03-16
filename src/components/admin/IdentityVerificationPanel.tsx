@@ -194,6 +194,7 @@ const IdentityVerificationPanel = () => {
     setSelectedVerification(verification);
     setHasViewed(false);
     setSignedUrls({ selfie: null, idFront: null, idBack: null });
+    setAiAnalysis({ isLoading: false, result: null });
     
     try {
       const getSignedUrl = async (path: string | null) => {
