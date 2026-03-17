@@ -66,6 +66,8 @@ const ProfileSettingsDrawer = ({
       <AlbumManager isOpen={showAlbumManager} onClose={() => setShowAlbumManager(false)} />
       <BlockedUsersSheet open={showBlockedUsers} onOpenChange={setShowBlockedUsers} />
       <PinManagementSheet open={showPinManagement} onOpenChange={setShowPinManagement} />
+      <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
+      <DataExportDialog open={showDataExport} onOpenChange={setShowDataExport} />
       
       {settingsType && (
         <SettingsDialog 
