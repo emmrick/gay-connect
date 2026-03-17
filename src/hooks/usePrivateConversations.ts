@@ -59,6 +59,14 @@ export const usePrivateConversations = () => {
     queryFn: async (): Promise<ConversationWithProfile[]> => {
       if (!user) return [];
 
+      // Fetch blocked users list to exclude them
+      const { data: blockedData } = await supabase
+        .from('user_personal_blocks' as any)
+        .select('blocked_id')
+        .eq('blocker_id', user.id);
+      
+      const blockedIds = new Set((blockedData as any[] || []).map((b: any) => b.blocked_id));
+
       // Get all conversations for the current user
       const { data: conversations, error } = await supabase
         .from('private_conversations')
