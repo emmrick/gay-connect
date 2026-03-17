@@ -77,10 +77,10 @@ export const usePrivateConversations = () => {
       if (error) throw error;
       if (!conversations || conversations.length === 0) return [];
 
-      // Get other user IDs
-      const otherUserIds = conversations.map(conv => 
-        conv.user1_id === user.id ? conv.user2_id : conv.user1_id
-      );
+      // Get other user IDs, filtering out blocked users
+      const otherUserIds = conversations
+        .map(conv => conv.user1_id === user.id ? conv.user2_id : conv.user1_id)
+        .filter(id => !blockedIds.has(id));
 
       // Fetch profiles for other users with all status fields
       const { data: profiles } = await supabase
