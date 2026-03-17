@@ -12,6 +12,8 @@ import AlbumManager from '@/components/albums/AlbumManager';
 import ProfileEditDialog from './ProfileEditDialog';
 import BlockedUsersSheet from './BlockedUsersSheet';
 import PinManagementSheet from '@/components/security/PinManagementSheet';
+import DeleteAccountDialog from './DeleteAccountDialog';
+import DataExportDialog from './DataExportDialog';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
