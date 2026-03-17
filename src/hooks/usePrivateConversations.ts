@@ -59,6 +59,14 @@ export const usePrivateConversations = () => {
     queryFn: async (): Promise<ConversationWithProfile[]> => {
       if (!user) return [];
 
+      // Fetch blocked users list to exclude them
+      const { data: blockedData } = await supabase
+        .from('user_personal_blocks' as any)
+        .select('blocked_id')
+        .eq('blocker_id', user.id);
+      
+      const blockedIds = new Set((blockedData as any[] || []).map((b: any) => b.blocked_id));
+
       // Get all conversations for the current user
       const { data: conversations, error } = await supabase
         .from('private_conversations')
@@ -69,10 +77,10 @@ export const usePrivateConversations = () => {
       if (error) throw error;
       if (!conversations || conversations.length === 0) return [];
 
-      // Get other user IDs
-      const otherUserIds = conversations.map(conv => 
-        conv.user1_id === user.id ? conv.user2_id : conv.user1_id
-      );
+      // Get other user IDs, filtering out blocked users
+      const otherUserIds = conversations
+        .map(conv => conv.user1_id === user.id ? conv.user2_id : conv.user1_id)
+        .filter(id => !blockedIds.has(id));
 
       // Fetch profiles for other users with all status fields
       const { data: profiles } = await supabase
@@ -121,22 +129,27 @@ export const usePrivateConversations = () => {
         }
       });
 
-      const conversationsWithData: ConversationWithProfile[] = conversations.map(conv => {
-        const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
-        return {
-          ...conv,
-          otherUser: profileMap.get(otherUserId) || {
-            user_id: otherUserId,
-            username: 'Utilisateur',
-            avatar_url: null,
-            is_online: false,
-            last_seen: null,
-            hide_online_status: false,
-            hide_last_seen: false,
-          },
-          lastMessage: lastMessageMap.get(otherUserId) || undefined,
-        };
-      });
+      const conversationsWithData: ConversationWithProfile[] = conversations
+        .filter(conv => {
+          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+          return !blockedIds.has(otherUserId);
+        })
+        .map(conv => {
+          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+          return {
+            ...conv,
+            otherUser: profileMap.get(otherUserId) || {
+              user_id: otherUserId,
+              username: 'Utilisateur',
+              avatar_url: null,
+              is_online: false,
+              last_seen: null,
+              hide_online_status: false,
+              hide_last_seen: false,
+            },
+            lastMessage: lastMessageMap.get(otherUserId) || undefined,
+          };
+        });
 
       return conversationsWithData.sort((a, b) => {
         const aTime = a.lastMessage?.created_at || a.created_at;
