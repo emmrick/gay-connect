@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle, FolderLock, 
-  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock
+  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock, Trash2, Download
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import AlbumManager from '@/components/albums/AlbumManager';
 import ProfileEditDialog from './ProfileEditDialog';
 import BlockedUsersSheet from './BlockedUsersSheet';
 import PinManagementSheet from '@/components/security/PinManagementSheet';
+import DeleteAccountDialog from './DeleteAccountDialog';
+import DataExportDialog from './DataExportDialog';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
@@ -41,6 +43,8 @@ const ProfileSettingsDrawer = ({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showPinManagement, setShowPinManagement] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [showDataExport, setShowDataExport] = useState(false);
 
   const menuItems = [
     { icon: Bell, label: 'Notifications', action: () => { setOpen(false); setSettingsType('notifications'); }, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
@@ -62,6 +66,8 @@ const ProfileSettingsDrawer = ({
       <AlbumManager isOpen={showAlbumManager} onClose={() => setShowAlbumManager(false)} />
       <BlockedUsersSheet open={showBlockedUsers} onOpenChange={setShowBlockedUsers} />
       <PinManagementSheet open={showPinManagement} onOpenChange={setShowPinManagement} />
+      <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
+      <DataExportDialog open={showDataExport} onOpenChange={setShowDataExport} />
       
       {settingsType && (
         <SettingsDialog 
@@ -165,6 +171,37 @@ const ProfileSettingsDrawer = ({
                 </button>
               </>
             )}
+
+            {/* Data Management Section */}
+            <Separator className="my-4" />
+            <div className="mb-2 px-1">
+              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Mes données (RGPD)
+              </h3>
+            </div>
+            <div className="space-y-2">
+              <button
+                onClick={() => { setOpen(false); setShowDataExport(true); }}
+                className="w-full flex items-center gap-4 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-all active:scale-[0.98]"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Download className="w-5 h-5 text-blue-500" />
+                </div>
+                <span className="flex-1 text-left font-medium text-sm">Télécharger mes données</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <button
+                onClick={() => { setOpen(false); setShowDeleteAccount(true); }}
+                className="w-full flex items-center gap-4 p-3 rounded-xl bg-destructive/5 hover:bg-destructive/10 transition-all active:scale-[0.98]"
+              >
+                <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-destructive" />
+                </div>
+                <span className="flex-1 text-left font-medium text-sm text-destructive">Supprimer mon compte</span>
+                <ChevronRight className="w-4 h-4 text-destructive/60" />
+              </button>
+            </div>
 
             <Separator className="my-4" />
 
