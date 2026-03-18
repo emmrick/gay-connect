@@ -573,6 +573,39 @@ export type Database = {
         }
         Relationships: []
       }
+      dossier_access_requests: {
+        Row: {
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          revoked_at: string | null
+          status: string
+          target_user_id: string
+          ticket_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          revoked_at?: string | null
+          status?: string
+          target_user_id: string
+          ticket_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          revoked_at?: string | null
+          status?: string
+          target_user_id?: string
+          ticket_id?: string | null
+        }
+        Relationships: []
+      }
       ephemeral_media: {
         Row: {
           created_at: string

@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.capture-paypal-order]
 verify_jwt = false
+
+[functions.notify-mission-sms]
+verify_jwt = false
