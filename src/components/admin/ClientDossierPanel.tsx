@@ -399,7 +399,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
       )}
 
       {/* Tabs: always visible but locked sections show padlock overlay */}
-      <Tabs defaultValue={!hasPhoneNumber ? "verification" : "info"} className="w-full">
+      <Tabs defaultValue="info" className="w-full">
         <TabsList className="w-full grid grid-cols-6">
           <TabsTrigger value="verification" className="text-xs gap-1">
             <Shield className="w-3 h-3" /> Identité
