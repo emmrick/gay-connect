@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -17,7 +17,6 @@ import {
   CheckCircle, XCircle, Ban, ShieldCheck, Eye, KeyRound, Bell,
   Plus, Minus, RefreshCw, AlertCircle
 } from 'lucide-react';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 interface ClientDossierPanelProps {
   userId: string;
@@ -28,25 +27,10 @@ interface ClientDossierPanelProps {
 const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [otpId, setOtpId] = useState<string | null>(null);
-  const [otpCode, setOtpCode] = useState('');
   const [isVerified, setIsVerified] = useState(false);
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
-  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
-  const [countdown, setCountdown] = useState(0);
-  const [sendingPhoneNotif, setSendingPhoneNotif] = useState(false);
-
-  // Countdown timer for OTP expiry
-  useEffect(() => {
-    if (!otpExpiry) return;
-    const interval = setInterval(() => {
-      const remaining = Math.max(0, Math.floor((otpExpiry.getTime() - Date.now()) / 1000));
-      setCountdown(remaining);
-      if (remaining === 0) clearInterval(interval);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [otpExpiry]);
+  const [accessRequestId, setAccessRequestId] = useState<string | null>(null);
+  const [accessRequestPending, setAccessRequestPending] = useState(false);
+  const [sendingAccessRequest, setSendingAccessRequest] = useState(false);
 
   // Fetch user profile (basic info always visible)
   const { data: profile, isLoading: profileLoading } = useQuery({
