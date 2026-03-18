@@ -184,97 +184,87 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
     enabled: !!userId,
   });
 
-  const hasPhoneNumber = !!profile?.phone_number;
+  // Check for existing approved access request
+  useEffect(() => {
+    if (!user?.id || !userId) return;
 
-  // Send notification to ask user to add phone number
-  const handleSendPhoneNotification = async () => {
-    setSendingPhoneNotif(true);
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: userId,
-          type: 'system',
-          title: '📱 Numéro de téléphone requis',
-          message: 'Pour assurer la sécurité de ton compte et te permettre de bénéficier d\'une assistance personnalisée, merci d\'ajouter ton numéro de téléphone dans les paramètres de ton profil. Cette information est indispensable pour que notre équipe puisse vérifier ton identité lors de demandes de support.',
-          action_url: '/?tab=profile&editProfile=true',
-          is_read: false,
-        });
-      if (error) throw error;
-
-      // Also send push notification
-      const { sendPushNotification } = await import('@/services/pushNotificationService');
-      await sendPushNotification({
-        userId,
-        title: '📱 Numéro de téléphone requis',
-        body: 'Ajoute ton numéro de téléphone dans ton profil pour sécuriser ton compte.',
-        url: '/?tab=profile&editProfile=true',
-        tag: 'phone-required',
-        notificationType: 'system',
-      });
-
-      toast.success('Notification envoyée au client');
-    } catch (err: any) {
-      toast.error('Erreur lors de l\'envoi de la notification');
-    } finally {
-      setSendingPhoneNotif(false);
-    }
-  };
-
-  // Send OTP
-  const handleSendOTP = async () => {
-    if (!profile?.phone_number) {
-      toast.error('Ce membre n\'a pas de numéro de téléphone enregistré');
-      return;
-    }
-    setOtpSending(true);
-    try {
-      const response = await supabase.functions.invoke('send-otp-sms', {
-        body: {
-          action: 'send',
-          target_user_id: userId,
-          ticket_id: ticketId,
-          phone_number: profile.phone_number,
-        },
-      });
-
-      if (response.error) throw new Error(response.error.message);
-      const result = response.data;
-      if (result.success) {
-        setOtpId(result.otp_id);
-        setOtpExpiry(new Date(result.expires_at));
-        toast.success('Code envoyé par SMS au client');
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur envoi SMS');
-    } finally {
-      setOtpSending(false);
-    }
-  };
-
-  // Verify OTP
-  const handleVerifyOTP = async () => {
-    if (!otpId || otpCode.length !== 6) return;
-    setOtpVerifying(true);
-    try {
-      const response = await supabase.functions.invoke('send-otp-sms', {
-        body: { action: 'verify', otp_id: otpId, code: otpCode },
-      });
-
-      if (response.error) throw new Error(response.error.message);
-      const result = response.data;
-      if (result.verified) {
+    const checkAccess = async () => {
+      const { data } = await supabase
+        .from('dossier_access_requests' as any)
+        .select('*')
+        .eq('requester_id', user.id)
+        .eq('target_user_id', userId)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (data && data.length > 0) {
         setIsVerified(true);
-        toast.success('Accès au dossier client autorisé');
-      } else {
-        throw new Error(result.error || 'Code incorrect');
+        setAccessRequestId((data[0] as any).id);
       }
+    };
+    checkAccess();
+
+    // Listen for real-time updates on access requests
+    const channel = supabase
+      .channel(`dossier-access-mod-${userId}-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'dossier_access_requests',
+          filter: `requester_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const req = payload.new as any;
+          if (req.target_user_id === userId) {
+            if (req.status === 'approved') {
+              setIsVerified(true);
+              setAccessRequestId(req.id);
+              setAccessRequestPending(false);
+              toast.success('Le client a autorisé l\'accès à son dossier');
+            } else if (req.status === 'denied') {
+              setAccessRequestPending(false);
+              toast.error('Le client a refusé l\'accès à son dossier');
+            } else if (req.status === 'revoked') {
+              setIsVerified(false);
+              setAccessRequestId(null);
+              toast.info('L\'accès au dossier a été révoqué');
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, userId]);
+
+  // Send access request to client
+  const handleRequestAccess = async () => {
+    if (!user?.id) return;
+    setSendingAccessRequest(true);
+    try {
+      const { data, error } = await supabase
+        .from('dossier_access_requests' as any)
+        .insert({
+          requester_id: user.id,
+          target_user_id: userId,
+          ticket_id: ticketId || null,
+          status: 'pending',
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setAccessRequestPending(true);
+      setAccessRequestId((data as any).id);
+      toast.success('Demande d\'accès envoyée au client');
     } catch (err: any) {
-      toast.error(err.message || 'Vérification échouée');
+      toast.error(err.message || 'Erreur lors de l\'envoi de la demande');
     } finally {
-      setOtpVerifying(false);
+      setSendingAccessRequest(false);
     }
   };
 
@@ -306,13 +296,12 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
       <Lock className="w-10 h-10 text-muted-foreground/50 mb-3" />
       <p className="text-sm font-medium text-muted-foreground">Accès verrouillé</p>
       <p className="text-xs text-muted-foreground/70 mt-1 text-center max-w-[240px]">
-        Le client doit d'abord ajouter son numéro de téléphone, puis valider un code OTP.
+        Le client doit autoriser l'accès à son dossier via une confirmation sécurisée.
       </p>
     </div>
   );
 
-  // Determine if sections should be locked (no phone = locked except identity verification)
-  const isSectionLocked = !hasPhoneNumber || !isVerified;
+  const isSectionLocked = !isVerified;
 
   return (
     <div className="space-y-4">
@@ -341,11 +330,6 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 {blockedStatus?.isSuspended && (
                   <Badge variant="destructive" className="text-[10px]">Suspendu</Badge>
                 )}
-                {!hasPhoneNumber && (
-                  <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/50 text-amber-600">
-                    <Phone className="w-3 h-3" /> Pas de téléphone
-                  </Badge>
-                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 {profile.first_name} {profile.last_name} · {profile.age ? `${profile.age} ans` : 'Âge inconnu'}
@@ -358,113 +342,60 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
         </CardContent>
       </Card>
 
-      {/* No phone number: show notification button + identity verification only */}
-      {!hasPhoneNumber && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
-              <Lock className="w-4 h-4" />
-              Dossier verrouillé — Numéro de téléphone manquant
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Ce client n'a pas encore renseigné de numéro de téléphone. Toutes les actions sont verrouillées 
-              sauf la <strong>vérification d'identité</strong>. Vous pouvez lui envoyer une notification 
-              pour lui demander d'ajouter son numéro.
-            </p>
-            <Button 
-              onClick={handleSendPhoneNotification} 
-              disabled={sendingPhoneNotif}
-              variant="outline"
-              className="w-full gap-2 border-amber-500/30 hover:bg-amber-500/10"
-            >
-              {sendingPhoneNotif ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Bell className="w-4 h-4 text-amber-600" />
-              )}
-              Demander l'ajout du numéro de téléphone
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* OTP Verification Gate (only when phone exists but not yet verified) */}
-      {hasPhoneNumber && !isVerified && (
+      {/* Access Request Gate */}
+      {!isVerified && (
         <Card className="border-primary/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Lock className="w-4 h-4 text-primary" />
-              Vérification requise
+              Autorisation requise
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Pour accéder au dossier complet de ce client et effectuer des modifications, 
-              un <strong>code à 6 chiffres</strong> doit être envoyé par SMS au client. 
-              Le code est valable <strong>5 minutes</strong>.
+              Pour accéder au dossier complet de ce client, une <strong>notification pop-up</strong> sera 
+              envoyée directement sur le site du client. Il devra confirmer et saisir son <strong>code 
+              secret personnel</strong> pour vous autoriser l'accès.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              L'accès restera actif tant que la conversation est ouverte. Il sera automatiquement 
+              révoqué si la conversation est mise en attente ou fermée.
             </p>
 
-            <div className="flex items-center gap-2 text-sm bg-secondary/50 rounded-lg p-3">
-              <Phone className="w-4 h-4 text-muted-foreground" />
-              <span>SMS sera envoyé au : <strong>{profile.phone_number?.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 ** ** ** $5')}</strong></span>
-            </div>
-
-            {!otpId ? (
-              <Button onClick={handleSendOTP} disabled={otpSending} className="w-full gap-2">
-                {otpSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                Envoyer le code de vérification
-              </Button>
-            ) : (
-              <div className="space-y-3">
-                <div className="text-center">
-                  <p className="text-sm font-medium mb-1">Entrez le code communiqué par le client</p>
-                  {countdown > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Expire dans : <span className="font-mono text-primary">{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}</span>
-                    </p>
-                  )}
-                  {countdown === 0 && otpExpiry && (
-                    <p className="text-xs text-destructive">Code expiré</p>
-                  )}
-                </div>
-                <div className="flex justify-center">
-                  <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleSendOTP} 
-                    disabled={otpSending || countdown > 240}
-                    className="flex-1"
-                    size="sm"
-                  >
-                    Renvoyer
-                  </Button>
-                  <Button 
-                    onClick={handleVerifyOTP} 
-                    disabled={otpCode.length !== 6 || otpVerifying || countdown === 0}
-                    className="flex-1 gap-1"
-                    size="sm"
-                  >
-                    {otpVerifying ? <Loader2 className="w-3 h-3 animate-spin" /> : <KeyRound className="w-3 h-3" />}
-                    Vérifier
-                  </Button>
+            {accessRequestPending ? (
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <Loader2 className="w-5 h-5 animate-spin text-primary flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">En attente de confirmation...</p>
+                  <p className="text-xs text-muted-foreground">
+                    Le client doit confirmer la demande sur son écran
+                  </p>
                 </div>
               </div>
+            ) : (
+              <Button 
+                onClick={handleRequestAccess} 
+                disabled={sendingAccessRequest} 
+                className="w-full gap-2"
+              >
+                {sendingAccessRequest ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                Demander l'accès au dossier
+              </Button>
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Verified access indicator */}
+      {isVerified && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20">
+          <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+          <p className="text-xs text-primary font-medium">Accès au dossier autorisé par le client</p>
+        </div>
       )}
 
       {/* Tabs: always visible but locked sections show padlock overlay */}
