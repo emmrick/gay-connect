@@ -456,8 +456,8 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Profil détaillé</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <InfoRow label="Bio" value={profile.bio} />
-                  <InfoRow label="Orientation" value={profile.orientation} />
-                  <InfoRow label="Position" value={profile.position} />
+                  <InfoRow label="Morphologie" value={profile.body_type} />
+                  <InfoRow label="Ethnicité" value={profile.ethnicity} />
                   <InfoRow label="Recherche" value={profile.looking_for?.join(', ')} />
                   <InfoRow label="Dernière connexion" value={profile.last_seen ? formatDateTime(profile.last_seen) : null} />
                   <InfoRow label="Premium" value={profile.is_premium ? 'Oui' : 'Non'} />
