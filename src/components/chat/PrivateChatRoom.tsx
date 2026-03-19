@@ -439,7 +439,15 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                           </div>
                         )}
 
-                        {isAlbumShare && albumShareData ? (
+                        {isAlbumAccessRequest && albumAccessRequestData ? (
+                          <AlbumAccessRequestMessage
+                            albumIds={albumAccessRequestData.albumIds}
+                            albumNames={albumAccessRequestData.albumNames}
+                            requesterId={albumAccessRequestData.requesterId}
+                            isOwn={isOwn}
+                            messageId={message.id}
+                          />
+                        ) : isAlbumShare && albumShareData ? (
                           <SharedAlbumMessage
                             shareId={albumShareData.shareId}
                             albumId={albumShareData.albumId}
