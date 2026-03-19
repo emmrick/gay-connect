@@ -326,6 +326,27 @@ export const notifySupportAgentReply = async (
   agentUsername: string,
   ticketNumber: string
 ) => {
+  // Check if user is currently viewing the support page (active conversation)
+  try {
+    const { data } = await supabase
+      .from('user_active_conversations' as any)
+      .select('active_chat_room_id, updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (data) {
+      const updatedAt = new Date((data as any).updated_at);
+      const now = new Date();
+      const isRecent = now.getTime() - updatedAt.getTime() < 2 * 60 * 1000;
+      // If active_chat_room_id is 'support', user is viewing support chat
+      if (isRecent && (data as any).active_chat_room_id === 'support') {
+        return; // User is already in the support conversation, skip notification
+      }
+    }
+  } catch {
+    // Continue with notification on error
+  }
+
   await createNotificationAndPush(
     userId,
     'support_reply',
