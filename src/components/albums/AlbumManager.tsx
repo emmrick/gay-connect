@@ -149,16 +149,21 @@ const AlbumManager = ({ isOpen, onClose, initialAlbumId }: AlbumManagerProps) =>
             )}
             <div className="flex-1 min-w-0">
               <h2 className="font-bold text-lg">
-                {view === 'create' ? 'Nouvel album' : view === 'detail' && selectedAlbum ? selectedAlbum.name : 'Mes albums'}
+                {view === 'create' ? 'Nouvel album' : view === 'detail' && selectedAlbum ? selectedAlbum.name : view === 'access' ? 'Accès à mes albums' : 'Mes albums'}
               </h2>
               {view === 'list' && (
                 <p className="text-xs text-muted-foreground">{albums.length} album{albums.length !== 1 ? 's' : ''}</p>
               )}
             </div>
             {view === 'list' && (
-              <Button size="sm" className="rounded-xl gap-1.5 h-9" onClick={() => setView('create')}>
-                <Plus className="w-4 h-4" /> Créer
-              </Button>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="outline" className="rounded-xl gap-1.5 h-9" onClick={() => setView('access')}>
+                  <Shield className="w-4 h-4" /> Accès
+                </Button>
+                <Button size="sm" className="rounded-xl gap-1.5 h-9" onClick={() => setView('create')}>
+                  <Plus className="w-4 h-4" /> Créer
+                </Button>
+              </div>
             )}
             {view === 'detail' && selectedAlbumId && (
               <DropdownMenu>
