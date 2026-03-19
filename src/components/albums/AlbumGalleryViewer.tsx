@@ -96,9 +96,11 @@ const AlbumGalleryViewer = ({
 
   // Helper to close via history.back so popstate listener handles it
   const closeViewer = useCallback(() => {
+    // Always use history.back if we pushed a state, to avoid navigating away
     if (window.history.state?.albumGalleryOpen) {
       window.history.back();
     } else {
+      // Fallback: just call onClose without navigation
       onClose();
     }
   }, [onClose]);
