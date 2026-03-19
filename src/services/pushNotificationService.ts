@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { isUserViewingPrivateChat } from '@/hooks/useActiveConversation';
 
 type NotificationType = 'private_message' | 'group_message' | 'favorite' | 'reaction' | 'album_share' | 'match' | 'mention' | 'credit' | 'verification' | 'system';
 
