@@ -184,6 +184,9 @@ const Help = ({ embedded = false }: HelpProps) => {
   // Support tickets
   const { tickets, isLoading: ticketsLoading, createTicket, closeTicket } = useSupportTickets();
 
+  // Wait time estimation (real-time, polls every 30s)
+  const waitTimeData = useEstimatedWaitTime(selectedTicket?.id ?? null);
+
   // Auto-resume active ticket on mount
   useEffect(() => {
     if (hasCheckedActiveTicket || !user?.id || ticketsLoading) return;
