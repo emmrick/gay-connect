@@ -25,7 +25,7 @@ interface ProfilePhotoCarouselProps {
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 
-const ProfilePhotoCarousel = ({ photos, username, className }: ProfilePhotoCarouselProps) => {
+const ProfilePhotoCarousel = ({ photos, username, className, albumSlides = [], onAlbumClick }: ProfilePhotoCarouselProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     dragFree: false,
