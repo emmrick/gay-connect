@@ -68,7 +68,20 @@ const AlbumManager = ({ isOpen, onClose, initialAlbumId }: AlbumManagerProps) =>
     }
   }, [isOpen, initialAlbumId]);
 
-  const handleClose = useCallback(() => {
+  // Hierarchical back navigation: detail/create/access → list, list → close
+  const handleBack = useCallback(() => {
+    if (view === 'detail' || view === 'create' || view === 'access') {
+      setView('list');
+      setSelectedAlbumId(null);
+      setNewAlbumName('');
+      setNewAlbumDescription('');
+    } else {
+      onClose();
+    }
+  }, [view, onClose]);
+
+  const handleSheetClose = useCallback(() => {
+    // When sheet is dismissed (overlay click / swipe), always fully close
     setView('list');
     setSelectedAlbumId(null);
     setNewAlbumName('');
