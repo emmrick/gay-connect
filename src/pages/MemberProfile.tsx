@@ -137,6 +137,9 @@ const MemberProfile = () => {
   const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId);
   const { data: chatbotConfig } = useChatbotConfig(userId);
   const hasChatBot = chatbotConfig?.is_active === true;
+
+  // Albums for carousel integration
+  const { albums: userAlbums, useAlbumMedia } = useAlbums(userId || undefined);
   
   // Credit system for profile views
   const { data: alreadyViewed, isLoading: viewCheckLoading } = useProfileViewCheck(userId || '');
