@@ -28,6 +28,7 @@ import ChatBotDialog from '@/components/chatbot/ChatBotDialog';
 import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import BirthdayGiftButton from '@/components/profile/BirthdayGiftButton';
 import MemberProfileAlbumsSection from '@/components/albums/MemberProfileAlbumsSection';
+import AlbumPreviewBlocks from '@/components/albums/AlbumPreviewBlocks';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
