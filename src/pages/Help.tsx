@@ -959,10 +959,14 @@ const Help = ({ embedded = false }: HelpProps) => {
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
       >
         {isWaiting && (
-          <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs mb-2">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            <span>Recherche d'un agent disponible...</span>
-          </div>
+          <WaitTimeBanner
+            estimatedMinutes={waitTimeData.estimatedMinutes}
+            position={waitTimeData.position}
+            onlineModerators={waitTimeData.onlineModerators}
+            found={waitTimeData.found}
+            isLoading={waitTimeData.isLoading}
+            waitStartTime={waitStartTime}
+          />
         )}
 
         {/* Always-visible "Contact agent" button in chatbot phase */}
