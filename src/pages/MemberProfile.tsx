@@ -208,6 +208,36 @@ const MemberProfile = () => {
       ? [profile.avatar_url] 
       : [];
 
+  // Build album slides for the carousel (only for other users' profiles)
+  const isOtherUser = user?.id && userId && user.id !== userId;
+  const { data: albumCovers = [] } = useQuery({
+    queryKey: ['album-covers', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const albumIds = userAlbums.map(a => a.id);
+      if (albumIds.length === 0) return [];
+      const { data } = await supabase
+        .from('album_media')
+        .select('album_id, media_url')
+        .in('album_id', albumIds)
+        .order('created_at', { ascending: true });
+      return data || [];
+    },
+    enabled: !!isOtherUser && userAlbums.length > 0,
+  });
+
+  const albumSlides: AlbumSlide[] = isOtherUser ? userAlbums.map(album => {
+    const cover = albumCovers.find(m => m.album_id === album.id);
+    const count = albumCovers.filter(m => m.album_id === album.id).length;
+    return {
+      id: album.id,
+      name: album.name,
+      is_private: album.is_private,
+      coverUrl: cover?.media_url,
+      mediaCount: count,
+    };
+  }) : [];
+
   const getLastSeenText = () => getDetailedLastSeenText(profile);
   const isTrulyOnline = isUserTrulyOnline(profile);
 
