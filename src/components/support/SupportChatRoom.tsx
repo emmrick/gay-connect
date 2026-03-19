@@ -53,7 +53,9 @@ const formatBoldText = (text: string) => {
 
 const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideHeader = false }: SupportChatRoomProps) => {
   const { user } = useAuth();
-  
+
+  // Track that user is viewing support chat (for notification suppression)
+  useActiveConversation(null, isAgent ? null : 'support');
   // Live ticket status to detect closure in real-time
   const { data: liveTicketData } = useQuery({
     queryKey: ['live-support-ticket', initialTicket.id],
