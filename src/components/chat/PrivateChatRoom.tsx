@@ -30,6 +30,7 @@ import EphemeralMessage from './EphemeralMessage';
 import EphemeralMessageRow from './EphemeralMessageRow';
 import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
+import AlbumAccessRequestMessage from './AlbumAccessRequestMessage';
 import CreditRequestMessage from './CreditRequestMessage';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
