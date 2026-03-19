@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSupportTickets, useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
+import WaitTimeBanner from '@/components/support/WaitTimeBanner';
 
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
