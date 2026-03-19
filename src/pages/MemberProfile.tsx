@@ -427,7 +427,14 @@ const MemberProfile = () => {
             </span>
           </div>
         </motion.div>
-      </motion.div>
+        </motion.div>
+
+        {/* Album preview blocks under the photo carousel */}
+        {userId && user?.id !== userId && (
+          <div className="px-4 -mt-6 relative z-10">
+            <AlbumPreviewBlocks userId={userId} />
+          </div>
+        )}
 
       {/* Profile Content */}
       <div className="px-4 pt-4 space-y-5">
