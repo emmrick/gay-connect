@@ -127,6 +127,12 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [noMatchCount, setNoMatchCount] = useState(0);
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const [waitStartTime, setWaitStartTime] = useState<number | null>(() => {
+    try {
+      const saved = localStorage.getItem('gc-help-wait-start');
+      return saved ? parseInt(saved, 10) : null;
+    } catch { return null; }
+  });
 
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const freeTextRef = useRef<HTMLTextAreaElement>(null);
