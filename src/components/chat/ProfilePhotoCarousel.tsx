@@ -1,14 +1,25 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
-import { User, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { User, X, ChevronLeft, ChevronRight, Lock, FolderLock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GayConnectWatermark from '@/components/security/GayConnectWatermark';
+import { Badge } from '@/components/ui/badge';
+
+export interface AlbumSlide {
+  id: string;
+  name: string;
+  is_private: boolean;
+  coverUrl?: string;
+  mediaCount: number;
+}
 
 interface ProfilePhotoCarouselProps {
   photos: string[];
   username: string;
   className?: string;
+  albumSlides?: AlbumSlide[];
+  onAlbumClick?: (albumId: string) => void;
 }
 
 const MIN_SCALE = 1;
