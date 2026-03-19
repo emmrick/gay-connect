@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FolderLock, Plus, Trash2, Share2, X, Clock, ImagePlus, Loader2,
-  Users, StopCircle, ArrowLeft, Play, MoreVertical, Images, ChevronLeft
+  Users, StopCircle, ArrowLeft, Play, MoreVertical, Images, ChevronLeft, Shield, Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
