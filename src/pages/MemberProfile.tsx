@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, MessageCircle, Flag, MapPin, Ruler, Weight, Heart, Calendar, User, Shield, Star, Loader2, Ban, Sparkles, Info, Bot, Cake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,8 @@ import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import BirthdayGiftButton from '@/components/profile/BirthdayGiftButton';
 import MemberProfileAlbumsSection from '@/components/albums/MemberProfileAlbumsSection';
 import AlbumPreviewBlocks from '@/components/albums/AlbumPreviewBlocks';
+import { useAlbums } from '@/hooks/useAlbums';
+import type { AlbumSlide } from '@/components/chat/ProfilePhotoCarousel';
 
 // Labels for profile fields
 const POSITION_LABELS: Record<string, string> = {
@@ -135,6 +138,9 @@ const MemberProfile = () => {
   const { data: suspensionStatus, isLoading: suspensionLoading } = useUserSuspensionStatus(userId);
   const { data: chatbotConfig } = useChatbotConfig(userId);
   const hasChatBot = chatbotConfig?.is_active === true;
+
+  // Albums for carousel integration
+  const { albums: userAlbums, useAlbumMedia } = useAlbums(userId || undefined);
   
   // Credit system for profile views
   const { data: alreadyViewed, isLoading: viewCheckLoading } = useProfileViewCheck(userId || '');
@@ -202,6 +208,36 @@ const MemberProfile = () => {
     : profile?.avatar_url 
       ? [profile.avatar_url] 
       : [];
+
+  // Build album slides for the carousel (only for other users' profiles)
+  const isOtherUser = user?.id && userId && user.id !== userId;
+  const { data: albumCovers = [] } = useQuery({
+    queryKey: ['album-covers', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const albumIds = userAlbums.map(a => a.id);
+      if (albumIds.length === 0) return [];
+      const { data } = await supabase
+        .from('album_media')
+        .select('album_id, media_url')
+        .in('album_id', albumIds)
+        .order('created_at', { ascending: true });
+      return data || [];
+    },
+    enabled: !!isOtherUser && userAlbums.length > 0,
+  });
+
+  const albumSlides: AlbumSlide[] = isOtherUser ? userAlbums.map(album => {
+    const cover = albumCovers.find(m => m.album_id === album.id);
+    const count = albumCovers.filter(m => m.album_id === album.id).length;
+    return {
+      id: album.id,
+      name: album.name,
+      is_private: album.is_private,
+      coverUrl: cover?.media_url,
+      mediaCount: count,
+    };
+  }) : [];
 
   const getLastSeenText = () => getDetailedLastSeenText(profile);
   const isTrulyOnline = isUserTrulyOnline(profile);
@@ -350,6 +386,12 @@ const MemberProfile = () => {
           photos={allPhotos} 
           username={profile.username}
           className="aspect-[3/4] max-h-[70vh]"
+          albumSlides={albumSlides}
+          onAlbumClick={(albumId) => {
+            // Navigate to album access request section
+            const albumSection = document.getElementById('albums-section');
+            albumSection?.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
         
         {/* Gradient overlay at bottom for text readability */}
