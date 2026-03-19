@@ -7,6 +7,7 @@ import { useSupportMessages, SupportTicket } from '@/hooks/useSupportTickets';
 import { useSupportTypingIndicator } from '@/hooks/useSupportTypingIndicator';
 import { notifySupportAgentReply } from '@/services/pushNotificationService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveConversation } from '@/hooks/useActiveConversation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -52,7 +53,9 @@ const formatBoldText = (text: string) => {
 
 const SupportChatRoom = ({ ticket: initialTicket, onBack, isAgent = false, hideHeader = false }: SupportChatRoomProps) => {
   const { user } = useAuth();
-  
+
+  // Track that user is viewing support chat (for notification suppression)
+  useActiveConversation(null, isAgent ? null : 'support');
   // Live ticket status to detect closure in real-time
   const { data: liveTicketData } = useQuery({
     queryKey: ['live-support-ticket', initialTicket.id],
