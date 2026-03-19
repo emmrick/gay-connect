@@ -581,9 +581,11 @@ const Help = ({ embedded = false }: HelpProps) => {
     setFreeText('');
     setCurrentCategory(null);
     setNoMatchCount(0);
+    setWaitStartTime(null);
     agentJoinedRef.current = false;
     hasInitializedRef.current = false;
     clearPersistedState();
+    try { localStorage.removeItem('gc-help-wait-start'); } catch {}
   };
 
   const handleCloseTicket = async () => {
