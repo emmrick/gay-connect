@@ -386,6 +386,12 @@ const MemberProfile = () => {
           photos={allPhotos} 
           username={profile.username}
           className="aspect-[3/4] max-h-[70vh]"
+          albumSlides={albumSlides}
+          onAlbumClick={(albumId) => {
+            // Navigate to album access request section
+            const albumSection = document.getElementById('albums-section');
+            albumSection?.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
         
         {/* Gradient overlay at bottom for text readability */}
