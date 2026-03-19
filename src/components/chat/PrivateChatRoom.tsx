@@ -343,6 +343,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               const isEphemeralMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && !message.content.startsWith('http');
               const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && message.content.startsWith('http');
               const isAlbumShare = message.message_type === 'album_share';
+              const isAlbumAccessRequest = message.message_type === 'album_access_request';
               const isCreditRequest = message.message_type === 'credit_request';
               const isSystemScreenshot = message.message_type === 'system_screenshot';
 
@@ -351,6 +352,13 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                 try {
                   const parsed = JSON.parse(message.content);
                   albumShareData = parsed.shareId ? parsed : parsed.data || null;
+                } catch { /* ignore */ }
+              }
+
+              let albumAccessRequestData: { albumIds: string[]; albumNames: string[]; requesterId: string } | null = null;
+              if (isAlbumAccessRequest && message.content) {
+                try {
+                  albumAccessRequestData = JSON.parse(message.content);
                 } catch { /* ignore */ }
               }
 
