@@ -513,6 +513,9 @@ const Help = ({ embedded = false }: HelpProps) => {
         { type: 'system', text: 'Nous vous mettons en relation avec le prochain agent disponible. Merci de patienter...' },
       ]);
       setChatPhase('waiting_agent');
+      const now = Date.now();
+      setWaitStartTime(now);
+      try { localStorage.setItem('gc-help-wait-start', String(now)); } catch {}
 
       const history = chatMessages.map(m => ({ type: m.type, text: m.text }));
       const ticket = await createTicket.mutateAsync("Demande d'assistance");
