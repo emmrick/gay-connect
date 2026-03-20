@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { isSameDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send, Headphones, Loader2, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
