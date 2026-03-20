@@ -107,7 +107,7 @@ export const useIsAdminOrModerator = () => {
 };
 
 export const useAdminReports = (status?: ReportStatus) => {
-  const { data: isAdmin } = useIsAdmin();
+  const { data: isAdminOrMod } = useIsAdminOrModerator();
 
   return useQuery({
     queryKey: ['admin-reports', status],
