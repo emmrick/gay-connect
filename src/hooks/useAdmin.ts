@@ -89,8 +89,25 @@ export const useIsAdmin = () => {
   });
 };
 
+export const useIsAdminOrModerator = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['is-admin-or-mod', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data: admin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      if (admin === true) return true;
+      const { data: mod } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'moderator' });
+      return mod === true;
+    },
+    enabled: !!user?.id,
+    staleTime: 60000,
+  });
+};
+
 export const useAdminReports = (status?: ReportStatus) => {
-  const { data: isAdmin } = useIsAdmin();
+  const { data: isAdminOrMod } = useIsAdminOrModerator();
 
   return useQuery({
     queryKey: ['admin-reports', status],
@@ -145,7 +162,7 @@ export const useAdminReports = (status?: ReportStatus) => {
         message: report.message_id ? messageMap.get(report.message_id) || null : null,
       }));
     },
-    enabled: isAdmin === true,
+    enabled: isAdminOrMod === true,
   });
 };
 
@@ -198,7 +215,7 @@ export const useUpdateReportStatus = () => {
 };
 
 export const useReportStats = () => {
-  const { data: isAdmin } = useIsAdmin();
+  const { data: isAdminOrMod } = useIsAdminOrModerator();
 
   return useQuery({
     queryKey: ['report-stats'],
@@ -219,7 +236,7 @@ export const useReportStats = () => {
 
       return stats;
     },
-    enabled: isAdmin === true,
+    enabled: isAdminOrMod === true,
   });
 };
 
