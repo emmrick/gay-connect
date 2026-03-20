@@ -133,6 +133,11 @@ const CreditsPage = () => {
           onOpenChange={setShowClaimDialog}
         />
 
+        <AdFreeSubscriptionDialog
+          open={showAdFreeDialog}
+          onOpenChange={setShowAdFreeDialog}
+        />
+
         {/* FAQ */}
         <CreditFAQSection />
       </div>
