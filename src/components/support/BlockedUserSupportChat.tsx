@@ -170,7 +170,7 @@ const BlockedUserSupportChat = () => {
 
             {/* Wait time banner */}
             {activeTicketId && (
-              <EstimatedWaitBanner taskType="support_chat" />
+              <EstimatedWaitBanner entityId={activeTicketId} />
             )}
 
             {/* Messages */}
