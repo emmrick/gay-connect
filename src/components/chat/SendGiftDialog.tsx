@@ -62,7 +62,7 @@ const SendGiftDialog = ({ isOpen, onClose, recipientName, onSendGift, isSending 
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{selectedAmount}</span> crédit{selectedAmount > 1 ? 's' : ''} sera{selectedAmount > 1 ? 'ont' : ''} déduit{selectedAmount > 1 ? 's' : ''} de ton solde
+            <span className="font-semibold text-foreground">{selectedAmount}</span> {selectedAmount > 1 ? 'crédits seront déduits' : 'crédit sera déduit'} de ton solde
           </p>
 
           <Button
