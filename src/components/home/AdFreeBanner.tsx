@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { BanIcon, HelpCircle, X } from 'lucide-react';
+import { BanIcon, HelpCircle, X, Sparkles } from 'lucide-react';
+import AdFreeSubscriptionDialog from '@/components/ads/AdFreeSubscriptionDialog';
 
 const STORAGE_KEY = 'gc_ad_free_banner';
 
