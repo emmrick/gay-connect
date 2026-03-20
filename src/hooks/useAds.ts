@@ -72,14 +72,15 @@ export const useAdImpression = (adId: string | undefined) => {
     if (!adId || !user?.id || tracked.current.has(adId)) return;
     tracked.current.add(adId);
 
-    supabase.from('ad_impressions').insert({
-      ad_id: adId,
-      user_id: user.id,
-      page_url: window.location.pathname,
-    } as any).then(() => {
-      // Increment counter
-      supabase.rpc('increment_ad_impressions' as any, { _ad_id: adId }).catch(() => {});
-    });
+    const track = async () => {
+      await supabase.from('ad_impressions').insert({
+        ad_id: adId,
+        user_id: user.id,
+        page_url: window.location.pathname,
+      } as any);
+      await supabase.rpc('increment_ad_impressions' as any, { _ad_id: adId });
+    };
+    track().catch(() => {});
   }, [adId, user?.id]);
 };
 
