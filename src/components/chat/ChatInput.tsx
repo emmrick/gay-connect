@@ -177,7 +177,28 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
               <span className="text-[10px] text-muted-foreground">Vocal</span>
             </button>
           )}
+
+          {showPollButton && onCreatePoll && (
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => { setShowPollDialog(true); setShowOptions(false); }}
+            >
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <BarChart3 className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-[10px] text-muted-foreground">Sondage</span>
+            </button>
+          )}
         </div>
+      )}
+
+      {/* Poll creation dialog */}
+      {onCreatePoll && (
+        <CreatePollDialog
+          isOpen={showPollDialog}
+          onClose={() => setShowPollDialog(false)}
+          onCreatePoll={onCreatePoll}
+        />
       )}
 
       {/* Snap capture dialog */}
