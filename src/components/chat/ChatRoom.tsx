@@ -365,13 +365,12 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
         onNavigate={handleSearchNavigate}
       />
       
-      {/* Messages area - scrollable middle section */}
       <div 
-        className="flex-1 overflow-y-auto overscroll-contain p-4" 
+        className="flex-1 overflow-y-auto overscroll-contain" 
         ref={scrollRef}
         onScroll={handleScroll}
       >
-        <div className="space-y-4 pb-4">
+        <div className="px-3 py-2">
           {/* Welcome message */}
           <div className="text-center py-8">
             <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-2xl mb-4">
@@ -393,20 +392,35 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           )}
           
           {/* Messages */}
-          {messages.map((message) => {
+          {messages.map((message, index) => {
             const isEphemeral = message.message_type === 'image' || message.message_type === 'video';
             const isPoll = message.message_type === 'poll';
             const poll = isPoll ? getPollForMessage(message.id) : undefined;
+            const isOwn = message.sender_id === user?.id;
+
+            // Grouping: next message same sender within 2min
+            const nextMsg = messages[index + 1];
+            const isLastInGroup = !nextMsg ||
+              nextMsg.sender_id !== message.sender_id ||
+              new Date(nextMsg.created_at).getTime() - new Date(message.created_at).getTime() > 120000;
+
+            // Find last own message id for read receipt display
+            const isLastOwnMessage = isOwn && (() => {
+              for (let i = messages.length - 1; i >= 0; i--) {
+                if (messages[i].sender_id === user?.id) return messages[i].id === message.id;
+              }
+              return false;
+            })();
 
             // Render poll message
             if (isPoll && poll) {
               return (
-                <div key={message.id} id={`message-${message.id}`} className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
+                <div key={message.id} id={`message-${message.id}`} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup ? 'mb-2' : 'mb-px'}`}>
                   <PollMessage
                     poll={poll}
-                    isOwn={message.sender_id === user?.id}
+                    isOwn={isOwn}
                     onVote={(pollId, optionId) => vote.mutate({ pollId, optionId })}
-                    onLock={message.sender_id === user?.id ? (pollId) => lockPoll.mutate(pollId) : undefined}
+                    onLock={isOwn ? (pollId) => lockPoll.mutate(pollId) : undefined}
                   />
                 </div>
               );
@@ -425,7 +439,9 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
                   type: message.message_type as 'text' | 'image',
                   replyToMessage: message.replyToMessage,
                 }}
-                isOwn={message.sender_id === user?.id}
+                isOwn={isOwn}
+                isLastInGroup={isLastInGroup}
+                isLastOwnMessage={isLastOwnMessage}
                 isHighlighted={searchResults.includes(message.id) && searchResults[searchIndex] === message.id}
                 reactions={getReactionsForMessage(message.id)}
                 readers={getReaders(message.id)}
