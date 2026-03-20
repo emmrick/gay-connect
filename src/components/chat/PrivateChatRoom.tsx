@@ -516,7 +516,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                         ) : (
                           <div
                             className={cn(
-                              "px-4 py-2.5 text-[14.5px] leading-[1.45] whitespace-pre-wrap break-words rounded-[20px]",
+                              "px-4 py-2 pb-4 text-[14.5px] leading-[1.45] whitespace-pre-wrap break-words rounded-[20px] relative",
                               isOwn
                                 ? "bg-primary text-primary-foreground rounded-br-[6px] shadow-[0_1px_3px_hsl(215_85%_45%/0.15)]"
                                 : "bg-secondary text-foreground rounded-bl-[6px] shadow-[0_1px_2px_hsl(220_30%_20%/0.06)]",
@@ -524,6 +524,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                             style={{ wordBreak: 'break-word', maxWidth: 'min(80%, 380px)' }}
                           >
                             {message.content}
+                            <span className={cn(
+                              "absolute bottom-1 right-3 text-[10px] leading-none",
+                              isOwn ? "text-primary-foreground/60" : "text-muted-foreground"
+                            )}>
+                              {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
+                            </span>
                           </div>
                         )}
 
