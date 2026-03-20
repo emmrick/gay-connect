@@ -71,6 +71,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
   const { getReaders, markAsRead } = useGroupReadReceipts(roomId);
   const { markMentionsAsRead } = useUnreadMentions();
+  const { createPoll, vote, lockPoll, getPollForMessage } = usePolls(roomId);
   const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePinnedMessages(roomId);
   
   // Mark mentions as read when opening the room
