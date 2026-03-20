@@ -547,22 +547,16 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                         isOwn={isOwn}
                       />
 
-                      {/* Timestamp + read — Google Messages: time on last in group, read on last own msg only */}
-                      {isLastInGroup && (
+                      {/* Read receipt only — timestamp now inside bubble */}
+                      {isLastInGroup && isLastOwnMessage && (
                         <div className={cn(
-                          "flex items-center gap-1 mt-0.5 px-1",
-                          isOwn ? "justify-end" : "justify-start"
+                          "flex items-center gap-0.5 mt-0.5 px-1",
+                          "justify-end"
                         )}>
-                          <span className="text-[10px] text-muted-foreground">
-                            {format(new Date(message.created_at), 'HH:mm', { locale: fr })}
-                          </span>
-                          {/* Read receipt: only on last own message */}
-                          {isLastOwnMessage && (
-                            message.read_at ? (
-                              <CheckCheck className="w-3.5 h-3.5 text-primary" />
-                            ) : (
-                              <Check className="w-3.5 h-3.5 text-muted-foreground/50" />
-                            )
+                          {message.read_at ? (
+                            <CheckCheck className="w-3.5 h-3.5 text-primary" />
+                          ) : (
+                            <Check className="w-3.5 h-3.5 text-muted-foreground/50" />
                           )}
                         </div>
                       )}
