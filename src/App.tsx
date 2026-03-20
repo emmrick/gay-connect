@@ -148,7 +148,7 @@ const AuthenticatedApp = () => {
                 <GlobalMissionOverlay />
                 <DossierAccessPopup />
                 <CookieConsentBanner />
-              </BrowserRouter>
+              </>
             </TooltipProvider>
           </ProfilePhotoGuard>
           </VerificationGuard>
