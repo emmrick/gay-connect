@@ -59,6 +59,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const navigate = useNavigate();
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { getReactionsForMessage, toggleReaction } = usePrivateMessageReactions(otherUserId);
+  const { sendGift } = useCreditGifts();
   const { markAsRead } = useUnreadMessages();
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
   const unblockUser = useUnblockUserAction();
