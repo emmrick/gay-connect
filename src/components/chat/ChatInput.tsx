@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Plus, Mic, Camera } from 'lucide-react';
+import { Send, Loader2, Plus, Mic, Camera, BarChart3 } from 'lucide-react';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import SnapCaptureDialog from './SnapCaptureDialog';
+import CreatePollDialog from './CreatePollDialog';
 import MentionAutocomplete from './MentionAutocomplete';
 import { useMentionAutocomplete } from '@/hooks/useMentionAutocomplete';
 import { useIsMobile } from '@/hooks/use-mobile';
