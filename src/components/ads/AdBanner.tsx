@@ -27,11 +27,14 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
   useEffect(() => {
     if (!ad?.id || !user?.id || impressionTracked.current.has(ad.id)) return;
     impressionTracked.current.add(ad.id);
-    supabase.from('ad_impressions').insert({
-      ad_id: ad.id,
-      user_id: user.id,
-      page_url: window.location.pathname,
-    } as any).catch(() => {});
+    const track = async () => {
+      await supabase.from('ad_impressions').insert({
+        ad_id: ad.id,
+        user_id: user.id,
+        page_url: window.location.pathname,
+      } as any);
+    };
+    track().catch(() => {});
   }, [ad?.id, user?.id]);
 
   if (isAdFree || !ad || dismissed) return null;

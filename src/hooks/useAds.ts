@@ -97,8 +97,7 @@ export const useAdClick = () => {
       page_url: window.location.pathname,
     } as any);
 
-    // Increment counter
-    supabase.rpc('increment_ad_clicks' as any, { _ad_id: adId }).catch(() => {});
+    await supabase.rpc('increment_ad_clicks' as any, { _ad_id: adId });
 
     if (linkUrl) {
       window.open(linkUrl, '_blank', 'noopener,noreferrer');
