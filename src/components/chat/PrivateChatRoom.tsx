@@ -467,7 +467,18 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                             senderId={message.sender_id}
                             isOwn={isOwn}
                           />
-                        ) : isEphemeralMedia ? (
+                        ) : isCreditGift ? (() => {
+                          let giftData = { amount: 0 };
+                          try { giftData = JSON.parse(message.content || '{}'); } catch {}
+                          return (
+                            <GiftMessage
+                              amount={giftData.amount || 0}
+                              senderName={message.senderUsername}
+                              recipientName={otherUserProfile?.username || ''}
+                              isOwn={isOwn}
+                            />
+                          );
+                        })() : isEphemeralMedia ? (
                           <EphemeralMessage
                             messageId={message.id}
                             messageType={message.message_type as 'image' | 'video'}
