@@ -97,6 +97,7 @@ const navItems: NavItem[] = [
   { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'communication', adminOnly: true },
   { id: 'flyers', label: 'Flyers promo', icon: FileImage, group: 'communication', adminOnly: true },
   { id: 'promo-images', label: 'Visuels promo IA', icon: Sparkles, group: 'communication', adminOnly: true },
+  { id: 'site-updates', label: 'Mises à jour site', icon: Rocket, group: 'communication', adminOnly: true },
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
 
   // Config & Logs (admin only)
