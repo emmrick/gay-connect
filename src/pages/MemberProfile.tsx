@@ -631,20 +631,6 @@ const MemberProfile = () => {
           </motion.div>
         )}
 
-        {/* Albums */}
-        {userId && user?.id !== userId && (
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.45 }}
-          >
-            <MemberProfileAlbumsSection
-              profileUserId={userId}
-              profileUsername={profile.username}
-              onStartChat={handleStartChat}
-            />
-          </motion.div>
-        )}
 
         {/* Member since */}
         <motion.div 
