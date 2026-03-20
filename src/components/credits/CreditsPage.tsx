@@ -82,6 +82,33 @@ const CreditsPage = () => {
         {/* Missions */}
         <CreditMissionsSection />
 
+        {/* Ad-free option */}
+        {!isAdFree && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            onClick={() => setShowAdFreeDialog(true)}
+            className="w-full flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3.5 text-left hover:bg-primary/10 transition-colors active:scale-[0.98]"
+          >
+            <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+              <BanIcon className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Naviguer sans publicité</p>
+              <p className="text-[11px] text-muted-foreground">À partir de 7 crédits/semaine</p>
+            </div>
+            <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
+          </motion.button>
+        )}
+
+        {isAdFree && (
+          <div className="flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
+            <BanIcon className="w-4 h-4 flex-shrink-0" />
+            <span className="font-medium">Abonnement sans pub actif</span>
+          </div>
+        )}
+
         {/* Ad */}
         <AdBanner placement="compact" />
 
