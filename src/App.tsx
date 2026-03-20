@@ -115,7 +115,7 @@ const AuthenticatedApp = () => {
               
               <Toaster />
               <Sonner />
-              <BrowserRouter>
+              <>
                 <Suspense fallback={<AppLoadingSkeleton />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
@@ -148,7 +148,7 @@ const AuthenticatedApp = () => {
                 <GlobalMissionOverlay />
                 <DossierAccessPopup />
                 <CookieConsentBanner />
-              </BrowserRouter>
+              </>
             </TooltipProvider>
           </ProfilePhotoGuard>
           </VerificationGuard>
