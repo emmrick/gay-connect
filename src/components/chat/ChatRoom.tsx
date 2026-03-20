@@ -6,15 +6,18 @@ import { useGroupReadReceipts } from '@/hooks/useGroupReadReceipts';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { usePinnedMessages } from '@/hooks/usePinnedMessages';
+import { usePolls } from '@/hooks/usePolls';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveConversation } from '@/hooks/useActiveConversation';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
+import PollMessage from './PollMessage';
 import EphemeralMessageRow from './EphemeralMessageRow';
 import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';
 import MessageReply from './MessageReply';
 import MessageSearch from './MessageSearch';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import MediaGallerySheet from './MediaGallerySheet';
 import PinnedMessagesBanner from './PinnedMessagesBanner';
@@ -69,6 +72,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const { getReactionsForMessage, toggleReaction } = useMessageReactions(roomId);
   const { getReaders, markAsRead } = useGroupReadReceipts(roomId);
   const { markMentionsAsRead } = useUnreadMentions();
+  const { createPoll, vote, lockPoll, getPollForMessage } = usePolls(roomId);
   const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePinnedMessages(roomId);
   
   // Mark mentions as read when opening the room
@@ -191,6 +195,26 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
       });
       setReplyTo(null);
       stopTyping();
+    }
+  };
+
+  const handleCreatePoll = async (question: string, options: string[], isMultipleChoice: boolean) => {
+    if (!user) return;
+    // Create a message first for the poll
+    const { data: msg } = await supabase
+      .from('messages')
+      .insert({
+        chat_room_id: roomId,
+        sender_id: user.id,
+        content: `📊 ${question}`,
+        message_type: 'poll',
+        is_private: false,
+      })
+      .select()
+      .single();
+
+    if (msg) {
+      await createPoll.mutateAsync({ question, options, isMultipleChoice, messageId: msg.id });
     }
   };
 
@@ -374,6 +398,23 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           {/* Messages */}
           {messages.map((message) => {
             const isEphemeral = message.message_type === 'image' || message.message_type === 'video';
+            const isPoll = message.message_type === 'poll';
+            const poll = isPoll ? getPollForMessage(message.id) : undefined;
+
+            // Render poll message
+            if (isPoll && poll) {
+              return (
+                <div key={message.id} id={`message-${message.id}`} className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
+                  <PollMessage
+                    poll={poll}
+                    isOwn={message.sender_id === user?.id}
+                    onVote={(pollId, optionId) => vote.mutate({ pollId, optionId })}
+                    onLock={message.sender_id === user?.id ? (pollId) => lockPoll.mutate(pollId) : undefined}
+                  />
+                </div>
+              );
+            }
+
             const chatMsg = (
               <ChatMessage
                 key={message.id}
@@ -459,6 +500,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           onFocus={handleInputFocus}
           onVoiceToggle={() => setShowVoiceRecorder(!showVoiceRecorder)}
           showVoiceButton
+          showPollButton
+          onCreatePoll={handleCreatePoll}
         />
       </div>
     </div>

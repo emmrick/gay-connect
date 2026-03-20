@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Plus, FolderLock, Camera } from 'lucide-react';
+import { Send, Loader2, Plus, FolderLock, Camera, Gift } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MediaUploadButton from './MediaUploadButton';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
 import SnapCaptureDialog from './SnapCaptureDialog';
+import SendGiftDialog from './SendGiftDialog';
 import { cn } from '@/lib/utils';
 import { useForbiddenWords } from '@/hooks/useForbiddenWords';
 
@@ -17,14 +18,16 @@ interface PrivateChatInputProps {
   isSending?: boolean;
   onTyping?: (hasText: boolean) => void;
   onFocus?: () => void;
+  onSendGift?: (amount: number) => void;
 }
 
-const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending = false, onTyping, onFocus }: PrivateChatInputProps) => {
+const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending = false, onTyping, onFocus, onSendGift }: PrivateChatInputProps) => {
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [showOptions, setShowOptions] = useState(false);
   const [showShareAlbum, setShowShareAlbum] = useState(false);
   const [showSnapCapture, setShowSnapCapture] = useState(false);
+  const [showGiftDialog, setShowGiftDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { checkMessage } = useForbiddenWords(recipientId);
 
@@ -110,7 +113,32 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
             </div>
             <span className="text-[10px] text-muted-foreground">Album</span>
           </button>
+
+          {onSendGift && (
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => { setShowGiftDialog(true); setShowOptions(false); }}
+            >
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <Gift className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-[10px] text-muted-foreground">Cadeau</span>
+            </button>
+          )}
         </div>
+      )}
+
+      {/* Gift dialog */}
+      {onSendGift && (
+        <SendGiftDialog
+          isOpen={showGiftDialog}
+          onClose={() => setShowGiftDialog(false)}
+          recipientName={recipientName || ''}
+          onSendGift={(amount) => {
+            onSendGift(amount);
+            setShowGiftDialog(false);
+          }}
+        />
       )}
 
       {/* Snap capture dialog */}

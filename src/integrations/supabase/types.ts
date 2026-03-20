@@ -537,6 +537,41 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_gifts: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          message_id: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_gifts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_purchase_requests: {
         Row: {
           admin_notes: string | null
@@ -1795,6 +1830,128 @@ export type Database = {
             columns: ["message_id"]
             isOneToOne: false
             referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_messages: {
+        Row: {
+          chat_room_id: string
+          created_at: string | null
+          created_by: string
+          id: string
+          is_locked: boolean | null
+          is_multiple_choice: boolean | null
+          message_id: string
+          question: string
+          updated_at: string | null
+        }
+        Insert: {
+          chat_room_id: string
+          created_at?: string | null
+          created_by: string
+          id?: string
+          is_locked?: boolean | null
+          is_multiple_choice?: boolean | null
+          message_id: string
+          question: string
+          updated_at?: string | null
+        }
+        Update: {
+          chat_room_id?: string
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          is_locked?: boolean | null
+          is_multiple_choice?: boolean | null
+          message_id?: string
+          question?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_messages_chat_room_id_fkey"
+            columns: ["chat_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_messages_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_options: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          option_text: string
+          poll_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          option_text: string
+          poll_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          option_text?: string
+          poll_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "poll_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_id?: string
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "poll_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -3500,6 +3657,15 @@ export type Database = {
         Returns: Json
       }
       revoke_premium: { Args: { _target_user_id: string }; Returns: Json }
+      send_credit_gift: {
+        Args: {
+          _amount: number
+          _message_id?: string
+          _recipient_id: string
+          _sender_id: string
+        }
+        Returns: Json
+      }
       update_successful_referrals: {
         Args: { _referral_code_id: string }
         Returns: undefined

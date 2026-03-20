@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useHasBlockedUser, useUnblockUserAction, useIsStaffUser } from '@/hooks/useUserBlock';
 import { usePrivateTypingIndicator } from '@/hooks/usePrivateTypingIndicator';
 import { useActiveConversation } from '@/hooks/useActiveConversation';
+import { useCreditGifts } from '@/hooks/useCreditGifts';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -32,6 +33,7 @@ import RegularMediaMessage from './RegularMediaMessage';
 import SharedAlbumMessage from './SharedAlbumMessage';
 import AlbumAccessRequestMessage from './AlbumAccessRequestMessage';
 import CreditRequestMessage from './CreditRequestMessage';
+import GiftMessage from './GiftMessage';
 import EmojiReactionPicker from './EmojiReactionPicker';
 import MessageReactions from './MessageReactions';
 import ReportUserDialog from './ReportUserDialog';
@@ -57,6 +59,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const navigate = useNavigate();
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { getReactionsForMessage, toggleReaction } = usePrivateMessageReactions(otherUserId);
+  const { sendGift } = useCreditGifts();
   const { markAsRead } = useUnreadMessages();
   const { data: hasBlocked, refetch: refetchBlockStatus } = useHasBlockedUser(otherUserId);
   const unblockUser = useUnblockUserAction();
@@ -205,6 +208,22 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   };
 
+  const handleSendGift = async (amount: number) => {
+    if (!user || !otherUserId) return;
+    const { data: msg } = await supabase.from('messages').insert({
+      sender_id: user.id,
+      recipient_id: otherUserId,
+      content: JSON.stringify({ type: 'credit_gift', amount }),
+      message_type: 'credit_gift',
+      is_private: true,
+    }).select().single();
+    await sendGift.mutateAsync({
+      recipientId: otherUserId,
+      amount,
+      messageId: msg?.id,
+    });
+  };
+
   const handleUnblock = async () => {
     await unblockUser.mutateAsync(otherUserId);
     refetchBlockStatus();
@@ -345,6 +364,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
               const isAlbumShare = message.message_type === 'album_share';
               const isAlbumAccessRequest = message.message_type === 'album_access_request';
               const isCreditRequest = message.message_type === 'credit_request';
+              const isCreditGift = message.message_type === 'credit_gift';
               const isSystemScreenshot = message.message_type === 'system_screenshot';
 
               let albumShareData: { shareId: string; albumId: string; albumName: string; expiresAt: string | null } | null = null;
@@ -463,7 +483,18 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                             senderId={message.sender_id}
                             isOwn={isOwn}
                           />
-                        ) : isEphemeralMedia ? (
+                        ) : isCreditGift ? (() => {
+                          let giftData = { amount: 0 };
+                          try { giftData = JSON.parse(message.content || '{}'); } catch {}
+                          return (
+                            <GiftMessage
+                              amount={giftData.amount || 0}
+                              senderName={message.senderUsername}
+                              recipientName={otherUserProfile?.username || ''}
+                              isOwn={isOwn}
+                            />
+                          );
+                        })() : isEphemeralMedia ? (
                           <EphemeralMessage
                             messageId={message.id}
                             messageType={message.message_type as 'image' | 'video'}
@@ -607,6 +638,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
             isSending={sendMessage.isPending}
             onFocus={handleInputFocus}
             onTyping={startTyping}
+            onSendGift={handleSendGift}
           />
         )}
       </div>

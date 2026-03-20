@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Plus, Mic, Camera } from 'lucide-react';
+import { Send, Loader2, Plus, Mic, Camera, BarChart3 } from 'lucide-react';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import SnapCaptureDialog from './SnapCaptureDialog';
+import CreatePollDialog from './CreatePollDialog';
 import MentionAutocomplete from './MentionAutocomplete';
 import { useMentionAutocomplete } from '@/hooks/useMentionAutocomplete';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -20,14 +21,17 @@ interface ChatInputProps {
   onFocus?: () => void;
   onVoiceToggle?: () => void;
   showVoiceButton?: boolean;
+  onCreatePoll?: (question: string, options: string[], isMultipleChoice: boolean) => void;
+  showPollButton?: boolean;
 }
 
-const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus, onVoiceToggle, showVoiceButton }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus, onVoiceToggle, showVoiceButton, onCreatePoll, showPollButton }: ChatInputProps) => {
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [showOptions, setShowOptions] = useState(false);
   const [showSnapCapture, setShowSnapCapture] = useState(false);
+  const [showPollDialog, setShowPollDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const conversationId = chatRoomId || recipientId || 'unknown';
   const { checkMessage } = useForbiddenWords(conversationId);
@@ -173,7 +177,28 @@ const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, 
               <span className="text-[10px] text-muted-foreground">Vocal</span>
             </button>
           )}
+
+          {showPollButton && onCreatePoll && (
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => { setShowPollDialog(true); setShowOptions(false); }}
+            >
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <BarChart3 className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-[10px] text-muted-foreground">Sondage</span>
+            </button>
+          )}
         </div>
+      )}
+
+      {/* Poll creation dialog */}
+      {onCreatePoll && (
+        <CreatePollDialog
+          isOpen={showPollDialog}
+          onClose={() => setShowPollDialog(false)}
+          onCreatePoll={onCreatePoll}
+        />
       )}
 
       {/* Snap capture dialog */}
