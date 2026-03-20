@@ -18,6 +18,8 @@ import { motion } from 'framer-motion';
 const CreditsPage = () => {
   const { isLoading } = useCredits();
   const [showClaimDialog, setShowClaimDialog] = useState(false);
+  const [showAdFreeDialog, setShowAdFreeDialog] = useState(false);
+  const { data: isAdFree } = useAdFreeStatus();
 
   if (isLoading) {
     return (
