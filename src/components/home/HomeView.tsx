@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { MapPin, Star, SlidersHorizontal } from 'lucide-react';
+import { Star, SlidersHorizontal, Compass } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -8,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
-import ReferralBanner from './ReferralBanner';
 import AdFreeBanner from './AdFreeBanner';
 import StoryBar from '@/components/stories/StoryBar';
 
@@ -26,13 +26,8 @@ const HomeView = ({
   const [appliedAgeRange, setAppliedAgeRange] = useState<[number, number]>([18, 99]);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const handleViewProfile = (userId: string) => {
-    onViewProfile?.(userId);
-  };
-
-  const handleStartChat = (userId: string) => {
-    onStartPrivateChat?.(userId);
-  };
+  const handleViewProfile = (userId: string) => onViewProfile?.(userId);
+  const handleStartChat = (userId: string) => onStartPrivateChat?.(userId);
 
   const applyFilter = () => {
     setAppliedAgeRange(ageRange);
@@ -50,33 +45,28 @@ const HomeView = ({
   return (
     <div className="pb-4">
       <div className="px-4 py-4 space-y-4">
-        {/* Stories bar */}
         {featureFlags['stories'] !== false && <StoryBar />}
-
-        {/* Ad-free banner */}
         <AdFreeBanner />
 
-        {/* Tabs + Filter */}
         <Tabs defaultValue="nearby" className="w-full">
           <div className="flex items-center gap-2">
-            <TabsList className="flex-1 grid grid-cols-2">
-              <TabsTrigger value="nearby" className="gap-1.5 text-xs">
-                <MapPin className="w-3.5 h-3.5" />
+            <TabsList className="flex-1 grid grid-cols-2 h-10">
+              <TabsTrigger value="nearby" className="gap-1.5 text-xs font-medium">
+                <Compass className="w-3.5 h-3.5" />
                 À proximité
               </TabsTrigger>
-              <TabsTrigger value="favorites" className="gap-1.5 text-xs">
+              <TabsTrigger value="favorites" className="gap-1.5 text-xs font-medium">
                 <Star className="w-3.5 h-3.5" />
                 Favoris
               </TabsTrigger>
             </TabsList>
 
-            {/* Age Filter */}
             <Popover open={filterOpen} onOpenChange={setFilterOpen}>
               <PopoverTrigger asChild>
                 <Button 
                   variant={isFilterActive ? "default" : "outline"} 
                   size="icon" 
-                  className="h-9 w-9 flex-shrink-0"
+                  className="h-10 w-10 flex-shrink-0 rounded-xl"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                 </Button>
@@ -84,7 +74,7 @@ const HomeView = ({
               <PopoverContent className="w-72" align="end">
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-sm font-medium">Tranche d'âge</Label>
+                    <Label className="text-sm font-semibold">Tranche d'âge</Label>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {ageRange[0]} – {ageRange[1] === 99 ? '99+' : ageRange[1]} ans
                     </p>
@@ -111,11 +101,15 @@ const HomeView = ({
           </div>
 
           {isFilterActive && (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-xs text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
-                Âge : {appliedAgeRange[0]} – {appliedAgeRange[1] === 99 ? '99+' : appliedAgeRange[1]} ans
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-2"
+            >
+              <span className="text-xs text-muted-foreground bg-secondary px-2.5 py-1 rounded-full border border-border/50">
+                🎯 Âge : {appliedAgeRange[0]} – {appliedAgeRange[1] === 99 ? '99+' : appliedAgeRange[1]} ans
               </span>
-            </div>
+            </motion.div>
           )}
 
           <TabsContent value="nearby" className="mt-3">

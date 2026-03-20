@@ -1,16 +1,13 @@
-import { useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { MapPin, Loader2, Navigation, RefreshCw, Crown } from 'lucide-react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Loader2, RefreshCw, Crown, Users, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
-
-import { shouldShowOnlineIndicator, getLastSeenText } from '@/hooks/useOnlineStatus';
-
 import { cn } from '@/lib/utils';
+import ProfileCard from './ProfileCard';
 
 interface NearbyMembersGridProps {
   onViewProfile: (userId: string) => void;
@@ -18,14 +15,15 @@ interface NearbyMembersGridProps {
   ageRange?: [number, number];
 }
 
-// Skeleton component for loading state
+const PROFILES_PER_PAGE = 12;
+
 const ProfileSkeleton = ({ index }: { index: number }) => (
-  <div 
-    className="relative aspect-[3/4] rounded-xl overflow-hidden bg-secondary/50"
-    style={{ animationDelay: `${index * 50}ms` }}
+  <div
+    className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/30"
+    style={{ animationDelay: `${index * 60}ms` }}
   >
     <Skeleton className="absolute inset-0" />
-    <div className="absolute bottom-0 left-0 right-0 p-2 space-y-1">
+    <div className="absolute bottom-0 left-0 right-0 p-2.5 space-y-1.5">
       <Skeleton className="h-4 w-16" />
       <Skeleton className="h-3 w-12" />
     </div>
@@ -33,32 +31,32 @@ const ProfileSkeleton = ({ index }: { index: number }) => (
 );
 
 const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembersGridProps) => {
-  const navigate = useNavigate();
   const { profile: currentUserProfile } = useAuth();
-  const { latitude, longitude, loading: locationLoading, error: locationError, requestLocation, permissionState } = useGeolocation();
-  const { 
-    data: profiles, 
-    isLoading: profilesLoading, 
-    error: profilesError, 
-    refetch, 
+  const { latitude, longitude, loading: locationLoading, requestLocation, permissionState } = useGeolocation();
+  const {
+    data: profiles,
+    isLoading: profilesLoading,
+    error: profilesError,
+    refetch,
     isPremium,
     hasGeoData,
   } = useNearbyProfiles(latitude, longitude);
 
   const hasLocation = latitude != null && longitude != null;
+  const [visibleCount, setVisibleCount] = useState(PROFILES_PER_PAGE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // If the user already granted location permission, fetch location automatically on mount
+  // Auto-request location if already granted
   useEffect(() => {
     if (permissionState === 'granted' && !hasLocation && !locationLoading) {
       void requestLocation();
     }
   }, [permissionState, hasLocation, locationLoading, requestLocation]);
 
-  // Build the final profiles list with current user first
+  // Build final profiles list
   const allProfiles = useMemo(() => {
     const result: any[] = [];
-    
-    // Add current user profile first
+
     if (currentUserProfile) {
       result.push({
         id: currentUserProfile.id,
@@ -71,23 +69,18 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
         distance_km: null,
         bio: currentUserProfile.bio,
         region: currentUserProfile.region,
-        sexual_position: (currentUserProfile as any).sexual_position,
         isCurrentUser: true,
+        created_at: (currentUserProfile as any).created_at,
       });
     }
-    
-    // Add other profiles
+
     if (profiles) {
       profiles.forEach(p => {
-        result.push({
-          ...p,
-          sexual_position: null,
-          isCurrentUser: false,
-        });
+        result.push({ ...p, isCurrentUser: false });
       });
     }
-    
-    // Apply age filter
+
+    // Age filter
     if (ageRange && (ageRange[0] !== 18 || ageRange[1] !== 99)) {
       return result.filter(p => {
         if (p.isCurrentUser) return true;
@@ -95,38 +88,51 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
         return p.age >= ageRange[0] && p.age <= ageRange[1];
       });
     }
-    
+
     return result;
   }, [currentUserProfile, profiles, ageRange]);
 
-  // Total member count including current user
-  const totalMembersCount = allProfiles.length;
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
-  // ---------- HELPER FUNCTIONS ----------
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && visibleCount < allProfiles.length) {
+          setVisibleCount(prev => Math.min(prev + PROFILES_PER_PAGE, allProfiles.length));
+        }
+      },
+      { rootMargin: '200px' }
+    );
 
-  const formatDistance = (km: number | null) => {
-    if (km === null) return null;
-    if (km < 1) return `${Math.round(km * 1000)}m`;
-    return `${km.toFixed(1)}km`;
-  };
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, allProfiles.length]);
 
-  const getProfileLastSeenText = (profile: any) => getLastSeenText(profile);
-  const shouldShowOnlineStatus = (profile: any) => shouldShowOnlineIndicator(profile);
+  // Reset visible count on filter change
+  useEffect(() => {
+    setVisibleCount(PROFILES_PER_PAGE);
+  }, [ageRange]);
 
-  // ---------- EARLY RETURNS (AFTER ALL HOOKS) ----------
+  const visibleProfiles = allProfiles.slice(0, visibleCount);
+  const hasMore = visibleCount < allProfiles.length;
+  const totalCount = allProfiles.length;
+  const onlineCount = allProfiles.filter(p => !p.isCurrentUser && p.is_online).length;
 
-  // Show query error only if no profiles at all
+  // Error state
   if (profilesError && allProfiles.length === 0) {
-    const message = (profilesError as any)?.message || 'Erreur lors du chargement des profils.';
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl bg-secondary/50 border border-border/50 p-6 text-center"
+        className="rounded-2xl bg-card border border-border/50 p-8 text-center"
       >
-        <RefreshCw className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-        <h3 className="font-medium text-foreground mb-2">Chargement impossible</h3>
-        <p className="text-sm text-muted-foreground mb-4">{message}</p>
+        <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+          <RefreshCw className="w-6 h-6 text-destructive" />
+        </div>
+        <h3 className="font-semibold text-foreground mb-2">Impossible de charger</h3>
+        <p className="text-sm text-muted-foreground mb-5">Vérifie ta connexion et réessaie.</p>
         <Button
           variant="outline"
           onClick={() => {
@@ -134,25 +140,23 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
             void refetch();
           }}
         >
+          <RefreshCw className="w-4 h-4 mr-2" />
           Réessayer
         </Button>
       </motion.div>
     );
   }
 
-  // Initial loading state - show skeleton grid (check actual nearby profiles, not allProfiles which includes current user)
+  // Loading state
   if (profilesLoading && (!profiles || profiles.length === 0)) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-primary" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-          <Skeleton className="h-8 w-20" />
+        <div className="flex items-center gap-2">
+          <Compass className="w-4 h-4 text-primary animate-spin" />
+          <span className="text-sm text-muted-foreground">Recherche de profils…</span>
         </div>
         <div className="grid grid-cols-3 gap-2">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <ProfileSkeleton key={i} index={i} />
           ))}
         </div>
@@ -162,127 +166,85 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
 
   return (
     <div className="space-y-4">
-      {/* Header with refresh */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          {totalMembersCount} membre{totalMembersCount > 1 ? 's' : ''}{hasGeoData ? ' à proximité' : ''}
-        </span>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <Users className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              {totalCount} membre{totalCount > 1 ? 's' : ''}
+            </span>
+          </div>
+          {onlineCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              {onlineCount} en ligne
+            </span>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => {
             void requestLocation();
             void refetch();
           }}
-          className="text-xs"
+          className="text-xs h-8 gap-1.5"
           disabled={profilesLoading}
         >
-          <RefreshCw className={cn("w-3 h-3 mr-1", profilesLoading && "animate-spin")} />
+          <RefreshCw className={cn("w-3.5 h-3.5", profilesLoading && "animate-spin")} />
           Actualiser
         </Button>
       </div>
 
-      {/* Members grid */}
-      {allProfiles.length > 0 ? (
+      {/* Encouragement message */}
+      {hasGeoData && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/10"
+        >
+          <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            Profils triés par proximité — découvre qui est autour de toi !
+          </p>
+        </motion.div>
+      )}
+
+      {/* Grid */}
+      {visibleProfiles.length > 0 ? (
         <>
           <div className="grid grid-cols-3 gap-2">
-            {allProfiles.map((profile) => (
-              <button
+            {visibleProfiles.map((profile, index) => (
+              <ProfileCard
                 key={profile.id}
-                onClick={() => navigate(profile.isCurrentUser ? `/profile/${profile.user_id}` : `/profile/${profile.user_id}`)}
-                className={cn(
-                  "relative aspect-[3/4] rounded-xl overflow-hidden group",
-                  "bg-gradient-to-br from-secondary to-secondary/50",
-                  "border-2 transition-colors duration-150",
-                  profile.isCurrentUser 
-                    ? "border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/30" 
-                    : "border-border/30 active:border-primary/50"
-                )}
-              >
-                {/* Avatar/Photo */}
-                <div className="absolute inset-0">
-                  {profile.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt={profile.username}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-                      <span className="text-3xl font-bold text-white/80">
-                        {profile.username.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                {/* Current user badge */}
-                {profile.isCurrentUser && (
-                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center gap-1 z-10">
-                    <Crown className="w-3 h-3" />
-                    Toi
-                  </div>
-                )}
-
-
-                {/* Online/Offline indicator */}
-                {!profile.isCurrentUser && (
-                  <div className="absolute top-2 right-2">
-                    {shouldShowOnlineStatus(profile) ? (
-                      <span className="w-2.5 h-2.5 rounded-full bg-green-500 block shadow-lg shadow-green-500/50" />
-                    ) : !profile.hide_online_status ? (
-                      <span className="w-2.5 h-2.5 rounded-full bg-gray-400 block" />
-                    ) : null}
-                  </div>
-                )}
-
-                {/* Info overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-2">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-white font-medium text-sm truncate">
-                      {profile.username}
-                    </span>
-                    {profile.age && (
-                      <span className="text-white/70 text-xs">{profile.age}</span>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-1 text-[10px] text-white/60">
-                    {profile.isCurrentUser ? (
-                      <span className="text-primary-foreground/80">Voir ton profil</span>
-                    ) : (
-                      <span>{getProfileLastSeenText(profile)}</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Proximity badge */}
-                {!profile.isCurrentUser && profile.distance_km !== null && (
-                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium flex items-center gap-0.5">
-                    <MapPin className="w-2.5 h-2.5" />
-                    {formatDistance(profile.distance_km)}
-                  </div>
-                )}
-
-                {/* Hover effect */}
-                {!profile.isCurrentUser && (
-                  <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                )}
-              </button>
+                profile={profile}
+                index={index}
+                onViewProfile={onViewProfile}
+                onLike={onStartChat}
+              />
             ))}
           </div>
 
+          {/* Infinite scroll sentinel */}
+          {hasMore && (
+            <div ref={sentinelRef} className="flex justify-center py-4">
+              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+            </div>
+          )}
         </>
       ) : (
-        <div className="text-center py-12 rounded-2xl bg-secondary/30">
-          <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Aucun membre à proximité</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-16 rounded-2xl bg-card border border-border/30"
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <MapPin className="w-7 h-7 text-primary" />
+          </div>
+          <h3 className="font-semibold text-foreground mb-1">Aucun membre trouvé</h3>
+          <p className="text-sm text-muted-foreground">Élargis tes filtres pour découvrir plus de profils</p>
+        </motion.div>
       )}
     </div>
   );
