@@ -185,9 +185,8 @@ export const usePrivateMessages = (otherUserId: string | null) => {
       sendingRef.current = true;
 
       try {
-        const creditCost = messageType === 'text' 
-          ? CREDIT_COSTS.private_message_text 
-          : CREDIT_COSTS.private_message_media;
+        const costKey = messageType === 'text' ? 'private_message_text' : 'private_message_media';
+        const creditCost = await getDynamicCreditCost(costKey);
 
         const hasCredits = await checkSufficientCredits(user.id, creditCost);
         if (!hasCredits) throw new Error('INSUFFICIENT_CREDITS');
