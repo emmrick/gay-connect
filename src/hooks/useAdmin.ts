@@ -162,7 +162,7 @@ export const useAdminReports = (status?: ReportStatus) => {
         message: report.message_id ? messageMap.get(report.message_id) || null : null,
       }));
     },
-    enabled: isAdmin === true,
+    enabled: isAdminOrMod === true,
   });
 };
 
