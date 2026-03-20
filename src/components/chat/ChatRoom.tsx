@@ -17,6 +17,7 @@ import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';
 import MessageReply from './MessageReply';
 import MessageSearch from './MessageSearch';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import MediaGallerySheet from './MediaGallerySheet';
 import PinnedMessagesBanner from './PinnedMessagesBanner';
