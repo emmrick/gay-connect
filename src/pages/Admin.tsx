@@ -270,6 +270,7 @@ const Admin = () => {
       case 'security': return <SecurityEventsPanel />;
       case 'verification': return <IdentityVerificationPanel />;
       case 'feature-toggles': return <FeatureTogglesPanel />;
+      case 'site-updates': return <SiteUpdatesPanel />;
       default: return null;
     }
   };
