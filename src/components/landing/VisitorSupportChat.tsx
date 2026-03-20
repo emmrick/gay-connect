@@ -99,6 +99,13 @@ const VisitorSupportChat = ({ isOpen, onClose }: VisitorSupportChatProps) => {
           content: `Bienvenue ${firstName} ! Un conseiller va prendre en charge votre demande. Vous pouvez décrire votre problème en attendant.`,
         });
 
+      // Google Ads conversion tracking - Contact
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'conversion', {
+          'send_to': 'AW-18000558154/mbyNCImp54QcEMrwqodD',
+        });
+      }
+
       setStep('chat');
     } catch (err) {
       console.error('Error creating session:', err);
