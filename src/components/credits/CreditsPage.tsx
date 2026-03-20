@@ -1,24 +1,19 @@
 import { useState } from 'react';
-import {
-  Coins, Gift, ShoppingCart, Users, MessageCircle, Camera,
-  FolderOpen, Heart, Eye, MapPin, Loader2, Sparkles, Shield,
-  Clock, Zap, HelpCircle, TrendingUp, Bot, ChevronRight,
-  ArrowDownUp, CreditCard, Rocket
-} from 'lucide-react';
+import { Loader2, AlertTriangle, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useCredits, CREDIT_COSTS, CREDIT_REWARDS } from '@/hooks/useCredits';
-import { useDynamicCreditCosts } from '@/hooks/useDynamicCreditCosts';
-import CreditBalanceBar from './CreditBalanceBar';
-import CreditHistorySheet from './CreditHistorySheet';
-import BuyCreditDialog from './BuyCreditDialog';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCredits } from '@/hooks/useCredits';
+import CreditWalletHeader from './CreditWalletHeader';
+import CreditBreakdownCards from './CreditBreakdownCards';
+import CreditMissionsSection from './CreditMissionsSection';
+import CreditCostsAccordion from './CreditCostsAccordion';
+import CreditFAQSection from './CreditFAQSection';
+import SendGiftSection from './SendGiftSection';
+import ContactCreditIssueDialog from './ContactCreditIssueDialog';
+import { motion } from 'framer-motion';
 
 const CreditsPage = () => {
-  const { isLoading, totalCredits, dailyCredits, bonusCredits, purchasedCredits, passiveCredits, maxDailyCredits } = useCredits();
-  const { data: dynamicCosts } = useDynamicCreditCosts();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const { isLoading } = useCredits();
+  const [showClaimDialog, setShowClaimDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -28,320 +23,77 @@ const CreditsPage = () => {
     );
   }
 
-  const creditBreakdown = [
-    { label: 'Quotidien', value: dailyCredits, icon: Clock, gradient: 'from-emerald-500 to-green-500' },
-    { label: 'Passif', value: passiveCredits, icon: Zap, gradient: 'from-amber-500 to-orange-500' },
-    { label: 'Bonus', value: bonusCredits, icon: Gift, gradient: 'from-blue-500 to-indigo-500' },
-    { label: 'Achetés', value: purchasedCredits, icon: CreditCard, gradient: 'from-violet-500 to-purple-500' },
-  ];
-
-  const costSections = [
-    {
-      id: 'messages',
-      title: 'Messages',
-      icon: MessageCircle,
-      gradient: 'from-primary to-blue-500',
-      items: [
-        { icon: MessageCircle, label: 'Message texte', cost: CREDIT_COSTS.private_message_text, note: 'Message privé' },
-        { icon: Camera, label: 'Photo / Vidéo', cost: CREDIT_COSTS.private_message_media, note: 'Média permanent' },
-        { icon: Sparkles, label: 'Média éphémère', cost: CREDIT_COSTS.ephemeral_media, note: 'Disparaît après visionnage' },
-        { icon: Users, label: 'Média groupe', cost: CREDIT_COSTS.group_message_media },
-      ],
-    },
-    {
-      id: 'social',
-      title: 'Profil & Social',
-      icon: Heart,
-      gradient: 'from-pink-500 to-rose-500',
-      items: [
-        { icon: Eye, label: 'Consulter un profil', cost: CREDIT_COSTS.profile_view },
-        { icon: Heart, label: 'Réaction profil', cost: CREDIT_COSTS.profile_reaction },
-        { icon: Heart, label: 'Like (swipe)', cost: CREDIT_COSTS.swipe_like },
-        { icon: MessageCircle, label: 'Démarrer conversation', cost: CREDIT_COSTS.swipe_start_conversation, note: 'Après un match' },
-      ],
-    },
-    {
-      id: 'albums',
-      title: 'Albums',
-      icon: FolderOpen,
-      gradient: 'from-amber-500 to-yellow-500',
-      items: [
-        { icon: FolderOpen, label: 'Partage d\'album', cost: CREDIT_COSTS.album_share },
-        { icon: FolderOpen, label: 'Créer un album (2ème+)', cost: CREDIT_COSTS.album_create, note: '1er album gratuit' },
-      ],
-    },
-    {
-      id: 'nearby',
-      title: 'Proximité',
-      icon: MapPin,
-      gradient: 'from-emerald-500 to-teal-500',
-      items: [
-        { icon: MapPin, label: '+30 profils proches', cost: CREDIT_COSTS.nearby_unlock_30, note: '72 heures' },
-        { icon: MapPin, label: '+130 profils proches', cost: CREDIT_COSTS.nearby_unlock_130, note: '7 jours' },
-      ],
-    },
-    {
-      id: 'chatbot',
-      title: 'ChatBot & Groupes',
-      icon: Bot,
-      gradient: 'from-cyan-500 to-sky-500',
-      items: [
-        { icon: Bot, label: 'Message chatbot', cost: CREDIT_COSTS.chatbot_message },
-        { icon: Bot, label: 'Activer le chatbot', cost: CREDIT_COSTS.chatbot_activate },
-        { icon: Users, label: 'Rejoindre un groupe', cost: CREDIT_COSTS.join_extra_group, note: 'Hors département' },
-      ],
-    },
-  ];
-
-  const earnMethods = [
-    { icon: Rocket, label: 'Inscription', reward: CREDIT_REWARDS.signup, gradient: 'from-green-500 to-emerald-500' },
-    { icon: Shield, label: 'Vérification d\'identité', reward: CREDIT_REWARDS.identity_verification, gradient: 'from-blue-500 to-indigo-500' },
-    { icon: Clock, label: 'Crédits quotidiens', reward: CREDIT_REWARDS.daily_claim, suffix: '/jour', gradient: 'from-amber-500 to-orange-500' },
-    { icon: Users, label: 'Parrainage réussi', reward: dynamicCosts?.referral_reward ?? CREDIT_REWARDS.referral_success, suffix: ' chacun', gradient: 'from-purple-500 to-violet-500' },
-  ];
-
   return (
-    <div className="bg-background pb-8 max-w-2xl mx-auto overflow-x-hidden">
-      {/* ── HERO ──────────────────────────────────── */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent" />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative px-4 pt-8 pb-6"
-        >
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-xl shadow-primary/30 mb-4"
-          >
-            <Coins className="w-8 h-8 text-primary-foreground" />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15 }}
-            className="text-center"
-          >
-            <div className="text-4xl font-black tracking-tight">
-              {totalCredits.toFixed(1)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 font-medium">crédits disponibles</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="flex items-center justify-center gap-3 mt-4"
-          >
-            <CreditHistorySheet />
-            <BuyCreditDialog
-              trigger={
-                <Button size="sm" className="bg-gradient-to-r from-primary to-accent text-primary-foreground gap-2 shadow-lg shadow-primary/25 px-4 h-9 rounded-xl font-semibold text-xs">
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  Acheter
-                </Button>
-              }
-            />
-          </motion.div>
-        </motion.div>
+    <div className="min-h-screen bg-background pb-24">
+      <div className="px-4 pt-6 pb-2">
+        <h1 className="text-xl font-bold tracking-tight">Crédits</h1>
       </div>
 
-      <div className="px-3 space-y-4 -mt-1">
-        {/* ── BALANCE BREAKDOWN ───────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <CreditBalanceBar showLabel={false} showDetails={true} />
-          <div className="grid grid-cols-4 gap-1 mt-2">
-            {creditBreakdown.map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 + i * 0.05 }}
-                className="relative overflow-hidden rounded-xl bg-card border border-border/50 p-2 text-center"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-[0.06]`} />
-                <div className={`w-5 h-5 rounded-md bg-gradient-to-br ${item.gradient} flex items-center justify-center mx-auto mb-0.5`}>
-                  <item.icon className="w-2.5 h-2.5 text-white" />
-                </div>
-                <div className="text-sm font-bold tabular-nums relative">{item.value.toFixed(1)}</div>
-                <div className="text-[7px] text-muted-foreground font-semibold uppercase tracking-wider mt-0.5 truncate">{item.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+      <div className="px-4 space-y-6">
+        {/* Wallet Header */}
+        <CreditWalletHeader onOpenGift={() => {}} />
 
-        {/* ── RECHARGE CHIPS ─────────────────────── */}
+        {/* Credit Breakdown */}
+        <section>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Répartition
+          </p>
+          <CreditBreakdownCards />
+        </section>
+
+        {/* Priority order hint */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide"
+          transition={{ delay: 0.5 }}
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/50 border border-border/40"
         >
-          {[
-            { icon: Clock, text: `+${maxDailyCredits}/jour`, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-            { icon: Zap, text: '+0.1/6h', color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-            { icon: ArrowDownUp, text: 'Quot→Pass→Bon→Ach', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
-          ].map((chip, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-1 px-2 py-1.5 rounded-full ${chip.bg} border ${chip.border} text-[10px] font-medium whitespace-nowrap shrink-0`}
-            >
-              <chip.icon className={`w-3 h-3 ${chip.color}`} />
-              <span>{chip.text}</span>
-            </div>
-          ))}
+          <span className="text-[11px] text-muted-foreground leading-relaxed">
+            <span className="font-medium text-foreground">Ordre d'utilisation :</span>{' '}
+            Quotidien → Passif → Bonus → Achetés
+          </span>
         </motion.div>
 
-        {/* ── GAGNER ──────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-2xl bg-card border border-border/50 overflow-hidden"
-        >
-          <div className="p-3.5 space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                <Gift className="w-4 h-4 text-white" />
-              </div>
-              <p className="font-bold text-sm">Gagner des crédits</p>
-            </div>
-
-            <div className="space-y-1.5">
-              {earnMethods.map((m, i) => (
-                <motion.div
-                  key={m.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.35 + i * 0.05 }}
-                  className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/40"
-                >
-                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${m.gradient} flex items-center justify-center shrink-0`}>
-                    <m.icon className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate">{m.label}</p>
-                  </div>
-                  <Badge className="bg-background border border-border/60 text-foreground text-[10px] font-bold px-2 py-0.5 shadow-sm shrink-0">
-                    +{m.reward}{m.suffix || ''}
-                  </Badge>
-                </motion.div>
-              ))}
-            </div>
+        {/* Launch promo */}
+        <div className="flex items-start gap-3 rounded-xl bg-amber-500/5 border border-amber-500/15 p-3.5">
+          <Timer className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">Prix de lancement</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+              Tarifs temporaires, valables 1 an après l'ouverture. Les prix définitifs seront plus élevés.
+            </p>
           </div>
-        </motion.div>
+        </div>
 
-        {/* ── COÛTS DES ACTIONS ──────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-2xl bg-card border border-border/50 overflow-hidden"
-        >
-          <div className="p-3.5 pb-3">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-white" />
-              </div>
-              <p className="font-bold text-sm">Coût des actions</p>
-            </div>
+        {/* Gift section */}
+        <SendGiftSection />
 
-            <div className="space-y-1.5">
-              {costSections.map((section) => (
-                <div key={section.id}>
-                  <button
-                    onClick={() => setActiveSection(activeSection === section.id ? null : section.id)}
-                    className="w-full flex items-center gap-2 p-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all"
-                  >
-                    <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${section.gradient} flex items-center justify-center shrink-0`}>
-                      <section.icon className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <span className="text-xs font-semibold flex-1 text-left">{section.title}</span>
-                    <Badge variant="secondary" className="text-[9px] font-bold px-1.5">
-                      {section.items.length}
-                    </Badge>
-                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${activeSection === section.id ? 'rotate-90' : ''}`} />
-                  </button>
+        {/* Missions */}
+        <CreditMissionsSection />
 
-                  <AnimatePresence>
-                    {activeSection === section.id && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pt-1 pb-0.5 space-y-0.5">
-                          {section.items.map((item, i) => (
-                            <div
-                              key={i}
-                              className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-background/60"
-                            >
-                              <item.icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium leading-tight truncate">{item.label}</p>
-                                {item.note && (
-                                  <p className="text-[9px] text-muted-foreground mt-0.5 truncate">{item.note}</p>
-                                )}
-                              </div>
-                              <span className="text-[10px] font-bold font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-md shrink-0">
-                                -{item.cost}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+        {/* Costs */}
+        <CreditCostsAccordion />
 
-        {/* ── FAQ ─────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="rounded-2xl bg-card border border-border/50 overflow-hidden"
-        >
-          <div className="p-3.5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
-                <HelpCircle className="w-4 h-4 text-white" />
-              </div>
-              <p className="font-bold text-sm">Questions fréquentes</p>
-            </div>
+        {/* Claim button */}
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs text-destructive border-destructive/20 hover:bg-destructive/5"
+            onClick={() => setShowClaimDialog(true)}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Réclamer des crédits
+          </Button>
+        </div>
 
-            <Accordion type="single" collapsible className="w-full space-y-1">
-              {[
-                { id: 'how', q: 'Comment fonctionne le système ?', a: 'Chaque action consomme des crédits. 15 crédits bonus à l\'inscription, 5 gratuits chaque jour à minuit.' },
-                { id: 'order', q: 'Ordre d\'utilisation ?', a: 'Quotidiens → Passifs → Bonus → Achetés. Verrouillez (🔒) pour économiser.' },
-                { id: 'album', q: 'Premier album gratuit ?', a: 'Oui ! Seuls les albums suivants coûtent 10 crédits.' },
-                { id: 'daily', q: 'Crédits quotidiens ?', a: '5 crédits gratuits chaque jour à minuit. Non cumulables.' },
-                { id: 'referral', q: 'Parrainage ?', a: 'Partagez votre code. Après vérification du filleul, vous recevez tous les deux des crédits bonus.' },
-              ].map((faq) => (
-                <AccordionItem key={faq.id} value={faq.id} className="border rounded-xl px-2.5 overflow-hidden data-[state=open]:bg-muted/30">
-                  <AccordionTrigger className="text-xs font-semibold py-2.5 hover:no-underline">{faq.q}</AccordionTrigger>
-                  <AccordionContent className="text-xs text-muted-foreground pb-2.5 leading-relaxed">
-                    {faq.a}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </motion.div>
+        <ContactCreditIssueDialog
+          open={showClaimDialog}
+          onOpenChange={setShowClaimDialog}
+        />
+
+        {/* FAQ */}
+        <CreditFAQSection />
       </div>
     </div>
   );
