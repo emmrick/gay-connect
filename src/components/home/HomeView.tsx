@@ -11,6 +11,7 @@ import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
 import AdFreeBanner from './AdFreeBanner';
 import StoryBar from '@/components/stories/StoryBar';
+import AdBanner from '@/components/ads/AdBanner';
 
 interface HomeViewProps {
   onViewProfile?: (userId: string) => void;
