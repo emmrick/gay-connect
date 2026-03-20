@@ -215,7 +215,7 @@ export const useUpdateReportStatus = () => {
 };
 
 export const useReportStats = () => {
-  const { data: isAdmin } = useIsAdmin();
+  const { data: isAdminOrMod } = useIsAdminOrModerator();
 
   return useQuery({
     queryKey: ['report-stats'],
@@ -236,7 +236,7 @@ export const useReportStats = () => {
 
       return stats;
     },
-    enabled: isAdmin === true,
+    enabled: isAdminOrMod === true,
   });
 };
 
