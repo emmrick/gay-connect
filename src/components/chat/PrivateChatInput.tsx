@@ -18,6 +18,7 @@ interface PrivateChatInputProps {
   isSending?: boolean;
   onTyping?: (hasText: boolean) => void;
   onFocus?: () => void;
+  onSendGift?: (amount: number) => void;
 }
 
 const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending = false, onTyping, onFocus }: PrivateChatInputProps) => {
