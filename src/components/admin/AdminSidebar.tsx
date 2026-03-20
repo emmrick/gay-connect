@@ -24,7 +24,8 @@ export type AdminSection =
   | 'ai-moderation' | 'screenshot-sanctions' | 'moderators'
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
-  | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles';
+  | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles'
+  | 'site-updates';
 
 export interface ModPermissions {
   can_manage_users?: boolean | null;
