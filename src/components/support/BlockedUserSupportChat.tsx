@@ -205,10 +205,6 @@ const BlockedUserSupportChat = () => {
                 const senderProfile = senderProfiles?.[msg.sender_id];
                 const showDate = index === 0 || 
                   !isSameDay(new Date(messages[index - 1].created_at), new Date(msg.created_at));
-                const isSameDay2 = (d1: Date, d2: Date) => 
-                  d1.getFullYear() === d2.getFullYear() && 
-                  d1.getMonth() === d2.getMonth() && 
-                  d1.getDate() === d2.getDate();
 
                 return (
                   <div key={msg.id}>
