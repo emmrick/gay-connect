@@ -3,6 +3,7 @@ import { Loader2, AlertTriangle, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
 import CreditWalletHeader from './CreditWalletHeader';
+import { toast } from 'sonner';
 import CreditBreakdownCards from './CreditBreakdownCards';
 import CreditMissionsSection from './CreditMissionsSection';
 import CreditCostsAccordion from './CreditCostsAccordion';
@@ -31,7 +32,12 @@ const CreditsPage = () => {
 
       <div className="px-4 space-y-6">
         {/* Wallet Header */}
-        <CreditWalletHeader onOpenGift={() => {}} />
+        <CreditWalletHeader onOpenGift={() => {
+          toast.info('🎁 Pour offrir des crédits', {
+            description: 'Ouvrez une conversation privée et utilisez le bouton cadeau 🎁 dans la barre de saisie.',
+            duration: 4000,
+          });
+        }} />
 
         {/* Credit Breakdown */}
         <section>
