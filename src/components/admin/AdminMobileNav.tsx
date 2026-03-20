@@ -3,7 +3,7 @@ import {
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Bell, Home,
   Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, ListOrdered, 
-  Headphones, Star, HelpCircle, ArrowLeft, FileImage
+  Headphones, Star, HelpCircle, ArrowLeft, FileImage, Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,7 @@ const navItems: NavItem[] = [
   { id: 'faq', label: "Aide", icon: HelpCircle, group: 'communication', adminOnly: true },
   { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'communication', adminOnly: true },
   { id: 'promo', label: 'Promo', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
+  { id: 'ads' as AdminSection, label: 'Annonces', icon: Megaphone, group: 'communication', adminOnly: true },
   { id: 'promo-images' as AdminSection, label: 'Visuels promo', shortLabel: 'Visuels', icon: FileImage, group: 'communication', adminOnly: true },
   // Config
   { id: 'credit-costs', label: 'Tarifs crédits', shortLabel: 'Tarifs', icon: Coins, group: 'config', adminOnly: true },

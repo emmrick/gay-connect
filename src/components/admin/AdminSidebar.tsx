@@ -2,7 +2,7 @@ import {
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
   MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, Home,
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, 
-  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles, ToggleLeft, Rocket
+  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles, ToggleLeft, Rocket, Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ export type AdminSection =
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
   | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles'
-  | 'site-updates';
+  | 'site-updates' | 'ads';
 
 export interface ModPermissions {
   can_manage_users?: boolean | null;
@@ -99,6 +99,7 @@ const navItems: NavItem[] = [
   { id: 'promo-images', label: 'Visuels promo IA', icon: Sparkles, group: 'communication', adminOnly: true },
   { id: 'site-updates', label: 'Mises à jour site', icon: Rocket, group: 'communication', adminOnly: true },
   { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
+  { id: 'ads', label: 'Annonces pub', icon: Megaphone, group: 'communication', adminOnly: true },
 
   // Config & Logs (admin only)
   { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'config', adminOnly: true },

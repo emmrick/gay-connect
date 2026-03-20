@@ -53,6 +53,103 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_clicks: {
+        Row: {
+          ad_id: string
+          created_at: string
+          id: string
+          page_url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_clicks_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_free_subscriptions: {
+        Row: {
+          created_at: string
+          credits_paid: number
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          payment_plan: string | null
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_paid?: number
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          payment_plan?: string | null
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_paid?: number
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          payment_plan?: string | null
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ad_impressions: {
+        Row: {
+          ad_id: string
+          created_at: string
+          id: string
+          page_url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_impressions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_popups: {
         Row: {
           button_action: string | null
@@ -90,6 +187,96 @@ export type Database = {
           is_active?: boolean
           message?: string
           popup_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ads: {
+        Row: {
+          advertiser_email: string | null
+          advertiser_name: string
+          budget_cents: number | null
+          clicks_count: number | null
+          cost_per_click_cents: number | null
+          cost_per_mille_cents: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          impressions_count: number | null
+          is_active: boolean | null
+          link_url: string | null
+          max_clicks: number | null
+          max_impressions: number | null
+          placement: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          spent_cents: number | null
+          starts_at: string | null
+          status: string
+          target_pages: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          advertiser_email?: string | null
+          advertiser_name: string
+          budget_cents?: number | null
+          clicks_count?: number | null
+          cost_per_click_cents?: number | null
+          cost_per_mille_cents?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          impressions_count?: number | null
+          is_active?: boolean | null
+          link_url?: string | null
+          max_clicks?: number | null
+          max_impressions?: number | null
+          placement?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          spent_cents?: number | null
+          starts_at?: string | null
+          status?: string
+          target_pages?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          advertiser_email?: string | null
+          advertiser_name?: string
+          budget_cents?: number | null
+          clicks_count?: number | null
+          cost_per_click_cents?: number | null
+          cost_per_mille_cents?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          impressions_count?: number | null
+          is_active?: boolean | null
+          link_url?: string | null
+          max_clicks?: number | null
+          max_impressions?: number | null
+          placement?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          spent_cents?: number | null
+          starts_at?: string | null
+          status?: string
+          target_pages?: string[] | null
           title?: string
           updated_at?: string
         }
