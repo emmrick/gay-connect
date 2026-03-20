@@ -343,7 +343,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
         ref={messagesContainerRef}
         onScroll={handleScroll}
       >
-        <div className="px-3 py-2 space-y-0.5">
+        <div className="px-3 py-2">
           {isLoading ? (
             <div className="space-y-4 p-4">
               {[1, 2, 3].map((i) => (
