@@ -21,12 +21,13 @@ interface PrivateChatInputProps {
   onSendGift?: (amount: number) => void;
 }
 
-const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending = false, onTyping, onFocus }: PrivateChatInputProps) => {
+const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending = false, onTyping, onFocus, onSendGift }: PrivateChatInputProps) => {
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [showOptions, setShowOptions] = useState(false);
   const [showShareAlbum, setShowShareAlbum] = useState(false);
   const [showSnapCapture, setShowSnapCapture] = useState(false);
+  const [showGiftDialog, setShowGiftDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { checkMessage } = useForbiddenWords(recipientId);
 
