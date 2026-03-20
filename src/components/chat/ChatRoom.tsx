@@ -398,6 +398,23 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
           {/* Messages */}
           {messages.map((message) => {
             const isEphemeral = message.message_type === 'image' || message.message_type === 'video';
+            const isPoll = message.message_type === 'poll';
+            const poll = isPoll ? getPollForMessage(message.id) : undefined;
+
+            // Render poll message
+            if (isPoll && poll) {
+              return (
+                <div key={message.id} id={`message-${message.id}`} className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
+                  <PollMessage
+                    poll={poll}
+                    isOwn={message.sender_id === user?.id}
+                    onVote={(pollId, optionId) => vote.mutate({ pollId, optionId })}
+                    onLock={message.sender_id === user?.id ? (pollId) => lockPoll.mutate(pollId) : undefined}
+                  />
+                </div>
+              );
+            }
+
             const chatMsg = (
               <ChatMessage
                 key={message.id}
