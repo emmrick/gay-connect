@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, AlertTriangle, Timer } from 'lucide-react';
+import { Loader2, AlertTriangle, Timer, BanIcon, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
 import CreditWalletHeader from './CreditWalletHeader';
@@ -11,6 +11,8 @@ import CreditFAQSection from './CreditFAQSection';
 import SendGiftSection from './SendGiftSection';
 import ContactCreditIssueDialog from './ContactCreditIssueDialog';
 import AdBanner from '@/components/ads/AdBanner';
+import AdFreeSubscriptionDialog from '@/components/ads/AdFreeSubscriptionDialog';
+import { useAdFreeStatus } from '@/hooks/useAds';
 import { motion } from 'framer-motion';
 
 const CreditsPage = () => {
