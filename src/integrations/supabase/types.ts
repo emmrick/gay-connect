@@ -3855,6 +3855,10 @@ export type Database = {
         }
         Returns: Json
       }
+      subscribe_ad_free: {
+        Args: { _plan?: string; _user_id: string }
+        Returns: Json
+      }
       update_successful_referrals: {
         Args: { _referral_code_id: string }
         Returns: undefined
