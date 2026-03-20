@@ -512,7 +512,7 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                             isOwn={isOwn}
                           />
                         ) : isEmojiOnlyMessage(message.content || '') ? (
-                          <EmojiMessageEffect content={message.content!} isOwn={isOwn} />
+                          <EmojiMessageEffect content={message.content!} isOwn={isOwn} messageId={message.id} />
                         ) : (
                           <div
                             className={cn(
