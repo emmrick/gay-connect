@@ -113,7 +113,32 @@ const PrivateChatInput = ({ onSendMessage, recipientId, recipientName, isSending
             </div>
             <span className="text-[10px] text-muted-foreground">Album</span>
           </button>
+
+          {onSendGift && (
+            <button
+              className="flex flex-col items-center gap-1.5"
+              onClick={() => { setShowGiftDialog(true); setShowOptions(false); }}
+            >
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <Gift className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-[10px] text-muted-foreground">Cadeau</span>
+            </button>
+          )}
         </div>
+      )}
+
+      {/* Gift dialog */}
+      {onSendGift && (
+        <SendGiftDialog
+          isOpen={showGiftDialog}
+          onClose={() => setShowGiftDialog(false)}
+          recipientName={recipientName || ''}
+          onSendGift={(amount) => {
+            onSendGift(amount);
+            setShowGiftDialog(false);
+          }}
+        />
       )}
 
       {/* Snap capture dialog */}
