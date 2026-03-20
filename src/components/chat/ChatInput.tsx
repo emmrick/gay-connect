@@ -25,12 +25,13 @@ interface ChatInputProps {
   showPollButton?: boolean;
 }
 
-const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus, onVoiceToggle, showVoiceButton }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, chatRoomId, recipientId, isPrivate = false, isSending = false, onTyping, onFocus, onVoiceToggle, showVoiceButton, onCreatePoll, showPollButton }: ChatInputProps) => {
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [showOptions, setShowOptions] = useState(false);
   const [showSnapCapture, setShowSnapCapture] = useState(false);
+  const [showPollDialog, setShowPollDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const conversationId = chatRoomId || recipientId || 'unknown';
   const { checkMessage } = useForbiddenWords(conversationId);
