@@ -208,6 +208,22 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
     }
   };
 
+  const handleSendGift = async (amount: number) => {
+    if (!user || !otherUserId) return;
+    const { data: msg } = await supabase.from('messages').insert({
+      sender_id: user.id,
+      recipient_id: otherUserId,
+      content: JSON.stringify({ type: 'credit_gift', amount }),
+      message_type: 'credit_gift',
+      is_private: true,
+    }).select().single();
+    await sendGift.mutateAsync({
+      recipientId: otherUserId,
+      amount,
+      messageId: msg?.id,
+    });
+  };
+
   const handleUnblock = async () => {
     await unblockUser.mutateAsync(otherUserId);
     refetchBlockStatus();
