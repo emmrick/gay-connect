@@ -1,10 +1,9 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { ExternalLink, X, Info } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAds, useAdClick } from '@/hooks/useAds';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface AdBannerProps {
@@ -15,27 +14,33 @@ interface AdBannerProps {
 }
 
 const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps) => {
-  const { ads, isAdFree } = useAds(placement, 5);
+  const { currentAd, isAdFree, rotationIndex } = useAds(placement);
   const handleClick = useAdClick();
   const { user } = useAuth();
   const [dismissed, setDismissed] = useState(false);
   const impressionTracked = useRef(new Set<string>());
 
-  const ad = ads?.[index % (ads?.length || 1)];
+  const ad = currentAd;
 
   // Track impression
   useEffect(() => {
     if (!ad?.id || !user?.id || impressionTracked.current.has(ad.id)) return;
     impressionTracked.current.add(ad.id);
     const track = async () => {
-      await supabase.from('ad_impressions').insert({
-        ad_id: ad.id,
-        user_id: user.id,
-        page_url: window.location.pathname,
-      } as any);
+      try {
+        await supabase.from('ad_impressions').insert({
+          ad_id: ad.id,
+          user_id: user.id,
+          page_url: window.location.pathname,
+        } as any);
+        await supabase.rpc('increment_ad_impressions' as any, { _ad_id: ad.id });
+      } catch {}
     };
-    track().catch(() => {});
+    track();
   }, [ad?.id, user?.id]);
+
+  // Reset dismissed on rotation
+  useEffect(() => { setDismissed(false); }, [rotationIndex]);
 
   if (isAdFree || !ad || dismissed) return null;
 

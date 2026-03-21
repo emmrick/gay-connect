@@ -282,6 +282,80 @@ export type Database = {
         }
         Relationships: []
       }
+      advertiser_deposits: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          payment_method: string
+          payment_reference: string | null
+          processed_at: string | null
+          status: string
+          wallet_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payment_reference?: string | null
+          processed_at?: string | null
+          status?: string
+          wallet_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payment_reference?: string | null
+          processed_at?: string | null
+          status?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertiser_deposits_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "advertiser_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advertiser_wallets: {
+        Row: {
+          advertiser_email: string
+          advertiser_name: string
+          balance_cents: number
+          created_at: string
+          id: string
+          total_deposited_cents: number
+          total_spent_cents: number
+          updated_at: string
+        }
+        Insert: {
+          advertiser_email: string
+          advertiser_name?: string
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          total_deposited_cents?: number
+          total_spent_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          advertiser_email?: string
+          advertiser_name?: string
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          total_deposited_cents?: number
+          total_spent_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_moderation_reports: {
         Row: {
           ai_analysis: string
