@@ -31,6 +31,7 @@ import { Loader2, Plus, User, Users } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
+import AdBanner from '@/components/ads/AdBanner';
 
 // Lazy-load heavy sub-views to reduce initial JS bundle
 const ChatRoom = lazy(() => import('@/components/chat/ChatRoom'));
@@ -633,6 +634,8 @@ const Index = () => {
 
   const content = renderContent();
 
+  const showGlobalAd = user && currentView !== 'landing' && !isAdmin && !isModerator;
+
   return (
     <Suspense fallback={<LazyFallback />}>
       <div 
@@ -663,6 +666,13 @@ const Index = () => {
             </div>
           )}
         </main>
+
+        {/* Global Ad Banner - shown on all pages except admin/moderator */}
+        {showGlobalAd && currentView !== 'chat' && currentView !== 'private' && (
+          <div className="px-3 pb-1" style={{ marginBottom: showBottomNav ? '-20px' : undefined }}>
+            <AdBanner placement="compact" />
+          </div>
+        )}
 
         {/* Bottom Navigation Bar */}
         {showBottomNav && (
