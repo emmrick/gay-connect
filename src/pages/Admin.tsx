@@ -53,6 +53,7 @@ import IdentityVerificationPanel from '@/components/admin/IdentityVerificationPa
 import FeatureTogglesPanel from '@/components/admin/FeatureTogglesPanel';
 import SiteUpdatesPanel from '@/components/admin/SiteUpdatesPanel';
 import AdsManagementPanel from '@/components/admin/AdsManagementPanel';
+import AdFreePlansPanel from '@/components/admin/AdFreePlansPanel';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
@@ -259,7 +260,7 @@ const Admin = () => {
       case 'screenshot-sanctions': return <ScreenshotSanctionsPanel />;
       case 'moderators': return <ModeratorManagementPanel />;
       case 'swipe-stats': return <SwipeStatsPanel />;
-      case 'credit-costs': return <div className="space-y-8"><CreditOffersPanel /><CreditCostsPanel /></div>;
+      case 'credit-costs': return <div className="space-y-8"><CreditOffersPanel /><AdFreePlansPanel /><CreditCostsPanel /></div>;
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
       case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('dashboard')} onNavigateToSection={handleSectionChange} />;
