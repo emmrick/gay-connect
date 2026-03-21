@@ -85,6 +85,45 @@ export type Database = {
           },
         ]
       }
+      ad_free_plans: {
+        Row: {
+          created_at: string
+          credits_cost: number
+          display_order: number | null
+          duration_days: number
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          label: string
+          tag: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits_cost: number
+          display_order?: number | null
+          duration_days: number
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          label: string
+          tag?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits_cost?: number
+          display_order?: number | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          label?: string
+          tag?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ad_free_subscriptions: {
         Row: {
           created_at: string
@@ -3971,10 +4010,9 @@ export type Database = {
         }
         Returns: Json
       }
-      subscribe_ad_free: {
-        Args: { _plan?: string; _user_id: string }
-        Returns: Json
-      }
+      subscribe_ad_free:
+        | { Args: { _plan?: string; _user_id: string }; Returns: Json }
+        | { Args: { _plan_id: string; _user_id: string }; Returns: Json }
       update_successful_referrals: {
         Args: { _referral_code_id: string }
         Returns: undefined
