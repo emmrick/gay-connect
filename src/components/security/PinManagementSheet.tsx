@@ -103,7 +103,14 @@ const PinManagementSheet = ({ open, onOpenChange }: PinManagementSheetProps) => 
   }, [isProcessing]);
 
   const handleToggleBiometric = async () => {
-    if (!biometricEnabled) {
+    if (biometricEnabled) {
+      const success = await disableBiometric();
+      if (success) {
+        toast.success('Empreinte digitale désactivée');
+      } else {
+        toast.error("Impossible de désactiver l'empreinte digitale");
+      }
+    } else {
       const success = await enableBiometric();
       if (success) {
         toast.success('Empreinte digitale activée !');
