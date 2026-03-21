@@ -168,6 +168,7 @@ const GlobalMissionOverlay = () => {
   const prevActiveTaskIdRef = useRef<string | null>(null);
   const prevNextTaskIdRef = useRef<string | null>(null);
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isCooldownRef = useRef(false);
 
   // Countdown
   useEffect(() => {
@@ -224,7 +225,7 @@ const GlobalMissionOverlay = () => {
       return;
     }
     if (!missionsActive) { setQueueState('idle'); return; }
-    if (queueState === 'cooldown') return;
+    if (isCooldownRef.current) return;
 
     const prevNextTaskId = prevNextTaskIdRef.current;
     prevNextTaskIdRef.current = nextTask?.id ?? null;
@@ -246,7 +247,7 @@ const GlobalMissionOverlay = () => {
       }
     } else {
       prevActiveTaskIdRef.current = null;
-      if (queueState !== 'cooldown') setQueueState('idle');
+      if (!isCooldownRef.current) setQueueState('idle');
     }
 
     return () => { if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current); };
@@ -270,8 +271,10 @@ const GlobalMissionOverlay = () => {
     refuseTask.mutate(nextTask.id);
     setQueueState('cooldown');
     if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    isCooldownRef.current = true;
     cooldownTimerRef.current = setTimeout(() => {
       cooldownTimerRef.current = null;
+      isCooldownRef.current = false;
       invalidateAllTaskQueries(queryClient);
       setQueueState('idle');
     }, REFUSE_COOLDOWN_MS);
