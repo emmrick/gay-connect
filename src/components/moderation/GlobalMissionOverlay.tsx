@@ -192,6 +192,11 @@ const GlobalMissionOverlay = () => {
     return () => { if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; } };
   }, [queueState, nextTask?.id, missionsActive, queryClient, shouldActivate]);
 
+  useEffect(() => {
+    if (!shouldActivate || !missionsActive) return;
+    invalidateAllTaskQueries(queryClient);
+  }, [missionsActive, shouldActivate, queryClient]);
+
   // Repeating sound
   useEffect(() => {
     if (!shouldActivate) return;
@@ -242,7 +247,7 @@ const GlobalMissionOverlay = () => {
     }
 
     return () => { if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current); };
-  }, [activeTask, nextTask, missionsActive, shouldActivate]);
+  }, [activeTask, nextTask, missionsActive, shouldActivate, queryClient]);
 
   const handleAccept = useCallback(() => {
     if (!nextTask) return;
