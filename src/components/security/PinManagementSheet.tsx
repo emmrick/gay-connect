@@ -20,6 +20,7 @@ const PinManagementSheet = ({ open, onOpenChange }: PinManagementSheetProps) => 
     verifyPin,
     setupPin,
     enableBiometric,
+    disableBiometric,
     isBiometricAvailable,
     biometricEnabled,
   } = useAppLock();
