@@ -55,6 +55,8 @@ export const formatCentsReward = (cents: number) => {
 // ─── Mission toggle (persisted in localStorage) ───
 const MISSION_ACTIVE_KEY = 'moderation-missions-active';
 const MISSION_ACTIVE_EVENT = 'moderation-missions-active-change';
+const MISSION_REFUSE_COOLDOWN_KEY = 'moderation-missions-refuse-cooldown-until';
+const MISSION_REFUSE_COOLDOWN_EVENT = 'moderation-missions-refuse-cooldown-change';
 
 const readMissionActiveState = () => {
   try {
@@ -72,6 +74,38 @@ const persistMissionActiveState = (value: boolean) => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(MISSION_ACTIVE_EVENT, { detail: value }));
   }
+};
+
+const readMissionRefuseCooldownUntil = () => {
+  try {
+    const raw = localStorage.getItem(MISSION_REFUSE_COOLDOWN_KEY);
+    const parsed = raw ? Number(raw) : 0;
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const persistMissionRefuseCooldownUntil = (value: number) => {
+  try {
+    if (value > Date.now()) {
+      localStorage.setItem(MISSION_REFUSE_COOLDOWN_KEY, String(value));
+    } else {
+      localStorage.removeItem(MISSION_REFUSE_COOLDOWN_KEY);
+    }
+  } catch {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(MISSION_REFUSE_COOLDOWN_EVENT, { detail: value }));
+  }
+};
+
+export const isMissionRefuseCooldownActive = () => readMissionRefuseCooldownUntil() > Date.now();
+
+export const startMissionRefuseCooldown = (durationMs: number) => {
+  const until = Date.now() + durationMs;
+  persistMissionRefuseCooldownUntil(until);
+  return until;
 };
 
 export const useMissionToggle = () => {
@@ -163,11 +197,51 @@ export const usePendingTasksHistory = () => {
 export const useAvailableTasks = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [cooldownUntil, setCooldownUntil] = useState(readMissionRefuseCooldownUntil);
+  const cooldownActive = cooldownUntil > Date.now();
+
+  useEffect(() => {
+    const syncCooldown = (value?: number) => {
+      const nextValue = typeof value === 'number' ? value : readMissionRefuseCooldownUntil();
+      setCooldownUntil(nextValue > Date.now() ? nextValue : 0);
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === MISSION_REFUSE_COOLDOWN_KEY) {
+        syncCooldown(event.newValue ? Number(event.newValue) : 0);
+      }
+    };
+
+    const handleLocalSync = (event: Event) => {
+      const customEvent = event as CustomEvent<number>;
+      syncCooldown(customEvent.detail);
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener(MISSION_REFUSE_COOLDOWN_EVENT, handleLocalSync as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(MISSION_REFUSE_COOLDOWN_EVENT, handleLocalSync as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!cooldownActive) return;
+
+    const timeout = window.setTimeout(() => {
+      setCooldownUntil(0);
+      invalidateAllTaskQueries(queryClient);
+    }, Math.max(0, cooldownUntil - Date.now()) + 50);
+
+    return () => window.clearTimeout(timeout);
+  }, [cooldownActive, cooldownUntil, queryClient]);
 
   const query = useQuery({
     queryKey: ['moderation-tasks-available', user?.id],
     queryFn: async (): Promise<ModerationTask[]> => {
       if (!user?.id) return [];
+      if (cooldownActive) return [];
 
       // get_exclusive_next_task already handles expiring stale offers
       // and recycling refused tasks internally — no redundant calls needed
@@ -185,7 +259,7 @@ export const useAvailableTasks = () => {
       })) as ModerationTask[];
     },
     enabled: !!user?.id,
-    refetchInterval: 10000, // Poll every 10s to check for new exclusive offers (60s TTL)
+    refetchInterval: cooldownActive ? false : 10000,
   });
 
   // Realtime: instant refresh on any task change
@@ -202,6 +276,7 @@ export const useAvailableTasks = () => {
           table: 'moderation_tasks',
         },
         () => {
+          if (isMissionRefuseCooldownActive()) return;
           invalidateAllTaskQueries(queryClient);
         }
       )

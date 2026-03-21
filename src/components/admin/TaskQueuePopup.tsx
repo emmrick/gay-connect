@@ -32,6 +32,7 @@ import {
   getTaskTypeSection,
   formatCentsReward,
   invalidateAllTaskQueries,
+  startMissionRefuseCooldown,
 } from '@/hooks/useModerationTaskQueue';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -147,8 +148,9 @@ interface TaskQueuePopupProps {
 }
 
 const TRANSITION_DELAY_MS = 1500;
+const REFUSE_COOLDOWN_MS = 10000;
 
-type QueueState = 'idle' | 'offering' | 'transitioning' | 'active';
+type QueueState = 'idle' | 'offering' | 'transitioning' | 'cooldown' | 'active';
 
 const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
   const { user } = useAuth();
@@ -169,9 +171,11 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
   const offerStartRef = useRef<number | null>(null);
 
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const soundIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevActiveTaskIdRef = useRef<string | null>(null);
   const prevNextTaskIdRef = useRef<string | null>(null);
+  const isCooldownRef = useRef(false);
 
   // ── Countdown timer: 60s to accept or refuse ──
   useEffect(() => {
@@ -250,6 +254,8 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
       return;
     }
 
+    if (isCooldownRef.current) return;
+
     const prevNextTaskId = prevNextTaskIdRef.current;
     prevNextTaskIdRef.current = nextTask?.id ?? null;
 
@@ -299,15 +305,22 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
 
   const handleRefuse = useCallback(() => {
     if (!nextTask) return;
+    startMissionRefuseCooldown(REFUSE_COOLDOWN_MS);
     refuseTask.mutate(nextTask.id);
-    setQueueState('transitioning');
-    transitionTimerRef.current = setTimeout(() => {
-      // State will be resolved by the useEffect above after refetch
-    }, TRANSITION_DELAY_MS);
-  }, [nextTask, refuseTask]);
+    setQueueState('cooldown');
+    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    isCooldownRef.current = true;
+    cooldownTimerRef.current = setTimeout(() => {
+      cooldownTimerRef.current = null;
+      isCooldownRef.current = false;
+      invalidateAllTaskQueries(queryClient);
+      setQueueState('idle');
+    }, REFUSE_COOLDOWN_MS);
+  }, [nextTask, refuseTask, queryClient]);
 
   const handleRefuseActive = useCallback(() => {
     if (!activeTask) return;
+    startMissionRefuseCooldown(REFUSE_COOLDOWN_MS);
     refuseTask.mutate(activeTask.id);
   }, [activeTask, refuseTask]);
 
@@ -431,7 +444,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
         </div>
 
         {/* Queue position indicator */}
-        {missionsActive && !activeTask && queueLength > 0 && queueState !== 'transitioning' && (
+        {missionsActive && !activeTask && queueLength > 0 && queueState !== 'transitioning' && queueState !== 'cooldown' && (
           <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-xs text-primary font-medium">
@@ -443,7 +456,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
 
       {/* ── Transition State ── */}
       <AnimatePresence>
-        {queueState === 'transitioning' && (
+        {(queueState === 'transitioning' || queueState === 'cooldown') && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -454,10 +467,10 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
               <Loader2 className="w-5 h-5 text-primary animate-spin" />
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  Connexion à la mission suivante…
+                  {queueState === 'cooldown' ? 'Recherche de la prochaine mission…' : 'Connexion à la mission suivante…'}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Veuillez patienter
+                  {queueState === 'cooldown' ? 'Nouvelle proposition dans 10 secondes' : 'Veuillez patienter'}
                 </p>
               </div>
             </div>
