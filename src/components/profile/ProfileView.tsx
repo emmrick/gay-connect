@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import AdBanner from '@/components/ads/AdBanner';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
