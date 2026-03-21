@@ -53,22 +53,58 @@ export const formatCentsReward = (cents: number) => {
 
 // ─── Mission toggle (persisted in localStorage) ───
 const MISSION_ACTIVE_KEY = 'moderation-missions-active';
+const MISSION_ACTIVE_EVENT = 'moderation-missions-active-change';
+
+const readMissionActiveState = () => {
+  try {
+    return localStorage.getItem(MISSION_ACTIVE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const persistMissionActiveState = (value: boolean) => {
+  try {
+    localStorage.setItem(MISSION_ACTIVE_KEY, String(value));
+  } catch {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(MISSION_ACTIVE_EVENT, { detail: value }));
+  }
+};
 
 export const useMissionToggle = () => {
-  const [isActive, setIsActive] = useState<boolean>(() => {
-    try {
-      const stored = localStorage.getItem(MISSION_ACTIVE_KEY);
-      // Default to FALSE on fresh load (no stored value) to prevent unwanted missions
-      return stored === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [isActive, setIsActive] = useState<boolean>(readMissionActiveState);
+
+  useEffect(() => {
+    const syncState = (value?: boolean) => {
+      setIsActive(typeof value === 'boolean' ? value : readMissionActiveState());
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === MISSION_ACTIVE_KEY) {
+        syncState(event.newValue === 'true');
+      }
+    };
+
+    const handleLocalSync = (event: Event) => {
+      const customEvent = event as CustomEvent<boolean>;
+      syncState(customEvent.detail);
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener(MISSION_ACTIVE_EVENT, handleLocalSync as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(MISSION_ACTIVE_EVENT, handleLocalSync as EventListener);
+    };
+  }, []);
 
   const toggle = useCallback(() => {
     setIsActive(prev => {
       const next = !prev;
-      try { localStorage.setItem(MISSION_ACTIVE_KEY, String(next)); } catch {}
+      persistMissionActiveState(next);
       if (next) {
         toast.success('Missions activées — vous recevrez de nouvelles missions.');
       } else {
@@ -80,7 +116,7 @@ export const useMissionToggle = () => {
 
   const setActive = useCallback((value: boolean) => {
     setIsActive(value);
-    try { localStorage.setItem(MISSION_ACTIVE_KEY, String(value)); } catch {}
+    persistMissionActiveState(value);
   }, []);
 
   return { isActive, toggle, setActive };
