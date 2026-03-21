@@ -37,6 +37,7 @@ import ScreenshotSanctionsPanel from '@/components/admin/ScreenshotSanctionsPane
 import ModeratorManagementPanel from '@/components/admin/ModeratorManagementPanel';
 import SwipeStatsPanel from '@/components/admin/SwipeStatsPanel';
 import CreditCostsPanel from '@/components/admin/CreditCostsPanel';
+import CreditOffersPanel from '@/components/admin/CreditOffersPanel';
 import MaintenanceTogglePanel from '@/components/admin/MaintenanceTogglePanel';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import PendingTasksPanel from '@/components/admin/PendingTasksPanel';
