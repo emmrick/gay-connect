@@ -1,43 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { BanIcon, Check, Loader2, Sparkles } from 'lucide-react';
+import { BanIcon, Check, Loader2, Sparkles, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface AdFreeSubscriptionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const PLANS = [
-  {
-    id: '7_weekly' as const,
-    label: '7 jours',
-    credits: 7,
-    tag: 'Flexible',
-    perDay: '1 crédit/jour',
-  },
-  {
-    id: '15_biweekly' as const,
-    label: '15 jours',
-    credits: 15,
-    tag: 'Populaire',
-    perDay: '1 crédit/jour',
-    popular: true,
-  },
-  {
-    id: '30_once' as const,
-    label: '30 jours',
-    credits: 30,
-    tag: 'Meilleur prix',
-    perDay: '1 crédit/jour',
-  },
-];
+interface AdFreePlan {
+  id: string;
+  label: string;
+  duration_days: number;
+  credits_cost: number;
+  tag: string | null;
+  is_popular: boolean;
+  display_order: number;
+}
 
 const BENEFITS = [
   'Aucune publicité visible sur le site',
@@ -48,16 +34,51 @@ const BENEFITS = [
 const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDialogProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedPlan, setSelectedPlan] = useState<string>('15_biweekly');
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { data: plans } = useQuery({
+    queryKey: ['ad-free-plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('ad_free_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data as AdFreePlan[];
+    },
+    enabled: open,
+  });
+
+  // Realtime updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('ad-free-plans-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ad_free_plans' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['ad-free-plans'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
+  // Auto-select popular or first plan
+  useEffect(() => {
+    if (plans?.length && !selectedPlanId) {
+      const popular = plans.find(p => p.is_popular);
+      setSelectedPlanId(popular?.id || plans[0].id);
+    }
+  }, [plans, selectedPlanId]);
+
+  const selected = plans?.find(p => p.id === selectedPlanId);
+
   const handleSubscribe = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !selectedPlanId) return;
     setIsLoading(true);
     try {
       const { data, error } = await supabase.rpc('subscribe_ad_free' as any, {
         _user_id: user.id,
-        _plan: selectedPlan,
+        _plan_id: selectedPlanId,
       });
 
       const result = data as any;
@@ -85,8 +106,6 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
     }
   };
 
-  const selected = PLANS.find(p => p.id === selectedPlan);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm mx-auto">
@@ -104,30 +123,44 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
 
         <div className="space-y-4 pt-2">
           {/* Plans */}
-          <div className="grid grid-cols-3 gap-2">
-            {PLANS.map((plan) => (
+          <div className={cn("grid gap-2", plans && plans.length <= 3 ? `grid-cols-${plans.length}` : 'grid-cols-2')}>
+            {plans?.map((plan) => (
               <motion.button
                 key={plan.id}
                 whileTap={{ scale: 0.96 }}
-                onClick={() => setSelectedPlan(plan.id)}
+                onClick={() => setSelectedPlanId(plan.id)}
                 className={cn(
                   "relative rounded-xl border-2 p-3 text-center transition-all duration-200",
-                  selectedPlan === plan.id
+                  selectedPlanId === plan.id
                     ? "border-primary bg-primary/5 shadow-sm"
                     : "border-border/50 bg-card hover:border-border"
                 )}
               >
-                {plan.popular && (
+                {plan.is_popular && plan.tag && (
                   <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full whitespace-nowrap">
                     {plan.tag}
                   </span>
                 )}
-                <p className="text-lg font-bold text-foreground">{plan.credits}</p>
+                {!plan.is_popular && plan.tag && (
+                  <Badge variant="secondary" className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] px-2 py-0 whitespace-nowrap">
+                    {plan.tag}
+                  </Badge>
+                )}
+                <p className="text-lg font-bold text-foreground">{plan.credits_cost}</p>
                 <p className="text-[10px] text-muted-foreground font-medium">crédits</p>
                 <p className="text-xs font-semibold text-foreground mt-1">{plan.label}</p>
+                {plan.duration_days > 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {(plan.credits_cost / plan.duration_days).toFixed(1)} cr/jour
+                  </p>
+                )}
               </motion.button>
             ))}
           </div>
+
+          {!plans?.length && (
+            <p className="text-sm text-muted-foreground text-center py-4">Aucune offre disponible pour le moment.</p>
+          )}
 
           {/* Benefits */}
           <div className="space-y-2 px-1">
@@ -142,7 +175,7 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
           {/* Subscribe button */}
           <Button
             onClick={handleSubscribe}
-            disabled={isLoading}
+            disabled={isLoading || !selected}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             size="lg"
           >
@@ -151,7 +184,7 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
             ) : (
               <Sparkles className="w-4 h-4 mr-2" />
             )}
-            Souscrire pour {selected?.credits} crédits
+            Souscrire pour {selected?.credits_cost ?? '...'} crédits
           </Button>
 
           <p className="text-[10px] text-center text-muted-foreground">
