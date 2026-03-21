@@ -192,6 +192,11 @@ const GlobalMissionOverlay = () => {
     return () => { if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; } };
   }, [queueState, nextTask?.id, missionsActive, queryClient, shouldActivate]);
 
+  useEffect(() => {
+    if (!shouldActivate || !missionsActive) return;
+    invalidateAllTaskQueries(queryClient);
+  }, [missionsActive, shouldActivate, queryClient]);
+
   // Repeating sound
   useEffect(() => {
     if (!shouldActivate) return;
@@ -242,7 +247,7 @@ const GlobalMissionOverlay = () => {
     }
 
     return () => { if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current); };
-  }, [activeTask, nextTask, missionsActive, shouldActivate]);
+  }, [activeTask, nextTask, missionsActive, shouldActivate, queryClient]);
 
   const handleAccept = useCallback(() => {
     if (!nextTask) return;
@@ -336,7 +341,8 @@ const GlobalMissionOverlay = () => {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-2 left-1/2 -translate-x-1/2 w-[90vw] max-w-md z-[60]"
+            className="fixed left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[90vw] sm:max-w-md z-[60]"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
           >
             <div className="rounded-xl border border-primary/20 bg-card shadow-lg p-4">
               <div className="flex items-center justify-center gap-3">
@@ -356,8 +362,8 @@ const GlobalMissionOverlay = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -100, scale: 0.9 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed top-0 left-0 right-0 sm:top-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md z-[60]"
-            style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+            className="fixed left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md z-[60]"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
           >
             <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-2xl shadow-primary/10 overflow-hidden">
               <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
@@ -415,8 +421,8 @@ const GlobalMissionOverlay = () => {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-2 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md z-[60]"
-            style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+            className="fixed left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md z-[60]"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
           >
             <div className="rounded-xl border border-primary/30 bg-card shadow-lg p-3 sm:p-4 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
