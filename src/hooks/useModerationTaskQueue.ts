@@ -135,11 +135,8 @@ export const useAvailableTasks = () => {
     queryFn: async (): Promise<ModerationTask[]> => {
       if (!user?.id) return [];
 
-      // First expire stale tasks and recycle fully refused ones
-      await supabase.rpc('expire_stale_moderation_tasks');
-      await supabase.rpc('recycle_fully_refused_tasks');
-
-      // Use exclusive offering: atomically assigns ONE task to this user only
+      // get_exclusive_next_task already handles expiring stale offers
+      // and recycling refused tasks internally — no redundant calls needed
       const { data, error } = await supabase.rpc('get_exclusive_next_task', {
         _user_id: user.id,
       });

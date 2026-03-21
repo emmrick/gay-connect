@@ -669,7 +669,7 @@ const Index = () => {
 
         {/* Global Ad Banner - shown on all pages except admin/moderator */}
         {showGlobalAd && currentView !== 'chat' && currentView !== 'private' && (
-          <div className="px-3 pb-1" style={{ marginBottom: showBottomNav ? '-20px' : undefined }}>
+          <div className="px-3 py-1">
             <AdBanner placement="compact" />
           </div>
         )}
