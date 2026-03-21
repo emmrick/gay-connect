@@ -51,6 +51,7 @@ const Rules = lazy(() => import("./pages/Rules"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const GuidePage = lazy(() => import("./pages/Guide"));
 const PaypalReturn = lazy(() => import("./pages/PaypalReturn"));
+const Advertise = lazy(() => import("./pages/Advertise"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
@@ -133,6 +134,7 @@ const AuthenticatedApp = () => {
                     <Route path="/regles" element={<Suspense fallback={<PageFallback />}><Rules /></Suspense>} />
                     <Route path="/guide" element={<Suspense fallback={<PageFallback />}><GuidePage /></Suspense>} />
                     <Route path="/paypal-return" element={<Suspense fallback={<PageFallback />}><PaypalReturn /></Suspense>} />
+                    <Route path="/advertise" element={<Suspense fallback={<PageFallback />}><Advertise /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>
