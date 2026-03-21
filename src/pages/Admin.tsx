@@ -260,7 +260,7 @@ const Admin = () => {
       case 'screenshot-sanctions': return <ScreenshotSanctionsPanel />;
       case 'moderators': return <ModeratorManagementPanel />;
       case 'swipe-stats': return <SwipeStatsPanel />;
-      case 'credit-costs': return <div className="space-y-8"><CreditOffersPanel /><CreditCostsPanel /></div>;
+      case 'credit-costs': return <div className="space-y-8"><CreditOffersPanel /><AdFreePlansPanel /><CreditCostsPanel /></div>;
       case 'maintenance': return <MaintenanceTogglePanel />;
       case 'pending-tasks': return <PendingTasksPanel />;
       case 'support': return <AdminSupportChatPanel onBack={() => handleSectionChange('dashboard')} onNavigateToSection={handleSectionChange} />;
