@@ -145,7 +145,7 @@ serve(async (req) => {
           const jwtClaims = {
             aud: audience,
             exp: now + 12 * 60 * 60,
-            sub: "mailto:support@gayconnect.app",
+            sub: "mailto:support@gaysocial.app",
           };
 
           const headerB64 = btoa(JSON.stringify(jwtHeader))

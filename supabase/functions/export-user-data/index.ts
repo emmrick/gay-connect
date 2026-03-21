@@ -350,7 +350,7 @@ Pour toute question, contactez notre support.
       JSON.stringify({ 
         success: true, 
         zip_base64: zipBase64,
-        filename: `gayconnect-export-${new Date().toISOString().split('T')[0]}.zip`,
+        filename: `gaysocial-export-${new Date().toISOString().split('T')[0]}.zip`,
         stats: {
           photos: photoCount,
           album_media: albumMediaCount,

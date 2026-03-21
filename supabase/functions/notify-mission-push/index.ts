@@ -119,7 +119,7 @@ serve(async (req) => {
     });
 
     const appServer = await webpush.ApplicationServer.new({
-      contactInformation: "mailto:support@gayconnect.app",
+      contactInformation: "mailto:support@gaysocial.app",
       vapidKeys,
     });
 

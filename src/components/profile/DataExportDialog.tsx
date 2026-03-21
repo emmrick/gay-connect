@@ -77,7 +77,7 @@ const DataExportDialog = ({ open, onOpenChange }: DataExportDialogProps) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = data.filename || `gayconnect-export-${new Date().toISOString().split('T')[0]}.zip`;
+      a.download = data.filename || `gaysocial-export-${new Date().toISOString().split('T')[0]}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
