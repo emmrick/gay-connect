@@ -65,7 +65,6 @@ const navItems: NavItem[] = [
   { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'communication', adminOnly: true },
   { id: 'promo', label: 'Promo', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
   { id: 'ads' as AdminSection, label: 'Annonces', icon: Megaphone, group: 'communication', adminOnly: true },
-  { id: 'ads' as AdminSection, label: 'Annonces', icon: Megaphone, group: 'communication', permissionKey: 'can_manage_content' },
   { id: 'promo-images' as AdminSection, label: 'Visuels promo', shortLabel: 'Visuels', icon: FileImage, group: 'communication', adminOnly: true },
   // Config
   { id: 'credit-costs', label: 'Tarifs crédits', shortLabel: 'Tarifs', icon: Coins, group: 'config', adminOnly: true },
