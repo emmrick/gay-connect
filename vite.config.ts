@@ -24,8 +24,8 @@ export default defineConfig(({ mode }) => ({
       injectRegister: null,
       includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
       manifest: {
-        name: "Gay Connect - Rencontres & Chat",
-        short_name: "Gay Connect",
+        name: "Gay Social - Rencontres & Chat",
+        short_name: "Gay Social",
         description: "Rejoins la communauté gay de ta région. Chat, échanges de photos et vidéos en groupe ou en privé.",
         theme_color: "#9b5de5",
         background_color: "#0a0a0f",
