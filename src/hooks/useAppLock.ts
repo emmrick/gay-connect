@@ -244,6 +244,7 @@ export function useAppLock() {
     setupPin,
     unlockWithBiometric,
     enableBiometric,
+    disableBiometric,
     isBiometricAvailable,
     biometricEnabled: pinData?.biometric_enabled ?? false,
   };
