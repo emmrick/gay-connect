@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import AdBanner from '@/components/ads/AdBanner';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileStats } from '@/hooks/useProfileStats';
@@ -116,6 +117,9 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
           ethnicityLabels={ETHNICITY_LABELS}
           hivStatusLabels={HIV_STATUS_LABELS}
         />
+
+        {/* Ad */}
+        <AdBanner placement="compact" />
 
         {/* Albums */}
         {featureFlags['albums'] !== false && (
