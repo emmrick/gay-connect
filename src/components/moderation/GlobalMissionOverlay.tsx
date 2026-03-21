@@ -22,6 +22,7 @@ import {
   getTaskTypeSection,
   formatCentsReward,
   invalidateAllTaskQueries,
+  startMissionRefuseCooldown,
 } from '@/hooks/useModerationTaskQueue';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -122,7 +123,7 @@ const playAcceptSound = () => {
 
 type QueueState = 'idle' | 'offering' | 'transitioning' | 'cooldown' | 'active';
 const TRANSITION_DELAY_MS = 1500;
-const REFUSE_COOLDOWN_MS = 5000;
+const REFUSE_COOLDOWN_MS = 10000;
 
 const GlobalMissionOverlay = () => {
   const { user } = useAuth();
@@ -268,6 +269,7 @@ const GlobalMissionOverlay = () => {
 
   const handleRefuse = useCallback(() => {
     if (!nextTask) return;
+    startMissionRefuseCooldown(REFUSE_COOLDOWN_MS);
     refuseTask.mutate(nextTask.id);
     setQueueState('cooldown');
     if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
@@ -294,6 +296,7 @@ const GlobalMissionOverlay = () => {
 
   const handleRefuseActive = useCallback(() => {
     if (!activeTask) return;
+    startMissionRefuseCooldown(REFUSE_COOLDOWN_MS);
     refuseTask.mutate(activeTask.id);
   }, [activeTask, refuseTask]);
 
