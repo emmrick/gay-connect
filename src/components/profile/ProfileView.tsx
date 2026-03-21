@@ -118,6 +118,9 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
           hivStatusLabels={HIV_STATUS_LABELS}
         />
 
+        {/* Ad */}
+        <AdBanner placement="compact" />
+
         {/* Albums */}
         {featureFlags['albums'] !== false && (
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>

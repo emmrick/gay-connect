@@ -286,6 +286,10 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
         })}
       </div>
 
+      <div className="px-2 py-2">
+        <AdBanner placement="compact" />
+      </div>
+
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

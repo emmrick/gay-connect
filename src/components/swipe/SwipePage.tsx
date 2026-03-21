@@ -441,6 +441,7 @@ const LikedProfilesList = ({
             </motion.div>
           ))}
         </div>
+        <AdBanner placement="compact" className="mt-4" />
       </div>
     </ScrollArea>
   );
