@@ -206,6 +206,26 @@ export function useAppLock() {
     return false;
   }, [user]);
 
+  const disableBiometric = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      await supabase
+        .from('user_security_pins')
+        .update({
+          biometric_enabled: false,
+          biometric_credential_id: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+
+      setPinData(prev => prev ? { ...prev, biometric_enabled: false, biometric_credential_id: null } : null);
+      return true;
+    } catch (e) {
+      console.warn('[AppLock] Biometric disable failed:', e);
+      return false;
+    }
+  }, [user]);
+
   const isBiometricAvailable = useCallback(async (): Promise<boolean> => {
     try {
       if (!window.PublicKeyCredential) return false;
