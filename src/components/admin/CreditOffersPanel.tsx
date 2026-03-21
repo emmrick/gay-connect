@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -211,8 +211,7 @@ const OfferFormDialog = ({
   const [highlighted, setHighlighted] = useState(offer?.is_highlighted || false);
   const [saving, setSaving] = useState(false);
 
-  // Reset form when offer changes
-  useState(() => {
+  useEffect(() => {
     if (offer) {
       setCredits(offer.credits.toString());
       setPrice(offer.price_euros.toString());
@@ -230,7 +229,7 @@ const OfferFormDialog = ({
       setOrder('0');
       setHighlighted(false);
     }
-  });
+  }, [offer]);
 
   const handleSave = async () => {
     const numCredits = parseFloat(credits);
