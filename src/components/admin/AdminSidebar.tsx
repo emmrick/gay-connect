@@ -1,6 +1,6 @@
 import { 
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter, 
-  MessageSquare, IdCard, Ticket, Ban, Coins, History, ChevronLeft, Menu, Home,
+  MessageSquare, IdCard, Ticket, Coins, ChevronLeft, Menu, Home,
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, 
   ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles, ToggleLeft, Rocket, Megaphone
 } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import AdminCommandBar from './AdminCommandBar';
 
 export type AdminSection = 
   | 'dashboard'
@@ -61,63 +62,51 @@ interface NavItem {
   icon: React.ElementType;
   group: NavGroup;
   adminOnly?: boolean;
-  /** If set, moderators with this permission can also see this item */
   permissionKey?: keyof ModPermissions;
 }
 
 const navItems: NavItem[] = [
-  // Tâches quotidiennes (visible par tous)
-  { id: 'pending-tasks', label: "File d'attente", icon: ListOrdered, group: 'tasks' },
-  { id: 'support', label: 'Support client', icon: Headphones, group: 'tasks' },
-  { id: 'support-ratings', label: 'Avis support', icon: Star, group: 'tasks' },
-
-  // Modération
+  { id: 'pending-tasks', label: "Missions", icon: ListOrdered, group: 'tasks' },
+  { id: 'support', label: 'Support', icon: Headphones, group: 'tasks' },
+  { id: 'support-ratings', label: 'Avis', icon: Star, group: 'tasks' },
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation', permissionKey: 'can_manage_reports' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation', permissionKey: 'can_manage_content' },
-  { id: 'ai-moderation', label: 'Modération IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
-  { id: 'screenshot-sanctions', label: 'Captures écran', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
-  { id: 'verification', label: 'Vérification ID', icon: IdCard, group: 'moderation', adminOnly: true, permissionKey: 'can_verify_identity' },
-
-  // Utilisateurs
-  { id: 'users', label: 'Utilisateurs', icon: Users, group: 'users', adminOnly: true, permissionKey: 'can_manage_users' },
-  { id: 'stats', label: 'Statistiques', icon: BarChart3, group: 'users', adminOnly: true, permissionKey: 'can_view_stats' },
-  { id: 'moderators', label: 'Modérateurs', icon: UserCog, group: 'users', adminOnly: true },
-
-  // Finances
+  { id: 'ai-moderation', label: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
+  { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
+  { id: 'verification', label: 'Identité', icon: IdCard, group: 'moderation', adminOnly: true, permissionKey: 'can_verify_identity' },
+  { id: 'users', label: 'Membres', icon: Users, group: 'users', adminOnly: true, permissionKey: 'can_manage_users' },
+  { id: 'stats', label: 'Stats', icon: BarChart3, group: 'users', adminOnly: true, permissionKey: 'can_view_stats' },
+  { id: 'moderators', label: 'Équipe', icon: UserCog, group: 'users', adminOnly: true },
   { id: 'wallet', label: 'Portefeuille', icon: Wallet, group: 'finances' },
   { id: 'credits-surveillance', label: 'Surveillance', icon: Activity, group: 'finances', adminOnly: true, permissionKey: 'can_manage_credits' },
-  { id: 'credit-purchases', label: 'Achats crédits', icon: ShoppingCart, group: 'finances', permissionKey: 'can_manage_credits' },
-  { id: 'rates', label: 'Tarifs missions', icon: Euro, group: 'finances', adminOnly: true },
+  { id: 'credit-purchases', label: 'Achats', icon: ShoppingCart, group: 'finances', permissionKey: 'can_manage_credits' },
+  { id: 'rates', label: 'Tarifs', icon: Euro, group: 'finances', adminOnly: true },
   { id: 'withdrawals', label: 'Retraits', icon: ArrowUpRight, group: 'finances', adminOnly: true },
-  { id: 'global', label: 'Gains globaux', icon: PieChart, group: 'finances', adminOnly: true },
-
-  // Communication (admin only)
-  { id: 'broadcast', label: 'Notifications push', icon: Bell, group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
-  { id: 'popups', label: 'Pop-ups promo', icon: Bell, group: 'communication', adminOnly: true },
-  { id: 'faq', label: "Centre d'aide", icon: HelpCircle, group: 'communication', adminOnly: true },
-  { id: 'flyers', label: 'Flyers promo', icon: FileImage, group: 'communication', adminOnly: true },
-  { id: 'promo-images', label: 'Visuels promo IA', icon: Sparkles, group: 'communication', adminOnly: true },
-  { id: 'site-updates', label: 'Mises à jour site', icon: Rocket, group: 'communication', adminOnly: true },
-  { id: 'promo', label: 'Codes promo', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
-  { id: 'ads', label: 'Annonces pub', icon: Megaphone, group: 'communication', permissionKey: 'can_manage_content' },
-
-  // Config & Logs (admin only)
-  { id: 'credit-costs', label: 'Tarifs crédits', icon: Coins, group: 'config', adminOnly: true },
-  { id: 'swipe-stats', label: 'Stats Swipe', icon: Heart, group: 'config', adminOnly: true },
+  { id: 'global', label: 'Gains', icon: PieChart, group: 'finances', adminOnly: true },
+  { id: 'broadcast', label: 'Push', icon: Bell, group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
+  { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'communication', adminOnly: true },
+  { id: 'faq', label: "Aide", icon: HelpCircle, group: 'communication', adminOnly: true },
+  { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'communication', adminOnly: true },
+  { id: 'promo-images', label: 'Visuels', icon: Sparkles, group: 'communication', adminOnly: true },
+  { id: 'site-updates', label: 'Updates', icon: Rocket, group: 'communication', adminOnly: true },
+  { id: 'promo', label: 'Promos', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
+  { id: 'ads', label: 'Annonces', icon: Megaphone, group: 'communication', permissionKey: 'can_manage_content' },
+  { id: 'credit-costs', label: 'Crédits', icon: Coins, group: 'config', adminOnly: true },
+  { id: 'swipe-stats', label: 'Swipe', icon: Heart, group: 'config', adminOnly: true },
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'config', adminOnly: true },
-  { id: 'feature-toggles', label: 'Fonctionnalités', icon: ToggleLeft, group: 'config', adminOnly: true },
-  { id: 'error-logs', label: "Logs d'erreurs", icon: Activity, group: 'logs', adminOnly: true },
+  { id: 'feature-toggles', label: 'Toggles', icon: ToggleLeft, group: 'config', adminOnly: true },
+  { id: 'error-logs', label: 'Erreurs', icon: Activity, group: 'logs', adminOnly: true },
   { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true },
 ];
 
-const groupConfig: Record<NavGroup, { label: string; color: string }> = {
-  tasks: { label: 'Mes tâches', color: 'text-orange-500' },
-  moderation: { label: 'Modération', color: 'text-amber-500' },
-  users: { label: 'Utilisateurs', color: 'text-blue-500' },
-  finances: { label: 'Finances', color: 'text-emerald-500' },
-  communication: { label: 'Communication', color: 'text-violet-500' },
-  config: { label: 'Configuration', color: 'text-muted-foreground' },
-  logs: { label: 'Monitoring', color: 'text-red-400' },
+const groupConfig: Record<NavGroup, { label: string; icon: string }> = {
+  tasks: { label: 'Tâches', icon: '⚡' },
+  moderation: { label: 'Modération', icon: '🛡️' },
+  users: { label: 'Utilisateurs', icon: '👥' },
+  finances: { label: 'Finances', icon: '💰' },
+  communication: { label: 'Communication', icon: '📢' },
+  config: { label: 'Configuration', icon: '⚙️' },
+  logs: { label: 'Monitoring', icon: '📊' },
 };
 
 const groupOrder: NavGroup[] = ['tasks', 'moderation', 'users', 'finances', 'communication', 'config', 'logs'];
@@ -137,7 +126,6 @@ const AdminSidebar = ({
   const visibleItems = navItems.filter(item => {
     if (!item.adminOnly) return true;
     if (isAdmin) return true;
-    // Moderator: check permission
     if (item.permissionKey && modPermissions?.[item.permissionKey]) return true;
     return false;
   });
@@ -163,26 +151,26 @@ const AdminSidebar = ({
           "relative w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 group",
           collapsed ? "justify-center p-2.5" : "px-3 py-[7px]",
           isActive 
-            ? "bg-primary text-primary-foreground shadow-sm" 
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            ? "bg-primary/10 text-primary" 
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
         )}
       >
-        <Icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-primary-foreground" : "group-hover:text-foreground")} />
+        <Icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-primary" : "group-hover:text-foreground")} />
         {!collapsed && (
           <>
             <span className="flex-1 text-left truncate">{item.label}</span>
             {item.badge !== undefined && item.badge > 0 && (
-              <span className={cn(
-                "flex items-center justify-center min-w-[20px] h-5 rounded-full text-[10px] font-bold px-1.5",
-                isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-destructive text-destructive-foreground"
-              )}>
+              <span className="flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 bg-destructive text-destructive-foreground">
                 {item.badge}
               </span>
             )}
           </>
         )}
         {collapsed && item.badge !== undefined && item.badge > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full ring-2 ring-card" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
+        )}
+        {isActive && !collapsed && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
         )}
       </button>
     );
@@ -205,63 +193,64 @@ const AdminSidebar = ({
     <TooltipProvider>
       <div 
         className={cn(
-          "h-screen border-r flex flex-col transition-all duration-200 bg-card/50 border-border/50",
-          collapsed ? "w-[56px]" : "w-[250px]"
+          "h-screen border-r flex flex-col transition-all duration-200 bg-card border-border/40",
+          collapsed ? "w-[56px]" : "w-[240px]"
         )}
       >
         {/* Header */}
         <div className={cn(
-          "flex items-center h-14 px-3 border-b border-border/50",
+          "flex items-center h-14 px-3 border-b border-border/40",
           collapsed ? "justify-center" : "justify-between"
         )}>
           {!collapsed && (
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-                <Shield className="w-4 h-4 text-primary-foreground" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Shield className="w-3.5 h-3.5 text-primary" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-sm leading-none">Admin</span>
-                <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
-                  {isAdmin ? 'Administrateur' : 'Modérateur'}
-                </span>
-              </div>
+              <span className="font-semibold text-sm">{isAdmin ? 'Admin' : 'Modération'}</span>
             </div>
           )}
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground flex-shrink-0"
+            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground flex-shrink-0"
           >
-            {collapsed ? <Menu className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {collapsed ? <Menu className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
           </Button>
         </div>
 
-        {/* Dashboard Home Button */}
-        <div className={cn("border-b border-border/50", collapsed ? "p-1.5" : "p-2")}>
+        {/* Search (desktop expanded only) */}
+        {!collapsed && (
+          <div className="px-2 py-2 border-b border-border/40">
+            <AdminCommandBar onNavigate={onSectionChange} className="w-full" />
+          </div>
+        )}
+
+        {/* Dashboard button */}
+        <div className={cn("border-b border-border/40", collapsed ? "p-1.5" : "p-2")}>
           <NavButton
-            item={{ id: 'dashboard', label: 'Tableau de bord', icon: Home, group: 'tasks' }}
+            item={{ id: 'dashboard', label: 'Dashboard', icon: Home, group: 'tasks' }}
             isActive={activeSection === 'dashboard'}
           />
         </div>
 
         {/* Navigation */}
         <ScrollArea className="flex-1">
-          <nav className={cn("py-3", collapsed ? "px-1" : "px-2")}>
+          <nav className={cn("py-2", collapsed ? "px-1" : "px-2")}>
             {groupOrder.map((group, groupIndex) => {
               const items = groupedItems[group];
               if (!items?.length) return null;
               return (
-                <div key={group} className={groupIndex > 0 ? "mt-4" : ""}>
+                <div key={group} className={groupIndex > 0 ? "mt-3" : ""}>
                   {!collapsed ? (
-                    <div className="flex items-center gap-1.5 px-3 mb-1.5">
-                      <span className={cn("text-[10px] font-bold uppercase tracking-[0.08em]", groupConfig[group]?.color)}>
+                    <div className="flex items-center gap-1.5 px-3 mb-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                         {groupConfig[group]?.label}
                       </span>
-                      <div className="flex-1 h-px bg-border/50" />
                     </div>
                   ) : (
-                    groupIndex > 0 && <div className="h-px bg-border/50 mx-1.5 my-2" />
+                    groupIndex > 0 && <div className="h-px bg-border/40 mx-1.5 my-2" />
                   )}
                   <div className="space-y-0.5">
                     {items.map((item) => (
@@ -275,30 +264,30 @@ const AdminSidebar = ({
         </ScrollArea>
 
         {/* Footer */}
-        <div className={cn("border-t border-border/50", collapsed ? "p-1.5" : "p-2")}>
+        <div className={cn("border-t border-border/40", collapsed ? "p-1.5" : "p-2")}>
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="w-full h-9 rounded-lg text-muted-foreground hover:text-foreground"
+                  className="w-full h-8 rounded-md text-muted-foreground hover:text-foreground"
                   onClick={() => window.history.back()}
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="text-xs">Retour à l'app</TooltipContent>
+              <TooltipContent side="right" className="text-xs">Quitter</TooltipContent>
             </Tooltip>
           ) : (
             <Button 
               variant="ghost" 
               size="sm"
-              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs h-9"
+              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs h-8"
               onClick={() => window.history.back()}
             >
               <LogOut className="w-3.5 h-3.5" />
-              Retour à l'app
+              Quitter
             </Button>
           )}
         </div>

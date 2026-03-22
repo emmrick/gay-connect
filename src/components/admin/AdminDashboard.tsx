@@ -4,13 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Users, Activity, Shield, MessageSquare, UserPlus, Crown,
   AlertTriangle, IdCard, ShoppingCart, Headphones, ListOrdered,
-  TrendingUp, Eye, Globe
+  TrendingUp, Eye, Globe, ArrowRight, Zap
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { AdminSection } from './AdminSidebar';
+import { cn } from '@/lib/utils';
 
 interface AdminDashboardProps {
   onNavigate: (section: AdminSection) => void;
@@ -76,10 +78,10 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
         </div>
       </div>
     );
@@ -90,39 +92,42 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
   const onlinePercent = stats.totalUsers > 0 ? Math.round((stats.onlineUsers / stats.totalUsers) * 100) : 0;
   const verifiedPercent = stats.totalUsers > 0 ? Math.round((stats.verifiedUsers / stats.totalUsers) * 100) : 0;
 
-  // Quick actions with urgency
   const urgentActions = [
-    { id: 'pending-tasks' as AdminSection, label: 'Missions en attente', icon: ListOrdered, count: stats.pendingTasks, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { id: 'reports' as AdminSection, label: 'Signalements', icon: AlertTriangle, count: pendingReports, color: 'text-red-500', bg: 'bg-red-500/10' },
-    { id: 'verification' as AdminSection, label: 'Vérifications', icon: IdCard, count: pendingVerifications, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { id: 'credit-purchases' as AdminSection, label: 'Achats crédits', icon: ShoppingCart, count: pendingPurchases, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { id: 'support' as AdminSection, label: 'Tickets ouverts', icon: Headphones, count: stats.openTickets, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+    { id: 'pending-tasks' as AdminSection, label: 'Missions', icon: ListOrdered, count: stats.pendingTasks, color: 'text-orange-500', bg: 'bg-orange-500/10', borderColor: 'border-orange-500/20' },
+    { id: 'reports' as AdminSection, label: 'Signalements', icon: AlertTriangle, count: pendingReports, color: 'text-red-500', bg: 'bg-red-500/10', borderColor: 'border-red-500/20' },
+    { id: 'verification' as AdminSection, label: 'Vérifications', icon: IdCard, count: pendingVerifications, color: 'text-blue-500', bg: 'bg-blue-500/10', borderColor: 'border-blue-500/20' },
+    { id: 'credit-purchases' as AdminSection, label: 'Achats', icon: ShoppingCart, count: pendingPurchases, color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+    { id: 'support' as AdminSection, label: 'Support', icon: Headphones, count: stats.openTickets, color: 'text-violet-500', bg: 'bg-violet-500/10', borderColor: 'border-violet-500/20' },
   ].filter(a => a.count > 0);
 
   return (
     <div className="space-y-6">
-      {/* Urgent Actions */}
+      {/* Urgent Actions Banner */}
       {urgentActions.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
-            ⚡ Actions urgentes
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-orange-500" />
+            <h3 className="text-sm font-semibold">Actions urgentes</h3>
+            <Badge variant="secondary" className="text-[10px] h-5">
+              {urgentActions.reduce((acc, a) => acc + a.count, 0)} en attente
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {urgentActions.map((action) => (
               <button
                 key={action.id}
                 onClick={() => onNavigate(action.id)}
-                className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/50 transition-colors text-left group"
+                className={cn(
+                  "flex flex-col items-start gap-2 p-3 rounded-xl border transition-all",
+                  "hover:shadow-md active:scale-[0.98]",
+                  action.borderColor, action.bg
+                )}
               >
-                <div className={`w-10 h-10 rounded-lg ${action.bg} flex items-center justify-center flex-shrink-0`}>
-                  <action.icon className={`w-5 h-5 ${action.color}`} />
+                <div className="flex items-center justify-between w-full">
+                  <action.icon className={cn("w-4 h-4", action.color)} />
+                  <span className={cn("text-lg font-bold", action.color)}>{action.count}</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{action.label}</p>
-                </div>
-                <Badge variant="destructive" className="text-xs font-bold">
-                  {action.count}
-                </Badge>
+                <span className="text-[11px] font-medium text-foreground/70">{action.label}</span>
               </button>
             ))}
           </div>
@@ -130,92 +135,89 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
       )}
 
       {/* KPI Cards */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
-          📊 Vue d'ensemble
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KPICard
-            title="Membres"
-            value={stats.totalUsers}
-            icon={Users}
-            color="text-primary"
-            bg="bg-primary/10"
-            onClick={() => onNavigate('users')}
-          />
-          <KPICard
-            title="En ligne"
-            value={stats.onlineUsers}
-            subtitle={`${onlinePercent}%`}
-            icon={Activity}
-            color="text-green-500"
-            bg="bg-green-500/10"
-            pulse
-          />
-          <KPICard
-            title="Vérifiés"
-            value={stats.verifiedUsers}
-            subtitle={`${verifiedPercent}%`}
-            icon={Shield}
-            color="text-blue-500"
-            bg="bg-blue-500/10"
-            onClick={() => onNavigate('users')}
-          />
-          <KPICard
-            title="Premium"
-            value={stats.premiumUsers}
-            icon={Crown}
-            color="text-amber-500"
-            bg="bg-amber-500/10"
-          />
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KPICard
+          title="Membres"
+          value={stats.totalUsers}
+          icon={Users}
+          trend={`+${stats.newUsersToday} aujourd'hui`}
+          onClick={() => onNavigate('users')}
+        />
+        <KPICard
+          title="En ligne"
+          value={stats.onlineUsers}
+          icon={Activity}
+          trend={`${onlinePercent}% actifs`}
+          pulse
+        />
+        <KPICard
+          title="Vérifiés"
+          value={stats.verifiedUsers}
+          icon={Shield}
+          trend={`${verifiedPercent}%`}
+          onClick={() => onNavigate('users')}
+        />
+        <KPICard
+          title="Premium"
+          value={stats.premiumUsers}
+          icon={Crown}
+          trend="abonnés"
+        />
       </div>
 
       {/* Growth & Activity */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="overflow-hidden">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-semibold">Croissance</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Card className="overflow-hidden border-border/40">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <UserPlus className="w-4 h-4 text-green-500" />
+                </div>
+                <span className="text-sm font-semibold">Croissance</span>
+              </div>
+              <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-xs font-bold">
+                +{stats.newUsersWeek} / sem.
+              </Badge>
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Aujourd'hui</span>
-                <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-xs">
-                  +{stats.newUsersToday}
-                </Badge>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Objectif hebdo</span>
+                <span className="font-medium">{stats.newUsersWeek}/100</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Cette semaine</span>
-                <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-xs">
-                  +{stats.newUsersWeek}
-                </Badge>
-              </div>
-              <Progress value={Math.min((stats.newUsersWeek / 100) * 100, 100)} className="h-1.5" />
-              <p className="text-[10px] text-muted-foreground text-right">{stats.newUsersWeek}/100 objectif hebdo</p>
+              <Progress value={Math.min((stats.newUsersWeek / 100) * 100, 100)} className="h-2" />
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs text-muted-foreground">Aujourd'hui: +{stats.newUsersToday}</span>
+              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => onNavigate('stats')}>
+                Détails <ArrowRight className="w-3 h-3" />
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-indigo-500" />
-              <span className="text-sm font-semibold">Activité</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-2 rounded-lg bg-muted/50">
-                <p className="text-lg font-bold">{stats.totalMessages.toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">Messages total</p>
+        <Card className="overflow-hidden border-border/40">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-indigo-500" />
+                </div>
+                <span className="text-sm font-semibold">Activité</span>
               </div>
-              <div className="text-center p-2 rounded-lg bg-muted/50">
-                <p className="text-lg font-bold">{stats.messagesWeek.toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">Cette semaine</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-3 rounded-lg bg-muted/40 text-center">
+                <p className="text-xl font-bold">{stats.totalMessages.toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Total messages</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/40 text-center">
+                <p className="text-xl font-bold">{stats.messagesWeek.toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Cette semaine</p>
               </div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Msg/utilisateur</span>
+              <span className="text-muted-foreground">Moy. par utilisateur</span>
               <span className="font-semibold">
                 {stats.totalUsers > 0 ? Math.round(stats.totalMessages / stats.totalUsers) : 0}
               </span>
@@ -224,27 +226,27 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
         </Card>
       </div>
 
-      {/* Quick Navigation by Role */}
+      {/* Quick Navigation */}
       {isAdmin && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
-            🔧 Accès rapide admin
-          </h3>
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-muted-foreground">Accès rapide</h3>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {([
               { id: 'users' as AdminSection, label: 'Utilisateurs', icon: Users },
-              { id: 'credits' as AdminSection, label: 'Crédits', icon: TrendingUp },
-              { id: 'moderators' as AdminSection, label: 'Modérateurs', icon: Eye },
-              { id: 'broadcast' as AdminSection, label: 'Annonces', icon: Globe },
+              { id: 'credits-surveillance' as AdminSection, label: 'Crédits', icon: TrendingUp },
+              { id: 'moderators' as AdminSection, label: 'Équipe', icon: Eye },
+              { id: 'broadcast' as AdminSection, label: 'Broadcast', icon: Globe },
               { id: 'maintenance' as AdminSection, label: 'Maintenance', icon: Shield },
-              { id: 'stats' as AdminSection, label: 'Stats détail', icon: Activity },
+              { id: 'stats' as AdminSection, label: 'Analytics', icon: Activity },
             ]).map((item) => (
               <button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border/40 bg-card hover:bg-muted/50 transition-all active:scale-[0.97]"
               >
-                <item.icon className="w-5 h-5 text-muted-foreground" />
+                <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center">
+                  <item.icon className="w-4 h-4 text-muted-foreground" />
+                </div>
                 <span className="text-[10px] font-medium text-muted-foreground">{item.label}</span>
               </button>
             ))}
@@ -256,30 +258,32 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
 };
 
 const KPICard = ({
-  title, value, subtitle, icon: Icon, color, bg, pulse, onClick
+  title, value, icon: Icon, trend, pulse, onClick
 }: {
-  title: string; value: number; subtitle?: string;
-  icon: React.ElementType; color: string; bg: string;
-  pulse?: boolean; onClick?: () => void;
+  title: string; value: number; trend?: string;
+  icon: React.ElementType; pulse?: boolean; onClick?: () => void;
 }) => (
   <Card
-    className={onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
+    className={cn(
+      "overflow-hidden border-border/40 transition-all",
+      onClick && "cursor-pointer hover:shadow-md hover:border-border/60 active:scale-[0.98]"
+    )}
     onClick={onClick}
   >
-    <CardContent className="p-3">
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground font-medium">{title}</p>
-          <p className="text-xl font-bold mt-0.5">{value.toLocaleString()}</p>
-          {subtitle && <p className="text-[10px] text-muted-foreground">{subtitle}</p>}
-        </div>
-        <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0`}>
+    <CardContent className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center">
           {pulse ? (
             <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
           ) : (
-            <Icon className={`w-4 h-4 ${color}`} />
+            <Icon className="w-4 h-4 text-muted-foreground" />
           )}
         </div>
+      </div>
+      <p className="text-2xl font-bold tracking-tight">{value.toLocaleString()}</p>
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-xs text-muted-foreground">{title}</span>
+        {trend && <span className="text-[10px] text-muted-foreground">{trend}</span>}
       </div>
     </CardContent>
   </Card>

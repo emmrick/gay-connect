@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import AdminSidebar, { AdminSection } from '@/components/admin/AdminSidebar';
 import AdminMobileNav from '@/components/admin/AdminMobileNav';
 import AdminDashboard from '@/components/admin/AdminDashboard';
+import AdminCommandBar from '@/components/admin/AdminCommandBar';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import ReportCard from '@/components/admin/ReportCard';
 import PromoCodePanel from '@/components/admin/PromoCodePanel';
@@ -55,6 +56,7 @@ import SiteUpdatesPanel from '@/components/admin/SiteUpdatesPanel';
 import AdsManagementPanel from '@/components/admin/AdsManagementPanel';
 import AdFreePlansPanel from '@/components/admin/AdFreePlansPanel';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
+
 const statusConfig: Record<ReportStatus, { label: string; icon: React.ElementType }> = {
   pending: { label: 'En attente', icon: Clock },
   reviewed: { label: 'En cours', icon: Eye },
@@ -92,7 +94,6 @@ const Admin = () => {
     enabled: !!user?.id,
   });
 
-  // Fetch moderator permissions for the current user
   const { data: modPermissions } = useQuery({
     queryKey: ['moderator-permissions', user?.id],
     queryFn: async () => {
@@ -112,7 +113,6 @@ const Admin = () => {
   const isAdminOrMod = isAdmin || isModerator;
 
   const handleSectionChange = useCallback((section: AdminSection | string, userId?: string) => {
-    // Support "users:userId" format from support chat
     if (typeof section === 'string' && section.startsWith('users:')) {
       const uid = section.split(':')[1];
       setActiveSection('users');
@@ -147,7 +147,6 @@ const Admin = () => {
     selectedStatus === 'all' ? undefined : selectedStatus
   );
 
-  // Auto-open report linked to active moderation task
   useEffect(() => {
     if (
       activeSection === 'reports' &&
@@ -349,8 +348,18 @@ const Admin = () => {
         modPermissions={modPermissions}
       />
 
-      <main className="flex-1 overflow-auto bg-muted/20">
-        <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <main className="flex-1 overflow-auto">
+        {/* Desktop top bar with search */}
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/40">
+          <div className="flex items-center justify-between px-6 h-14">
+            <h1 className="text-sm font-semibold text-muted-foreground">
+              {activeSection === 'dashboard' ? 'Tableau de bord' : ''}
+            </h1>
+            <AdminCommandBar onNavigate={handleSectionChange as (s: AdminSection) => void} className="w-64" />
+          </div>
+        </div>
+        
+        <div className="max-w-6xl mx-auto p-6 space-y-6">
           <TaskQueuePopup onNavigateToSection={handleSectionChange} />
           {renderContent()}
         </div>
