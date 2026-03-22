@@ -37,49 +37,62 @@ const useFullDashboardStats = () => {
       const weekAgo = subDays(today, 7).toISOString();
       const monthAgo = subDays(today, 30).toISOString();
 
-      const [
-        { count: totalUsers },
-        { count: onlineUsers },
-        { count: verifiedUsers },
-        { count: premiumUsers },
-        { count: newUsersToday },
-        { count: newUsersWeek },
-        { count: newUsersMonth },
-        { count: totalMessages },
-        { count: messagesWeek },
-        { count: messagesToday },
-        { count: pendingTasks },
-        { count: openTickets },
-        { count: totalPhotos },
-        { count: totalAlbums },
-        { count: totalConversations },
-        { count: completedTasks },
-        { data: recentUsers },
-        { data: regionData },
-        { data: dailySignups },
-        { data: recentActivity },
-      ] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_online', true),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_premium', true),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startOfToday),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', monthAgo),
-        supabase.from('messages').select('*', { count: 'exact', head: true }),
-        supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
-        supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', startOfToday),
-        supabase.from('moderation_tasks').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('support_tickets').select('*', { count: 'exact', head: true }).eq('status', 'open'),
-        supabase.from('profile_photos').select('*', { count: 'exact', head: true }),
-        supabase.from('user_albums').select('*', { count: 'exact', head: true }),
-        supabase.from('private_conversations').select('*', { count: 'exact', head: true }),
-        supabase.from('moderation_tasks').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
+      const cq = (table: string, filters?: Record<string, any>, gte?: { col: string; val: string }) => {
+        let q = supabase.from(table as any).select('*', { count: 'exact', head: true });
+        if (filters) Object.entries(filters).forEach(([k, v]) => { q = q.eq(k, v) as any; });
+        if (gte) q = q.gte(gte.col, gte.val) as any;
+        return q as any;
+      };
+
+      const [r1, r2, r3, r4, r5, r6, r7, r8] = await Promise.all([
+        cq('profiles'),
+        cq('profiles', { is_online: true }),
+        cq('profiles', { is_verified: true }),
+        cq('profiles', { is_premium: true }),
+        cq('profiles', undefined, { col: 'created_at', val: startOfToday }),
+        cq('profiles', undefined, { col: 'created_at', val: weekAgo }),
+        cq('profiles', undefined, { col: 'created_at', val: monthAgo }),
+        cq('messages'),
+      ]);
+
+      const [r9, r10, r11, r12, r13, r14, r15] = await Promise.all([
+        cq('messages', undefined, { col: 'created_at', val: weekAgo }),
+        cq('messages', undefined, { col: 'created_at', val: startOfToday }),
+        cq('moderation_tasks', { status: 'pending' }),
+        cq('support_tickets', { status: 'open' }),
+        cq('profile_photos'),
+        cq('user_albums'),
+        cq('private_conversations'),
+      ]);
+
+      const [r16, r17, r18, r19, r20] = await Promise.all([
+        cq('moderation_tasks', { status: 'completed' }),
         supabase.from('profiles').select('username, avatar_url, region, created_at, is_verified, is_online').order('created_at', { ascending: false }).limit(8),
         supabase.from('profiles').select('region'),
         supabase.from('profiles').select('created_at').gte('created_at', weekAgo).order('created_at', { ascending: true }),
         supabase.from('moderation_tasks').select('task_type, status, created_at, description').order('created_at', { ascending: false }).limit(10),
       ]);
+
+      const totalUsers = r1.count || 0;
+      const onlineUsers = r2.count || 0;
+      const verifiedUsers = r3.count || 0;
+      const premiumUsers = r4.count || 0;
+      const newUsersToday = r5.count || 0;
+      const newUsersWeek = r6.count || 0;
+      const newUsersMonth = r7.count || 0;
+      const totalMessages = r8.count || 0;
+      const messagesWeek = r9.count || 0;
+      const messagesToday = r10.count || 0;
+      const pendingTasks = r11.count || 0;
+      const openTickets = r12.count || 0;
+      const totalPhotos = r13.count || 0;
+      const totalAlbums = r14.count || 0;
+      const totalConversations = r15.count || 0;
+      const completedTasks = r16.count || 0;
+      const recentUsers = r17.data;
+      const regionData = r18.data;
+      const dailySignups = r19.data;
+      const recentActivity = r20.data;
 
       // Build daily signups chart data
       const dailyMap: Record<string, number> = {};
