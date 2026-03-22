@@ -27,30 +27,7 @@ const useDetailedStats = () => {
       const monthAgo = subDays(today, 30).toISOString();
 
       const [
-        { count: totalUsers },
-        { count: onlineUsers },
-        { count: verifiedUsers },
-        { count: premiumUsers },
-        { count: totalMessages },
-        { count: messagesWeek },
-        { count: messagesToday },
-        { count: totalPhotos },
-        { count: totalAlbums },
-        { count: totalConversations },
-        { count: newUsersToday },
-        { count: newUsersWeek },
-        { count: newUsersMonth },
-        { count: totalReports },
-        { count: pendingReports },
-        { count: totalVerifications },
-        { count: approvedVerifications },
-        { count: completedTasks },
-        { count: totalSwipeLikes },
-        { count: totalGifts },
-        { data: regionData },
-        { data: dailySignupsData },
-        { data: dailyMessagesData },
-        { data: verificationStatusData },
+        r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12
       ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_online', true),
@@ -64,6 +41,11 @@ const useDetailedStats = () => {
         supabase.from('private_conversations').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', startOfToday),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo),
+      ]);
+
+      const [
+        r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24
+      ] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', monthAgo),
         supabase.from('reports').select('*', { count: 'exact', head: true }),
         supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
@@ -77,6 +59,31 @@ const useDetailedStats = () => {
         supabase.from('messages').select('created_at').gte('created_at', weekAgo).order('created_at', { ascending: true }),
         supabase.from('identity_verifications').select('status'),
       ]);
+
+      const totalUsers = r1.count || 0;
+      const onlineUsers = r2.count || 0;
+      const verifiedUsers = r3.count || 0;
+      const premiumUsers = r4.count || 0;
+      const totalMessages = r5.count || 0;
+      const messagesWeek = r6.count || 0;
+      const messagesToday = r7.count || 0;
+      const totalPhotos = r8.count || 0;
+      const totalAlbums = r9.count || 0;
+      const totalConversations = r10.count || 0;
+      const newUsersToday = r11.count || 0;
+      const newUsersWeek = r12.count || 0;
+      const newUsersMonth = r13.count || 0;
+      const totalReports = r14.count || 0;
+      const pendingReports = r15.count || 0;
+      const totalVerifications = r16.count || 0;
+      const approvedVerifications = r17.count || 0;
+      const completedTasks = r18.count || 0;
+      const totalSwipeLikes = r19.count || 0;
+      const totalGifts = r20.count || 0;
+      const regionData = r21.data;
+      const dailySignupsData = r22.data;
+      const dailyMessagesData = r23.data;
+      const verificationStatusData = r24.data;
 
       // Daily signups chart (14 days)
       const signupMap: Record<string, number> = {};
