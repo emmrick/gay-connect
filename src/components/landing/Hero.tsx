@@ -154,13 +154,23 @@ const Hero = ({ onGetStarted, onLearnMore }: HeroProps) => {
         jsonLd={combinedJsonLd}
       />
 
-      {/* Top bar with branding */}
+      {/* Top bar with branding + nav */}
       <div className="bg-background/95 backdrop-blur-lg border-b border-border/50 py-3 px-5 relative z-20">
-        <div className="container mx-auto flex items-center gap-2.5">
-          
+        <div className="container mx-auto flex items-center justify-between">
           <h1 className="font-display text-2xl font-extrabold rainbow-text leading-tight">
             Gay Social
           </h1>
+          <nav className="hidden sm:flex items-center gap-5 text-sm text-muted-foreground">
+            <Link to="/comment-ca-marche" className="hover:text-primary transition-colors">Comment ça marche</Link>
+            <Link to="/securite" className="hover:text-primary transition-colors">Sécurité</Link>
+            <Link to="/communaute" className="hover:text-primary transition-colors">Communauté</Link>
+            <Link to="/regions" className="hover:text-primary transition-colors">Régions</Link>
+            <Button size="sm" onClick={onGetStarted}>S'inscrire</Button>
+          </nav>
+          {/* Mobile: just CTA */}
+          <div className="sm:hidden">
+            <Button size="sm" onClick={onGetStarted}>S'inscrire</Button>
+          </div>
         </div>
       </div>
 
