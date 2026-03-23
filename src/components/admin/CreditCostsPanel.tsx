@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const categoryLabels: Record<string, string> = {
+  recharge: '⚡ Recharge passive',
   messages: '💬 Messages',
   albums: '📸 Albums',
   profil: '👤 Profil',
@@ -26,6 +27,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 const categoryColors: Record<string, string> = {
+  recharge: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
   messages: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
   albums: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   profil: 'bg-violet-500/10 text-violet-600 border-violet-500/20',
