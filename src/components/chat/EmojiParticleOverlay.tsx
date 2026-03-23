@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /* ─── Emoji category mapping ─── */
@@ -187,31 +187,53 @@ interface EmojiParticleOverlayProps {
   triggerId: string; // unique key per message to avoid re-triggering
 }
 
+const STORAGE_KEY = 'emoji_effects_seen';
+const MAX_STORED = 200;
+
+function hasBeenSeen(id: string): boolean {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const list: string[] = JSON.parse(raw);
+    return list.includes(id);
+  } catch { return false; }
+}
+
+function markSeen(id: string) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    let list: string[] = raw ? JSON.parse(raw) : [];
+    if (list.includes(id)) return;
+    list.push(id);
+    if (list.length > MAX_STORED) list = list.slice(-MAX_STORED);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  } catch { /* storage full, skip */ }
+}
+
 const EmojiParticleOverlay = ({ content, triggerId }: EmojiParticleOverlayProps) => {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [category, setCategory] = useState<EmojiCategory>(null);
-  const triggered = useRef<Set<string>>(new Set());
+  const triggered = useRef(false);
 
-  const trigger = useCallback(() => {
+  useEffect(() => {
+    if (triggered.current) return;
+    triggered.current = true;
+
     const cat = detectEmojiCategory(content);
     if (!cat) return;
-    if (triggered.current.has(triggerId)) return;
-    triggered.current.add(triggerId);
+    if (hasBeenSeen(triggerId)) return;
+    markSeen(triggerId);
 
     setCategory(cat);
     setParticles(makeParticles(cat));
     playTone(cat);
 
-    // Cleanup after animation
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setParticles([]);
       setCategory(null);
     }, 3500);
+    return () => clearTimeout(timer);
   }, [content, triggerId]);
-
-  useEffect(() => {
-    trigger();
-  }, [trigger]);
 
   if (particles.length === 0) return null;
 
