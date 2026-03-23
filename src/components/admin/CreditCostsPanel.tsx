@@ -136,7 +136,7 @@ const CreditCostsPanel = () => {
 
           <ScrollArea className={isMobile ? 'h-[calc(100vh-380px)]' : 'h-[calc(100vh-340px)]'}>
             <div className="space-y-5 pr-2">
-              {Object.entries(grouped).map(([category, items]) => (
+              {sortedCategories.map(([category, items]) => (
                 <div key={category}>
                   <div className="flex items-center gap-2 mb-2.5">
                     <Badge
