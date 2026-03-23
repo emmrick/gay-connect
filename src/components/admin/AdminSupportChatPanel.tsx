@@ -25,7 +25,10 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { data: activeTask } = useActiveTask();
-  const ticketId = (activeTask?.metadata as any)?.ticket_id as string | undefined;
+  const taskMetadata = activeTask?.metadata as any;
+  const isVisitorTask = !!taskMetadata?.is_visitor;
+  const ticketId = taskMetadata?.ticket_id as string | undefined;
+  const visitorSessionId = taskMetadata?.visitor_session_id as string | undefined;
   const autoMessageSentRef = useRef<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showInfractions, setShowInfractions] = useState(false);
@@ -43,7 +46,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
       if (error) throw error;
       return data as unknown as SupportTicket;
     },
-    enabled: !!ticketId,
+    enabled: !!ticketId && !isVisitorTask,
   });
 
   const { data: moderatorProfile } = useQuery({
