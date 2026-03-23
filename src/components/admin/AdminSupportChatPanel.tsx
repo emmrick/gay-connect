@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { notifySupportTicketAssigned } from '@/services/pushNotificationService';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
+import VisitorSupportChatAdmin from '@/components/admin/VisitorSupportChatAdmin';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import InfractionsSidebar from '@/components/admin/InfractionsSidebar';
 import ClientDossierPanel from '@/components/admin/ClientDossierPanel';
@@ -24,7 +25,10 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { data: activeTask } = useActiveTask();
-  const ticketId = (activeTask?.metadata as any)?.ticket_id as string | undefined;
+  const taskMetadata = activeTask?.metadata as any;
+  const isVisitorTask = !!taskMetadata?.is_visitor;
+  const ticketId = taskMetadata?.ticket_id as string | undefined;
+  const visitorSessionId = taskMetadata?.visitor_session_id as string | undefined;
   const autoMessageSentRef = useRef<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showInfractions, setShowInfractions] = useState(false);
@@ -42,7 +46,7 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
       if (error) throw error;
       return data as unknown as SupportTicket;
     },
-    enabled: !!ticketId,
+    enabled: !!ticketId && !isVisitorTask,
   });
 
   const { data: moderatorProfile } = useQuery({
@@ -116,6 +120,23 @@ const AdminSupportChatPanel = ({ onBack, onNavigateToSection }: AdminSupportChat
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Visitor support session handling
+  if (isVisitorTask && visitorSessionId) {
+    return (
+      <div className="max-w-2xl mx-auto w-full">
+        <div className="flex flex-col h-[calc(100vh-160px)] rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+          <VisitorSupportChatAdmin
+            sessionId={visitorSessionId}
+            visitorName={taskMetadata?.visitor_name || 'Visiteur'}
+            visitorEmail={taskMetadata?.visitor_email}
+            onBack={onBack}
+            onComplete={onBack}
+          />
+        </div>
       </div>
     );
   }
