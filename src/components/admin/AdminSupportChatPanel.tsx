@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { notifySupportTicketAssigned } from '@/services/pushNotificationService';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import SupportChatRoom from '@/components/support/SupportChatRoom';
+import VisitorSupportChatAdmin from '@/components/admin/VisitorSupportChatAdmin';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import InfractionsSidebar from '@/components/admin/InfractionsSidebar';
 import ClientDossierPanel from '@/components/admin/ClientDossierPanel';
