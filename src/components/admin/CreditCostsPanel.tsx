@@ -93,6 +93,14 @@ const CreditCostsPanel = () => {
     return acc;
   }, {} as Record<string, typeof filteredCosts>);
 
+  // Sort categories with 'recharge' first
+  const categoryOrder = ['recharge', ...Object.keys(categoryLabels).filter(k => k !== 'recharge')];
+  const sortedCategories = Object.entries(grouped).sort(([a], [b]) => {
+    const ai = categoryOrder.indexOf(a);
+    const bi = categoryOrder.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
