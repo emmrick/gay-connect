@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const categoryLabels: Record<string, string> = {
+  recharge: '⚡ Recharge passive',
   messages: '💬 Messages',
   albums: '📸 Albums',
   profil: '👤 Profil',
@@ -26,6 +27,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 const categoryColors: Record<string, string> = {
+  recharge: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
   messages: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
   albums: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   profil: 'bg-violet-500/10 text-violet-600 border-violet-500/20',
@@ -91,6 +93,14 @@ const CreditCostsPanel = () => {
     return acc;
   }, {} as Record<string, typeof filteredCosts>);
 
+  // Sort categories with 'recharge' first
+  const categoryOrder = ['recharge', ...Object.keys(categoryLabels).filter(k => k !== 'recharge')];
+  const sortedCategories = Object.entries(grouped).sort(([a], [b]) => {
+    const ai = categoryOrder.indexOf(a);
+    const bi = categoryOrder.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -126,7 +136,7 @@ const CreditCostsPanel = () => {
 
           <ScrollArea className={isMobile ? 'h-[calc(100vh-380px)]' : 'h-[calc(100vh-340px)]'}>
             <div className="space-y-5 pr-2">
-              {Object.entries(grouped).map(([category, items]) => (
+              {sortedCategories.map(([category, items]) => (
                 <div key={category}>
                   <div className="flex items-center gap-2 mb-2.5">
                     <Badge
