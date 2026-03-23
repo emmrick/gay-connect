@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import CreditBalanceCompact from '@/components/credits/CreditBalanceCompact';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import { User } from 'lucide-react';
+import logoSrc from '@/assets/logo.png';
 
 
 interface UnifiedPageHeaderProps {
