@@ -138,6 +138,9 @@ const AuthenticatedApp = () => {
                     <Route path="/guide" element={<Suspense fallback={<PageFallback />}><GuidePage /></Suspense>} />
                     <Route path="/paypal-return" element={<Suspense fallback={<PageFallback />}><PaypalReturn /></Suspense>} />
                     <Route path="/advertise" element={<Suspense fallback={<PageFallback />}><Advertise /></Suspense>} />
+                    <Route path="/comment-ca-marche" element={<Suspense fallback={<PageFallback />}><HowItWorks /></Suspense>} />
+                    <Route path="/securite" element={<Suspense fallback={<PageFallback />}><Security /></Suspense>} />
+                    <Route path="/communaute" element={<Suspense fallback={<PageFallback />}><Community /></Suspense>} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                   </Routes>
