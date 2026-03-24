@@ -627,6 +627,21 @@ const Index = () => {
           </div>
         ) : null;
 
+      case 'tween':
+        return user ? (
+          <div className="flex-1 flex flex-col min-h-0">
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+            />
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="px-3 py-4 pb-8">
+                <TweenFeed />
+              </div>
+            </ScrollArea>
+          </div>
+        ) : null;
+
       case 'help':
         return user ? (
           <div className="flex-1 flex flex-col min-h-0">
