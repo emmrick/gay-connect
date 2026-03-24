@@ -15,6 +15,7 @@ const allTabs = [
   { id: 'tween' as const, icon: Rss, label: 'Tween', premium: false, featureKey: null },
   { id: 'swipe' as const, icon: Sparkles, label: 'Swipe', premium: false, featureKey: 'swipe_page' },
   { id: 'messages' as const, icon: MessageCircle, label: 'Messages', premium: false, featureKey: null },
+  { id: 'help' as const, icon: HelpCircle, label: 'Aide', premium: false, featureKey: null },
 ] as const;
 
 const BottomNavBar = memo(({ activeTab, onTabChange, unreadCount = 0, isPremium = false }: BottomNavBarProps) => {
