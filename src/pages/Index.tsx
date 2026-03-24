@@ -50,6 +50,7 @@ const CreateGroupDialog = lazy(() => import('@/components/chat/CreateGroupDialog
 const IdentityVerificationDialog = lazy(() => import('@/components/verification/IdentityVerificationDialog'));
 const VerificationReminderBanner = lazy(() => import('@/components/verification/VerificationReminderBanner'));
 const Help = lazy(() => import('@/pages/Help'));
+const TweenFeed = lazy(() => import('@/components/tween/TweenFeed'));
 
 type NavTab = 'home' | 'swipe' | 'messages' | 'tween' | 'premium' | 'help' | 'profile';
 
