@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditCheck } from './useCreditCheck';
-import { deductCredits } from './useCredits';
+import { deductCredits, getDynamicCreditCost } from './useCredits';
 import { notifySwipeMatch } from '@/services/pushNotificationService';
 import { toast } from 'sonner';
 import { useMemo } from 'react';
