@@ -284,6 +284,10 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: NavTab) => {
+    if (tab === 'tween') {
+      navigate('/tween');
+      return;
+    }
     if (tab === 'help') {
       setPreviousTab(activeTab);
       setActiveTab(tab);
