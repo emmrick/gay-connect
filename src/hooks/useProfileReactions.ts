@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { notifyNewReaction } from '@/services/pushNotificationService';
-import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 
 interface ProfileReaction {
   id: string;
