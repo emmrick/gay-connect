@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Loader2, RefreshCw, Crown, Users, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -54,24 +54,28 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
   }, [permissionState, hasLocation, locationLoading, requestLocation]);
 
   // Build final profiles list
+  // Stabilize current user reference to avoid re-renders on unrelated profile refetches
+  const stableUserRef = useRef<{ id: string; user_id: string; username: string; avatar_url: string | null; age: number | null; is_online: boolean | null; last_seen: string | null; bio: string | null; region: string | null; created_at: string | null } | null>(null);
+  if (currentUserProfile && (!stableUserRef.current || stableUserRef.current.user_id !== currentUserProfile.user_id || stableUserRef.current.avatar_url !== currentUserProfile.avatar_url || stableUserRef.current.username !== currentUserProfile.username)) {
+    stableUserRef.current = {
+      id: currentUserProfile.id,
+      user_id: currentUserProfile.user_id,
+      username: currentUserProfile.username,
+      avatar_url: currentUserProfile.avatar_url,
+      age: currentUserProfile.age,
+      is_online: currentUserProfile.is_online,
+      last_seen: currentUserProfile.last_seen,
+      bio: currentUserProfile.bio,
+      region: currentUserProfile.region,
+      created_at: (currentUserProfile as any).created_at,
+    };
+  }
+
   const allProfiles = useMemo(() => {
     const result: any[] = [];
 
-    if (currentUserProfile) {
-      result.push({
-        id: currentUserProfile.id,
-        user_id: currentUserProfile.user_id,
-        username: currentUserProfile.username,
-        avatar_url: currentUserProfile.avatar_url,
-        age: currentUserProfile.age,
-        is_online: currentUserProfile.is_online,
-        last_seen: currentUserProfile.last_seen,
-        distance_km: null,
-        bio: currentUserProfile.bio,
-        region: currentUserProfile.region,
-        isCurrentUser: true,
-        created_at: (currentUserProfile as any).created_at,
-      });
+    if (stableUserRef.current) {
+      result.push({ ...stableUserRef.current, distance_km: null, isCurrentUser: true });
     }
 
     if (profiles) {
@@ -80,7 +84,6 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
       });
     }
 
-    // Age filter
     if (ageRange && (ageRange[0] !== 18 || ageRange[1] !== 99)) {
       return result.filter(p => {
         if (p.isCurrentUser) return true;
@@ -90,7 +93,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
     }
 
     return result;
-  }, [currentUserProfile, profiles, ageRange]);
+  }, [stableUserRef.current, profiles, ageRange]);
 
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
@@ -250,4 +253,4 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
   );
 };
 
-export default NearbyMembersGrid;
+export default memo(NearbyMembersGrid);
