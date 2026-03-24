@@ -51,7 +51,7 @@ const IdentityVerificationDialog = lazy(() => import('@/components/verification/
 const VerificationReminderBanner = lazy(() => import('@/components/verification/VerificationReminderBanner'));
 const Help = lazy(() => import('@/pages/Help'));
 
-type NavTab = 'home' | 'swipe' | 'messages' | 'premium' | 'help' | 'profile';
+type NavTab = 'home' | 'swipe' | 'messages' | 'tween' | 'premium' | 'help' | 'profile';
 
 const LazyFallback = () => (
   <div className="flex-1 flex items-center justify-center min-h-screen">
@@ -284,6 +284,10 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: NavTab) => {
+    if (tab === 'tween') {
+      navigate('/tween');
+      return;
+    }
     if (tab === 'help') {
       setPreviousTab(activeTab);
       setActiveTab(tab);

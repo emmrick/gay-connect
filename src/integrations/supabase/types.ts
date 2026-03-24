@@ -3252,6 +3252,192 @@ export type Database = {
         }
         Relationships: []
       }
+      tween_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tween_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "tween_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tween_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          likes_count: number | null
+          parent_comment_id: string | null
+          tween_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          parent_comment_id?: string | null
+          tween_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          parent_comment_id?: string | null
+          tween_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tween_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "tween_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tween_comments_tween_id_fkey"
+            columns: ["tween_id"]
+            isOneToOne: false
+            referencedRelation: "tweens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tween_likes: {
+        Row: {
+          created_at: string
+          id: string
+          tween_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tween_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tween_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tween_likes_tween_id_fkey"
+            columns: ["tween_id"]
+            isOneToOne: false
+            referencedRelation: "tweens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tween_poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_index: number
+          tween_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_index: number
+          tween_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_index?: number
+          tween_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tween_poll_votes_tween_id_fkey"
+            columns: ["tween_id"]
+            isOneToOne: false
+            referencedRelation: "tweens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tweens: {
+        Row: {
+          comments_count: number | null
+          content: string
+          created_at: string
+          has_poll: boolean | null
+          id: string
+          is_deleted: boolean | null
+          likes_count: number | null
+          media_type: string | null
+          media_url: string | null
+          poll_ends_at: string | null
+          poll_options: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comments_count?: number | null
+          content: string
+          created_at?: string
+          has_poll?: boolean | null
+          id?: string
+          is_deleted?: boolean | null
+          likes_count?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          poll_ends_at?: string | null
+          poll_options?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comments_count?: number | null
+          content?: string
+          created_at?: string
+          has_poll?: boolean | null
+          id?: string
+          is_deleted?: boolean | null
+          likes_count?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          poll_ends_at?: string | null
+          poll_options?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       typing_indicators: {
         Row: {
           chat_room_id: string | null
