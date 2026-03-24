@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useChatbotConfig, useUpdateChatbotConfig } from '@/hooks/useChatbotConfig';
-import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { useCredits, CREDIT_COSTS, getDynamicCreditCost } from '@/hooks/useCredits';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 

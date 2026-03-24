@@ -472,12 +472,13 @@ export const useRecordProfileView = () => {
       if (!user?.id) throw new Error('Not authenticated');
       if (user.id === viewedUserId) return; // Don't charge for viewing own profile
 
+      const dynamicCost = await getDynamicCreditCost('profile_view');
       const { error } = await supabase
         .from('profile_view_credits')
         .insert({
           viewer_user_id: user.id,
           viewed_user_id: viewedUserId,
-          credits_spent: CREDIT_COSTS.profile_view,
+          credits_spent: dynamicCost,
         });
 
       // Ignore duplicate error (already viewed)
