@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Loader2, RefreshCw, Crown, Users, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
