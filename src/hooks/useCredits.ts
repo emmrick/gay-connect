@@ -522,9 +522,7 @@ export const useNearbyProfilesUnlock = () => {
       const cost = await getDynamicCreditCost(costKey);
       const duration = unlockType === '30_extra' ? 72 : 168; // hours
       
-      if (cost <= 0) {
-        // Free action, skip deduction
-      } else {
+      if (cost > 0) {
         // First deduct credits
         const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits', {
           _user_id: user.id,
@@ -533,9 +531,10 @@ export const useNearbyProfilesUnlock = () => {
           _description: `Déblocage ${unlockType === '30_extra' ? '30' : '130'} profils supplémentaires`,
         });
 
-      if (deductError) throw deductError;
-      if (!(deductResult as any).success) {
-        throw new Error((deductResult as any).error || 'Crédits insuffisants');
+        if (deductError) throw deductError;
+        if (!(deductResult as any).success) {
+          throw new Error((deductResult as any).error || 'Crédits insuffisants');
+        }
       }
 
       // Then create unlock record
