@@ -50,6 +50,7 @@ const CreateGroupDialog = lazy(() => import('@/components/chat/CreateGroupDialog
 const IdentityVerificationDialog = lazy(() => import('@/components/verification/IdentityVerificationDialog'));
 const VerificationReminderBanner = lazy(() => import('@/components/verification/VerificationReminderBanner'));
 const Help = lazy(() => import('@/pages/Help'));
+const TweenFeed = lazy(() => import('@/components/tween/TweenFeed'));
 
 type NavTab = 'home' | 'swipe' | 'messages' | 'tween' | 'premium' | 'help' | 'profile';
 
@@ -285,7 +286,9 @@ const Index = () => {
 
   const handleTabChange = (tab: NavTab) => {
     if (tab === 'tween') {
-      navigate('/tween');
+      setPreviousTab(activeTab);
+      setActiveTab(tab);
+      setCurrentView('tween');
       return;
     }
     if (tab === 'help') {
@@ -620,6 +623,21 @@ const Index = () => {
             />
             <ScrollArea className="flex-1 min-h-0">
               <CreditsPage />
+            </ScrollArea>
+          </div>
+        ) : null;
+
+      case 'tween':
+        return user ? (
+          <div className="flex-1 flex flex-col min-h-0">
+            <UnifiedPageHeader
+              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToProfile={() => handleTabChange('profile')}
+            />
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="px-3 py-4 pb-8">
+                <TweenFeed />
+              </div>
             </ScrollArea>
           </div>
         ) : null;
