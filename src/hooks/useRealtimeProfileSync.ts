@@ -44,25 +44,25 @@ export const useRealtimeProfileSync = () => {
 
           // Profile data changes (avatar, username, etc.) → invalidate profile-related queries
           if (isProfileDataChange) {
-            queryClient.invalidateQueries({ queryKey: ['profile', changedUserId] });
-            // Batch: only invalidate lists if not done recently (debounce 2s)
+            // Update single profile cache directly instead of invalidating
+            queryClient.setQueryData(['profile', changedUserId], (old: any) =>
+              old ? { ...old, ...newData } : old
+            );
+            // Batch list invalidation with 10s debounce to avoid flicker
             const now = Date.now();
-            if (now - lastInvalidateRef.current > 2000) {
+            if (now - lastInvalidateRef.current > 10000) {
               lastInvalidateRef.current = now;
               queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
               queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
-              queryClient.invalidateQueries({ queryKey: ['nearby-profiles'] });
-              queryClient.invalidateQueries({ queryKey: ['profiles'] });
             }
           }
 
-          // Online status change → lightweight invalidation (throttled)
+          // Online status change → very lightweight, 30s throttle
           if (isOnlineChange && !isProfileDataChange) {
             const now = Date.now();
-            if (now - lastInvalidateRef.current > 5000) {
+            if (now - lastInvalidateRef.current > 30000) {
               lastInvalidateRef.current = now;
               queryClient.invalidateQueries({ queryKey: ['online-member-counts'] });
-              queryClient.invalidateQueries({ queryKey: ['private-conversations'] });
             }
           }
         }

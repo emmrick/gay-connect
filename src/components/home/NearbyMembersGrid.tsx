@@ -253,4 +253,4 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange }: NearbyMembe
   );
 };
 
-export default NearbyMembersGrid;
+export default memo(NearbyMembersGrid);
