@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { deductCredits, checkSufficientCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 import { toast } from 'sonner';
 
 const MAX_GROUPS = 3;
@@ -140,23 +140,25 @@ export const useJoinedGroups = () => {
 
     // If not home group and not skipping check, charge credits
     if (!isHomeGroup && !skipCreditCheck) {
-      const cost = CREDIT_COSTS.join_extra_group;
-      const hasCredits = await checkSufficientCredits(user.id, cost);
+      const cost = await getDynamicCreditCost('join_extra_group');
       
-      if (!hasCredits) {
-        return { success: false, reason: 'insufficient_credits' };
-      }
+      if (cost > 0) {
+        const hasCredits = await checkSufficientCredits(user.id, cost);
+        
+        if (!hasCredits) {
+          return { success: false, reason: 'insufficient_credits' };
+        }
 
-      // Deduct credits
-      const result = await deductCredits(
-        user.id,
-        cost,
-        'join_extra_group',
-        `Rejoindre le groupe ${regionName}`
-      );
+        const result = await deductCredits(
+          user.id,
+          cost,
+          'join_extra_group',
+          `Rejoindre le groupe ${regionName}`
+        );
 
-      if (!result.success) {
-        return { success: false, reason: 'deduction_failed' };
+        if (!result.success) {
+          return { success: false, reason: 'deduction_failed' };
+        }
       }
     }
 

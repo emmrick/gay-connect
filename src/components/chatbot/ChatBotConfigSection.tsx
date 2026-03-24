@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useChatbotConfig, useUpdateChatbotConfig } from '@/hooks/useChatbotConfig';
-import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { useCredits, CREDIT_COSTS, getDynamicCreditCost } from '@/hooks/useCredits';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
@@ -25,17 +25,19 @@ const ChatBotConfigSection = () => {
 
   const handleToggle = async () => {
     if (!isActive) {
-      // Activation costs 10 credits
-      if (!hasEnoughCredits(CREDIT_COSTS.chatbot_activate)) {
-        toast.error(`Crédits insuffisants (${CREDIT_COSTS.chatbot_activate} crédits pour activer)`);
+      const activateCost = await getDynamicCreditCost('chatbot_activate');
+      if (activateCost > 0 && !hasEnoughCredits(activateCost)) {
+        toast.error(`Crédits insuffisants (${activateCost} crédits pour activer)`);
         return;
       }
       try {
-        await deductCredits.mutateAsync({
-          amount: CREDIT_COSTS.chatbot_activate,
-          transactionType: 'chatbot_activate',
-          description: 'Activation du ChatBot personnel',
-        });
+        if (activateCost > 0) {
+          await deductCredits.mutateAsync({
+            amount: activateCost,
+            transactionType: 'chatbot_activate',
+            description: 'Activation du ChatBot personnel',
+          });
+        }
         updateConfig.mutate({ is_active: true });
       } catch {
         toast.error('Erreur lors de l\'activation');
@@ -49,18 +51,22 @@ const ChatBotConfigSection = () => {
     const trimmed = newInfo.trim();
     if (!trimmed) return;
     
-    const cost = infos.length >= 10 ? CREDIT_COSTS.chatbot_info_extra : CREDIT_COSTS.chatbot_info;
-    if (!hasEnoughCredits(cost)) {
+    const cost = infos.length >= 10 
+      ? await getDynamicCreditCost('chatbot_info_extra') 
+      : await getDynamicCreditCost('chatbot_info');
+    if (cost > 0 && !hasEnoughCredits(cost)) {
       toast.error(`Crédits insuffisants (${cost} crédits par information)`);
       return;
     }
 
     try {
-      await deductCredits.mutateAsync({
-        amount: cost,
-        transactionType: infos.length >= 10 ? 'chatbot_info_extra' : 'chatbot_info',
-        description: `Info chatbot (${infos.length + 1}${infos.length >= 10 ? ' - extra' : ''})`,
-      });
+      if (cost > 0) {
+        await deductCredits.mutateAsync({
+          amount: cost,
+          transactionType: infos.length >= 10 ? 'chatbot_info_extra' : 'chatbot_info',
+          description: `Info chatbot (${infos.length + 1}${infos.length >= 10 ? ' - extra' : ''})`,
+        });
+      }
       updateConfig.mutate({ chatbot_info: [...infos, trimmed] });
       setNewInfo('');
     } catch {

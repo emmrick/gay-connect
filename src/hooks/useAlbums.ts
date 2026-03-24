@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCreateNotification } from '@/hooks/useNotifications';
-import { CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 
 interface Album {
   id: string;
@@ -101,22 +101,23 @@ export const useAlbums = (userId?: string) => {
       const isFirstAlbum = currentAlbumCount === 0;
 
       if (!isFirstAlbum) {
-        // Check if user has enough credits for additional album
-        const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.album_create);
-        if (!hasCredits) {
-          throw new Error('INSUFFICIENT_CREDITS');
-        }
+        const albumCost = await getDynamicCreditCost('album_create');
+        if (albumCost > 0) {
+          const hasCredits = await checkSufficientCredits(user.id, albumCost);
+          if (!hasCredits) {
+            throw new Error('INSUFFICIENT_CREDITS');
+          }
 
-        // Deduct credits for additional album
-        const deductResult = await deductCredits(
-          user.id,
-          CREDIT_COSTS.album_create,
-          'album_create',
-          `Création d'un nouvel album: ${name}`
-        );
+          const deductResult = await deductCredits(
+            user.id,
+            albumCost,
+            'album_create',
+            `Création d'un nouvel album: ${name}`
+          );
 
-        if (!deductResult.success) {
-          throw new Error('INSUFFICIENT_CREDITS');
+          if (!deductResult.success) {
+            throw new Error('INSUFFICIENT_CREDITS');
+          }
         }
       }
 
@@ -340,22 +341,23 @@ export const useAlbums = (userId?: string) => {
     }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      // Check if user has enough credits for album share
-      const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.album_share);
-      if (!hasCredits) {
-        throw new Error('INSUFFICIENT_CREDITS');
-      }
+      const shareCost = await getDynamicCreditCost('album_share');
+      if (shareCost > 0) {
+        const hasCredits = await checkSufficientCredits(user.id, shareCost);
+        if (!hasCredits) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
 
-      // Deduct credits for sharing album
-      const deductResult = await deductCredits(
-        user.id,
-        CREDIT_COSTS.album_share,
-        'album_share',
-        'Partage d\'album'
-      );
+        const deductResult = await deductCredits(
+          user.id,
+          shareCost,
+          'album_share',
+          'Partage d\'album'
+        );
 
-      if (!deductResult.success) {
-        throw new Error('INSUFFICIENT_CREDITS');
+        if (!deductResult.success) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
       }
 
       let expiresAt: string | null = null;

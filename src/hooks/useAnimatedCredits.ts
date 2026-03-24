@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
-import { deductCredits as deductCreditsBase, checkSufficientCredits, CREDIT_COSTS } from '@/hooks/useCredits';
+import { deductCredits as deductCreditsBase, checkSufficientCredits, CREDIT_COSTS, getDynamicCreditCost } from '@/hooks/useCredits';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 
 type CreditCostKey = keyof typeof CREDIT_COSTS;
@@ -45,7 +45,11 @@ export const useAnimatedCredits = (): UseAnimatedCreditsResult => {
     costKey: CreditCostKey,
     label?: string
   ): Promise<boolean> => {
-    const amount = CREDIT_COSTS[costKey];
+    // Use dynamic cost from DB instead of static
+    const amount = await getDynamicCreditCost(costKey);
+    
+    // If cost is 0, action is free
+    if (amount <= 0) return true;
     
     // Check if user has enough credits
     const hasCredits = await checkSufficientCredits(userId, amount);
