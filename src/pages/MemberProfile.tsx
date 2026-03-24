@@ -21,7 +21,7 @@ import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 // Premium user check removed - premium badges no longer shown on other profiles
 import { useUserSuspensionStatus } from '@/hooks/useUserSuspensionStatus';
 import { motion } from 'framer-motion';
-import { useProfileViewCheck, useRecordProfileView, CREDIT_COSTS, deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
+import { useProfileViewCheck, useRecordProfileView, CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { toast } from 'sonner';
 import { useChatbotConfig } from '@/hooks/useChatbotConfig';
