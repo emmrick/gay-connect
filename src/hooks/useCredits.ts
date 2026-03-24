@@ -518,16 +518,20 @@ export const useNearbyProfilesUnlock = () => {
     mutationFn: async (unlockType: '30_extra' | '130_extra') => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      const cost = unlockType === '30_extra' ? CREDIT_COSTS.nearby_unlock_30 : CREDIT_COSTS.nearby_unlock_130;
+      const costKey = unlockType === '30_extra' ? 'nearby_unlock_30' : 'nearby_unlock_130';
+      const cost = await getDynamicCreditCost(costKey);
       const duration = unlockType === '30_extra' ? 72 : 168; // hours
       
-      // First deduct credits
-      const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits', {
-        _user_id: user.id,
-        _amount: cost,
-        _transaction_type: unlockType === '30_extra' ? 'nearby_unlock_30' : 'nearby_unlock_130',
-        _description: `Déblocage ${unlockType === '30_extra' ? '30' : '130'} profils supplémentaires`,
-      });
+      if (cost <= 0) {
+        // Free action, skip deduction
+      } else {
+        // First deduct credits
+        const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits', {
+          _user_id: user.id,
+          _amount: cost,
+          _transaction_type: costKey,
+          _description: `Déblocage ${unlockType === '30_extra' ? '30' : '130'} profils supplémentaires`,
+        });
 
       if (deductError) throw deductError;
       if (!(deductResult as any).success) {
