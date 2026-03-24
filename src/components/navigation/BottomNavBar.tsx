@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { MessageCircle, User, Home, Crown, Sparkles, HelpCircle } from 'lucide-react';
+import { MessageCircle, User, Home, Crown, Sparkles, HelpCircle, Rss } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 
