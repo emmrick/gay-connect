@@ -116,22 +116,25 @@ export const useToggleProfileReaction = () => {
         if (error) throw error;
         return { action: 'removed' };
       } else {
-        // Adding a new reaction costs credits
-        const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.profile_reaction);
-        if (!hasCredits) {
-          throw new Error('INSUFFICIENT_CREDITS');
-        }
+        // Adding a new reaction - fetch dynamic cost
+        const reactionCost = await getDynamicCreditCost('profile_reaction');
+        
+        if (reactionCost > 0) {
+          const hasCredits = await checkSufficientCredits(user.id, reactionCost);
+          if (!hasCredits) {
+            throw new Error('INSUFFICIENT_CREDITS');
+          }
 
-        // Deduct credits for profile reaction
-        const deductResult = await deductCredits(
-          user.id,
-          CREDIT_COSTS.profile_reaction,
-          'profile_reaction',
-          `Réaction ${emoji} sur un profil`
-        );
+          const deductResult = await deductCredits(
+            user.id,
+            reactionCost,
+            'profile_reaction',
+            `Réaction ${emoji} sur un profil`
+          );
 
-        if (!deductResult.success) {
-          throw new Error('INSUFFICIENT_CREDITS');
+          if (!deductResult.success) {
+            throw new Error('INSUFFICIENT_CREDITS');
+          }
         }
 
         // Add reaction

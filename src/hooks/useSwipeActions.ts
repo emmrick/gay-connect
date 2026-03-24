@@ -213,25 +213,29 @@ export const useSwipeActions = () => {
     }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      const cost = SWIPE_CREDIT_COSTS[actionType];
+      const costKey = actionType === 'like' ? 'swipe_like' : actionType === 'dislike' ? 'swipe_dislike' : 'swipe_hide';
+      const cost = await getDynamicCreditCost(costKey);
       
-      if (totalCredits < cost) {
-        throw new Error('Crédits insuffisants');
-      }
+      // If cost is 0, action is free - skip credit check
+      if (cost > 0) {
+        if (totalCredits < cost) {
+          throw new Error('Crédits insuffisants');
+        }
 
-      const deductResult = await deductCredits(
-        user.id,
-        cost,
-        `swipe_${actionType}`,
-        actionType === 'like' 
-          ? 'J\'aime un profil' 
-          : actionType === 'dislike' 
-            ? 'Passer un profil' 
-            : 'Masquer définitivement'
-      );
+        const deductResult = await deductCredits(
+          user.id,
+          cost,
+          `swipe_${actionType}`,
+          actionType === 'like' 
+            ? 'J\'aime un profil' 
+            : actionType === 'dislike' 
+              ? 'Passer un profil' 
+              : 'Masquer définitivement'
+        );
 
-      if (!deductResult.success) {
-        throw new Error(deductResult.error || 'Erreur lors de la déduction des crédits');
+        if (!deductResult.success) {
+          throw new Error(deductResult.error || 'Erreur lors de la déduction des crédits');
+        }
       }
 
       const expiresAt = actionType === 'dislike' 

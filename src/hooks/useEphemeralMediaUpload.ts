@@ -40,12 +40,14 @@ export const useEphemeralMediaUpload = () => {
     }: UploadEphemeralMediaParams) => {
       if (!user) throw new Error('Not authenticated');
 
-      // Credits are the only limiting factor now - no more premium/usage limits
+      // Fetch dynamic cost for ephemeral media
+      const ephemeralCost = await getDynamicCreditCost('ephemeral_media');
 
-      // Check if user has enough credits for ephemeral media
-      const hasCredits = await checkSufficientCredits(user.id, CREDIT_COSTS.ephemeral_media);
-      if (!hasCredits) {
-        throw new Error('INSUFFICIENT_CREDITS');
+      if (ephemeralCost > 0) {
+        const hasCredits = await checkSufficientCredits(user.id, ephemeralCost);
+        if (!hasCredits) {
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
       }
 
       // Check file size limits
@@ -59,16 +61,18 @@ export const useEphemeralMediaUpload = () => {
       setProgress(10);
 
       try {
-        // Deduct credits for ephemeral media
-        const deductResult = await deductCredits(
-          user.id,
-          CREDIT_COSTS.ephemeral_media,
-          'ephemeral_media',
-          `Média éphémère ${messageType === 'image' ? 'photo' : 'vidéo'}`
-        );
+        // Deduct credits for ephemeral media (only if cost > 0)
+        if (ephemeralCost > 0) {
+          const deductResult = await deductCredits(
+            user.id,
+            ephemeralCost,
+            'ephemeral_media',
+            `Média éphémère ${messageType === 'image' ? 'photo' : 'vidéo'}`
+          );
 
-        if (!deductResult.success) {
-          throw new Error('INSUFFICIENT_CREDITS');
+          if (!deductResult.success) {
+            throw new Error('INSUFFICIENT_CREDITS');
+          }
         }
         // 1. Upload file to storage
         const fileExt = file.name.split('.').pop();
