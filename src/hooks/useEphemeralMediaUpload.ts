@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserUsage } from './useUserUsage';
 import { toast } from 'sonner';
-import { CREDIT_COSTS, deductCredits, checkSufficientCredits, useCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS, deductCredits, checkSufficientCredits, useCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 import { useCreditDialog } from '@/contexts/CreditDialogContext';
 
 interface UploadEphemeralMediaParams {
