@@ -90,7 +90,7 @@ const TweenComposer = () => {
     <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
       <div className="flex gap-3">
         <Avatar className="w-10 h-10 flex-shrink-0">
-          <AvatarImage src={profile?.avatar_url || ''} />
+          <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
           <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
             {profile?.username?.charAt(0)?.toUpperCase() || '?'}
           </AvatarFallback>
