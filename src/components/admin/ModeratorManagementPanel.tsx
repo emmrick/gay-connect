@@ -31,6 +31,10 @@ interface ModeratorPermissions {
   can_broadcast: boolean;
   can_ai_moderation: boolean;
   can_screenshot_sanctions: boolean;
+  can_manage_faq: boolean;
+  can_manage_popups: boolean;
+  can_view_logs: boolean;
+  can_manage_flyers: boolean;
 }
 
 const PERMISSION_LABELS: Record<keyof ModeratorPermissions, { label: string; icon: React.ElementType }> = {
@@ -46,6 +50,10 @@ const PERMISSION_LABELS: Record<keyof ModeratorPermissions, { label: string; ico
   can_broadcast: { label: 'Notifications', icon: Bell },
   can_ai_moderation: { label: 'Modération IA', icon: Bot },
   can_screenshot_sanctions: { label: 'Captures écran', icon: Camera },
+  can_manage_faq: { label: 'FAQ & Aide', icon: HelpCircle },
+  can_manage_popups: { label: 'Pop-ups', icon: Megaphone },
+  can_view_logs: { label: 'Logs & Sécurité', icon: Activity },
+  can_manage_flyers: { label: 'Flyers', icon: FileImage },
 };
 
 const DEFAULT_PERMISSIONS: ModeratorPermissions = {
