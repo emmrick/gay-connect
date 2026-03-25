@@ -288,6 +288,10 @@ const Index = () => {
   };
 
   const handleTabChange = (tab: NavTab) => {
+    // Restricted users can only access profile and help
+    if (isRestricted && tab !== 'profile' && tab !== 'help') {
+      return;
+    }
     if (tab === 'tween') {
       setPreviousTab(activeTab);
       setActiveTab(tab);
