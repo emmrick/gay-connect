@@ -69,6 +69,10 @@ const DEFAULT_PERMISSIONS: ModeratorPermissions = {
   can_broadcast: false,
   can_ai_moderation: false,
   can_screenshot_sanctions: false,
+  can_manage_faq: false,
+  can_manage_popups: false,
+  can_view_logs: false,
+  can_manage_flyers: false,
 };
 
 const ModeratorManagementPanel = () => {
