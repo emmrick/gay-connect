@@ -72,6 +72,7 @@ const slideIn = {
 
 const Index = () => {
   const { user, profile, isLoading: authLoading, signOut } = useAuth();
+  const { isRestricted } = useBlockedUserContext();
   
   // Use persisted navigation state
   const {
