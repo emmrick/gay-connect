@@ -278,6 +278,10 @@ const ModeratorManagementPanel = () => {
                               can_broadcast: perms?.can_broadcast || false,
                               can_ai_moderation: perms?.can_ai_moderation || false,
                               can_screenshot_sanctions: perms?.can_screenshot_sanctions || false,
+                              can_manage_faq: perms?.can_manage_faq || false,
+                              can_manage_popups: perms?.can_manage_popups || false,
+                              can_view_logs: perms?.can_view_logs || false,
+                              can_manage_flyers: perms?.can_manage_flyers || false,
                             });
                             setEditDialogOpen(true);
                           }}
