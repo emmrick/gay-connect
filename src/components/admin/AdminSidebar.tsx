@@ -41,6 +41,10 @@ export interface ModPermissions {
   can_broadcast?: boolean | null;
   can_ai_moderation?: boolean | null;
   can_screenshot_sanctions?: boolean | null;
+  can_manage_faq?: boolean | null;
+  can_manage_popups?: boolean | null;
+  can_view_logs?: boolean | null;
+  can_manage_flyers?: boolean | null;
 }
 
 interface AdminSidebarProps {
@@ -84,19 +88,19 @@ const navItems: NavItem[] = [
   { id: 'withdrawals', label: 'Retraits', icon: ArrowUpRight, group: 'finances', adminOnly: true },
   { id: 'global', label: 'Gains', icon: PieChart, group: 'finances', adminOnly: true },
   { id: 'broadcast', label: 'Push', icon: Bell, group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
-  { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'communication', adminOnly: true },
-  { id: 'faq', label: "Aide", icon: HelpCircle, group: 'communication', adminOnly: true },
-  { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'communication', adminOnly: true },
-  { id: 'promo-images', label: 'Visuels', icon: Sparkles, group: 'communication', adminOnly: true },
-  { id: 'site-updates', label: 'Updates', icon: Rocket, group: 'communication', adminOnly: true },
+  { id: 'popups', label: 'Pop-ups', icon: Bell, group: 'communication', adminOnly: true, permissionKey: 'can_manage_popups' },
+  { id: 'faq', label: "Aide", icon: HelpCircle, group: 'communication', adminOnly: true, permissionKey: 'can_manage_faq' },
+  { id: 'flyers', label: 'Flyers', icon: FileImage, group: 'communication', adminOnly: true, permissionKey: 'can_manage_flyers' },
+  { id: 'promo-images', label: 'Visuels', icon: Sparkles, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
+  { id: 'site-updates', label: 'Updates', icon: Rocket, group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
   { id: 'promo', label: 'Promos', icon: Ticket, group: 'communication', adminOnly: true, permissionKey: 'can_manage_promo' },
   { id: 'ads', label: 'Annonces', icon: Megaphone, group: 'communication', permissionKey: 'can_manage_content' },
-  { id: 'credit-costs', label: 'Crédits', icon: Coins, group: 'config', adminOnly: true },
-  { id: 'swipe-stats', label: 'Swipe', icon: Heart, group: 'config', adminOnly: true },
+  { id: 'credit-costs', label: 'Crédits', icon: Coins, group: 'config', adminOnly: true, permissionKey: 'can_manage_credits' },
+  { id: 'swipe-stats', label: 'Swipe', icon: Heart, group: 'config', adminOnly: true, permissionKey: 'can_view_stats' },
   { id: 'maintenance', label: 'Maintenance', icon: Wrench, group: 'config', adminOnly: true },
   { id: 'feature-toggles', label: 'Toggles', icon: ToggleLeft, group: 'config', adminOnly: true },
-  { id: 'error-logs', label: 'Erreurs', icon: Activity, group: 'logs', adminOnly: true },
-  { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true },
+  { id: 'error-logs', label: 'Erreurs', icon: Activity, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
 ];
 
 const groupConfig: Record<NavGroup, { label: string; icon: string }> = {

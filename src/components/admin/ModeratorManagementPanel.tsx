@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import {
   Shield, Search, UserPlus, Trash2, Loader2, Users,
   Filter, IdCard, Coins, MessageSquare, BarChart3, Ban,
-  History, Ticket, Bell, Bot, Camera
+  History, Ticket, Bell, Bot, Camera, HelpCircle, FileImage, Activity, Megaphone
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
@@ -31,6 +31,10 @@ interface ModeratorPermissions {
   can_broadcast: boolean;
   can_ai_moderation: boolean;
   can_screenshot_sanctions: boolean;
+  can_manage_faq: boolean;
+  can_manage_popups: boolean;
+  can_view_logs: boolean;
+  can_manage_flyers: boolean;
 }
 
 const PERMISSION_LABELS: Record<keyof ModeratorPermissions, { label: string; icon: React.ElementType }> = {
@@ -46,6 +50,10 @@ const PERMISSION_LABELS: Record<keyof ModeratorPermissions, { label: string; ico
   can_broadcast: { label: 'Notifications', icon: Bell },
   can_ai_moderation: { label: 'Modération IA', icon: Bot },
   can_screenshot_sanctions: { label: 'Captures écran', icon: Camera },
+  can_manage_faq: { label: 'FAQ & Aide', icon: HelpCircle },
+  can_manage_popups: { label: 'Pop-ups', icon: Megaphone },
+  can_view_logs: { label: 'Logs & Sécurité', icon: Activity },
+  can_manage_flyers: { label: 'Flyers', icon: FileImage },
 };
 
 const DEFAULT_PERMISSIONS: ModeratorPermissions = {
@@ -61,6 +69,10 @@ const DEFAULT_PERMISSIONS: ModeratorPermissions = {
   can_broadcast: false,
   can_ai_moderation: false,
   can_screenshot_sanctions: false,
+  can_manage_faq: false,
+  can_manage_popups: false,
+  can_view_logs: false,
+  can_manage_flyers: false,
 };
 
 const ModeratorManagementPanel = () => {
@@ -266,6 +278,10 @@ const ModeratorManagementPanel = () => {
                               can_broadcast: perms?.can_broadcast || false,
                               can_ai_moderation: perms?.can_ai_moderation || false,
                               can_screenshot_sanctions: perms?.can_screenshot_sanctions || false,
+                              can_manage_faq: perms?.can_manage_faq || false,
+                              can_manage_popups: perms?.can_manage_popups || false,
+                              can_view_logs: perms?.can_view_logs || false,
+                              can_manage_flyers: perms?.can_manage_flyers || false,
                             });
                             setEditDialogOpen(true);
                           }}
