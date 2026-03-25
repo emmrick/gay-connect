@@ -605,22 +605,23 @@ const Index = () => {
         return user ? (
           <div className="flex-1 flex flex-col min-h-0">
             <UnifiedPageHeader
-              onNavigateToCredits={() => handleTabChange('premium')}
+              onNavigateToCredits={isRestricted ? undefined : () => handleTabChange('premium')}
               onNavigateToProfile={() => handleTabChange('profile')}
             />
+            {isRestricted && <SuspensionBanner />}
             <ScrollArea className="flex-1 min-h-0">
               <ProfileView 
                 onSignOut={handleSignOut}
-                onNavigateToAdmin={() => navigate('/admin')}
-                onNavigateToCredits={() => handleTabChange('premium')}
+                onNavigateToAdmin={isRestricted ? undefined : () => navigate('/admin')}
+                onNavigateToCredits={isRestricted ? undefined : () => handleTabChange('premium')}
                 onContactAdmin={() => {
                   setPreviousTab(activeTab);
                   setActiveTab('help');
                   setCurrentView('help');
                 }}
-                onNavigateToChatbot={() => setCurrentView('chatbot-config')}
-                isAdmin={isAdmin}
-                isModerator={isModerator}
+                onNavigateToChatbot={isRestricted ? undefined : () => setCurrentView('chatbot-config')}
+                isAdmin={isRestricted ? false : isAdmin}
+                isModerator={isRestricted ? false : isModerator}
                 openEditProfile={openEditProfile}
                 onEditProfileHandled={() => setOpenEditProfile(false)}
               />
