@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import {
   Shield, Search, UserPlus, Trash2, Loader2, Users,
   Filter, IdCard, Coins, MessageSquare, BarChart3, Ban,
-  History, Ticket, Bell, Bot, Camera
+  History, Ticket, Bell, Bot, Camera, HelpCircle, FileImage, Activity, Megaphone
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
