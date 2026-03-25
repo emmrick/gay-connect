@@ -273,6 +273,14 @@ const Index = () => {
     enableSwipeBack: currentView === 'private' || currentView === 'chat' || currentView === 'chatbot-config',
   });
 
+  // Force restricted users to profile view
+  useEffect(() => {
+    if (isRestricted && user && currentView !== 'profile' && currentView !== 'help') {
+      setActiveTab('profile');
+      setCurrentView('profile');
+    }
+  }, [isRestricted, user, currentView]);
+
   // Skeleton already shown by parent Suspense, just return null briefly
   if (authLoading) {
     return null;
