@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useBlockedUserContext } from '@/components/BlockedUserGuard';
+import SuspensionBanner from '@/components/moderation/SuspensionBanner';
 import { useMobileNavigation } from '@/hooks/useMobileNavigation';
 import Hero from '@/components/landing/Hero';
 import HomeView from '@/components/home/HomeView';
