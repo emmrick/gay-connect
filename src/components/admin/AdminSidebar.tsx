@@ -41,6 +41,10 @@ export interface ModPermissions {
   can_broadcast?: boolean | null;
   can_ai_moderation?: boolean | null;
   can_screenshot_sanctions?: boolean | null;
+  can_manage_faq?: boolean | null;
+  can_manage_popups?: boolean | null;
+  can_view_logs?: boolean | null;
+  can_manage_flyers?: boolean | null;
 }
 
 interface AdminSidebarProps {
