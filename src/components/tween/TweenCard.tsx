@@ -48,6 +48,7 @@ const TweenPoll = ({ tween }: { tween: Tween }) => {
 
 const TweenCard = ({ tween }: TweenCardProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const toggleLike = useToggleTweenLike();
   const deleteTween = useDeleteTween();
   const [showDetail, setShowDetail] = useState(false);
