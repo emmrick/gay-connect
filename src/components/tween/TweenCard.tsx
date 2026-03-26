@@ -145,7 +145,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
 
               <button
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
-                onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
+                onClick={() => setShowDetail(true)}
               >
                 <MessageCircle className="w-[18px] h-[18px]" />
                 <span className="font-medium">{tween.comments_count || ''}</span>
