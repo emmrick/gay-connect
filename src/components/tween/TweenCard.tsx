@@ -65,8 +65,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
   return (
     <>
       <article
-        className="bg-card border border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-        onClick={() => setShowDetail(true)}
+        className="bg-card border border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow"
       >
         <div className="flex gap-3">
           <Avatar
