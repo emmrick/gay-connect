@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useTweenFeed } from '@/hooks/useTweens';
 import TweenCard from './TweenCard';
 import TweenComposer from './TweenComposer';
+import AdBanner from '@/components/ads/AdBanner';
 import { Loader2 } from 'lucide-react';
 
 const TweenFeed = () => {
