@@ -115,7 +115,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
             </div>
 
             {/* Content */}
-            <p className="mt-1 text-sm whitespace-pre-wrap break-words">{tween.content}</p>
+            <p className="mt-1 text-sm whitespace-pre-wrap break-words">{renderBoldText(tween.content)}</p>
 
             {/* Media */}
             {tween.media_url && tween.media_type === 'image' && (
