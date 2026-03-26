@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from '@/hooks/useTweens';
 import TweenDetailDialog from './TweenDetailDialog';
 
