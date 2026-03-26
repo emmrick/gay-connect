@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from '@/hooks/useTweens';
 import TweenDetailDialog from './TweenDetailDialog';
 
@@ -47,6 +48,7 @@ const TweenPoll = ({ tween }: { tween: Tween }) => {
 
 const TweenCard = ({ tween }: TweenCardProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const toggleLike = useToggleTweenLike();
   const deleteTween = useDeleteTween();
   const [showDetail, setShowDetail] = useState(false);
@@ -63,12 +65,14 @@ const TweenCard = ({ tween }: TweenCardProps) => {
   return (
     <>
       <article
-        className="bg-card border border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-        onClick={() => setShowDetail(true)}
+        className="bg-card border border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow"
       >
         <div className="flex gap-3">
-          <Avatar className="w-10 h-10 flex-shrink-0">
-            <AvatarImage src={profile?.avatar_url || ''} />
+          <Avatar
+            className="w-10 h-10 flex-shrink-0 cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/member/${profile.user_id}`); }}
+          >
+            <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
             <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
               {profile?.username?.charAt(0)?.toUpperCase() || '?'}
             </AvatarFallback>
@@ -77,7 +81,10 @@ const TweenCard = ({ tween }: TweenCardProps) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="font-semibold text-sm truncate">{profile?.username || 'Anonyme'}</span>
+                <span
+                  className="font-semibold text-sm truncate cursor-pointer hover:underline"
+                  onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/member/${profile.user_id}`); }}
+                >{profile?.username || 'Anonyme'}</span>
                 <span className="text-xs text-muted-foreground flex-shrink-0">· {timeAgo}</span>
               </div>
 
@@ -138,7 +145,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
 
               <button
                 className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
-                onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
+                onClick={() => setShowDetail(true)}
               >
                 <MessageCircle className="w-[18px] h-[18px]" />
                 <span className="font-medium">{tween.comments_count || ''}</span>
