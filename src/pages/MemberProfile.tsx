@@ -146,6 +146,7 @@ const MemberProfile = () => {
   // Credit system for profile views
   const { data: alreadyViewed, isLoading: viewCheckLoading } = useProfileViewCheck(userId || '');
   const recordProfileView = useRecordProfileView();
+  const recordVisit = useRecordProfileVisit();
   const { showInsufficientCreditsDialog } = useCreditCheck();
   const [hasChargedView, setHasChargedView] = useState(false);
 
