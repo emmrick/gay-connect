@@ -127,13 +127,21 @@ const Admin = () => {
       setTargetUserId(uid);
       return;
     }
+    // Read entity ID from sessionStorage for task-based navigation
+    const entityId = sessionStorage.getItem('admin-navigate-entity-id');
+    if (entityId) {
+      sessionStorage.removeItem('admin-navigate-entity-id');
+      setTaskEntityId(entityId);
+    } else if (section !== activeSection) {
+      setTaskEntityId(null);
+    }
     setActiveSection(section as AdminSection);
     if (section === 'users' && userId) {
       setTargetUserId(userId);
     } else if (section !== 'users') {
       setTargetUserId(null);
     }
-  }, []);
+  }, [activeSection]);
 
   const { data: pendingPurchasesCount = 0 } = useQuery({
     queryKey: ['admin-pending-purchases-count'],
