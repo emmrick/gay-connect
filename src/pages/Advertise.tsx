@@ -558,28 +558,58 @@ const Advertise = () => {
                     />
                   </div>
 
+                  <div className="space-y-3">
+                    <FormField
+                      control={form.control}
+                      name="placements"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Format(s) souhaité(s) *</FormLabel>
+                          <FormDescription>Sélectionnez un ou plusieurs formats de diffusion</FormDescription>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {Object.entries(placementLabels).map(([k, v]) => {
+                              const selected = field.value?.includes(k as any);
+                              return (
+                                <button
+                                  key={k}
+                                  type="button"
+                                  onClick={() => {
+                                    const current = field.value || [];
+                                    if (selected) {
+                                      field.onChange(current.filter((p: string) => p !== k));
+                                    } else {
+                                      field.onChange([...current, k]);
+                                    }
+                                  }}
+                                  className={`p-3 rounded-lg border text-left transition-colors ${selected ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'}`}
+                                >
+                                  <p className="text-xs font-semibold">{v.label}</p>
+                                  <p className="text-[10px] text-muted-foreground">{v.desc}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <div className="grid sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="placement"
+                      name="geo_targeting"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Format souhaité *</FormLabel>
+                          <FormLabel className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Zone de diffusion *</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Object.entries(placementLabels).map(([k, v]) => (
-                                <SelectItem key={k} value={k}>
-                                  <div>
-                                    <span className="font-medium">{v.label}</span>
-                                    <span className="text-muted-foreground ml-1 text-xs">— {v.desc}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
+                              <SelectItem value="local">🏘️ Local (codes postaux)</SelectItem>
+                              <SelectItem value="regional">🗺️ Régional</SelectItem>
+                              <SelectItem value="national">🇫🇷 National (toute la France)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -596,8 +626,30 @@ const Advertise = () => {
                             <Input type="number" min={500} step={100} {...field} />
                           </FormControl>
                           <FormDescription>
-                            {field.value ? `${(Number(field.value) / 100).toFixed(2)} €` : '—'}
+                            {field.value ? `${(Number(field.value) / 100).toFixed(2)} € (min. 5€)` : '—'}
                           </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {form.watch('geo_targeting') === 'local' && (
+                    <FormField
+                      control={form.control}
+                      name="geo_postal_codes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Codes postaux autorisés</FormLabel>
+                          <FormControl>
+                            <Input placeholder="75001, 75002, 69001..." {...field} />
+                          </FormControl>
+                          <FormDescription>Séparez les codes postaux par des virgules</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )
                           <FormMessage />
                         </FormItem>
                       )}
