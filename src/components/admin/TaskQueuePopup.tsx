@@ -334,6 +334,8 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
   const handleGoToTask = useCallback(() => {
     if (!activeTask) return;
     const section = getTaskTypeSection(activeTask.task_type);
+    const entityId = getTaskEntityId(activeTask);
+    if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
     onNavigateToSection(section);
   }, [activeTask, onNavigateToSection]);
 

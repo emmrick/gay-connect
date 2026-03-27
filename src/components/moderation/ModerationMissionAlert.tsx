@@ -362,6 +362,8 @@ const ModerationMissionAlert = () => {
   const handleExecute = useCallback(() => {
     if (!mission) return;
     const section = getTaskTypeSection(mission.task_type);
+    const entityId = getTaskEntityId(mission);
+    if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
     navigate(`/admin?section=${section}`);
   }, [mission, navigate]);
 
