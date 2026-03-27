@@ -14,6 +14,7 @@ import BlockedUsersSheet from './BlockedUsersSheet';
 import PinManagementSheet from '@/components/security/PinManagementSheet';
 import DeleteAccountDialog from './DeleteAccountDialog';
 import DataExportDialog from './DataExportDialog';
+import ContactAgeFilterSheet from './ContactAgeFilterSheet';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
