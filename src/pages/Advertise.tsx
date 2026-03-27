@@ -732,6 +732,17 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Badge variant="outline" className={`text-[10px] ${sc.color}`}>{sc.label}</Badge>
+                        {campaign.status === 'approved' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => onUpdateAd(campaign.id, { is_active: !campaign.is_active })}
+                            title={campaign.is_active ? 'Mettre en pause' : 'Activer'}
+                          >
+                            {campaign.is_active ? <Pause className="w-3.5 h-3.5 text-amber-500" /> : <Play className="w-3.5 h-3.5 text-green-500" />}
+                          </Button>
+                        )}
                         {campaign.status !== 'rejected' && (
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEditAd(campaign)}>
                             <Pencil className="w-3.5 h-3.5" />
