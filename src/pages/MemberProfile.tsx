@@ -171,6 +171,7 @@ const MemberProfile = () => {
         // If cost is 0, profile view is free - just record it
         if (dynamicCost <= 0) {
           await recordProfileView.mutateAsync(userId);
+          await recordVisit.mutateAsync(userId);
           setHasChargedView(true);
           return;
         }
