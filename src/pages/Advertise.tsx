@@ -649,12 +649,7 @@ const Advertise = () => {
                         </FormItem>
                       )}
                     />
-                  )
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  }
 
                   <div className="pt-2">
                     <Button type="submit" disabled={loading} className="w-full sm:w-auto gap-2">
