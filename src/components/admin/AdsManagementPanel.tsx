@@ -46,6 +46,8 @@ interface Ad {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  geo_targeting: string;
+  geo_postal_codes: string[];
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
