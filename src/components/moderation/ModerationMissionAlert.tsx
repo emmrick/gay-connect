@@ -12,6 +12,7 @@ import {
   useRefuseTask,
   useCompleteTask,
   getTaskTypeSection,
+  getTaskEntityId,
   invalidateAllTaskQueries,
   useMissionToggle,
 } from '@/hooks/useModerationTaskQueue';
@@ -108,6 +109,8 @@ interface MissionData {
   reward_cents: number;
   created_at: string;
   updated_at: string;
+  metadata?: Record<string, unknown>;
+  target_entity_id?: string | null;
 }
 
 type PopupStep = 'propose' | 'accepted' | 'resolved';
@@ -361,6 +364,8 @@ const ModerationMissionAlert = () => {
   const handleExecute = useCallback(() => {
     if (!mission) return;
     const section = getTaskTypeSection(mission.task_type);
+    const entityId = mission.metadata?.ad_id as string || mission.target_entity_id || null;
+    if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
     navigate(`/admin?section=${section}`);
   }, [mission, navigate]);
 

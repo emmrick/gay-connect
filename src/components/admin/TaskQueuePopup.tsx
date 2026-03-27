@@ -30,6 +30,7 @@ import {
   useMissionToggle,
   getTaskTypeLabel,
   getTaskTypeSection,
+  getTaskEntityId,
   formatCentsReward,
   invalidateAllTaskQueries,
   startMissionRefuseCooldown,
@@ -294,8 +295,9 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
     playAcceptSound();
     reserveTask.mutate(nextTask.id, {
       onSuccess: () => {
-        // Auto-navigate to the relevant section after accepting
         const section = getTaskTypeSection(nextTask.task_type);
+        const entityId = getTaskEntityId(nextTask);
+        if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
         setTimeout(() => {
           onNavigateToSection(section);
         }, 300);
@@ -332,6 +334,8 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
   const handleGoToTask = useCallback(() => {
     if (!activeTask) return;
     const section = getTaskTypeSection(activeTask.task_type);
+    const entityId = getTaskEntityId(activeTask);
+    if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
     onNavigateToSection(section);
   }, [activeTask, onNavigateToSection]);
 

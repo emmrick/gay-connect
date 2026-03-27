@@ -243,6 +243,8 @@ export type Database = {
           created_by: string | null
           description: string | null
           ends_at: string | null
+          geo_postal_codes: string[] | null
+          geo_targeting: string
           id: string
           image_url: string | null
           impressions_count: number | null
@@ -272,6 +274,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           ends_at?: string | null
+          geo_postal_codes?: string[] | null
+          geo_targeting?: string
           id?: string
           image_url?: string | null
           impressions_count?: number | null
@@ -301,6 +305,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           ends_at?: string | null
+          geo_postal_codes?: string[] | null
+          geo_targeting?: string
           id?: string
           image_url?: string | null
           impressions_count?: number | null

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Megaphone, Send, CheckCircle2, BarChart3, Users, Shield, Sparkles, Wallet, Eye, MousePointerClick, Pencil, CreditCard, Loader2, Search, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Megaphone, Send, CheckCircle2, BarChart3, Users, Shield, Sparkles, Wallet, Eye, MousePointerClick, Pencil, CreditCard, Loader2, Search, Upload, X, Image as ImageIcon, Pause, Play, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,8 +27,10 @@ const advertiseSchema = z.object({
   title: z.string().trim().min(3, 'Titre requis (min. 3 caractères)').max(120),
   description: z.string().trim().max(500, 'Max 500 caractères').optional(),
   link_url: z.string().url('URL invalide').max(500).optional().or(z.literal('')),
-  placement: z.enum(['compact', 'native', 'sponsored_card']),
+  placements: z.array(z.enum(['compact', 'native', 'sponsored_card'])).min(1, 'Sélectionnez au moins un format'),
   budget_cents: z.coerce.number().min(500, 'Budget minimum : 5€').max(1000000),
+  geo_targeting: z.enum(['local', 'regional', 'national']),
+  geo_postal_codes: z.string().optional(),
 });
 
 type AdvertiseForm = z.infer<typeof advertiseSchema>;
@@ -247,9 +249,15 @@ const Advertise = () => {
   };
 
   const handleUpdateAd = async (adId: string, updates: Record<string, any>) => {
+    // When content changes, reset to pending for re-verification
+    const contentChanged = updates.title || updates.description !== undefined || updates.image_url !== undefined;
+    if (contentChanged) {
+      updates.status = 'pending';
+      updates.is_active = false;
+    }
     const { error } = await supabase.from('ads').update(updates).eq('id', adId);
     if (error) { toast.error('Erreur de mise à jour'); return; }
-    toast.success('Annonce mise à jour');
+    toast.success(contentChanged ? 'Annonce modifiée — en attente de vérification' : 'Annonce mise à jour');
     queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
     setEditingAd(null);
   };
@@ -262,27 +270,38 @@ const Advertise = () => {
       title: '',
       description: '',
       link_url: '',
-      placement: 'native',
+      placements: ['native'],
       budget_cents: 1000,
+      geo_targeting: 'national',
+      geo_postal_codes: '',
     },
   });
 
   const onSubmit = async (values: AdvertiseForm) => {
     setLoading(true);
     try {
-      const { error } = await supabase.from('ads').insert({
-        advertiser_name: values.advertiser_name,
-        advertiser_email: values.advertiser_email,
-        title: values.title,
-        description: values.description || null,
-        image_url: adImageUrl || null,
-        link_url: values.link_url || null,
-        placement: values.placement,
-        budget_cents: values.budget_cents,
-        status: 'pending',
-        is_active: false,
-      });
-      if (error) throw error;
+      const postalCodes = values.geo_postal_codes
+        ? values.geo_postal_codes.split(',').map(c => c.trim()).filter(Boolean)
+        : [];
+
+      // Create one ad per selected placement
+      for (const placement of values.placements) {
+        const { error } = await supabase.from('ads').insert({
+          advertiser_name: values.advertiser_name,
+          advertiser_email: values.advertiser_email,
+          title: values.title,
+          description: values.description || null,
+          image_url: adImageUrl || null,
+          link_url: values.link_url || null,
+          placement,
+          budget_cents: values.budget_cents,
+          status: 'pending',
+          is_active: false,
+          geo_targeting: values.geo_targeting,
+          geo_postal_codes: postalCodes,
+        } as any);
+        if (error) throw error;
+      }
       setSubmitted(true);
       setAdImageUrl('');
       toast.success('Demande envoyée avec succès !');
@@ -446,15 +465,15 @@ const Advertise = () => {
               <div className="grid sm:grid-cols-3 gap-4 text-xs text-muted-foreground">
                 <div className="space-y-1">
                   <p className="font-semibold text-foreground">CPC (Coût par clic)</p>
-                  <p>À partir de 0,02 € par clic. Vous ne payez que lorsqu'un utilisateur clique.</p>
+                  <p>0,01 € par clic. Vous ne payez que lorsqu'un utilisateur clique.</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-foreground">CPM (Coût pour 1000 impressions)</p>
-                  <p>À partir de 0,10 € pour 1000 affichages de votre annonce.</p>
+                  <p className="font-semibold text-foreground">CPM (Coût pour 100 impressions)</p>
+                  <p>0,01 € pour 100 affichages de votre annonce.</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="font-semibold text-foreground">Budget flexible</p>
-                  <p>Définissez votre budget maximal. La diffusion s'arrête automatiquement une fois atteint.</p>
+                  <p className="font-semibold text-foreground">Budget minimum</p>
+                  <p>5€ minimum pour démarrer votre campagne. Rechargez votre portefeuille pour continuer.</p>
                 </div>
               </div>
             </CardContent>
@@ -539,28 +558,58 @@ const Advertise = () => {
                     />
                   </div>
 
+                  <div className="space-y-3">
+                    <FormField
+                      control={form.control}
+                      name="placements"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Format(s) souhaité(s) *</FormLabel>
+                          <FormDescription>Sélectionnez un ou plusieurs formats de diffusion</FormDescription>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {Object.entries(placementLabels).map(([k, v]) => {
+                              const selected = field.value?.includes(k as any);
+                              return (
+                                <button
+                                  key={k}
+                                  type="button"
+                                  onClick={() => {
+                                    const current = field.value || [];
+                                    if (selected) {
+                                      field.onChange(current.filter((p: string) => p !== k));
+                                    } else {
+                                      field.onChange([...current, k]);
+                                    }
+                                  }}
+                                  className={`p-3 rounded-lg border text-left transition-colors ${selected ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'}`}
+                                >
+                                  <p className="text-xs font-semibold">{v.label}</p>
+                                  <p className="text-[10px] text-muted-foreground">{v.desc}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <div className="grid sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="placement"
+                      name="geo_targeting"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Format souhaité *</FormLabel>
+                          <FormLabel className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Zone de diffusion *</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Object.entries(placementLabels).map(([k, v]) => (
-                                <SelectItem key={k} value={k}>
-                                  <div>
-                                    <span className="font-medium">{v.label}</span>
-                                    <span className="text-muted-foreground ml-1 text-xs">— {v.desc}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
+                              <SelectItem value="local">🏘️ Local (codes postaux)</SelectItem>
+                              <SelectItem value="regional">🗺️ Régional</SelectItem>
+                              <SelectItem value="national">🇫🇷 National (toute la France)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -577,13 +626,30 @@ const Advertise = () => {
                             <Input type="number" min={500} step={100} {...field} />
                           </FormControl>
                           <FormDescription>
-                            {field.value ? `${(Number(field.value) / 100).toFixed(2)} €` : '—'}
+                            {field.value ? `${(Number(field.value) / 100).toFixed(2)} € (min. 5€)` : '—'}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
+
+                  {form.watch('geo_targeting') === 'local' && (
+                    <FormField
+                      control={form.control}
+                      name="geo_postal_codes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Codes postaux autorisés</FormLabel>
+                          <FormControl>
+                            <Input placeholder="75001, 75002, 69001..." {...field} />
+                          </FormControl>
+                          <FormDescription>Séparez les codes postaux par des virgules</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   <div className="pt-2">
                     <Button type="submit" disabled={loading} className="w-full sm:w-auto gap-2">
@@ -726,6 +792,17 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Badge variant="outline" className={`text-[10px] ${sc.color}`}>{sc.label}</Badge>
+                        {campaign.status === 'approved' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => onUpdateAd(campaign.id, { is_active: !campaign.is_active })}
+                            title={campaign.is_active ? 'Mettre en pause' : 'Activer'}
+                          >
+                            {campaign.is_active ? <Pause className="w-3.5 h-3.5 text-amber-500" /> : <Play className="w-3.5 h-3.5 text-green-500" />}
+                          </Button>
+                        )}
                         {campaign.status !== 'rejected' && (
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEditAd(campaign)}>
                             <Pencil className="w-3.5 h-3.5" />

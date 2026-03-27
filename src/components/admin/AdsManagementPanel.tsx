@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,6 +46,8 @@ interface Ad {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  geo_targeting: string;
+  geo_postal_codes: string[];
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -71,7 +73,7 @@ const emptyForm = {
   advertiser_email: '',
   placement: 'native',
   target_pages: [] as string[],
-  cost_per_click_cents: 2,
+  cost_per_click_cents: 1,
   cost_per_mille_cents: 10,
   max_impressions: '',
   max_clicks: '',
@@ -79,7 +81,7 @@ const emptyForm = {
   ends_at: '',
 };
 
-const AdsManagementPanel = () => {
+const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -89,6 +91,7 @@ const AdsManagementPanel = () => {
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [initialAdLoaded, setInitialAdLoaded] = useState(false);
 
   const { data: ads, isLoading } = useQuery({
     queryKey: ['admin-ads', statusFilter],
@@ -100,6 +103,17 @@ const AdsManagementPanel = () => {
       return (data || []) as Ad[];
     },
   });
+
+  // Auto-open specific ad from task navigation
+  useEffect(() => {
+    if (initialAdId && ads && !initialAdLoaded) {
+      const ad = ads.find(a => a.id === initialAdId);
+      if (ad) {
+        setSelectedAd(ad);
+        setInitialAdLoaded(true);
+      }
+    }
+  }, [initialAdId, ads, initialAdLoaded]);
 
   const createAd = useMutation({
     mutationFn: async () => {
@@ -434,6 +448,16 @@ const AdsManagementPanel = () => {
                     <p className="text-sm">{selectedAd.description}</p>
                   </div>
                 )}
+
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1">Zone de diffusion</p>
+                  <p className="text-sm font-medium">
+                    {selectedAd.geo_targeting === 'local' ? '🏘️ Local' : selectedAd.geo_targeting === 'regional' ? '🗺️ Régional' : '🇫🇷 National'}
+                    {selectedAd.geo_postal_codes?.length > 0 && (
+                      <span className="text-muted-foreground font-normal ml-1">— {selectedAd.geo_postal_codes.join(', ')}</span>
+                    )}
+                  </p>
+                </div>
 
                 {selectedAd.link_url && (
                   <a href={selectedAd.link_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-primary hover:underline">

@@ -78,6 +78,14 @@ const Admin = () => {
     }
     return 'dashboard';
   });
+  const [taskEntityId, setTaskEntityId] = useState<string | null>(() => {
+    const saved = sessionStorage.getItem('admin-navigate-entity-id');
+    if (saved) {
+      sessionStorage.removeItem('admin-navigate-entity-id');
+      return saved;
+    }
+    return null;
+  });
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
@@ -119,13 +127,21 @@ const Admin = () => {
       setTargetUserId(uid);
       return;
     }
+    // Read entity ID from sessionStorage for task-based navigation
+    const entityId = sessionStorage.getItem('admin-navigate-entity-id');
+    if (entityId) {
+      sessionStorage.removeItem('admin-navigate-entity-id');
+      setTaskEntityId(entityId);
+    } else if (section !== activeSection) {
+      setTaskEntityId(null);
+    }
     setActiveSection(section as AdminSection);
     if (section === 'users' && userId) {
       setTargetUserId(userId);
     } else if (section !== 'users') {
       setTargetUserId(null);
     }
-  }, []);
+  }, [activeSection]);
 
   const { data: pendingPurchasesCount = 0 } = useQuery({
     queryKey: ['admin-pending-purchases-count'],
@@ -273,7 +289,7 @@ const Admin = () => {
       case 'verification': return <IdentityVerificationPanel />;
       case 'feature-toggles': return <FeatureTogglesPanel />;
       case 'site-updates': return <SiteUpdatesPanel />;
-      case 'ads': return <AdsManagementPanel />;
+      case 'ads': return <AdsManagementPanel initialAdId={taskEntityId || undefined} />;
       default: return null;
     }
   };
