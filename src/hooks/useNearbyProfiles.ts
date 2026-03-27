@@ -43,16 +43,28 @@ export const useNearbyProfiles = (
     queryFn: async (): Promise<NearbyProfile[]> => {
       if (!user) return [];
 
+      // Get verified user IDs first
+      const { data: verifiedUsers } = await supabase
+        .from('identity_verifications')
+        .select('user_id')
+        .eq('status', 'approved');
+
+      const verifiedUserIds = new Set((verifiedUsers || []).map(v => v.user_id));
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, user_id, username, avatar_url, bio, age, is_online, last_seen, region')
         .neq('user_id', user.id)
         .order('is_online', { ascending: false })
         .order('last_seen', { ascending: false, nullsFirst: false })
-        .limit(100);
+        .limit(200);
 
       if (error) throw error;
-      let profiles = (data || []).map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
+      
+      // Filter to only verified profiles, then fix stale status
+      let profiles = (data || [])
+        .filter(p => verifiedUserIds.has(p.user_id))
+        .map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
 
       // Filter out suspended/blocked users
       const checks = await Promise.all(
