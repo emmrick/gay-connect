@@ -71,6 +71,7 @@ const ProfileSettingsDrawer = ({
       <PinManagementSheet open={showPinManagement} onOpenChange={setShowPinManagement} />
       <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
       <DataExportDialog open={showDataExport} onOpenChange={setShowDataExport} />
+      <ContactAgeFilterSheet open={showAgeFilter} onOpenChange={setShowAgeFilter} />
       
       {settingsType && (
         <SettingsDialog 
