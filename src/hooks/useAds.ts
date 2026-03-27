@@ -18,7 +18,7 @@ interface Ad {
   spent_cents?: number;
 }
 
-const AD_ROTATION_INTERVAL_MS = 60000;
+const AD_ROTATION_INTERVAL_MS = 30000;
 
 /** Check if user has an active ad-free subscription */
 export const useAdFreeStatus = () => {
