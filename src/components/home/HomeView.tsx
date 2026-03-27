@@ -7,6 +7,11 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { useProfileVisits } from '@/hooks/useProfileVisits';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
 import AdFreeBanner from './AdFreeBanner';
@@ -30,6 +35,25 @@ const HomeView = ({
   const [appliedAgeRange, setAppliedAgeRange] = useState<[number, number]>([18, 99]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<HomeSection>('accueil');
+  const { user } = useAuth();
+
+  // Counts for badges
+  const { data: visits } = useProfileVisits();
+  const visitsCount = visits?.length || 0;
+
+  const { data: reactionsCount = 0 } = useQuery({
+    queryKey: ['profile-reactions-count', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count, error } = await supabase
+        .from('profile_reactions' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('profile_user_id', user.id);
+      if (error) return 0;
+      return count || 0;
+    },
+    enabled: !!user?.id,
+  });
 
   const handleViewProfile = (userId: string) => onViewProfile?.(userId);
   const handleStartChat = (userId: string) => onStartPrivateChat?.(userId);
@@ -61,13 +85,23 @@ const HomeView = ({
                 <Star className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Favoris</span>
               </TabsTrigger>
-              <TabsTrigger value="visites" className="gap-1 text-xs font-medium">
+              <TabsTrigger value="visites" className="gap-1 text-xs font-medium relative">
                 <Eye className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Visites</span>
+                {visitsCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full">
+                    {visitsCount > 99 ? '99+' : visitsCount}
+                  </Badge>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="reactions" className="gap-1 text-xs font-medium">
+              <TabsTrigger value="reactions" className="gap-1 text-xs font-medium relative">
                 <Heart className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Réactions</span>
+                {reactionsCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full">
+                    {reactionsCount > 99 ? '99+' : reactionsCount}
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
