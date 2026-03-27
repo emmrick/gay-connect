@@ -20,6 +20,7 @@ import {
   useMissionToggle,
   getTaskTypeLabel,
   getTaskTypeSection,
+  getTaskEntityId,
   formatCentsReward,
   invalidateAllTaskQueries,
   startMissionRefuseCooldown,
