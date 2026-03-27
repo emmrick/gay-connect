@@ -71,7 +71,7 @@ const emptyForm = {
   advertiser_email: '',
   placement: 'native',
   target_pages: [] as string[],
-  cost_per_click_cents: 2,
+  cost_per_click_cents: 1,
   cost_per_mille_cents: 10,
   max_impressions: '',
   max_clicks: '',
