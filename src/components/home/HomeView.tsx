@@ -19,7 +19,7 @@ interface HomeViewProps {
   onStartPrivateChat?: (userId: string) => void;
 }
 
-type HomeSection = 'accueil' | 'visites' | 'reactions';
+type HomeSection = 'accueil' | 'favorites' | 'visites' | 'reactions';
 
 const HomeView = ({ 
   onViewProfile,
