@@ -679,6 +679,18 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           />
         )}
       </div>
+
+      {/* Age filter blocked dialog */}
+      <AgeFilterBlockedDialog
+        open={showAgeFilterDialog}
+        onOpenChange={setShowAgeFilterDialog}
+        minAge={contactCheck?.minAge ?? 18}
+        maxAge={contactCheck?.maxAge ?? 99}
+        onReactToProfile={() => {
+          setShowAgeFilterDialog(false);
+          navigate(`/member/${otherUserId}`);
+        }}
+      />
     </div>
   );
 };
