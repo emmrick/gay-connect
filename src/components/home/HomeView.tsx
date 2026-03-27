@@ -52,7 +52,7 @@ const HomeView = ({
       <div className="px-4 py-4 space-y-4">
         <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as HomeSection)}>
           <div className="flex items-center gap-2">
-            <TabsList className="flex-1 grid grid-cols-5 h-10">
+            <TabsList className="flex-1 grid grid-cols-4 h-10">
               <TabsTrigger value="accueil" className="gap-1 text-xs font-medium">
                 <Compass className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Proximité</span>
@@ -68,9 +68,6 @@ const HomeView = ({
               <TabsTrigger value="reactions" className="gap-1 text-xs font-medium">
                 <Heart className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Réactions</span>
-              </TabsTrigger>
-              <TabsTrigger value="home" className="gap-1 text-xs font-medium" disabled style={{ display: 'none' }}>
-                hidden
               </TabsTrigger>
             </TabsList>
 
