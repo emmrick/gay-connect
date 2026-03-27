@@ -193,6 +193,7 @@ const MemberProfile = () => {
         if (deductResult.success) {
           // Record the view to avoid charging again
           await recordProfileView.mutateAsync(userId);
+          await recordVisit.mutateAsync(userId);
           setHasChargedView(true);
         }
       } catch (error) {
