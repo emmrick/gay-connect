@@ -24,6 +24,7 @@ import { motion } from 'framer-motion';
 import { useProfileViewCheck, useRecordProfileView, CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { toast } from 'sonner';
+import { useRecordProfileVisit } from '@/hooks/useProfileVisits';
 import { useChatbotConfig } from '@/hooks/useChatbotConfig';
 import ChatBotDialog from '@/components/chatbot/ChatBotDialog';
 import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
