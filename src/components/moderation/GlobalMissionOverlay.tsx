@@ -287,7 +287,9 @@ const GlobalMissionOverlay = () => {
   const handleGoToTask = useCallback(() => {
     if (!activeTask) return;
     const section = getTaskTypeSection(activeTask.task_type);
+    const entityId = getTaskEntityId(activeTask);
     sessionStorage.setItem('admin-navigate-section', section);
+    if (entityId) sessionStorage.setItem('admin-navigate-entity-id', entityId);
     navigate('/admin');
   }, [activeTask, navigate]);
 
