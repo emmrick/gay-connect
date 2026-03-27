@@ -7,6 +7,11 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { useProfileVisits } from '@/hooks/useProfileVisits';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
 import AdFreeBanner from './AdFreeBanner';
