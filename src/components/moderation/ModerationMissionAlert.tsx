@@ -12,6 +12,7 @@ import {
   useRefuseTask,
   useCompleteTask,
   getTaskTypeSection,
+  getTaskEntityId,
   invalidateAllTaskQueries,
   useMissionToggle,
 } from '@/hooks/useModerationTaskQueue';
