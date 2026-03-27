@@ -121,7 +121,17 @@ export const useNearbyProfiles = (
         });
 
       if (error) throw error;
-      const geoProfiles = (data || []).map(fixStaleOnlineStatus);
+
+      // Filter to only verified users
+      const { data: verifiedUsers } = await supabase
+        .from('identity_verifications')
+        .select('user_id')
+        .eq('status', 'approved');
+
+      const verifiedUserIds = new Set((verifiedUsers || []).map(v => v.user_id));
+      const geoProfiles = (data || [])
+        .filter(p => verifiedUserIds.has(p.user_id))
+        .map(fixStaleOnlineStatus);
 
       // Filter out suspended/blocked users
       const checks = await Promise.all(
