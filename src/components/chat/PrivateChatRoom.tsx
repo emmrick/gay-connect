@@ -70,6 +70,12 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   
   // Track active conversation for notification suppression
   useActiveConversation(otherUserId, null);
+  
+  // Age filter check
+  const { data: contactCheck } = useCanContactUser(otherUserId);
+  const addException = useAddContactException();
+  const [showAgeFilterDialog, setShowAgeFilterDialog] = useState(false);
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
