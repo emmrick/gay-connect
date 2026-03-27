@@ -78,6 +78,14 @@ const Admin = () => {
     }
     return 'dashboard';
   });
+  const [taskEntityId, setTaskEntityId] = useState<string | null>(() => {
+    const saved = sessionStorage.getItem('admin-navigate-entity-id');
+    if (saved) {
+      sessionStorage.removeItem('admin-navigate-entity-id');
+      return saved;
+    }
+    return null;
+  });
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
