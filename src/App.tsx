@@ -182,23 +182,12 @@ const AppContent = () => {
 };
 
 const App = () => {
-  const [appReady, setAppReady] = useState(false);
-  const handleLoadComplete = useCallback(() => setAppReady(true), []);
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <BrowserRouter>
-            <TooltipProvider>
-              <AuthProvider>
-                <CreditDialogProvider>
-                  <CreditDeductionProvider>
-                    <AppContent />
-                  </CreditDeductionProvider>
-                </CreditDialogProvider>
-              </AuthProvider>
-            </TooltipProvider>
+            <AppContent />
           </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>
