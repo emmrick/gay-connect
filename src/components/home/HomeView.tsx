@@ -85,13 +85,23 @@ const HomeView = ({
                 <Star className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Favoris</span>
               </TabsTrigger>
-              <TabsTrigger value="visites" className="gap-1 text-xs font-medium">
+              <TabsTrigger value="visites" className="gap-1 text-xs font-medium relative">
                 <Eye className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Visites</span>
+                {visitsCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full">
+                    {visitsCount > 99 ? '99+' : visitsCount}
+                  </Badge>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="reactions" className="gap-1 text-xs font-medium">
+              <TabsTrigger value="reactions" className="gap-1 text-xs font-medium relative">
                 <Heart className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Réactions</span>
+                {reactionsCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full">
+                    {reactionsCount > 99 ? '99+' : reactionsCount}
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
