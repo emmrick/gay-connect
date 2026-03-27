@@ -24,6 +24,7 @@ import { motion } from 'framer-motion';
 import { useProfileViewCheck, useRecordProfileView, CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { toast } from 'sonner';
+import { useRecordProfileVisit } from '@/hooks/useProfileVisits';
 import { useChatbotConfig } from '@/hooks/useChatbotConfig';
 import ChatBotDialog from '@/components/chatbot/ChatBotDialog';
 import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
@@ -145,6 +146,7 @@ const MemberProfile = () => {
   // Credit system for profile views
   const { data: alreadyViewed, isLoading: viewCheckLoading } = useProfileViewCheck(userId || '');
   const recordProfileView = useRecordProfileView();
+  const recordVisit = useRecordProfileVisit();
   const { showInsufficientCreditsDialog } = useCreditCheck();
   const [hasChargedView, setHasChargedView] = useState(false);
 
@@ -169,6 +171,7 @@ const MemberProfile = () => {
         // If cost is 0, profile view is free - just record it
         if (dynamicCost <= 0) {
           await recordProfileView.mutateAsync(userId);
+          await recordVisit.mutateAsync(userId);
           setHasChargedView(true);
           return;
         }
@@ -191,6 +194,7 @@ const MemberProfile = () => {
         if (deductResult.success) {
           // Record the view to avoid charging again
           await recordProfileView.mutateAsync(userId);
+          await recordVisit.mutateAsync(userId);
           setHasChargedView(true);
         }
       } catch (error) {

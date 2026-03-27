@@ -2576,6 +2576,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_visits: {
+        Row: {
+          id: string
+          visited_at: string
+          visited_user_id: string
+          visitor_user_id: string
+        }
+        Insert: {
+          id?: string
+          visited_at?: string
+          visited_user_id: string
+          visitor_user_id: string
+        }
+        Update: {
+          id?: string
+          visited_at?: string
+          visited_user_id?: string
+          visitor_user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           accepts_nsfw: boolean | null
