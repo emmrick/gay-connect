@@ -27,8 +27,10 @@ const advertiseSchema = z.object({
   title: z.string().trim().min(3, 'Titre requis (min. 3 caractères)').max(120),
   description: z.string().trim().max(500, 'Max 500 caractères').optional(),
   link_url: z.string().url('URL invalide').max(500).optional().or(z.literal('')),
-  placement: z.enum(['compact', 'native', 'sponsored_card']),
+  placements: z.array(z.enum(['compact', 'native', 'sponsored_card'])).min(1, 'Sélectionnez au moins un format'),
   budget_cents: z.coerce.number().min(500, 'Budget minimum : 5€').max(1000000),
+  geo_targeting: z.enum(['local', 'regional', 'national']),
+  geo_postal_codes: z.string().optional(),
 });
 
 type AdvertiseForm = z.infer<typeof advertiseSchema>;
