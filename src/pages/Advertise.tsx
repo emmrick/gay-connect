@@ -270,8 +270,10 @@ const Advertise = () => {
       title: '',
       description: '',
       link_url: '',
-      placement: 'native',
+      placements: ['native'],
       budget_cents: 1000,
+      geo_targeting: 'national',
+      geo_postal_codes: '',
     },
   });
 
