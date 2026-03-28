@@ -21,6 +21,15 @@ interface ReactionsTabProps {
 
 const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const markAsSeen = async (reactionId: string) => {
+    await supabase
+      .from('profile_reactions' as any)
+      .update({ is_seen: true } as any)
+      .eq('id', reactionId);
+    queryClient.invalidateQueries({ queryKey: ['profile-reactions-count'] });
+  };
 
   const { data: reactions, isLoading } = useQuery({
     queryKey: ['profile-reactions-list', user?.id],
