@@ -39,7 +39,7 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
 
       const { data, error } = await supabase
         .from('profile_reactions' as any)
-        .select('id, reactor_user_id, emoji, created_at')
+        .select('id, reactor_user_id, emoji, created_at, is_seen')
         .eq('profile_user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100);
