@@ -110,7 +110,10 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
         return (
           <button
             key={reaction.id}
-            onClick={() => onViewProfile?.(reaction.reactor_user_id)}
+            onClick={() => {
+              if (!reaction.is_seen) markAsSeen(reaction.id);
+              onViewProfile?.(reaction.reactor_user_id);
+            }}
             className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:bg-accent/50 transition-colors text-left"
           >
             <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-primary/20 flex-shrink-0">
