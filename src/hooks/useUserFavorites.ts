@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { notifyNewFavorite } from '@/services/pushNotificationService';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface FavoriteUser {
   id: string;
