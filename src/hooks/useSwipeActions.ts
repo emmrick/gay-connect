@@ -167,6 +167,17 @@ export const useSwipeActions = () => {
         }
       }
 
+      // Resolve avatar URLs to signed URLs
+      if (profilesList.length > 0) {
+        await Promise.all(
+          profilesList.map(async (p) => {
+            if (p.avatar_url) {
+              p.avatar_url = await getSignedAvatarUrl(p.avatar_url);
+            }
+          })
+        );
+      }
+
       return profilesList;
     },
     enabled: !!user?.id,
