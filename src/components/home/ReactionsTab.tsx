@@ -63,6 +63,7 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
           reactor_user_id: reaction.reactor_user_id,
           emoji: reaction.emoji,
           created_at: reaction.created_at,
+          is_seen: reaction.is_seen,
           reactor_username: profile?.username || 'Anonyme',
           reactor_avatar: profile?.avatar_url || null,
         };

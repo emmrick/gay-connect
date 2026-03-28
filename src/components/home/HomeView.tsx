@@ -49,7 +49,8 @@ const HomeView = ({
       const { count, error } = await supabase
         .from('profile_reactions' as any)
         .select('id', { count: 'exact', head: true })
-        .eq('profile_user_id', user.id);
+        .eq('profile_user_id', user.id)
+        .eq('is_seen', false);
       if (error) return 0;
       return count || 0;
     },
