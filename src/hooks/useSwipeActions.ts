@@ -6,6 +6,7 @@ import { deductCredits, getDynamicCreditCost } from './useCredits';
 import { notifySwipeMatch } from '@/services/pushNotificationService';
 import { toast } from 'sonner';
 import { useMemo } from 'react';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 // Credit costs for swipe actions
 export const SWIPE_CREDIT_COSTS = {
