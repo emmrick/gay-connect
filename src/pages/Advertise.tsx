@@ -376,7 +376,7 @@ const Advertise = () => {
         </div>
 
         {/* Top-up dialog */}
-        <TopupDialog open={showTopup} onClose={() => setShowTopup(false)} topupAmount={topupAmount} setTopupAmount={setTopupAmount} onTopup={handleTopup} topupLoading={topupLoading} />
+        <TopupDialog open={showTopup} onClose={() => setShowTopup(false)} topupAmount={topupAmount} setTopupAmount={setTopupAmount} onTopup={handleTopup} topupLoading={topupLoading} advertiserEmail={activeEmail || undefined} />
         {editingAd && <EditAdDialog ad={editingAd} onClose={() => setEditingAd(null)} onSave={handleUpdateAd} />}
       </>
     );
