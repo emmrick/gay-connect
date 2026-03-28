@@ -11,6 +11,7 @@ interface ReactionItem {
   reactor_user_id: string;
   emoji: string;
   created_at: string;
+  is_seen: boolean;
   reactor_username: string;
   reactor_avatar: string | null;
 }
