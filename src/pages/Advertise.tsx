@@ -929,15 +929,17 @@ const TopupDialog = ({ open, onClose, topupAmount, setTopupAmount, onTopup, topu
         advertiser_email: advertiserEmail,
         bonus_cents_applied: Math.round(bonusAmount * 100),
       } as any);
-      // Increment times_used
+      // Increment times_used via RPC-style: fetch then update
+      const { data: codeData } = await supabase.from('advertiser_promo_codes' as any).select('times_used').eq('id', promoApplied.code_id).single();
       await supabase.from('advertiser_promo_codes' as any)
-        .update({ times_used: (await supabase.from('advertiser_promo_codes' as any).select('times_used').eq('id', promoApplied.code_id).single()).data?.times_used + 1 } as any)
+        .update({ times_used: ((codeData as any)?.times_used || 0) + 1 } as any)
         .eq('id', promoApplied.code_id);
       // Add bonus to wallet
       if (bonusAmount > 0) {
         const bonusCents = Math.round(bonusAmount * 100);
+        const { data: walletData } = await supabase.from('advertiser_wallets' as any).select('balance_cents').eq('advertiser_email', advertiserEmail).single();
         await supabase.from('advertiser_wallets' as any)
-          .update({ balance_cents: (await supabase.from('advertiser_wallets' as any).select('balance_cents').eq('advertiser_email', advertiserEmail).single()).data?.balance_cents + bonusCents, updated_at: new Date().toISOString() } as any)
+          .update({ balance_cents: ((walletData as any)?.balance_cents || 0) + bonusCents, updated_at: new Date().toISOString() } as any)
           .eq('advertiser_email', advertiserEmail);
       }
       queryClient.invalidateQueries({ queryKey: ['advertiser-wallet'] });
