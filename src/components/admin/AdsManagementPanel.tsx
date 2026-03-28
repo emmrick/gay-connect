@@ -569,6 +569,148 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Advertiser Promo Codes Section */}
+      <Separator className="my-6" />
+      <AdvertiserPromoCodes />
+    </div>
+  );
+};
+
+// ─── Advertiser Promo Codes Admin ───
+const AdvertiserPromoCodes = () => {
+  const queryClient = useQueryClient();
+  const [showCreate, setShowCreate] = useState(false);
+  const [code, setCode] = useState('');
+  const [bonusCents, setBonusCents] = useState('');
+  const [bonusPercent, setBonusPercent] = useState('');
+  const [maxUses, setMaxUses] = useState('');
+  const [expiresAt, setExpiresAt] = useState('');
+  const [creating, setCreating] = useState(false);
+  const { user } = useAuth();
+
+  const { data: promoCodes, isLoading } = useQuery({
+    queryKey: ['admin-advertiser-promo-codes'],
+    queryFn: async () => {
+      const { data } = await supabase.from('advertiser_promo_codes' as any).select('*').order('created_at', { ascending: false });
+      return (data || []) as any[];
+    },
+  });
+
+  const handleCreate = async () => {
+    if (!code.trim()) { toast.error('Code requis'); return; }
+    setCreating(true);
+    try {
+      await supabase.from('advertiser_promo_codes' as any).insert({
+        code: code.trim().toUpperCase(),
+        bonus_cents: parseInt(bonusCents) || 0,
+        bonus_percent: parseInt(bonusPercent) || 0,
+        max_uses: maxUses ? parseInt(maxUses) : null,
+        expires_at: expiresAt || null,
+        created_by: user?.id,
+      } as any);
+      toast.success('Code promo annonceur créé');
+      queryClient.invalidateQueries({ queryKey: ['admin-advertiser-promo-codes'] });
+      setShowCreate(false);
+      setCode(''); setBonusCents(''); setBonusPercent(''); setMaxUses(''); setExpiresAt('');
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur');
+    } finally { setCreating(false); }
+  };
+
+  const toggleActive = async (id: string, active: boolean) => {
+    await supabase.from('advertiser_promo_codes' as any).update({ is_active: active } as any).eq('id', id);
+    queryClient.invalidateQueries({ queryKey: ['admin-advertiser-promo-codes'] });
+    toast.success(active ? 'Code activé' : 'Code désactivé');
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Ticket className="w-5 h-5 text-primary" />
+          <h3 className="text-base font-semibold">Codes promo annonceurs</h3>
+          <Badge variant="secondary" className="text-xs">{promoCodes?.filter((c: any) => c.is_active).length || 0} actifs</Badge>
+        </div>
+        <Button size="sm" onClick={() => setShowCreate(true)} className="gap-1.5 text-xs">
+          <Plus className="w-3.5 h-3.5" /> Nouveau
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+      ) : !promoCodes?.length ? (
+        <p className="text-sm text-muted-foreground text-center py-6">Aucun code promo annonceur</p>
+      ) : (
+        <div className="space-y-2">
+          {promoCodes.map((pc: any) => (
+            <Card key={pc.id}>
+              <CardContent className="p-3 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <code className="font-mono font-bold text-sm">{pc.code}</code>
+                    <Badge variant={pc.is_active ? 'default' : 'secondary'} className="text-[10px]">
+                      {pc.is_active ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {pc.bonus_cents > 0 && `+${(pc.bonus_cents / 100).toFixed(2)}€`}
+                    {pc.bonus_cents > 0 && pc.bonus_percent > 0 && ' + '}
+                    {pc.bonus_percent > 0 && `+${pc.bonus_percent}%`}
+                    {' · '}{pc.times_used} utilisé{pc.times_used > 1 ? 's' : ''}
+                    {pc.max_uses && ` / ${pc.max_uses} max`}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant={pc.is_active ? 'destructive' : 'default'}
+                  className="text-xs"
+                  onClick={() => toggleActive(pc.id, !pc.is_active)}
+                >
+                  {pc.is_active ? 'Désactiver' : 'Activer'}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Nouveau code promo annonceur</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Code</Label>
+              <Input placeholder="BONUS2024" value={code} onChange={e => setCode(e.target.value.toUpperCase())} className="uppercase" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Bonus fixe (centimes)</Label>
+                <Input type="number" placeholder="500 = 5€" value={bonusCents} onChange={e => setBonusCents(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Bonus % sur recharge</Label>
+                <Input type="number" placeholder="20" value={bonusPercent} onChange={e => setBonusPercent(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Limite d'utilisations</Label>
+              <Input type="number" placeholder="Illimité" value={maxUses} onChange={e => setMaxUses(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Date d'expiration</Label>
+              <Input type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
+            <Button onClick={handleCreate} disabled={creating} className="gap-1.5">
+              {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
