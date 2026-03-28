@@ -72,6 +72,7 @@ export const useUserFavorites = () => {
           })
         );
         return resolved;
+      }
 
       return data || [];
     },
