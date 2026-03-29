@@ -397,10 +397,7 @@ export const useCredits = () => {
   // Toggle credit lock
   const toggleCreditLock = async (lockType: 'lock_passive' | 'lock_bonus' | 'lock_purchased', value: boolean) => {
     if (!user?.id) return;
-    await supabase
-      .from('user_credits')
-      .update({ [lockType]: value })
-      .eq('user_id', user.id);
+    await supabase.rpc('toggle_credit_lock', { _lock_type: lockType, _value: value });
     queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
   };
 
