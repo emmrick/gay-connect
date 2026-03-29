@@ -190,8 +190,7 @@ const Advertise = () => {
   const { data: wallet } = useQuery({
     queryKey: ['advertiser-wallet', activeEmail],
     queryFn: async () => {
-      const { data } = await supabase.from('advertiser_wallets' as any)
-        .select('*').eq('advertiser_email', activeEmail).maybeSingle();
+      const { data } = await supabase.rpc('get_advertiser_wallet', { _email: activeEmail });
       return data as any;
     },
     enabled: !!activeEmail,

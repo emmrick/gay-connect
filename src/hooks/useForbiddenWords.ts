@@ -217,18 +217,16 @@ export const useForbiddenWords = (conversationId?: string) => {
       }
     }
 
-    // Record infraction with AI analysis details
-    await supabase
-      .from('user_infractions' as any)
-      .insert({
-        user_id: user.id,
-        detected_word: detectedWord,
-        message_content: message.substring(0, 500),
-        context: `chat | AI: ${aiResult.reason} (${Math.round(aiResult.confidence * 100)}%)`,
-        warning_number: newWarningNumber,
-        is_sanctioned: isSanctioned,
-        support_ticket_id: supportTicketId,
-      });
+    // Record infraction via secure RPC
+    await supabase.rpc('record_user_infraction', {
+      _user_id: user.id,
+      _detected_word: detectedWord,
+      _message_content: message.substring(0, 500),
+      _context: `chat | AI: ${aiResult.reason} (${Math.round(aiResult.confidence * 100)}%)`,
+      _warning_number: newWarningNumber,
+      _is_sanctioned: isSanctioned,
+      _support_ticket_id: supportTicketId,
+    });
 
     queryClient.invalidateQueries({ queryKey: ['user-infractions'] });
 

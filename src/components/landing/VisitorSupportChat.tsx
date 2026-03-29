@@ -48,11 +48,7 @@ const VisitorSupportChat = ({ isOpen, onClose }: VisitorSupportChatProps) => {
     
     // Fetch existing messages
     const fetchMessages = async () => {
-      const { data } = await supabase
-        .from('visitor_support_messages' as any)
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: true });
+      const { data } = await supabase.rpc('get_visitor_support_messages', { _session_id: sessionId });
       if (data) setMessages(data as any[]);
     };
     fetchMessages();
