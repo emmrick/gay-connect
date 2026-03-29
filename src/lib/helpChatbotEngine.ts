@@ -16,10 +16,11 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'mot de passe': ['mdp', 'password', 'oublie', 'reinitialiser', 'changer'],
 
   // Credits
-  credit: ['credits', 'piece', 'pieces', 'monnaie', 'solde', 'acheter', 'payer', 'gratuit', 'recharge', 'quotidien', 'passif', 'bonus'],
-  acheter: ['achat', 'payer', 'paypal', 'prix', 'tarif', 'cout'],
+  credit: ['credits', 'piece', 'pieces', 'monnaie', 'solde', 'acheter', 'payer', 'gratuit', 'recharge', 'quotidien', 'passif', 'bonus', 'promo', 'promotion', 'tarif', 'dynamique'],
+  acheter: ['achat', 'payer', 'paypal', 'prix', 'tarif', 'cout', 'carte'],
   gratuit: ['gratis', 'offert', 'cadeau', 'free', 'sans payer'],
   parrainage: ['parrain', 'filleul', 'code', 'referral', 'inviter', 'invitation', 'parrainer'],
+  promo: ['promotion', 'reduction', 'boost', 'boostee', 'accelere', 'reduit', 'offre'],
 
   // Verification
   verification: ['verifier', 'verif', 'verifie', 'identite', 'carte', 'document', 'piece d\'identite', 'selfie', 'photo', 'approuve', 'badge'],
@@ -40,8 +41,10 @@ const SYNONYM_MAP: Record<string, string[]> = {
   notification: ['notifications', 'notif', 'alerte', 'push', 'son'],
 
   // Security
-  securite: ['protection', 'confidentialite', 'prive', 'donnees', 'rgpd', 'capture', 'screenshot'],
+  securite: ['protection', 'confidentialite', 'prive', 'donnees', 'rgpd', 'capture', 'screenshot', 'fraude', 'hack', 'vol'],
   capture: ['screenshot', 'capture ecran', 'screener'],
+  avatar: ['photo profil', 'image profil', 'pp', 'photo de profil'],
+  publicite: ['pub', 'annonce', 'banniere', 'ad', 'sans pub', 'ad free'],
 
   // Premium
   premium: ['abonnement', 'vip', 'abo', 'avantage', 'offre'],
@@ -79,14 +82,14 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
     id: 'static-credits-system',
     category: 'Crédits & Paiements',
     question: 'Comment fonctionne le système de crédits ?',
-    answer: "Le système de crédits Gay Social comprend **4 types** :\n\n1. **Crédits quotidiens** : 5 crédits rechargés automatiquement chaque jour (max 7 jours/mois)\n2. **Crédits passifs** : +0.1 crédit toutes les 6h, jusqu'à 10 max\n3. **Crédits bonus** : obtenus via parrainage, vérification d'identité, codes promo\n4. **Crédits achetés** : via PayPal ou virement\n\nLes crédits sont utilisés pour : envoyer des messages privés, booster votre profil, utiliser le swipe, activer votre ChatBot, etc.\n\n💡 **Astuce** : Vous pouvez **verrouiller** certains types de crédits pour les protéger !",
+    answer: "Le système de crédits Gay Social comprend **4 types** :\n\n1. **Crédits quotidiens** : 5 crédits rechargés automatiquement chaque jour\n2. **Crédits passifs** : accumulation automatique à intervalle régulier (montant et intervalle ajustables par l'équipe, consultez la page Crédits pour les valeurs actuelles)\n3. **Crédits bonus** : obtenus via parrainage, vérification d'identité, codes promo\n4. **Crédits achetés** : via PayPal ou carte bancaire\n\nLes crédits sont utilisés pour : envoyer des messages privés, booster votre profil, utiliser le swipe, activer votre ChatBot, etc.\n\n💡 **Astuce** : Vous pouvez **verrouiller** certains types de crédits pour les protéger !\n\n🔥 **Promotions** : Quand la recharge passive est boostée, un bandeau spécial apparaît sur la page Crédits.",
     keywords: ['credit', 'credits', 'systeme', 'fonctionnement', 'types', 'quotidien', 'passif', 'bonus', 'achete'],
   },
   {
     id: 'static-free-credits',
     category: 'Crédits & Paiements',
     question: 'Comment obtenir des crédits gratuits ?',
-    answer: "Plusieurs façons d'obtenir des crédits **gratuitement** :\n\n• **Crédits quotidiens** : 5 crédits par jour (automatique)\n• **Crédits passifs** : accumulation automatique (+0.1 / 6h)\n• **Vérification d'identité** : bonus de crédits à la validation\n• **Parrainage** : crédits offerts pour vous et votre filleul\n• **Codes promo** : disponibles lors d'événements spéciaux\n\n💰 Vous n'avez **jamais besoin de payer** pour utiliser les fonctions de base !",
+    answer: "Plusieurs façons d'obtenir des crédits **gratuitement** :\n\n• **Crédits quotidiens** : 5 crédits par jour (automatique)\n• **Crédits passifs** : accumulation automatique (intervalle et montant ajustables, consultez la page Crédits)\n• **Vérification d'identité** : bonus de crédits à la validation\n• **Parrainage** : crédits offerts pour vous et votre filleul\n• **Codes promo** : disponibles lors d'événements spéciaux\n\n💰 Vous n'avez **jamais besoin de payer** pour utiliser les fonctions de base !\n\n🔥 Lors des promotions, la recharge passive peut être **accélérée** — surveillez le badge Promo !",
     keywords: ['gratuit', 'free', 'obtenir', 'gagner', 'comment avoir', 'sans payer'],
   },
   {
@@ -172,6 +175,41 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
     question: 'Comment voir les membres proches de moi ?',
     answer: "La fonctionnalité **À proximité** vous montre les membres géographiquement proches :\n\n• Activez la **géolocalisation** dans votre navigateur\n• Consultez la section **À proximité** depuis l'accueil\n• Le déblocage nécessite des **crédits**\n• Les distances sont calculées en **kilomètres**\n\n📍 Votre position exacte n'est **jamais partagée** avec les autres membres.",
     keywords: ['proximite', 'proche', 'pres', 'geolocalisation', 'localisation', 'distance', 'km', 'autour'],
+  },
+  {
+    id: 'static-dynamic-pricing',
+    category: 'Crédits & Paiements',
+    question: 'Les tarifs des actions peuvent-ils changer ?',
+    answer: "Oui ! Tous les coûts d'actions sur Gay Social sont **dynamiques** :\n\n• Les administrateurs peuvent ajuster les tarifs **en temps réel**\n• Vous êtes **notifié automatiquement** de tout changement de prix\n• Quand un tarif est **réduit** par rapport au prix normal, un **badge promo** s'affiche\n• Quand une action devient **gratuite**, elle est signalée par un badge 🎁\n• Les prix barrés montrent l'ancien tarif vs le nouveau\n\n🔥 La recharge passive peut aussi être **boostée** (intervalle réduit), signalée par un bandeau spécial sur la page Crédits.",
+    keywords: ['tarif', 'prix', 'dynamique', 'promo', 'promotion', 'reduction', 'change', 'augmente', 'baisse'],
+  },
+  {
+    id: 'static-passive-promo',
+    category: 'Crédits & Paiements',
+    question: 'Comment savoir si la recharge passive est en promotion ?',
+    answer: "Quand la recharge passive est boostée, **deux indicateurs visuels** apparaissent :\n\n1. 🔥 **Bandeau promo** en haut de la page Crédits avec les détails (ex: « toutes les 4h au lieu de 6h »)\n2. **Badge « Promo »** sur la carte Passif dans la répartition des crédits\n\nCes indicateurs sont **persistants** et visibles tant que la promotion est active. Pas besoin de notification — l'info est toujours là quand vous consultez vos crédits.\n\n💡 Profitez des promotions pour accumuler des crédits plus rapidement !",
+    keywords: ['promo', 'promotion', 'passif', 'recharge', 'boost', 'boostee', 'accelere', 'intervalle', 'reduit'],
+  },
+  {
+    id: 'static-avatar-security',
+    category: 'Sécurité',
+    question: 'Mes photos de profil sont-elles protégées ?',
+    answer: "Oui ! Les avatars et photos de profil sont stockés de manière **privée** :\n\n• Le stockage des avatars est **non public** — aucun accès direct par URL\n• Seuls les **utilisateurs connectés** peuvent voir les photos de profil\n• Les images sont servies via des **URLs signées temporaires** (expiration 1h)\n• Un **cache intelligent** évite les rechargements inutiles\n\n🔒 Vos photos ne sont **jamais** accessibles aux visiteurs non inscrits.",
+    keywords: ['avatar', 'photo profil', 'image', 'protege', 'prive', 'securise', 'visible', 'public'],
+  },
+  {
+    id: 'static-credit-security',
+    category: 'Sécurité',
+    question: 'Mes crédits sont-ils protégés contre la fraude ?',
+    answer: "Gay Social applique des mesures de sécurité strictes pour protéger vos crédits :\n\n• **Aucune modification directe** du solde n'est possible depuis le navigateur\n• Toutes les opérations passent par des **fonctions sécurisées côté serveur**\n• Le verrouillage de crédits utilise une **validation serveur** (pas de manipulation client)\n• Chaque transaction est **tracée et auditée**\n\n🛡️ Votre solde est protégé par des contrôles automatiques en temps réel.",
+    keywords: ['fraude', 'securite', 'credit', 'protege', 'manipulation', 'hack', 'triche', 'vol'],
+  },
+  {
+    id: 'static-ad-free',
+    category: 'Fonctionnalités',
+    question: 'Comment naviguer sans publicité ?',
+    answer: "Vous pouvez supprimer les publicités en souscrivant à l'option **Sans pub** :\n\n• Accessible depuis la page **Crédits**\n• Paiement en **crédits** (à partir de 7 crédits/semaine)\n• Plusieurs durées disponibles\n• Activation **instantanée**\n\n🚫 Une fois activé, un badge confirme votre abonnement sans pub.",
+    keywords: ['pub', 'publicite', 'sans pub', 'ad free', 'annonce', 'banniere'],
   },
 ];
 
