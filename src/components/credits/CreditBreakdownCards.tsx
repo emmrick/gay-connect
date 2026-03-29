@@ -1,5 +1,6 @@
-import { Clock, Zap, Star, ShoppingBag, Lock, Unlock, Info } from 'lucide-react';
+import { Clock, Zap, Star, ShoppingBag, Lock, Unlock, Info, Flame } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
+import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
@@ -12,6 +13,15 @@ const CreditBreakdownCards = () => {
     lockPassive, lockBonus, lockPurchased,
     toggleCreditLock, isLoading,
   } = useCredits();
+  const { data: dynamicCosts } = useDynamicCreditCosts();
+
+  // Detect passive recharge promo
+  const currentInterval = dynamicCosts?.passive_recharge_interval_hours ?? DEFAULT_COSTS.passive_recharge_interval_hours;
+  const currentAmount = dynamicCosts?.passive_recharge_amount ?? DEFAULT_COSTS.passive_recharge_amount;
+  const currentMax = dynamicCosts?.passive_recharge_max ?? DEFAULT_COSTS.passive_recharge_max;
+  const defaultInterval = DEFAULT_COSTS.passive_recharge_interval_hours;
+  const defaultAmount = DEFAULT_COSTS.passive_recharge_amount;
+  const isPassivePromo = currentInterval < defaultInterval || currentAmount > defaultAmount;
 
   if (isLoading) {
     return (
