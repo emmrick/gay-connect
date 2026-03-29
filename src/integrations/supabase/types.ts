@@ -4363,6 +4363,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      record_user_infraction: {
+        Args: {
+          _context: string
+          _detected_word: string
+          _is_sanctioned: boolean
+          _message_content: string
+          _support_ticket_id?: string
+          _user_id: string
+          _warning_number: number
+        }
+        Returns: undefined
+      }
       recycle_fully_refused_tasks: { Args: never; Returns: undefined }
       redeem_flyer_promo_code: {
         Args: { _code: string; _user_id: string }
