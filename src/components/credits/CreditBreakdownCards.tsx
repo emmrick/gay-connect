@@ -127,13 +127,27 @@ const CreditBreakdownCards = () => {
               )}
             </div>
 
-            <p className="text-[11px] font-medium text-muted-foreground mb-0.5">{card.label}</p>
+            <p className="text-[11px] font-medium text-muted-foreground mb-0.5">
+              {card.label}
+              {(card as any).promo && (
+                <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400 text-[9px] font-bold uppercase animate-pulse">
+                  <Flame className="w-2.5 h-2.5" />
+                  Promo
+                </span>
+              )}
+            </p>
             <p className="text-xl font-bold tabular-nums tracking-tight">
               {card.value.toFixed(1)}
               {card.max !== undefined && (
                 <span className="text-xs text-muted-foreground font-normal">/{card.max}</span>
               )}
             </p>
+            {/* Promo detail line */}
+            {(card as any).promo && (
+              <p className="text-[10px] text-orange-600 dark:text-orange-400 font-medium mt-0.5">
+                ⚡ +{currentAmount} / {currentInterval}h au lieu de {defaultInterval}h
+              </p>
+            )}
 
             {/* Progress bar for daily & passive */}
             {card.progress !== undefined && (
