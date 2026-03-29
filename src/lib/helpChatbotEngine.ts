@@ -16,10 +16,11 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'mot de passe': ['mdp', 'password', 'oublie', 'reinitialiser', 'changer'],
 
   // Credits
-  credit: ['credits', 'piece', 'pieces', 'monnaie', 'solde', 'acheter', 'payer', 'gratuit', 'recharge', 'quotidien', 'passif', 'bonus'],
-  acheter: ['achat', 'payer', 'paypal', 'prix', 'tarif', 'cout'],
+  credit: ['credits', 'piece', 'pieces', 'monnaie', 'solde', 'acheter', 'payer', 'gratuit', 'recharge', 'quotidien', 'passif', 'bonus', 'promo', 'promotion', 'tarif', 'dynamique'],
+  acheter: ['achat', 'payer', 'paypal', 'prix', 'tarif', 'cout', 'carte'],
   gratuit: ['gratis', 'offert', 'cadeau', 'free', 'sans payer'],
   parrainage: ['parrain', 'filleul', 'code', 'referral', 'inviter', 'invitation', 'parrainer'],
+  promo: ['promotion', 'reduction', 'boost', 'boostee', 'accelere', 'reduit', 'offre'],
 
   // Verification
   verification: ['verifier', 'verif', 'verifie', 'identite', 'carte', 'document', 'piece d\'identite', 'selfie', 'photo', 'approuve', 'badge'],
