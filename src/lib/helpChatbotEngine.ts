@@ -41,8 +41,10 @@ const SYNONYM_MAP: Record<string, string[]> = {
   notification: ['notifications', 'notif', 'alerte', 'push', 'son'],
 
   // Security
-  securite: ['protection', 'confidentialite', 'prive', 'donnees', 'rgpd', 'capture', 'screenshot'],
+  securite: ['protection', 'confidentialite', 'prive', 'donnees', 'rgpd', 'capture', 'screenshot', 'fraude', 'hack', 'vol'],
   capture: ['screenshot', 'capture ecran', 'screener'],
+  avatar: ['photo profil', 'image profil', 'pp', 'photo de profil'],
+  publicite: ['pub', 'annonce', 'banniere', 'ad', 'sans pub', 'ad free'],
 
   // Premium
   premium: ['abonnement', 'vip', 'abo', 'avantage', 'offre'],
