@@ -19,9 +19,17 @@ import { motion } from 'framer-motion';
 
 const CreditsPage = () => {
   const { isLoading } = useCredits();
+  const { data: dynamicCosts } = useDynamicCreditCosts();
   const [showClaimDialog, setShowClaimDialog] = useState(false);
   const [showAdFreeDialog, setShowAdFreeDialog] = useState(false);
   const { data: isAdFree } = useAdFreeStatus();
+
+  // Passive recharge promo detection
+  const currentInterval = dynamicCosts?.passive_recharge_interval_hours ?? DEFAULT_COSTS.passive_recharge_interval_hours;
+  const currentAmount = dynamicCosts?.passive_recharge_amount ?? DEFAULT_COSTS.passive_recharge_amount;
+  const defaultInterval = DEFAULT_COSTS.passive_recharge_interval_hours;
+  const defaultAmount = DEFAULT_COSTS.passive_recharge_amount;
+  const isPassivePromo = currentInterval < defaultInterval || currentAmount > defaultAmount;
 
   if (isLoading) {
     return (
