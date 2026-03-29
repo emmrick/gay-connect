@@ -1,5 +1,6 @@
-import { Clock, Zap, Star, ShoppingBag, Lock, Unlock, Info } from 'lucide-react';
+import { Clock, Zap, Star, ShoppingBag, Lock, Unlock, Info, Flame } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
+import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
@@ -12,6 +13,15 @@ const CreditBreakdownCards = () => {
     lockPassive, lockBonus, lockPurchased,
     toggleCreditLock, isLoading,
   } = useCredits();
+  const { data: dynamicCosts } = useDynamicCreditCosts();
+
+  // Detect passive recharge promo
+  const currentInterval = dynamicCosts?.passive_recharge_interval_hours ?? DEFAULT_COSTS.passive_recharge_interval_hours;
+  const currentAmount = dynamicCosts?.passive_recharge_amount ?? DEFAULT_COSTS.passive_recharge_amount;
+  const currentMax = dynamicCosts?.passive_recharge_max ?? DEFAULT_COSTS.passive_recharge_max;
+  const defaultInterval = DEFAULT_COSTS.passive_recharge_interval_hours;
+  const defaultAmount = DEFAULT_COSTS.passive_recharge_amount;
+  const isPassivePromo = currentInterval < defaultInterval || currentAmount > defaultAmount;
 
   if (isLoading) {
     return (
@@ -40,17 +50,18 @@ const CreditBreakdownCards = () => {
     {
       label: 'Passif',
       value: passiveCredits,
-      max: 10,
+      max: currentMax,
       icon: Zap,
-      color: 'text-amber-500',
-      bg: 'bg-amber-500/8',
-      barColor: 'bg-amber-500',
-      borderColor: 'border-amber-500/15',
-      hint: '+0.1 toutes les 6h (max 10)',
+      color: isPassivePromo ? 'text-orange-500' : 'text-amber-500',
+      bg: isPassivePromo ? 'bg-orange-500/10' : 'bg-amber-500/8',
+      barColor: isPassivePromo ? 'bg-orange-500' : 'bg-amber-500',
+      borderColor: isPassivePromo ? 'border-orange-500/25' : 'border-amber-500/15',
+      hint: `+${currentAmount} toutes les ${currentInterval}h (max ${currentMax})`,
       lockable: true,
       locked: lockPassive,
       lockKey: 'lock_passive' as const,
-      progress: (passiveCredits / 10) * 100,
+      progress: (passiveCredits / currentMax) * 100,
+      promo: isPassivePromo,
     },
     {
       label: 'Bonus',
@@ -116,13 +127,27 @@ const CreditBreakdownCards = () => {
               )}
             </div>
 
-            <p className="text-[11px] font-medium text-muted-foreground mb-0.5">{card.label}</p>
+            <p className="text-[11px] font-medium text-muted-foreground mb-0.5">
+              {card.label}
+              {(card as any).promo && (
+                <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400 text-[9px] font-bold uppercase animate-pulse">
+                  <Flame className="w-2.5 h-2.5" />
+                  Promo
+                </span>
+              )}
+            </p>
             <p className="text-xl font-bold tabular-nums tracking-tight">
               {card.value.toFixed(1)}
               {card.max !== undefined && (
                 <span className="text-xs text-muted-foreground font-normal">/{card.max}</span>
               )}
             </p>
+            {/* Promo detail line */}
+            {(card as any).promo && (
+              <p className="text-[10px] text-orange-600 dark:text-orange-400 font-medium mt-0.5">
+                ⚡ +{currentAmount} / {currentInterval}h au lieu de {defaultInterval}h
+              </p>
+            )}
 
             {/* Progress bar for daily & passive */}
             {card.progress !== undefined && (

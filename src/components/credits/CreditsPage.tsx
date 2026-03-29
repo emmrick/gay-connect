@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Loader2, AlertTriangle, Timer, BanIcon, Sparkles } from 'lucide-react';
+import { Loader2, AlertTriangle, Timer, BanIcon, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
+import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
 import CreditWalletHeader from './CreditWalletHeader';
 import { toast } from 'sonner';
 import CreditBreakdownCards from './CreditBreakdownCards';
@@ -17,9 +18,17 @@ import { motion } from 'framer-motion';
 
 const CreditsPage = () => {
   const { isLoading } = useCredits();
+  const { data: dynamicCosts } = useDynamicCreditCosts();
   const [showClaimDialog, setShowClaimDialog] = useState(false);
   const [showAdFreeDialog, setShowAdFreeDialog] = useState(false);
   const { data: isAdFree } = useAdFreeStatus();
+
+  // Passive recharge promo detection
+  const currentInterval = dynamicCosts?.passive_recharge_interval_hours ?? DEFAULT_COSTS.passive_recharge_interval_hours;
+  const currentAmount = dynamicCosts?.passive_recharge_amount ?? DEFAULT_COSTS.passive_recharge_amount;
+  const defaultInterval = DEFAULT_COSTS.passive_recharge_interval_hours;
+  const defaultAmount = DEFAULT_COSTS.passive_recharge_amount;
+  const isPassivePromo = currentInterval < defaultInterval || currentAmount > defaultAmount;
 
   if (isLoading) {
     return (
@@ -43,6 +52,53 @@ const CreditsPage = () => {
             duration: 4000,
           });
         }} />
+
+        {/* Passive recharge promo banner */}
+        {isPassivePromo && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative overflow-hidden rounded-xl border border-orange-500/25 p-3.5"
+            style={{
+              background: 'linear-gradient(135deg, hsl(25 95% 53% / 0.08), hsl(35 95% 53% / 0.04))',
+            }}
+          >
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <motion.div
+                className="absolute -inset-x-full top-0 h-full w-[200%]"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 40%, hsl(25 95% 53% / 0.08) 50%, transparent 60%)',
+                }}
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
+              />
+            </div>
+            <div className="relative flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-5 h-5 text-orange-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                  🔥 Recharge passive boostée !
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                  +{currentAmount} crédit{currentAmount > 1 ? 's' : ''} toutes les <strong className="text-foreground">{currentInterval}h</strong>
+                  {currentInterval < defaultInterval && (
+                    <span className="line-through ml-1 opacity-60">{defaultInterval}h</span>
+                  )}
+                  {currentAmount > defaultAmount && (
+                    <span className="ml-1">
+                      (au lieu de {defaultAmount})
+                    </span>
+                  )}
+                </p>
+                <p className="text-[10px] text-orange-500/80 mt-1 font-medium">
+                  Profitez-en, durée limitée !
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Credit Breakdown */}
         <section>
