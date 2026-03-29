@@ -79,14 +79,14 @@ export const STATIC_KNOWLEDGE: StaticKnowledge[] = [
     id: 'static-credits-system',
     category: 'Crédits & Paiements',
     question: 'Comment fonctionne le système de crédits ?',
-    answer: "Le système de crédits Gay Social comprend **4 types** :\n\n1. **Crédits quotidiens** : 5 crédits rechargés automatiquement chaque jour (max 7 jours/mois)\n2. **Crédits passifs** : +0.1 crédit toutes les 6h, jusqu'à 10 max\n3. **Crédits bonus** : obtenus via parrainage, vérification d'identité, codes promo\n4. **Crédits achetés** : via PayPal ou virement\n\nLes crédits sont utilisés pour : envoyer des messages privés, booster votre profil, utiliser le swipe, activer votre ChatBot, etc.\n\n💡 **Astuce** : Vous pouvez **verrouiller** certains types de crédits pour les protéger !",
+    answer: "Le système de crédits Gay Social comprend **4 types** :\n\n1. **Crédits quotidiens** : 5 crédits rechargés automatiquement chaque jour\n2. **Crédits passifs** : accumulation automatique à intervalle régulier (montant et intervalle ajustables par l'équipe, consultez la page Crédits pour les valeurs actuelles)\n3. **Crédits bonus** : obtenus via parrainage, vérification d'identité, codes promo\n4. **Crédits achetés** : via PayPal ou carte bancaire\n\nLes crédits sont utilisés pour : envoyer des messages privés, booster votre profil, utiliser le swipe, activer votre ChatBot, etc.\n\n💡 **Astuce** : Vous pouvez **verrouiller** certains types de crédits pour les protéger !\n\n🔥 **Promotions** : Quand la recharge passive est boostée, un bandeau spécial apparaît sur la page Crédits.",
     keywords: ['credit', 'credits', 'systeme', 'fonctionnement', 'types', 'quotidien', 'passif', 'bonus', 'achete'],
   },
   {
     id: 'static-free-credits',
     category: 'Crédits & Paiements',
     question: 'Comment obtenir des crédits gratuits ?',
-    answer: "Plusieurs façons d'obtenir des crédits **gratuitement** :\n\n• **Crédits quotidiens** : 5 crédits par jour (automatique)\n• **Crédits passifs** : accumulation automatique (+0.1 / 6h)\n• **Vérification d'identité** : bonus de crédits à la validation\n• **Parrainage** : crédits offerts pour vous et votre filleul\n• **Codes promo** : disponibles lors d'événements spéciaux\n\n💰 Vous n'avez **jamais besoin de payer** pour utiliser les fonctions de base !",
+    answer: "Plusieurs façons d'obtenir des crédits **gratuitement** :\n\n• **Crédits quotidiens** : 5 crédits par jour (automatique)\n• **Crédits passifs** : accumulation automatique (intervalle et montant ajustables, consultez la page Crédits)\n• **Vérification d'identité** : bonus de crédits à la validation\n• **Parrainage** : crédits offerts pour vous et votre filleul\n• **Codes promo** : disponibles lors d'événements spéciaux\n\n💰 Vous n'avez **jamais besoin de payer** pour utiliser les fonctions de base !\n\n🔥 Lors des promotions, la recharge passive peut être **accélérée** — surveillez le badge Promo !",
     keywords: ['gratuit', 'free', 'obtenir', 'gagner', 'comment avoir', 'sans payer'],
   },
   {
