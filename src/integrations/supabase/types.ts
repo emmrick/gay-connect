@@ -4295,6 +4295,32 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_public_profiles: {
+        Args: { _region?: string }
+        Returns: {
+          age: number
+          avatar_url: string
+          bio: string
+          body_type: string
+          created_at: string
+          ethnicity: string
+          height: number
+          id: string
+          is_online: boolean
+          is_premium: boolean
+          is_verified: boolean
+          last_seen: string
+          looking_for: string
+          region: string
+          relationship_status: string
+          sexual_position: string
+          show_face: boolean
+          tribes: string[]
+          user_id: string
+          username: string
+          weight: number
+        }[]
+      }
       get_user_credit_balance: { Args: { _user_id: string }; Returns: Json }
       get_user_role: {
         Args: { _user_id: string }
