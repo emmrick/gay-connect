@@ -4196,6 +4196,14 @@ export type Database = {
         Returns: Json
       }
       add_verification_credits: { Args: { _user_id: string }; Returns: Json }
+      apply_advertiser_promo: {
+        Args: {
+          _advertiser_email: string
+          _bonus_cents: number
+          _code_id: string
+        }
+        Returns: Json
+      }
       calculate_distance: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
@@ -4232,6 +4240,7 @@ export type Database = {
       expire_stale_moderation_tasks: { Args: never; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
+      get_advertiser_wallet: { Args: { _email: string }; Returns: Json }
       get_estimated_wait_time: { Args: { _entity_id: string }; Returns: Json }
       get_exclusive_next_task: {
         Args: { _offer_ttl_seconds?: number; _user_id: string }
@@ -4291,6 +4300,23 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_visitor_support_messages: {
+        Args: { _session_id: string }
+        Returns: {
+          content: string
+          created_at: string
+          id: string
+          sender_id: string | null
+          sender_type: string
+          session_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "visitor_support_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_active_premium: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -4344,6 +4370,18 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_user_infraction: {
+        Args: {
+          _context: string
+          _detected_word: string
+          _is_sanctioned: boolean
+          _message_content: string
+          _support_ticket_id?: string
+          _user_id: string
+          _warning_number: number
+        }
+        Returns: undefined
       }
       recycle_fully_refused_tasks: { Args: never; Returns: undefined }
       redeem_flyer_promo_code: {
