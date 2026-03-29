@@ -4196,6 +4196,14 @@ export type Database = {
         Returns: Json
       }
       add_verification_credits: { Args: { _user_id: string }; Returns: Json }
+      apply_advertiser_promo: {
+        Args: {
+          _advertiser_email: string
+          _bonus_cents: number
+          _code_id: string
+        }
+        Returns: Json
+      }
       calculate_distance: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
