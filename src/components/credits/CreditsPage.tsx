@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Loader2, AlertTriangle, Timer, BanIcon, Sparkles } from 'lucide-react';
+import { Loader2, AlertTriangle, Timer, BanIcon, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCredits } from '@/hooks/useCredits';
+import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
 import { useCredits } from '@/hooks/useCredits';
 import CreditWalletHeader from './CreditWalletHeader';
 import { toast } from 'sonner';
