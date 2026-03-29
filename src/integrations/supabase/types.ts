@@ -4232,6 +4232,7 @@ export type Database = {
       expire_stale_moderation_tasks: { Args: never; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
+      get_advertiser_wallet: { Args: { _email: string }; Returns: Json }
       get_estimated_wait_time: { Args: { _entity_id: string }; Returns: Json }
       get_exclusive_next_task: {
         Args: { _offer_ttl_seconds?: number; _user_id: string }
@@ -4290,6 +4291,23 @@ export type Database = {
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_visitor_support_messages: {
+        Args: { _session_id: string }
+        Returns: {
+          content: string
+          created_at: string
+          id: string
+          sender_id: string | null
+          sender_type: string
+          session_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "visitor_support_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       has_active_premium: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
