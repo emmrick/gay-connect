@@ -4440,6 +4440,10 @@ export type Database = {
       subscribe_ad_free:
         | { Args: { _plan?: string; _user_id: string }; Returns: Json }
         | { Args: { _plan_id: string; _user_id: string }; Returns: Json }
+      toggle_credit_lock: {
+        Args: { _lock_type: string; _value: boolean }
+        Returns: undefined
+      }
       update_successful_referrals: {
         Args: { _referral_code_id: string }
         Returns: undefined
