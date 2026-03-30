@@ -88,8 +88,9 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
                     : "border-border/30"
                 )}>
                   {/* Avatar/Photo */}
-                  <ResolvedAvatarImg url={profile.avatar_url} alt={profile.username} />
-                  {!profile.avatar_url && (
+                  {profile.avatar_url ? (
+                    <SecureAvatarImg src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                  ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
                       <span className="text-2xl font-bold text-primary-foreground/80">
                         {profile.username.charAt(0).toUpperCase()}

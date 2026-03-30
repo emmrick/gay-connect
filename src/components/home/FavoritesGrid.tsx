@@ -75,7 +75,7 @@ const FavoritesGrid = ({ onStartChat }: FavoritesGridProps) => {
             {/* Photo */}
             <div className="absolute inset-0">
               {profile.avatar_url ? (
-                <ResolvedImg url={profile.avatar_url} alt={profile.username} />
+                <SecureAvatarImg src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" loading="lazy" />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
                   <span className="text-3xl font-bold text-white/80">
