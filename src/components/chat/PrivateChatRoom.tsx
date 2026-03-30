@@ -59,6 +59,7 @@ const formatDateLabel = (date: Date): string => {
 const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
+  const resolvedOtherAvatar = useAvatarUrl(otherUserProfile?.avatar_url);
   const navigate = useNavigate();
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { getReactionsForMessage, toggleReaction } = usePrivateMessageReactions(otherUserId);
