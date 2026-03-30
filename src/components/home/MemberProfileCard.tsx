@@ -9,6 +9,7 @@ import { useProfile } from '@/hooks/useProfiles';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { Skeleton } from '@/components/ui/skeleton';
 import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface MemberProfileCardProps {
   userId: string;
