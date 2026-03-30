@@ -49,9 +49,9 @@ const ProfileDetailDialog = ({
           {/* Avatar */}
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
-              {profile.avatar_url ? (
+              {resolvedAvatar ? (
                 <img
-                  src={profile.avatar_url}
+                  src={resolvedAvatar}
                   alt={profile.username}
                   className="w-full h-full object-cover"
                 />
