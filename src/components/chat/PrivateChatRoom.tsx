@@ -475,9 +475,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                     {/* Avatar for received — only last in group */}
                     {!isOwn && (
                       <div className="flex-shrink-0 w-7">
-                        {isLastInGroup && otherUserProfile?.avatar_url ? (
+                        {isLastInGroup && resolvedOtherAvatar ? (
                           <img
-                            src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
+                            src={resolvedOtherAvatar}
                             alt=""
                             className="w-7 h-7 rounded-full object-cover"
                           />
