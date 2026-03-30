@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { isUserTrulyOnline, getLastSeenText as getOnlineStatusText } from '@/hooks/useOnlineStatus';
 import { cn } from '@/lib/utils';
-import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import { SecureAvatarImg } from '@/components/ui/secure-avatar';
 
 interface FavoritesMembersProps {
   onStartChat: (userId: string) => void;
