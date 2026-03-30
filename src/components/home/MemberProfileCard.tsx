@@ -9,6 +9,7 @@ import { useProfile } from '@/hooks/useProfiles';
 import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { Skeleton } from '@/components/ui/skeleton';
 import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface MemberProfileCardProps {
   userId: string;
@@ -86,6 +87,8 @@ const MemberProfileCard = ({
       ? [profile.avatar_url] 
       : [];
   
+  const currentPhotoUrl = useAvatarUrl(allPhotos[currentPhotoIndex] || null);
+  
   const goToPrevPhoto = () => {
     setCurrentPhotoIndex(prev => prev > 0 ? prev - 1 : allPhotos.length - 1);
   };
@@ -129,7 +132,7 @@ const MemberProfileCard = ({
                 ) : allPhotos.length > 0 ? (
                   <>
                     <img 
-                      src={allPhotos[currentPhotoIndex]} 
+                      src={currentPhotoUrl || ''} 
                       alt={profile?.username}
                       className="w-full h-full object-cover"
                     />

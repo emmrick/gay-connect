@@ -8,6 +8,7 @@ import { getZodiacSign, isBirthdayToday, formatBirthday } from '@/lib/zodiac';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface ProfileHeroCardProps {
   profile: any;
@@ -22,6 +23,7 @@ interface ProfileHeroCardProps {
 const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionLabels, onEdit, settingsDrawer }: ProfileHeroCardProps) => {
   const zodiac = profile.birth_date ? getZodiacSign(profile.birth_date) : null;
   const isBirthday = profile.birth_date ? isBirthdayToday(profile.birth_date) : false;
+  const resolvedAvatar = useAvatarUrl(profile.avatar_url);
 
   return (
     <div className="relative">
@@ -59,7 +61,7 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
             <div className="relative flex-shrink-0 -mt-12">
               <div className="p-[3px] rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg">
                 <Avatar className="w-24 h-24 rounded-xl border-[3px] border-card">
-                  <AvatarImage src={profile.avatar_url || undefined} className="object-cover rounded-xl" />
+                  <AvatarImage src={resolvedAvatar || undefined} className="object-cover rounded-xl" />
                   <AvatarFallback className="text-3xl bg-gradient-to-br from-primary to-accent text-primary-foreground font-bold rounded-xl">
                     {profile.username.charAt(0).toUpperCase()}
                   </AvatarFallback>

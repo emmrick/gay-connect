@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 import { isUserTrulyOnline, getLastSeenText as getOnlineStatusText } from '@/hooks/useOnlineStatus';
 import { cn } from '@/lib/utils';
+import { SecureAvatarImg } from '@/components/ui/secure-avatar';
 
 interface FavoritesMembersProps {
   onStartChat: (userId: string) => void;
@@ -88,14 +89,10 @@ const FavoritesMembers = ({ onStartChat }: FavoritesMembersProps) => {
                 )}>
                   {/* Avatar/Photo */}
                   {profile.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt={profile.username}
-                      className="w-full h-full object-cover"
-                    />
+                    <SecureAvatarImg src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white/80">
+                      <span className="text-2xl font-bold text-primary-foreground/80">
                         {profile.username.charAt(0).toUpperCase()}
                       </span>
                     </div>

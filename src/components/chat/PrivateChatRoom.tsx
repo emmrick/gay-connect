@@ -43,6 +43,7 @@ import AgeFilterBlockedDialog from './AgeFilterBlockedDialog';
 import { useCanContactUser, useAddContactException } from '@/hooks/useContactAgeFilter';
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
 import { cn } from '@/lib/utils';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface PrivateChatRoomProps {
   otherUserId: string;
@@ -58,6 +59,7 @@ const formatDateLabel = (date: Date): string => {
 const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
   const { user } = useAuth();
   const { data: otherUserProfile, isLoading: profileLoading } = useProfile(otherUserId);
+  const resolvedOtherAvatar = useAvatarUrl(otherUserProfile?.avatar_url);
   const navigate = useNavigate();
   const { messages, isLoading, sendMessage } = usePrivateMessages(otherUserId);
   const { getReactionsForMessage, toggleReaction } = usePrivateMessageReactions(otherUserId);
@@ -296,10 +298,10 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           >
             <div className="relative flex-shrink-0">
               <div className="w-11 h-11 rounded-full overflow-hidden bg-muted ring-1 ring-border/30">
-                {otherUserProfile?.avatar_url ? (
+                {resolvedOtherAvatar ? (
                   <img
-                    src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
-                    alt={otherUserProfile.username}
+                    src={resolvedOtherAvatar}
+                    alt={otherUserProfile?.username || ''}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -473,9 +475,9 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
                     {/* Avatar for received — only last in group */}
                     {!isOwn && (
                       <div className="flex-shrink-0 w-7">
-                        {isLastInGroup && otherUserProfile?.avatar_url ? (
+                        {isLastInGroup && resolvedOtherAvatar ? (
                           <img
-                            src={`${otherUserProfile.avatar_url}${otherUserProfile.avatar_url.includes('?') ? '&' : '?'}v=${otherUserProfile.updated_at || ''}`}
+                            src={resolvedOtherAvatar}
                             alt=""
                             className="w-7 h-7 rounded-full object-cover"
                           />
@@ -616,8 +618,8 @@ const PrivateChatRoom = ({ otherUserId, onBack }: PrivateChatRoomProps) => {
           {isOtherTyping && (
             <div className="flex items-end gap-2 mb-2">
               <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border/20">
-                {otherUserProfile?.avatar_url ? (
-                  <img src={otherUserProfile.avatar_url} alt="" className="w-full h-full object-cover" />
+                {resolvedOtherAvatar ? (
+                  <img src={resolvedOtherAvatar} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center text-primary text-xs font-semibold">
                     {otherUserProfile?.username?.charAt(0).toUpperCase()}

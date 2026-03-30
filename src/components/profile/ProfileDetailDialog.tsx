@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tables } from '@/integrations/supabase/types';
 import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 type Profile = Tables<'profiles'>;
 
@@ -28,6 +29,8 @@ const ProfileDetailDialog = ({
   onStartChat,
   onReport,
 }: ProfileDetailDialogProps) => {
+  const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
+
   if (!profile) return null;
 
   const handleStartChat = () => {
@@ -46,9 +49,9 @@ const ProfileDetailDialog = ({
           {/* Avatar */}
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
-              {profile.avatar_url ? (
+              {resolvedAvatar ? (
                 <img
-                  src={profile.avatar_url}
+                  src={resolvedAvatar}
                   alt={profile.username}
                   className="w-full h-full object-cover"
                 />
