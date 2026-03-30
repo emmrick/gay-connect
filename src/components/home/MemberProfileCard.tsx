@@ -132,7 +132,7 @@ const MemberProfileCard = ({
                 ) : allPhotos.length > 0 ? (
                   <>
                     <img 
-                      src={allPhotos[currentPhotoIndex]} 
+                      src={currentPhotoUrl || ''} 
                       alt={profile?.username}
                       className="w-full h-full object-cover"
                     />
