@@ -241,6 +241,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
 
         if (profileError) throw profileError;
+
+        // Send welcome email
+        if (data.user.email) {
+          sendWelcomeEmail(data.user.email, username);
+        }
+
         // Fire Google Ads conversion event
         if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'conversion', {
