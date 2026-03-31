@@ -293,6 +293,8 @@ export const useAdminVerifications = () => {
 
       // Notify user that verification is approved
       await notifyVerificationApproved(userId);
+      // Send confirmation email
+      await sendVerificationConfirmedEmail(userId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });
