@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCallback } from 'react';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface ProfilePhoto {
   id: string;
@@ -31,7 +32,15 @@ export const useProfilePhotos = (userId?: string) => {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return data as ProfilePhoto[];
+      
+      // Resolve photo URLs to signed URLs for private bucket
+      const resolved = await Promise.all(
+        (data as ProfilePhoto[]).map(async (photo) => {
+          const signedUrl = await getSignedAvatarUrl(photo.photo_url);
+          return { ...photo, photo_url: signedUrl || photo.photo_url };
+        })
+      );
+      return resolved;
     },
     enabled: !!targetUserId,
     staleTime: 60_000,
