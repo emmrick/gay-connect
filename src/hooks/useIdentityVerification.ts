@@ -348,6 +348,8 @@ export const useAdminVerifications = () => {
       // Notify user that verification was rejected
       if (targetUserId) {
         await notifyVerificationRejected(targetUserId, reason);
+        // Send rejection email with reason
+        await sendVerificationRejectedEmail(targetUserId, reason);
       }
     },
     onSuccess: () => {
