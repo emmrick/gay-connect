@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCallback } from 'react';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface ProfilePhoto {
   id: string;
