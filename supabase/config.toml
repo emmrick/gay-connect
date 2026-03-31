@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.notify-mission-sms]
 verify_jwt = false
+
+[functions.process-email-queue]
+verify_jwt = true
