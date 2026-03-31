@@ -33,18 +33,9 @@ const getUserEmail = async (userId: string): Promise<string | null> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (user?.id === userId) return user.email ?? null;
 
-  // For admin context, fetch from support_tickets or profiles
-  // We need a different approach — use an edge function or RPC
-  // For now, we'll try to get it from the user's recent support ticket
-  const { data: ticket } = await supabase
-    .from("support_tickets")
-    .select("email")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  return ticket?.email ?? null;
+  // For other users (admin context), we can't access auth.users from client.
+  // Return null — the email must be passed directly when available.
+  return null;
 };
 
 /**
