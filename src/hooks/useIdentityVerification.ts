@@ -6,6 +6,7 @@ import {
   notifyVerificationApproved, 
   notifyVerificationRejected 
 } from '@/services/pushNotificationService';
+import { sendVerificationConfirmedEmail, sendVerificationRejectedEmail } from '@/services/emailService';
 
 export interface IdentityVerification {
   id: string;
