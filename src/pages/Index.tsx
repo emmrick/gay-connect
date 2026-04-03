@@ -360,8 +360,11 @@ const Index = () => {
     }
   };
 
-  const handleSelectConversation = (userId: string) => {
+  const [openSnapOnEnter, setOpenSnapOnEnter] = useState(false);
+
+  const handleSelectConversation = (userId: string, hasPendingSnap?: boolean) => {
     setSelectedPrivateUserId(userId);
+    setOpenSnapOnEnter(!!hasPendingSnap);
     markAsRead.mutate(userId);
     setCurrentView('private');
   };
