@@ -84,6 +84,8 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [snapViewerMessageId, setSnapViewerMessageId] = useState<string | null>(null);
+  const snapAutoOpenDone = useRef(false);
   
   const screenshotNotifiedRef = useRef(false);
 
