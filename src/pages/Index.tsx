@@ -95,6 +95,7 @@ const Index = () => {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [openEditProfile, setOpenEditProfile] = useState(false);
   const [messageSubTab, setMessageSubTab] = useState<'conversations' | 'groups' | 'archived'>('conversations');
+  const [openSnapOnEnter, setOpenSnapOnEnter] = useState(false);
   const { data: isAdmin } = useIsAdmin();
   const featureFlags = useFeatureFlags();
   const { data: isModerator } = useQuery({
