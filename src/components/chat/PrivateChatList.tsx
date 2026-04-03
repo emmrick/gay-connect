@@ -6,6 +6,7 @@ import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useConversationStatus } from '@/hooks/useConversationStatus';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
+import { usePendingEphemeralSnaps } from '@/hooks/usePendingEphemeralSnaps';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
@@ -23,12 +24,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MessageCircle, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen, Timer } from 'lucide-react';
+import { MessageCircle, MoreVertical, Archive, Trash2, ArchiveRestore, Mail, MailOpen, Timer, Camera, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ConversationAutoDeleteSheet from './ConversationAutoDeleteSheet';
 
 interface PrivateChatListProps {
-  onSelectConversation: (userId: string) => void;
+  onSelectConversation: (userId: string, pendingSnap?: boolean) => void;
   selectedUserId: string | null;
   showArchived?: boolean;
 }
