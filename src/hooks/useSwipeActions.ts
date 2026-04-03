@@ -133,6 +133,14 @@ export const useSwipeActions = () => {
 
       let profilesList = (data || []) as SwipeableProfile[];
 
+      // Filter to only verified profiles (identity approved)
+      const { data: verifiedUsers } = await supabase
+        .from('identity_verifications')
+        .select('user_id')
+        .eq('status', 'approved');
+      const verifiedUserIds = new Set((verifiedUsers || []).map(v => v.user_id));
+      profilesList = profilesList.filter(p => verifiedUserIds.has(p.user_id));
+
       // Filter out suspended/blocked users
       if (profilesList.length > 0) {
         const checks = await Promise.all(
