@@ -409,6 +409,8 @@ const Index = () => {
           <PrivateChatRoom
             otherUserId={selectedPrivateUserId}
             onBack={handleBackFromPrivateChat}
+            autoOpenSnap={openSnapOnEnter}
+            onSnapOpened={() => setOpenSnapOnEnter(false)}
           />
         </motion.div>
       </Suspense>
