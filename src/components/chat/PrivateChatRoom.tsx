@@ -719,6 +719,15 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
           navigate(`/member/${otherUserId}`);
         }}
       />
+
+      {/* Auto-opened snap viewer */}
+      {snapViewerMessageId && (
+        <SnapAutoViewer
+          messageId={snapViewerMessageId}
+          senderName={otherUserProfile?.username || ''}
+          onClose={() => setSnapViewerMessageId(null)}
+        />
+      )}
     </div>
   );
 };
