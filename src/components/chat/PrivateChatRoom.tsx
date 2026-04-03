@@ -39,6 +39,7 @@ import MessageReactions from './MessageReactions';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import AgeFilterBlockedDialog from './AgeFilterBlockedDialog';
+import SnapAutoViewer from './SnapAutoViewer';
 
 import { useCanContactUser, useAddContactException } from '@/hooks/useContactAgeFilter';
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
