@@ -270,9 +270,10 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, [liveTicket?.status, liveTicket?.assigned_to, chatPhase]);
 
   // Auto scroll
+  const typingReveal = chatMessages.find(m => m.isTyping)?.revealedLength;
   useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages.length, ticketMessages.length, chatPhase, agentTypingUsers.length, isBotTyping]);
+  }, [chatMessages.length, ticketMessages.length, chatPhase, agentTypingUsers.length, isBotTyping, typingReveal]);
 
   // FAQ + static categories combined
   const allCategories = useMemo(() => {
