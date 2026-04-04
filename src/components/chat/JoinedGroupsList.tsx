@@ -108,6 +108,11 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
           const onlineCount = onlineCounts?.[group.regionCode] || 0;
           const roomId = regionToRoomId.get(group.regionCode);
           const mentionCount = roomId ? getMentionCount(roomId) : 0;
+          const groupSnap = roomId ? pendingGroupSnaps?.get(roomId) : undefined;
+          const hasSnap = !!groupSnap;
+          const isSnapPhoto = groupSnap?.mediaType === 'image';
+          const snapColorClass = isSnapPhoto ? 'text-teal-500' : 'text-orange-500';
+          const snapRingClass = isSnapPhoto ? 'ring-2 ring-teal-500/60' : 'ring-2 ring-orange-500/60';
 
           return (
             <div
@@ -117,6 +122,7 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                 "bg-secondary/30 border border-transparent",
                 "hover:bg-secondary hover:border-border",
                 group.isHomeGroup && "border-green-500/30 bg-green-500/5",
+                hasSnap && (isSnapPhoto ? "border-teal-500/30 bg-teal-500/5" : "border-orange-500/30 bg-orange-500/5"),
                 "animate-fade-in"
               )}
               style={{ animationDelay: `${index * 0.05}s` }}
@@ -130,7 +136,8 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                   "w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm",
                   group.isHomeGroup 
                     ? "bg-green-500 text-white"
-                    : "bg-gradient-to-br from-primary to-accent text-white"
+                    : "bg-gradient-to-br from-primary to-accent text-white",
+                  hasSnap && snapRingClass
                 )}>
                   {group.regionCode}
                 </div>
