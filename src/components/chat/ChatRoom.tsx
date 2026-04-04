@@ -90,7 +90,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
       setSnapMessageId(groupSnap.messageId);
       // Try to find sender name from messages
       const senderMsg = messages.find(m => m.sender_id === groupSnap.senderId);
-      setSnapSenderName(senderMsg?.sender_username || 'Un membre');
+      setSnapSenderName(senderMsg?.senderUsername || 'Un membre');
       setShowSnapViewer(true);
     }
   }, [groupSnap?.messageId]); // Only trigger on mount/change
