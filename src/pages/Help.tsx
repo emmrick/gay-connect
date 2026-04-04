@@ -494,7 +494,8 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   // Handle free text — keyword search
   const handleSendFreeText = useCallback(() => {
-    if (!freeText.trim() || isBotTyping) return;
+    const isTypewriting = chatMessages.some(m => m.isTyping);
+    if (!freeText.trim() || isBotTyping || isTypewriting) return;
     const userMsg = freeText.trim();
     setFreeText('');
 
