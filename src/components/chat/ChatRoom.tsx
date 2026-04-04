@@ -13,6 +13,8 @@ import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import PollMessage from './PollMessage';
 import EphemeralMessageRow from './EphemeralMessageRow';
+import SnapAutoViewer from './SnapAutoViewer';
+import { usePendingGroupSnaps } from '@/hooks/usePendingGroupSnaps';
 import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';
 import MessageReply from './MessageReply';
