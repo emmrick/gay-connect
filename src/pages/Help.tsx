@@ -34,6 +34,8 @@ interface ChatMessage {
   type: 'bot' | 'user' | 'system';
   text: string;
   options?: ChatOption[];
+  isTyping?: boolean;
+  revealedLength?: number;
 }
 
 interface ChatOption {
