@@ -56,6 +56,9 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const [showMembers, setShowMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSnapViewer, setShowSnapViewer] = useState(false);
+  const [snapMessageId, setSnapMessageId] = useState<string | null>(null);
+  const [snapSenderName, setSnapSenderName] = useState('');
   
   const hasOverlayOpen = showMembers || showMediaGallery || showSettings;
   
