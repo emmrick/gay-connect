@@ -296,15 +296,67 @@ const Help = ({ embedded = false }: HelpProps) => {
     return <BookOpen className="w-4 h-4" />;
   };
 
-  // Bot message with typing delay
+  // Typewriter effect: reveal bot messages letter by letter
+  useEffect(() => {
+    const typingMsg = chatMessages.find(m => m.isTyping);
+    if (!typingMsg) {
+      if (typewriterRef.current) {
+        clearInterval(typewriterRef.current);
+        typewriterRef.current = null;
+      }
+      return;
+    }
+
+    if (typewriterRef.current) return; // already running
+
+    typewriterRef.current = setInterval(() => {
+      setChatMessages(prev => {
+        const idx = prev.findIndex(m => m.isTyping);
+        if (idx === -1) {
+          if (typewriterRef.current) clearInterval(typewriterRef.current);
+          typewriterRef.current = null;
+          return prev;
+        }
+        const msg = prev[idx];
+        const currentLen = msg.revealedLength || 0;
+        const fullLen = msg.text.length;
+        
+        // Reveal 1-3 chars at a time for natural feel
+        const step = fullLen > 200 ? 3 : fullLen > 100 ? 2 : 1;
+        const newLen = Math.min(currentLen + step, fullLen);
+
+        if (newLen >= fullLen) {
+          // Done typing
+          if (typewriterRef.current) clearInterval(typewriterRef.current);
+          typewriterRef.current = null;
+          const updated = [...prev];
+          updated[idx] = { ...msg, isTyping: false, revealedLength: fullLen };
+          playNotificationSoundStandalone();
+          return updated;
+        }
+
+        const updated = [...prev];
+        updated[idx] = { ...msg, revealedLength: newLen };
+        return updated;
+      });
+    }, 4);
+
+    return () => {
+      if (typewriterRef.current) {
+        clearInterval(typewriterRef.current);
+        typewriterRef.current = null;
+      }
+    };
+  }, [chatMessages]);
+
+  // Bot message with typing delay then typewriter reveal
   const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-    const typingDelay = Math.min(Math.ceil(wordCount / 5) * 1000, 3000);
+    const typingDelay = Math.min(Math.ceil(wordCount / 8) * 400, 1200);
     setIsBotTyping(true);
     setTimeout(() => {
-      setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
+      setChatMessages(prev => [...prev, { type: 'bot', text, options, isTyping: true, revealedLength: 0 }]);
       setIsBotTyping(false);
-      playNotificationSoundStandalone();
     }, typingDelay);
   }, []);
 
