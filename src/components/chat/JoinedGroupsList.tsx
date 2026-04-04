@@ -184,14 +184,25 @@ const JoinedGroupsList = ({ onSelectGroup }: JoinedGroupsListProps) => {
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>
-                    {onlineCount > 0 ? (
-                      <span className="text-green-500 font-medium">{onlineCount} en ligne</span>
-                    ) : (
-                      'Aucun membre en ligne'
-                    )}
-                  </span>
+                  {hasSnap ? (
+                    <>
+                      {isSnapPhoto ? <Camera className={cn("w-3.5 h-3.5", snapColorClass)} /> : <Video className={cn("w-3.5 h-3.5", snapColorClass)} />}
+                      <span className={cn("font-medium", snapColorClass)}>
+                        {isSnapPhoto ? 'Nouveau Selfie' : 'Nouvelle Vidéo'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-3.5 h-3.5" />
+                      <span>
+                        {onlineCount > 0 ? (
+                          <span className="text-green-500 font-medium">{onlineCount} en ligne</span>
+                        ) : (
+                          'Aucun membre en ligne'
+                        )}
+                      </span>
+                    </>
+                  )}
                 </div>
               </button>
 
