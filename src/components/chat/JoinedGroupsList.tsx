@@ -4,7 +4,8 @@ import { useOnlineMemberCounts } from '@/hooks/useOnlineMemberCounts';
 import { useUnreadMentions } from '@/hooks/useUnreadMentions';
 import { useChatRooms } from '@/hooks/useChatRooms';
 import { useAnnouncementChannel } from '@/hooks/useAnnouncementChannel';
-import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2, BellOff, Bell, Megaphone } from 'lucide-react';
+import { usePendingGroupSnaps } from '@/hooks/usePendingGroupSnaps';
+import { Users, ChevronRight, LogOut, MessageSquare, AtSign, Home, Loader2, BellOff, Bell, Megaphone, Camera, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
