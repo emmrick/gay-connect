@@ -271,8 +271,13 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   // Auto scroll
   const typingReveal = chatMessages.find(m => m.isTyping)?.revealedLength;
+  const scrollThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollThrottleRef.current) return;
+    scrollThrottleRef.current = setTimeout(() => {
+      scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      scrollThrottleRef.current = null;
+    }, 100);
   }, [chatMessages.length, ticketMessages.length, chatPhase, agentTypingUsers.length, isBotTyping, typingReveal]);
 
   // FAQ + static categories combined
