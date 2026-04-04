@@ -34,6 +34,8 @@ interface ChatMessage {
   type: 'bot' | 'user' | 'system';
   text: string;
   options?: ChatOption[];
+  isTyping?: boolean;
+  revealedLength?: number;
 }
 
 interface ChatOption {
@@ -139,6 +141,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   const freeTextRef = useRef<HTMLTextAreaElement>(null);
   const agentJoinedRef = useRef(false);
   const hasInitializedRef = useRef(false);
+  const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -267,9 +270,15 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, [liveTicket?.status, liveTicket?.assigned_to, chatPhase]);
 
   // Auto scroll
+  const typingReveal = chatMessages.find(m => m.isTyping)?.revealedLength;
+  const scrollThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages.length, ticketMessages.length, chatPhase, agentTypingUsers.length, isBotTyping]);
+    if (scrollThrottleRef.current) return;
+    scrollThrottleRef.current = setTimeout(() => {
+      scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      scrollThrottleRef.current = null;
+    }, 100);
+  }, [chatMessages.length, ticketMessages.length, chatPhase, agentTypingUsers.length, isBotTyping, typingReveal]);
 
   // FAQ + static categories combined
   const allCategories = useMemo(() => {
@@ -293,15 +302,67 @@ const Help = ({ embedded = false }: HelpProps) => {
     return <BookOpen className="w-4 h-4" />;
   };
 
-  // Bot message with typing delay
+  // Typewriter effect: reveal bot messages letter by letter
+  useEffect(() => {
+    const typingMsg = chatMessages.find(m => m.isTyping);
+    if (!typingMsg) {
+      if (typewriterRef.current) {
+        clearInterval(typewriterRef.current);
+        typewriterRef.current = null;
+      }
+      return;
+    }
+
+    if (typewriterRef.current) return; // already running
+
+    typewriterRef.current = setInterval(() => {
+      setChatMessages(prev => {
+        const idx = prev.findIndex(m => m.isTyping);
+        if (idx === -1) {
+          if (typewriterRef.current) clearInterval(typewriterRef.current);
+          typewriterRef.current = null;
+          return prev;
+        }
+        const msg = prev[idx];
+        const currentLen = msg.revealedLength || 0;
+        const fullLen = msg.text.length;
+        
+        // Reveal 1-3 chars at a time for natural feel
+        const step = fullLen > 200 ? 3 : fullLen > 100 ? 2 : 1;
+        const newLen = Math.min(currentLen + step, fullLen);
+
+        if (newLen >= fullLen) {
+          // Done typing
+          if (typewriterRef.current) clearInterval(typewriterRef.current);
+          typewriterRef.current = null;
+          const updated = [...prev];
+          updated[idx] = { ...msg, isTyping: false, revealedLength: fullLen };
+          playNotificationSoundStandalone();
+          return updated;
+        }
+
+        const updated = [...prev];
+        updated[idx] = { ...msg, revealedLength: newLen };
+        return updated;
+      });
+    }, 4);
+
+    return () => {
+      if (typewriterRef.current) {
+        clearInterval(typewriterRef.current);
+        typewriterRef.current = null;
+      }
+    };
+  }, [chatMessages]);
+
+  // Bot message with typing delay then typewriter reveal
   const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-    const typingDelay = Math.min(Math.ceil(wordCount / 5) * 1000, 3000);
+    const typingDelay = Math.min(Math.ceil(wordCount / 8) * 400, 1200);
     setIsBotTyping(true);
     setTimeout(() => {
-      setChatMessages(prev => [...prev, { type: 'bot', text, options }]);
+      setChatMessages(prev => [...prev, { type: 'bot', text, options, isTyping: true, revealedLength: 0 }]);
       setIsBotTyping(false);
-      playNotificationSoundStandalone();
     }, typingDelay);
   }, []);
 
@@ -438,7 +499,8 @@ const Help = ({ embedded = false }: HelpProps) => {
 
   // Handle free text — keyword search
   const handleSendFreeText = useCallback(() => {
-    if (!freeText.trim() || isBotTyping) return;
+    const isTypewriting = chatMessages.some(m => m.isTyping);
+    if (!freeText.trim() || isBotTyping || isTypewriting) return;
     const userMsg = freeText.trim();
     setFreeText('');
 
@@ -840,8 +902,11 @@ const Help = ({ embedded = false }: HelpProps) => {
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-muted text-foreground rounded-bl-md"
                   )}>
-                    <p className="whitespace-pre-line"><BoldText text={msg.text} /></p>
-                    {msg.type === 'bot' && msg.options && msg.options.length > 0 && (
+                    <p className="whitespace-pre-line">
+                      <BoldText text={msg.isTyping ? msg.text.slice(0, msg.revealedLength || 0) : msg.text} />
+                      {msg.isTyping && <span className="inline-block w-0.5 h-4 bg-foreground/70 animate-pulse ml-0.5 align-text-bottom" />}
+                    </p>
+                    {msg.type === 'bot' && !msg.isTyping && msg.options && msg.options.length > 0 && (
                       <div className="mt-3 flex flex-col gap-1.5">
                         {msg.options.map((opt) => (
                           <button
