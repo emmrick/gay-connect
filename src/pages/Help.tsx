@@ -345,7 +345,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         updated[idx] = { ...msg, revealedLength: newLen };
         return updated;
       });
-    }, 4);
+    }, 1);
 
     return () => {
       if (typewriterRef.current) {
