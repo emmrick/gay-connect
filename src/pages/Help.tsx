@@ -327,8 +327,8 @@ const Help = ({ embedded = false }: HelpProps) => {
         const currentLen = msg.revealedLength || 0;
         const fullLen = msg.text.length;
         
-        // Reveal 1-3 chars at a time for natural feel
-        const step = fullLen > 200 ? 3 : fullLen > 100 ? 2 : 1;
+        // Reveal multiple chars per tick for ultra-fast typing
+        const step = fullLen > 200 ? 12 : fullLen > 100 ? 8 : 4;
         const newLen = Math.min(currentLen + step, fullLen);
 
         if (newLen >= fullLen) {
@@ -345,7 +345,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         updated[idx] = { ...msg, revealedLength: newLen };
         return updated;
       });
-    }, 4);
+    }, 1);
 
     return () => {
       if (typewriterRef.current) {
