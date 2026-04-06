@@ -87,10 +87,9 @@ const loadPersistedTicketId = (): string | null => {
 const persistState = (phase: ChatPhase, messages: ChatMessage[], ticketId?: string | null) => {
   try {
     localStorage.setItem(STORAGE_KEY_PHASE, phase);
-    const safe = messages.map(m => ({
+  const safe = messages.map(m => ({
       type: m.type,
       text: m.text,
-      options: m.options?.map(o => ({ label: o.label, value: o.value })),
     }));
     localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(safe));
     if (ticketId) localStorage.setItem(STORAGE_KEY_TICKET, ticketId);
