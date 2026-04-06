@@ -120,7 +120,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [hasCheckedActiveTicket, setHasCheckedActiveTicket] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
+  
   const [noMatchCount, setNoMatchCount] = useState(0);
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [waitStartTime, setWaitStartTime] = useState<number | null>(() => {
@@ -513,7 +513,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setChatPhase('chatbot');
     setChatMessages([]);
     setFreeText('');
-    setCurrentCategory(null);
+    
     setNoMatchCount(0);
     setWaitStartTime(null);
     agentJoinedRef.current = false;
