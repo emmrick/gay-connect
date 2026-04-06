@@ -21,8 +21,6 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
   searchKnowledgeBase,
-  buildPostAnswerOptions,
-  buildDisambiguationMessage,
   STATIC_KNOWLEDGE,
   normalize,
   type ScoredResult,
