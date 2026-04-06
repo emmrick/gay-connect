@@ -61,9 +61,9 @@ export const useNearbyProfiles = (
 
       if (error) throw error;
       
-      // Filter to only verified profiles, then fix stale status
+      // Filter to only verified profiles with a photo, then fix stale status
       let profiles = (data || [])
-        .filter(p => verifiedUserIds.has(p.user_id))
+        .filter(p => verifiedUserIds.has(p.user_id) && !!p.avatar_url)
         .map(p => fixStaleOnlineStatus({ ...p, distance_km: null }));
 
       // Filter out suspended/blocked users
@@ -130,7 +130,7 @@ export const useNearbyProfiles = (
 
       const verifiedUserIds = new Set((verifiedUsers || []).map(v => v.user_id));
       const geoProfiles = (data || [])
-        .filter(p => verifiedUserIds.has(p.user_id))
+        .filter(p => verifiedUserIds.has(p.user_id) && !!p.avatar_url)
         .map(fixStaleOnlineStatus);
 
       // Filter out suspended/blocked users

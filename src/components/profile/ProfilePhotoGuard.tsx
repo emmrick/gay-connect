@@ -48,8 +48,9 @@ const ProfilePhotoGuard = ({ children }: ProfilePhotoGuardProps) => {
     return <>{children}</>;
   }
 
-  // No photos and no avatar — block access
-  const hasPhoto = photos.length > 0 || !!profile.avatar_url;
+  // No photos and no avatar — block access (consider only approved photos)
+  const approvedPhotos = photos.filter((p: any) => p.status === 'approved' || !p.status);
+  const hasPhoto = approvedPhotos.length > 0 || !!profile.avatar_url;
 
   if (!hasPhoto) {
     return <ProfilePhotoRequiredScreen />;

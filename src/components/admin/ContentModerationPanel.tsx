@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useActiveTask } from '@/hooks/useModerationTaskQueue';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import {
   MessageSquare,
   Image,
@@ -16,7 +19,9 @@ import {
   User,
   Clock,
   ChevronDown,
-  X
+  X,
+  Check,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -220,17 +225,91 @@ const useAlbums = (reportedUserIds: string[]) => {
 };
 
 const ContentModerationPanel = () => {
-  const [activeTab, setActiveTab] = useState('messages');
+  const [activeTab, setActiveTab] = useState('pending-photos');
   const [messageSearch, setMessageSearch] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: string; id: string; label: string } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { data: activeTask } = useActiveTask();
   const { data: reportedUserIds = [], isLoading: reportedUsersLoading, refetch: refetchReportedUsers } = useReportedUsers();
   const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useRecentMessages(messageSearch);
   const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } = useProfilePhotos(reportedUserIds);
   const { data: albums, isLoading: albumsLoading, refetch: refetchAlbums } = useAlbums(reportedUserIds);
+
+  // Pending photo approvals
+  const { data: pendingPhotos = [], isLoading: pendingPhotosLoading, refetch: refetchPendingPhotos } = useQuery({
+    queryKey: ['admin-pending-photos'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profile_photos')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+
+      // Resolve signed URLs + get usernames
+      const userIds = [...new Set((data || []).map(p => p.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url')
+        .in('user_id', userIds);
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+
+      const resolved = await Promise.all(
+        (data || []).map(async (photo: any) => {
+          const signedUrl = await getSignedAvatarUrl(photo.photo_url);
+          return {
+            ...photo,
+            signed_url: signedUrl || photo.photo_url,
+            profile: profileMap.get(photo.user_id) || null,
+          };
+        })
+      );
+      return resolved;
+    },
+    staleTime: 10000,
+    refetchInterval: 15000,
+  });
+
+  // Auto-navigate to pending photos tab when a photo_review task is active
+  useEffect(() => {
+    if (activeTask?.task_type === 'content_moderation' && (activeTask.metadata as any)?.type === 'photo_review') {
+      setActiveTab('pending-photos');
+    }
+  }, [activeTask]);
+
+  const approvePhoto = useMutation({
+    mutationFn: async (photoId: string) => {
+      const { error } = await supabase
+        .from('profile_photos')
+        .update({ status: 'approved' } as any)
+        .eq('id', photoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-photos'] });
+      toast.success('Photo approuvée');
+    },
+    onError: () => toast.error('Erreur'),
+  });
+
+  const rejectPhoto = useMutation({
+    mutationFn: async ({ photoId, reason }: { photoId: string; reason: string }) => {
+      const { error } = await supabase
+        .from('profile_photos')
+        .update({ status: 'rejected', rejection_reason: reason } as any)
+        .eq('id', photoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-photos'] });
+      toast.success('Photo refusée');
+    },
+    onError: () => toast.error('Erreur'),
+  });
 
   const photosLoaderState = reportedUsersLoading || photosLoading;
   const albumsLoaderState = reportedUsersLoading || albumsLoading;
@@ -320,7 +399,16 @@ const ContentModerationPanel = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-fit">
+        <TabsList className="grid grid-cols-4 w-fit">
+          <TabsTrigger value="pending-photos" className="gap-2 relative">
+            <ShieldCheck className="w-4 h-4" />
+            Approbation
+            {pendingPhotos.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {pendingPhotos.length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="messages" className="gap-2">
             <MessageSquare className="w-4 h-4" />
             Messages
@@ -334,6 +422,83 @@ const ContentModerationPanel = () => {
             Albums
           </TabsTrigger>
         </TabsList>
+
+        {/* Pending Photo Approvals Tab */}
+        <TabsContent value="pending-photos" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Photos en attente d'approbation
+            </p>
+            <Button variant="ghost" size="icon" onClick={() => refetchPendingPhotos()}>
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <ScrollArea className="h-[500px]">
+            {pendingPhotosLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="aspect-square rounded-lg" />
+                ))}
+              </div>
+            ) : pendingPhotos.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Check className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="font-medium">Aucune photo en attente</p>
+                <p className="text-sm mt-1">Toutes les photos ont été traitées</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {pendingPhotos.map((photo: any) => (
+                  <div key={photo.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="aspect-square bg-secondary relative">
+                      <img
+                        src={photo.signed_url}
+                        alt=""
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => setPreviewImage(photo.signed_url)}
+                      />
+                      <Badge className="absolute top-2 left-2 bg-amber-500 text-white text-[10px]">
+                        En attente
+                      </Badge>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <User className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-sm font-medium">{photo.profile?.username || 'Inconnu'}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(photo.created_at), { addSuffix: true, locale: fr })}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 gap-1"
+                          onClick={() => approvePhoto.mutate(photo.id)}
+                          disabled={approvePhoto.isPending}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          Approuver
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1 gap-1"
+                          onClick={() => rejectPhoto.mutate({ photoId: photo.id, reason: 'Photo non conforme aux règles' })}
+                          disabled={rejectPhoto.isPending}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          Refuser
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </TabsContent>
 
         {/* Messages Tab */}
         <TabsContent value="messages" className="space-y-4">

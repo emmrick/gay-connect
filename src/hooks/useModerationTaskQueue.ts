@@ -37,7 +37,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 const TASK_TYPE_SECTIONS: Record<string, string> = {
   identity_verification: 'verification',
   report_review: 'reports',
-  content_moderation: 'ads',
+  content_moderation: 'moderation',
   user_suspension: 'users',
   credit_management: 'credits',
   withdrawal_management: 'credits',
