@@ -31,16 +31,12 @@ type ChatPhase = 'chatbot' | 'waiting_agent' | 'agent' | 'rating';
 interface ChatMessage {
   type: 'bot' | 'user' | 'system';
   text: string;
-  options?: ChatOption[];
   isTyping?: boolean;
   revealedLength?: number;
 }
 
-interface ChatOption {
-  label: string;
-  value: string;
-  icon?: React.ReactNode;
-}
+// Pending results for numbered suggestions
+let pendingSuggestions: ScoredResult[] = [];
 
 const RATING_EMOJIS = [
   { emoji: '😡', label: 'Très insatisfait' },
