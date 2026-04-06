@@ -281,20 +281,6 @@ const Help = ({ embedded = false }: HelpProps) => {
     return Array.from(cats);
   }, [allFaqArticles]);
 
-  const getCategoryIcon = (category: string) => {
-    const lower = category.toLowerCase();
-    if (lower.includes('compte') || lower.includes('profil')) return <Users className="w-4 h-4" />;
-    if (lower.includes('crédit') || lower.includes('credit') || lower.includes('paiement') || lower.includes('achat')) return <CreditCard className="w-4 h-4" />;
-    if (lower.includes('sécu') || lower.includes('secu') || lower.includes('confiden')) return <Shield className="w-4 h-4" />;
-    if (lower.includes('message') || lower.includes('chat') || lower.includes('conversation')) return <MessageCircle className="w-4 h-4" />;
-    if (lower.includes('vérif') || lower.includes('verif')) return <Shield className="w-4 h-4" />;
-    if (lower.includes('notif')) return <MessageSquareText className="w-4 h-4" />;
-    if (lower.includes('fonctio') || lower.includes('feature')) return <Sparkles className="w-4 h-4" />;
-    if (lower.includes('techni')) return <Settings className="w-4 h-4" />;
-    if (lower.includes('général') || lower.includes('general')) return <HelpCircle className="w-4 h-4" />;
-    return <BookOpen className="w-4 h-4" />;
-  };
-
   // Typewriter effect: reveal bot messages letter by letter
   useEffect(() => {
     const typingMsg = chatMessages.find(m => m.isTyping);
@@ -306,7 +292,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       return;
     }
 
-    if (typewriterRef.current) return; // already running
+    if (typewriterRef.current) return;
 
     typewriterRef.current = setInterval(() => {
       setChatMessages(prev => {
@@ -319,13 +305,9 @@ const Help = ({ embedded = false }: HelpProps) => {
         const msg = prev[idx];
         const currentLen = msg.revealedLength || 0;
         const fullLen = msg.text.length;
-        
-        // Reveal 1-2 chars at a time for natural feel
-        const step = fullLen > 200 ? 2 : 1;
-        const newLen = Math.min(currentLen + step, fullLen);
+        const newLen = Math.min(currentLen + 1, fullLen);
 
         if (newLen >= fullLen) {
-          // Done typing
           if (typewriterRef.current) clearInterval(typewriterRef.current);
           typewriterRef.current = null;
           const updated = [...prev];
@@ -338,7 +320,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         updated[idx] = { ...msg, revealedLength: newLen };
         return updated;
       });
-    }, 3);
+    }, 10);
 
     return () => {
       if (typewriterRef.current) {
@@ -349,53 +331,15 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, [chatMessages]);
 
   // Bot message with typing delay then typewriter reveal
-  const addBotMessage = useCallback((text: string, options?: ChatOption[]) => {
+  const addBotMessage = useCallback((text: string) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
     const typingDelay = Math.min(Math.ceil(wordCount / 8) * 400, 1200);
     setIsBotTyping(true);
     setTimeout(() => {
-      setChatMessages(prev => [...prev, { type: 'bot', text, options, isTyping: true, revealedLength: 0 }]);
+      setChatMessages(prev => [...prev, { type: 'bot', text, isTyping: true, revealedLength: 0 }]);
       setIsBotTyping(false);
     }, typingDelay);
   }, []);
-
-  // Show category options
-  const showCategoryOptions = useCallback(() => {
-    const options: ChatOption[] = allCategories.map(cat => ({
-      label: cat,
-      value: `cat:${cat}`,
-      icon: getCategoryIcon(cat),
-    }));
-    addBotMessage(
-      "Sur quel **sujet** as-tu une question ? Tu peux aussi **taper ta question** directement ! 👇",
-      options
-    );
-  }, [allCategories, addBotMessage]);
-
-  // Show questions for a category (FAQ + static combined)
-  const showCategoryQuestions = useCallback((category: string) => {
-    setCurrentCategory(category);
-    const faqItems = allFaqArticles.filter(a => a.category === category);
-    const staticItems = STATIC_KNOWLEDGE.filter(s => s.category === category);
-    const combined = [
-      ...faqItems.map(a => ({ id: a.id, question: a.question })),
-      ...staticItems.map(s => ({ id: s.id, question: s.question })),
-    ];
-
-    if (combined.length === 0) {
-      addBotMessage("Aucune question disponible dans cette catégorie pour le moment. Tu peux **poser ta question** directement ou **choisir une autre catégorie**.");
-      setTimeout(() => showCategoryOptions(), 1200);
-      return;
-    }
-    const options: ChatOption[] = combined.map(item => ({
-      label: item.question,
-      value: `faq:${item.id}`,
-    }));
-    addBotMessage(
-      `Voici les questions sur **${category}** :\nChoisis celle qui correspond, ou **tape ta question** 📝`,
-      options,
-    );
-  }, [allFaqArticles, addBotMessage, showCategoryOptions]);
 
   // Find an entry by id (FAQ or static)
   const findEntryById = useCallback((id: string) => {
@@ -404,17 +348,16 @@ const Help = ({ embedded = false }: HelpProps) => {
     return STATIC_KNOWLEDGE.find(s => s.id === id) || null;
   }, [allFaqArticles]);
 
-  // Show answer with post-answer options
+  // Show answer
   const showAnswer = useCallback((entryId: string) => {
     const entry = findEntryById(entryId);
     if (!entry) return;
     setNoMatchCount(0);
+    pendingSuggestions = [];
+    addBotMessage(`**${entry.question}**\n\n${entry.answer}\n\nCette réponse t'a aidé ? Tu peux me poser une **autre question** ou taper **"agent"** pour contacter un conseiller. 😊`);
+  }, [findEntryById, addBotMessage]);
 
-    const options = buildPostAnswerOptions(entryId, entry.category, allFaqArticles, STATIC_KNOWLEDGE);
-    addBotMessage(`**${entry.question}**\n\n${entry.answer}`, options);
-  }, [findEntryById, allFaqArticles, addBotMessage]);
-
-  // Initialize chatbot on first load (auto-start)
+  // Initialize chatbot on first load
   useEffect(() => {
     if (hasInitializedRef.current) return;
     if (!userProfile && user?.id) return;
@@ -427,68 +370,11 @@ const Help = ({ embedded = false }: HelpProps) => {
     const displayName = userProfile?.username || 'cher utilisateur';
     const greeting: ChatMessage = {
       type: 'bot',
-      text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Social**. Je suis là pour t'aider à trouver des réponses à tes questions.`,
+      text: `Bonjour **${displayName}** ! 👋 Je suis l'assistant **Gay Social**.\n\nPose-moi ta question directement, je ferai de mon mieux pour t'aider ! 😊\n\nTu peux aussi taper **"agent"** à tout moment pour parler à un conseiller.`,
     };
     setChatMessages([greeting]);
-
-    setTimeout(() => {
-      if (!allCategories.length) return;
-      const options: ChatOption[] = allCategories.map(cat => ({
-        label: cat,
-        value: `cat:${cat}`,
-        icon: getCategoryIcon(cat),
-      }));
-      setChatMessages(prev => [
-        ...prev,
-        {
-          type: 'bot',
-          text: "Choisis un **sujet** ci-dessous, ou **tape ta question** directement ! 👇",
-          options,
-        },
-      ]);
-      playNotificationSoundStandalone();
-    }, 800);
-  }, [userProfile, user?.id, allCategories, chatMessages.length]);
-
-  // Handle option click
-  const handleOptionClick = useCallback((value: string) => {
-    if (value.startsWith('cat:')) {
-      const category = value.replace('cat:', '');
-      setChatMessages(prev => [...prev, { type: 'user', text: category }]);
-      showCategoryQuestions(category);
-    } else if (value.startsWith('faq:')) {
-      const entryId = value.replace('faq:', '');
-      const entry = findEntryById(entryId);
-      if (entry) {
-        setChatMessages(prev => [...prev, { type: 'user', text: entry.question }]);
-        showAnswer(entryId);
-      }
-    } else if (value === 'same_category') {
-      setChatMessages(prev => [...prev, { type: 'user', text: 'Autre question sur ce sujet' }]);
-      if (currentCategory) showCategoryQuestions(currentCategory);
-      else showCategoryOptions();
-    } else if (value === 'change_category') {
-      setChatMessages(prev => [...prev, { type: 'user', text: 'Choisir un autre sujet' }]);
-      setCurrentCategory(null);
-      showCategoryOptions();
-    } else if (value === 'not_resolved') {
-      setChatMessages(prev => [...prev, { type: 'user', text: 'Problème non résolu' }]);
-      addBotMessage(
-        "Je suis désolé que la réponse ne t'ait pas aidé. 😕\n\nTu peux :\n• **Reformuler** ta question avec d'autres mots\n• **Parcourir** les sujets disponibles\n• **Contacter un agent** pour une aide personnalisée",
-        [
-          { label: '📋 Parcourir les sujets', value: 'change_category' },
-          { label: '👤 Contacter un agent', value: 'contact_agent' },
-        ]
-      );
-    } else if (value === 'contact_agent') {
-      setChatMessages(prev => [...prev, { type: 'user', text: 'Contacter un agent' }]);
-      handleContactAgent();
-    } else if (value === 'view_rules') {
-      navigate('/regles');
-    } else if (value === 'view_legal') {
-      navigate('/legal');
-    }
-  }, [allFaqArticles, currentCategory, showCategoryQuestions, showCategoryOptions, showAnswer, findEntryById, navigate, addBotMessage]);
+    playNotificationSoundStandalone();
+  }, [userProfile, user?.id, chatMessages.length]);
 
   // Handle free text — keyword search
   const handleSendFreeText = useCallback(() => {
@@ -499,66 +385,59 @@ const Help = ({ embedded = false }: HelpProps) => {
 
     setChatMessages(prev => [...prev, { type: 'user', text: userMsg }]);
 
+    const lowerMsg = userMsg.toLowerCase().trim();
+
+    // Check if user wants to contact an agent
+    if (lowerMsg === 'agent' || lowerMsg.includes('contacter un agent') || lowerMsg.includes('parler agent') || lowerMsg.includes('conseiller')) {
+      handleContactAgent();
+      return;
+    }
+
+    // Check if user typed a number to select a suggestion
+    const num = parseInt(lowerMsg, 10);
+    if (!isNaN(num) && num >= 1 && num <= pendingSuggestions.length) {
+      const selected = pendingSuggestions[num - 1];
+      showAnswer(selected.id);
+      return;
+    }
+
     const results = searchKnowledgeBase(userMsg, allFaqArticles);
 
     if (results.length > 0) {
       setNoMatchCount(0);
 
-      if (results.length === 1) {
+      if (results.length === 1 || results[0].score > results[1].score * 2) {
         // Single clear match — show answer directly
         showAnswer(results[0].id);
       } else {
-        // Check if we need disambiguation or if top result is clearly the best
-        const disambiguation = buildDisambiguationMessage(results);
-
-        if (disambiguation) {
-          // Multiple close results — ask which one
-          addBotMessage(disambiguation.text, disambiguation.options.map(o => ({
-            ...o,
-            value: `faq:${results.find(r => r.question === o.label)?.id || o.value}`,
-          })));
-        } else {
-          // Top result is clearly the best — show it, but mention alternatives
-          const topResult = results[0];
-          const alternativeOptions: ChatOption[] = results.slice(1, 3).map(r => ({
-            label: `📄 ${r.question}`,
-            value: `faq:${r.id}`,
-          }));
-
-          const postOptions = [
-            ...alternativeOptions,
-            { label: '🔍 Problème non résolu', value: 'not_resolved' },
-            { label: '📋 Choisir un autre sujet', value: 'change_category' },
-            { label: '👤 Contacter un agent', value: 'contact_agent' },
-          ];
-
-          addBotMessage(
-            `**${topResult.question}**\n\n${topResult.answer}\n\n${alternativeOptions.length > 0 ? 'Tu peux aussi consulter ces sujets liés 👇' : 'Ça répond à ta question ? 😊'}`,
-            postOptions
-          );
-        }
+        // Multiple results — show numbered text suggestions
+        pendingSuggestions = results.slice(0, 5);
+        const suggestionList = pendingSuggestions
+          .map((r, i) => `**${i + 1}.** ${r.question}`)
+          .join('\n');
+        addBotMessage(
+          `J'ai trouvé **${pendingSuggestions.length} sujets** qui pourraient correspondre à ta question :\n\n${suggestionList}\n\n📝 **Tape le numéro** (1-${pendingSuggestions.length}) du sujet qui t'intéresse, ou **reformule** ta question !`
+        );
       }
     } else {
       const newCount = noMatchCount + 1;
       setNoMatchCount(newCount);
+      pendingSuggestions = [];
+
+      // Show available categories as text to help the user
+      const catList = allCategories.map(c => `• ${c}`).join('\n');
 
       if (newCount >= 2) {
         addBotMessage(
-          "Je n'ai pas trouvé de réponse dans notre **base de connaissances**. 😕\n\nJe te recommande de **contacter un agent** du support qui pourra t'aider personnellement.",
-          [{ label: '👤 Contacter un agent', value: 'contact_agent' }]
+          `Je n'ai pas trouvé de réponse dans notre base de connaissances. 😕\n\nJe te recommande de **contacter un agent** en tapant **"agent"** pour obtenir une aide personnalisée.`
         );
       } else {
-        const options: ChatOption[] = [
-          { label: '📋 Parcourir les sujets', value: 'change_category' },
-          { label: '👤 Contacter un agent', value: 'contact_agent' },
-        ];
         addBotMessage(
-          "Je n'ai pas trouvé de réponse correspondante. 🤔\n\nEssaie de **reformuler** avec d'autres mots, ou **parcours les sujets** disponibles.",
-          options,
+          `Je n'ai pas trouvé de réponse correspondante. 🤔\n\nEssaie de reformuler ta question avec d'autres mots. Voici les **sujets disponibles** :\n\n${catList}\n\nOu tape **"agent"** pour contacter un conseiller.`
         );
       }
     }
-  }, [freeText, isBotTyping, allFaqArticles, showAnswer, addBotMessage, noMatchCount]);
+  }, [freeText, isBotTyping, chatMessages, allFaqArticles, allCategories, showAnswer, addBotMessage, noMatchCount]);
 
   // Contact agent
   const handleContactAgent = async () => {
