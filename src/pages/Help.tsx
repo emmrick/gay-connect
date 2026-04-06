@@ -925,7 +925,7 @@ const Help = ({ embedded = false }: HelpProps) => {
             }}
             className="flex-1 rounded-2xl bg-muted border-0 min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none text-sm leading-5"
             rows={1}
-            disabled={isBotTyping}
+            disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
           />
           <Button
             size="icon"
