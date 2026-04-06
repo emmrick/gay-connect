@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useActiveTask } from '@/hooks/useModerationTaskQueue';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import {
   MessageSquare,
   Image,
@@ -16,7 +19,9 @@ import {
   User,
   Clock,
   ChevronDown,
-  X
+  X,
+  Check,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
