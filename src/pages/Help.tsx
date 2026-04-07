@@ -320,7 +320,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         updated[idx] = { ...msg, revealedLength: newLen };
         return updated;
       });
-    }, 10);
+    }, 18);
 
     return () => {
       if (typewriterRef.current) {
