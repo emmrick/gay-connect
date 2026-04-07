@@ -47,12 +47,27 @@ const RATING_EMOJIS = [
 ];
 
 const BoldText = ({ text }: { text: string }) => {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  const parts = text.split(/(\*\*[^*]+\*\*|\[LINK:\/[^\]]+\])/g);
   return (
     <span>
       {parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>;
+        }
+        // Link pattern: [LINK:/path]
+        const linkMatch = part.match(/^\[LINK:(\/[^\]]+)\]$/);
+        if (linkMatch) {
+          const path = linkMatch[1];
+          const label = '👉 Accéder à la page';
+          return (
+            <button
+              key={i}
+              onClick={(e) => { e.stopPropagation(); window.location.href = path; }}
+              className="inline-flex items-center gap-1 text-primary underline underline-offset-2 font-medium hover:opacity-80 transition-opacity"
+            >
+              {label}
+            </button>
+          );
         }
         return <span key={i}>{part}</span>;
       })}
