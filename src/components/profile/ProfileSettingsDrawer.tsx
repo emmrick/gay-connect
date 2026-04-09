@@ -58,6 +58,7 @@ const ProfileSettingsDrawer = ({
     { icon: UserCheck, label: 'Filtre d\'âge de contact', action: () => { setOpen(false); setShowAgeFilter(true); }, color: 'text-teal-500', bgColor: 'bg-teal-500/10' },
     { icon: HelpCircle, label: 'Aide & Support', action: () => { setOpen(false); setSettingsType('help'); }, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
     { icon: Lock, label: 'Code PIN & Sécurité', action: () => { setOpen(false); setShowPinManagement(true); }, color: 'text-violet-500', bgColor: 'bg-violet-500/10' },
+    { icon: Heart, label: 'Compte Couple', action: () => { setOpen(false); setShowCoupleSettings(true); }, color: 'text-pink-500', bgColor: 'bg-pink-500/10' },
   ];
   const legalItems = [
     { icon: Scale, label: 'Mentions légales', section: 'legal', color: 'text-slate-500', bgColor: 'bg-slate-500/10' },
