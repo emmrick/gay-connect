@@ -897,6 +897,115 @@ export type Database = {
         }
         Relationships: []
       }
+      couple_accounts: {
+        Row: {
+          created_at: string
+          id: string
+          invite_code: string
+          owner_user_id: string
+          partner_user_id: string | null
+          share_conversations: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          owner_user_id: string
+          partner_user_id?: string | null
+          share_conversations?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          owner_user_id?: string
+          partner_user_id?: string | null
+          share_conversations?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      couple_activity_log: {
+        Row: {
+          action: string
+          couple_account_id: string
+          created_at: string
+          description: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          couple_account_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          couple_account_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_activity_log_couple_account_id_fkey"
+            columns: ["couple_account_id"]
+            isOneToOne: false
+            referencedRelation: "couple_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couple_invitations: {
+        Row: {
+          couple_account_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          invitee_email: string | null
+          inviter_user_id: string
+          status: string
+          token: string
+        }
+        Insert: {
+          couple_account_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitee_email?: string | null
+          inviter_user_id: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          couple_account_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitee_email?: string | null
+          inviter_user_id?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_invitations_couple_account_id_fkey"
+            columns: ["couple_account_id"]
+            isOneToOne: false
+            referencedRelation: "couple_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_cost_audit_log: {
         Row: {
           changed_at: string
@@ -2819,6 +2928,8 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           body_type: string | null
+          couple_account_id: string | null
+          couple_role: string | null
           created_at: string
           endowment: string | null
           ethnicity: string | null
@@ -2859,6 +2970,8 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           body_type?: string | null
+          couple_account_id?: string | null
+          couple_role?: string | null
           created_at?: string
           endowment?: string | null
           ethnicity?: string | null
@@ -2899,6 +3012,8 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           body_type?: string | null
+          couple_account_id?: string | null
+          couple_role?: string | null
           created_at?: string
           endowment?: string | null
           ethnicity?: string | null
@@ -2932,7 +3047,15 @@ export type Database = {
           username?: string
           weight?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_couple_account_id_fkey"
+            columns: ["couple_account_id"]
+            isOneToOne: false
+            referencedRelation: "couple_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -4399,6 +4522,7 @@ export type Database = {
         Returns: boolean
       }
       demote_moderator: { Args: { _target_user_id: string }; Returns: Json }
+      dissolve_couple: { Args: { _couple_account_id: string }; Returns: Json }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -4572,6 +4696,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      join_couple_by_code: { Args: { _invite_code: string }; Returns: Json }
       mark_messages_as_read: {
         Args: { _sender_id: string; _user_id: string }
         Returns: number
