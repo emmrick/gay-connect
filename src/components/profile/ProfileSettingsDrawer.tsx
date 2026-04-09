@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle, FolderLock, 
-  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone, UserCheck
+  ChevronRight, X, Coins, Zap, Sparkles, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone, UserCheck, Heart
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import PinManagementSheet from '@/components/security/PinManagementSheet';
 import DeleteAccountDialog from './DeleteAccountDialog';
 import DataExportDialog from './DataExportDialog';
 import ContactAgeFilterSheet from './ContactAgeFilterSheet';
+import CoupleSettings from '@/components/couple/CoupleSettings';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
 
@@ -47,6 +48,7 @@ const ProfileSettingsDrawer = ({
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showDataExport, setShowDataExport] = useState(false);
   const [showAgeFilter, setShowAgeFilter] = useState(false);
+  const [showCoupleSettings, setShowCoupleSettings] = useState(false);
 
   const menuItems = [
     { icon: Bell, label: 'Notifications', action: () => { setOpen(false); setSettingsType('notifications'); }, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
@@ -56,6 +58,7 @@ const ProfileSettingsDrawer = ({
     { icon: UserCheck, label: 'Filtre d\'âge de contact', action: () => { setOpen(false); setShowAgeFilter(true); }, color: 'text-teal-500', bgColor: 'bg-teal-500/10' },
     { icon: HelpCircle, label: 'Aide & Support', action: () => { setOpen(false); setSettingsType('help'); }, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
     { icon: Lock, label: 'Code PIN & Sécurité', action: () => { setOpen(false); setShowPinManagement(true); }, color: 'text-violet-500', bgColor: 'bg-violet-500/10' },
+    { icon: Heart, label: 'Compte Couple', action: () => { setOpen(false); setShowCoupleSettings(true); }, color: 'text-pink-500', bgColor: 'bg-pink-500/10' },
   ];
   const legalItems = [
     { icon: Scale, label: 'Mentions légales', section: 'legal', color: 'text-slate-500', bgColor: 'bg-slate-500/10' },
@@ -72,6 +75,21 @@ const ProfileSettingsDrawer = ({
       <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
       <DataExportDialog open={showDataExport} onOpenChange={setShowDataExport} />
       <ContactAgeFilterSheet open={showAgeFilter} onOpenChange={setShowAgeFilter} />
+
+      {/* Couple Settings Sheet */}
+      <Sheet open={showCoupleSettings} onOpenChange={setShowCoupleSettings}>
+        <SheetContent side="bottom" className="h-[75vh] rounded-t-3xl">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-xl font-bold flex items-center gap-2">
+              <Heart className="h-5 w-5 text-primary" />
+              Gestion du Couple
+            </SheetTitle>
+          </SheetHeader>
+          <div className="overflow-y-auto h-full pb-20">
+            <CoupleSettings />
+          </div>
+        </SheetContent>
+      </Sheet>
       
       {settingsType && (
         <SettingsDialog 

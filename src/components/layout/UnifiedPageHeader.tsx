@@ -6,6 +6,7 @@ import NotificationsDropdown from '@/components/notifications/NotificationsDropd
 import { User } from 'lucide-react';
 import logoSrc from '@/assets/logo.png';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import ProfileSwitcher from '@/components/couple/ProfileSwitcher';
 
 
 interface UnifiedPageHeaderProps {
@@ -55,6 +56,7 @@ const UnifiedPageHeader = ({
           </h1>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <ProfileSwitcher />
           <CreditBalanceCompact onClick={onNavigateToCredits} />
           {onlineCount !== undefined && (
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">

@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ActiveProfileProvider } from "@/contexts/ActiveProfileContext";
 import { CreditDialogProvider } from "@/contexts/CreditDialogContext";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import BlockedUserGuard from "@/components/BlockedUserGuard";
@@ -26,6 +27,7 @@ import GlobalMissionOverlay from "@/components/moderation/GlobalMissionOverlay";
 import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog";
 import AppLockGate from "@/components/security/AppLockGate";
 import DossierAccessPopup from "@/components/moderation/DossierAccessPopup";
+import ProfileSelectorModal from "@/components/couple/ProfileSelectorModal";
 
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
@@ -110,6 +112,7 @@ const AuthenticatedApp = () => {
 
   
   return (
+    <ActiveProfileProvider>
     <MaintenanceGuard>
     <CreditDialogProvider>
       <CreditDeductionProvider>
@@ -160,6 +163,7 @@ const AuthenticatedApp = () => {
                 <GlobalMissionOverlay />
                 <DossierAccessPopup />
                 <CookieConsentBanner />
+                <ProfileSelectorModal />
               </>
             </TooltipProvider>
           </ProfilePhotoGuard>
@@ -168,6 +172,7 @@ const AuthenticatedApp = () => {
       </CreditDeductionProvider>
     </CreditDialogProvider>
     </MaintenanceGuard>
+    </ActiveProfileProvider>
   );
 };
 
