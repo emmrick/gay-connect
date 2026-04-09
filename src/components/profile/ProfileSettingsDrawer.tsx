@@ -75,6 +75,21 @@ const ProfileSettingsDrawer = ({
       <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
       <DataExportDialog open={showDataExport} onOpenChange={setShowDataExport} />
       <ContactAgeFilterSheet open={showAgeFilter} onOpenChange={setShowAgeFilter} />
+
+      {/* Couple Settings Sheet */}
+      <Sheet open={showCoupleSettings} onOpenChange={setShowCoupleSettings}>
+        <SheetContent side="bottom" className="h-[75vh] rounded-t-3xl">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-xl font-bold flex items-center gap-2">
+              <Heart className="h-5 w-5 text-primary" />
+              Gestion du Couple
+            </SheetTitle>
+          </SheetHeader>
+          <div className="overflow-y-auto h-full pb-20">
+            <CoupleSettings />
+          </div>
+        </SheetContent>
+      </Sheet>
       
       {settingsType && (
         <SettingsDialog 
