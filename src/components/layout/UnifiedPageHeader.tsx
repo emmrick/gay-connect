@@ -6,6 +6,7 @@ import NotificationsDropdown from '@/components/notifications/NotificationsDropd
 import { User } from 'lucide-react';
 import logoSrc from '@/assets/logo.png';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import ProfileSwitcher from '@/components/couple/ProfileSwitcher';
 
 
 interface UnifiedPageHeaderProps {
