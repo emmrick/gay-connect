@@ -113,7 +113,16 @@ const EphemeralMediaViewer = ({
       hasCalledOnViewed.current = false;
       hasNotifiedScreenshot.current = false;
       if (autoStart && type === 'video' && videoRef.current) {
-        videoRef.current.play();
+        const video = videoRef.current;
+        // Wait for video to be ready before playing
+        const tryPlay = () => {
+          video.play().catch(console.error);
+        };
+        if (video.readyState >= 1) {
+          tryPlay();
+        } else {
+          video.addEventListener('loadedmetadata', tryPlay, { once: true });
+        }
       }
     }
   }, [isOpen, duration, isUnlimited, autoStart, type]);
