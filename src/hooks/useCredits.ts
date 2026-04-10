@@ -200,23 +200,23 @@ export const useCredits = () => {
     staleTime: 30000,
   });
 
-  // Fetch credit transactions history
+  // Fetch credit transactions history (couple = owner's transactions)
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
-    queryKey: ['credit-transactions', user?.id],
+    queryKey: ['credit-transactions', creditUserId],
     queryFn: async (): Promise<CreditTransaction[]> => {
-      if (!user?.id) return [];
+      if (!creditUserId) return [];
 
       const { data, error } = await supabase
         .from('credit_transactions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', creditUserId)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
       return data as CreditTransaction[];
     },
-    enabled: !!user?.id,
+    enabled: !!creditUserId,
     staleTime: 30_000,
   });
 
