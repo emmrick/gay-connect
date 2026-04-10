@@ -93,9 +93,25 @@ export const usePrivateConversations = () => {
       if (!conversations || conversations.length === 0) return [];
 
       // Get other user IDs, filtering out blocked users
-      const otherUserIds = conversations
-        .map(conv => conv.user1_id === user.id ? conv.user2_id : conv.user1_id)
-        .filter(id => !blockedIds.has(id));
+      // For shared couple conversations, "other" = not the active user or partner
+      const myIds = new Set([user.id]);
+      if (shareConversations && partnerUserId) myIds.add(partnerUserId);
+      
+      const getOtherUserId = (conv: any) => {
+        const u1 = conv.user1_id;
+        const u2 = conv.user2_id;
+        // Return the user that is NOT part of the couple
+        if (myIds.has(u1) && !myIds.has(u2)) return u2;
+        if (myIds.has(u2) && !myIds.has(u1)) return u1;
+        // Both are in couple (shouldn't happen), fallback
+        return u1 === user.id ? u2 : u1;
+      };
+
+      const otherUserIds = [...new Set(
+        conversations
+          .map(getOtherUserId)
+          .filter(id => !blockedIds.has(id))
+      )];
 
       // Fetch profiles for other users with all status fields
       const { data: profiles } = await supabase
