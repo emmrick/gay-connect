@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveProfile } from '@/contexts/ActiveProfileContext';
 import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useUserUsage } from './useUserUsage';
 import { toast } from 'sonner';
@@ -29,12 +30,19 @@ interface ConversationWithProfile extends PrivateConversation {
 export const usePrivateConversations = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { coupleAccount, isCouple, activeUserId } = useActiveProfile();
   const { 
     canStartConversation, 
     incrementConversations, 
     conversationsCount, 
     limits
   } = useUserUsage();
+
+  // Determine which user IDs to fetch conversations for
+  const shareConversations = isCouple && coupleAccount?.share_conversations;
+  const partnerUserId = coupleAccount
+    ? (coupleAccount.owner_user_id === user?.id ? coupleAccount.partner_user_id : coupleAccount.owner_user_id)
+    : null;
 
   // Fetch conversation statuses
   const statusQuery = useQuery({
@@ -56,7 +64,7 @@ export const usePrivateConversations = () => {
   });
 
   const query = useQuery({
-    queryKey: ['private-conversations', user?.id],
+    queryKey: ['private-conversations', user?.id, shareConversations ? partnerUserId : null],
     queryFn: async (): Promise<ConversationWithProfile[]> => {
       if (!user) return [];
 
@@ -68,20 +76,42 @@ export const usePrivateConversations = () => {
       
       const blockedIds = new Set((blockedData as any[] || []).map((b: any) => b.blocked_id));
 
-      // Get all conversations for the current user
+      // Build OR filter: own conversations + partner's if sharing
+      let orFilter = `user1_id.eq.${user.id},user2_id.eq.${user.id}`;
+      if (shareConversations && partnerUserId) {
+        orFilter += `,user1_id.eq.${partnerUserId},user2_id.eq.${partnerUserId}`;
+      }
+
+      // Get all conversations
       const { data: conversations, error } = await supabase
         .from('private_conversations')
         .select('*')
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .or(orFilter)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       if (!conversations || conversations.length === 0) return [];
 
       // Get other user IDs, filtering out blocked users
-      const otherUserIds = conversations
-        .map(conv => conv.user1_id === user.id ? conv.user2_id : conv.user1_id)
-        .filter(id => !blockedIds.has(id));
+      // For shared couple conversations, "other" = not the active user or partner
+      const myIds = new Set([user.id]);
+      if (shareConversations && partnerUserId) myIds.add(partnerUserId);
+      
+      const getOtherUserId = (conv: any) => {
+        const u1 = conv.user1_id;
+        const u2 = conv.user2_id;
+        // Return the user that is NOT part of the couple
+        if (myIds.has(u1) && !myIds.has(u2)) return u2;
+        if (myIds.has(u2) && !myIds.has(u1)) return u1;
+        // Both are in couple (shouldn't happen), fallback
+        return u1 === user.id ? u2 : u1;
+      };
+
+      const otherUserIds = [...new Set(
+        conversations
+          .map(getOtherUserId)
+          .filter(id => !blockedIds.has(id))
+      )];
 
       // Fetch profiles for other users with all status fields
       const { data: profiles } = await supabase
@@ -106,18 +136,24 @@ export const usePrivateConversations = () => {
       );
       const profileMap = new Map(profileEntries);
 
-      // Batch fetch last messages for ALL conversations in one query
-      // Get the latest private message for each conversation partner
-      const lastMessagesPromises = otherUserIds.map(otherUserId =>
-        supabase
+      // Batch fetch last messages - for couple shared, include partner messages too
+      const allMyIds = [...myIds];
+      const lastMessagesPromises = otherUserIds.map(otherUserId => {
+        const orClauses = allMyIds
+          .flatMap(myId => [
+            `and(sender_id.eq.${myId},recipient_id.eq.${otherUserId})`,
+            `and(sender_id.eq.${otherUserId},recipient_id.eq.${myId})`,
+          ])
+          .join(',');
+        return supabase
           .from('messages')
           .select('content, created_at, message_type, sender_id, recipient_id')
           .eq('is_private', true)
-          .or(`and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`)
+          .or(orClauses)
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle()
-      );
+          .maybeSingle();
+      });
 
       const lastMessagesResults = await Promise.all(lastMessagesPromises);
 
@@ -135,11 +171,11 @@ export const usePrivateConversations = () => {
 
       const conversationsWithData: ConversationWithProfile[] = conversations
         .filter(conv => {
-          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+          const otherUserId = getOtherUserId(conv);
           return !blockedIds.has(otherUserId);
         })
         .map(conv => {
-          const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+          const otherUserId = getOtherUserId(conv);
           return {
             ...conv,
             otherUser: profileMap.get(otherUserId) || {

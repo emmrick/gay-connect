@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, QueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCoupleCreditsUserId } from '@/hooks/useCoupleCreditsUserId';
 import { toast } from 'sonner';
 import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
 
@@ -178,40 +179,44 @@ export const useCredits = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch user credits balance
+  // Resolve credit wallet owner (couple = owner's wallet)
+  const coupleCreditsUserId = useCoupleCreditsUserId();
+  const creditUserId = coupleCreditsUserId || user?.id;
+
+  // Fetch user credits balance (uses couple owner's wallet when applicable)
   const query = useQuery({
-    queryKey: ['user-credits', user?.id],
+    queryKey: ['user-credits', creditUserId],
     queryFn: async (): Promise<UserCredits | null> => {
-      if (!user?.id) return null;
+      if (!creditUserId) return null;
 
       const { data, error } = await supabase.rpc('get_user_credit_balance', {
-        _user_id: user.id,
+        _user_id: creditUserId,
       });
 
       if (error) throw error;
       return data as unknown as UserCredits;
     },
-    enabled: !!user?.id,
+    enabled: !!creditUserId,
     staleTime: 30000,
   });
 
-  // Fetch credit transactions history
+  // Fetch credit transactions history (couple = owner's transactions)
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
-    queryKey: ['credit-transactions', user?.id],
+    queryKey: ['credit-transactions', creditUserId],
     queryFn: async (): Promise<CreditTransaction[]> => {
-      if (!user?.id) return [];
+      if (!creditUserId) return [];
 
       const { data, error } = await supabase
         .from('credit_transactions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', creditUserId)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
       return data as CreditTransaction[];
     },
-    enabled: !!user?.id,
+    enabled: !!creditUserId,
     staleTime: 30_000,
   });
 
@@ -252,10 +257,10 @@ export const useCredits = () => {
       transactionType: string; 
       description?: string;
     }) => {
-      if (!user?.id) throw new Error('Not authenticated');
+      if (!creditUserId) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.rpc('deduct_credits', {
-        _user_id: user.id,
+        _user_id: creditUserId,
         _amount: amount,
         _transaction_type: transactionType,
         _description: description || null,
@@ -271,8 +276,8 @@ export const useCredits = () => {
       return { ...result, amount, description };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['credit-transactions', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-credits', creditUserId] });
+      queryClient.invalidateQueries({ queryKey: ['credit-transactions', creditUserId] });
       
       // Show subtle toast notification for credit deduction
       const actionDescription = data.description || 'Action';
@@ -396,9 +401,9 @@ export const useCredits = () => {
 
   // Toggle credit lock
   const toggleCreditLock = async (lockType: 'lock_passive' | 'lock_bonus' | 'lock_purchased', value: boolean) => {
-    if (!user?.id) return;
+    if (!creditUserId) return;
     await supabase.rpc('toggle_credit_lock', { _lock_type: lockType, _value: value });
-    queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+    queryClient.invalidateQueries({ queryKey: ['user-credits', creditUserId] });
   };
 
   return {
@@ -429,9 +434,11 @@ export const useCredits = () => {
     performAction,
     deductCredits,
     addCredits,
+    // Couple info
+    creditUserId,
     // Refresh
     refresh: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-credits', creditUserId] });
     },
   };
 };
