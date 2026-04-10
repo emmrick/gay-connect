@@ -401,9 +401,9 @@ export const useCredits = () => {
 
   // Toggle credit lock
   const toggleCreditLock = async (lockType: 'lock_passive' | 'lock_bonus' | 'lock_purchased', value: boolean) => {
-    if (!user?.id) return;
+    if (!creditUserId) return;
     await supabase.rpc('toggle_credit_lock', { _lock_type: lockType, _value: value });
-    queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+    queryClient.invalidateQueries({ queryKey: ['user-credits', creditUserId] });
   };
 
   return {
@@ -434,9 +434,11 @@ export const useCredits = () => {
     performAction,
     deductCredits,
     addCredits,
+    // Couple info
+    creditUserId,
     // Refresh
     refresh: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-credits', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-credits', creditUserId] });
     },
   };
 };
