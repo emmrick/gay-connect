@@ -178,20 +178,24 @@ export const useCredits = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch user credits balance
+  // Resolve credit wallet owner (couple = owner's wallet)
+  const coupleCreditsUserId = useCoupleCreditsUserId();
+  const creditUserId = coupleCreditsUserId || user?.id;
+
+  // Fetch user credits balance (uses couple owner's wallet when applicable)
   const query = useQuery({
-    queryKey: ['user-credits', user?.id],
+    queryKey: ['user-credits', creditUserId],
     queryFn: async (): Promise<UserCredits | null> => {
-      if (!user?.id) return null;
+      if (!creditUserId) return null;
 
       const { data, error } = await supabase.rpc('get_user_credit_balance', {
-        _user_id: user.id,
+        _user_id: creditUserId,
       });
 
       if (error) throw error;
       return data as unknown as UserCredits;
     },
-    enabled: !!user?.id,
+    enabled: !!creditUserId,
     staleTime: 30000,
   });
 
