@@ -275,7 +275,14 @@ const EphemeralMediaViewer = ({
 
   const handleStartViewing = useCallback(() => {
     setIsViewing(true);
-    if (type === 'video' && videoRef.current) videoRef.current.play();
+    if (type === 'video' && videoRef.current) {
+      const video = videoRef.current;
+      if (video.readyState >= 1) {
+        video.play().catch(console.error);
+      } else {
+        video.addEventListener('loadedmetadata', () => video.play().catch(console.error), { once: true });
+      }
+    }
   }, [type]);
 
   const handleCloseClick = useCallback(() => {
