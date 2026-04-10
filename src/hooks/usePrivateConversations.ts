@@ -30,12 +30,19 @@ interface ConversationWithProfile extends PrivateConversation {
 export const usePrivateConversations = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { coupleAccount, isCouple, activeUserId } = useActiveProfile();
   const { 
     canStartConversation, 
     incrementConversations, 
     conversationsCount, 
     limits
   } = useUserUsage();
+
+  // Determine which user IDs to fetch conversations for
+  const shareConversations = isCouple && coupleAccount?.share_conversations;
+  const partnerUserId = coupleAccount
+    ? (coupleAccount.owner_user_id === user?.id ? coupleAccount.partner_user_id : coupleAccount.owner_user_id)
+    : null;
 
   // Fetch conversation statuses
   const statusQuery = useQuery({
@@ -57,7 +64,7 @@ export const usePrivateConversations = () => {
   });
 
   const query = useQuery({
-    queryKey: ['private-conversations', user?.id],
+    queryKey: ['private-conversations', user?.id, shareConversations ? partnerUserId : null],
     queryFn: async (): Promise<ConversationWithProfile[]> => {
       if (!user) return [];
 
@@ -69,11 +76,17 @@ export const usePrivateConversations = () => {
       
       const blockedIds = new Set((blockedData as any[] || []).map((b: any) => b.blocked_id));
 
-      // Get all conversations for the current user
+      // Build OR filter: own conversations + partner's if sharing
+      let orFilter = `user1_id.eq.${user.id},user2_id.eq.${user.id}`;
+      if (shareConversations && partnerUserId) {
+        orFilter += `,user1_id.eq.${partnerUserId},user2_id.eq.${partnerUserId}`;
+      }
+
+      // Get all conversations
       const { data: conversations, error } = await supabase
         .from('private_conversations')
         .select('*')
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .or(orFilter)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
