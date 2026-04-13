@@ -32,6 +32,7 @@ import MemberProfileAlbumsSection from '@/components/albums/MemberProfileAlbumsS
 import AlbumPreviewBlocks from '@/components/albums/AlbumPreviewBlocks';
 import { useAlbums } from '@/hooks/useAlbums';
 import type { AlbumSlide } from '@/components/chat/ProfilePhotoCarousel';
+import MemberTweenSection from '@/components/tween/MemberTweenSection';
 
 const POSITION_LABELS: Record<string, string> = {
   'actif': '🔝 Actif (Top)', 'passif': '🔽 Passif (Bottom)', 'versatile': '↕️ Versatile',
@@ -438,6 +439,9 @@ const MemberProfile = () => {
             </div>
           </motion.div>
         )}
+
+        {/* Tweens */}
+        {userId && <MemberTweenSection userId={userId} username={profile.username} />}
 
         {/* Member since */}
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
