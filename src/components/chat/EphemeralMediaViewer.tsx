@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X, Eye, EyeOff, AlertTriangle, Shield, Play, Download, Infinity as InfinityIcon, Check, Send, RotateCcw } from 'lucide-react';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import GaySocialWatermark from '@/components/security/GaySocialWatermark';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ interface EphemeralMediaViewerProps {
   type: 'image' | 'video';
   src: string;
   senderName: string;
+  senderAvatar?: string | null;
   duration?: number; // 0 = unlimited
   mediaId?: string;
   autoStart?: boolean; // Skip pre-view screen and start immediately
@@ -60,7 +62,8 @@ const EphemeralMediaViewer = ({
   isOpen,
   type, 
   src, 
-  senderName, 
+  senderName,
+  senderAvatar,
   duration = 10,
   mediaId,
   autoStart = false,
