@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -74,13 +75,22 @@ export const usePrivateMessages = (otherUserId: string | null) => {
 
       const profileMap = new Map(profilesResult.data?.map(p => [p.user_id, p]) || []);
 
+      // Sign avatar URLs for private bucket
+      const signedAvatarMap = new Map<string, string | null>();
+      await Promise.all(
+        Array.from(profileMap.entries()).map(async ([userId, profile]) => {
+          const signed = await getSignedAvatarUrl(profile.avatar_url);
+          signedAvatarMap.set(userId, signed);
+        })
+      );
+
       // We fetched DESC for correct pagination, now re-sort for display (old -> new)
       const ordered = [...messages].reverse();
 
       return ordered.map(msg => ({
         ...msg,
         senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
-        senderAvatar: profileMap.get(msg.sender_id)?.avatar_url || null,
+        senderAvatar: signedAvatarMap.get(msg.sender_id) ?? null,
       }));
     },
     enabled: !!user && !!otherUserId,
