@@ -17,6 +17,9 @@ import LowCreditsAlert from "@/components/credits/LowCreditsAlert";
 import { CreditDeductionProvider } from "@/components/credits/CreditDeductionAnimation";
 import { AgeConfirmationModal } from "@/components/AgeConfirmationModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
+import CookieConsentBanner from "@/components/cookie/CookieConsentBanner";
+import { useCookieScripts } from "@/hooks/useCookieScripts";
 
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
