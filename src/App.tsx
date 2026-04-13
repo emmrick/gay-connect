@@ -152,7 +152,7 @@ const AuthenticatedApp = () => {
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/profile/chatbot" element={<ChatbotConfigPage />} />
                             <Route path="/credits" element={<CreditsPageRoute />} />
-                            <Route path="/tween-feed" element={<TweenPageRoute />} />
+                            <Route path="/tween" element={<TweenPageRoute />} />
                             <Route path="/aide/chat" element={<HelpPageRoute />} />
                           </Route>
 
@@ -172,7 +172,7 @@ const AuthenticatedApp = () => {
                           <Route path="/comment-ca-marche" element={<Suspense fallback={<PageFallback />}><HowItWorks /></Suspense>} />
                           <Route path="/securite" element={<Suspense fallback={<PageFallback />}><Security /></Suspense>} />
                           <Route path="/communaute" element={<Suspense fallback={<PageFallback />}><Community /></Suspense>} />
-                          <Route path="/tween" element={<Suspense fallback={<PageFallback />}><TweenPublicPage /></Suspense>} />
+                          <Route path="/tween-public" element={<Suspense fallback={<PageFallback />}><TweenPublicPage /></Suspense>} />
                           <Route path="/unsubscribe" element={<Suspense fallback={<PageFallback />}><Unsubscribe /></Suspense>} />
                           <Route path="*" element={<Suspense fallback={<PageFallback />}><NotFound /></Suspense>} />
                         </Routes>
