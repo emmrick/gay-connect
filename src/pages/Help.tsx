@@ -531,7 +531,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         );
       }
     }
-  }, [freeText, isBotTyping, chatMessages, allFaqArticles, allCategories, showAnswer, addBotMessage, noMatchCount]);
+  }, [freeText, isBotTyping, chatMessages, allFaqArticles, allCategories, showAnswer, addBotMessage, noMatchCount, isCreditRequest]);
 
   // Contact agent
   const handleContactAgent = async () => {
