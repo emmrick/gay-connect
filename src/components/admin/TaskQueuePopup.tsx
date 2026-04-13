@@ -36,12 +36,9 @@ import {
   startMissionRefuseCooldown,
 } from '@/hooks/useModerationTaskQueue';
 import { useQueryClient } from '@tanstack/react-query';
+import { playMissionSound, playAcceptSound } from '@/utils/missionAudio';
 
 const OFFER_TTL_SECONDS = 60;
-
-// ── Mission arrival sound (synthesized rising chime) ──
-let missionAudioCtx: AudioContext | null = null;
-let audioUnlocked = false;
 
 // Unlock AudioContext on first user interaction (mobile fix)
 const unlockAudio = () => {
