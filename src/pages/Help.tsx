@@ -477,6 +477,16 @@ const Help = ({ embedded = false }: HelpProps) => {
       return;
     }
 
+    // Check if user is asking for credits
+    if (isCreditRequest(lowerMsg)) {
+      setChatMessages(prev => [...prev, {
+        type: 'bot',
+        text: `💳 La demande de crédits via le chatbot n'est pas disponible directement. Vous devez contacter le **service client** pour cela.\n\nToutefois, dans une démarche d'économie et de générosité de notre plateforme, et étant donné que nous pouvons rencontrer des soucis techniques, nous vous accordons **5 crédits bonus** exceptionnels. 🎁\n\nCliquez sur le bouton ci-dessous pour réclamer vos crédits :`,
+        action: 'credit_claim',
+      }]);
+      return;
+    }
+
     // Check if user typed a number to select a suggestion
     const num = parseInt(lowerMsg, 10);
     if (!isNaN(num) && num >= 1 && num <= pendingSuggestions.length) {
