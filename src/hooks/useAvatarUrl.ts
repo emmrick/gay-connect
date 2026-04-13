@@ -16,12 +16,15 @@ function extractAvatarPath(avatarUrl: string): string | null {
   // Already a signed URL — use as-is
   if (avatarUrl.includes('/storage/v1/object/sign/')) return null;
 
+  // Strip query params before extracting path
+  const cleanUrl = avatarUrl.split('?')[0];
+
   // Full public URL: extract path after bucket name
-  const publicMatch = avatarUrl.match(/\/storage\/v1\/object\/public\/avatars\/(.+)/);
+  const publicMatch = cleanUrl.match(/\/storage\/v1\/object\/public\/avatars\/(.+)/);
   if (publicMatch) return publicMatch[1];
 
-  // Raw path (e.g. "uuid/file.jpg")
-  if (!avatarUrl.startsWith('http')) return avatarUrl;
+  // Raw path (e.g. "uuid/file.jpg") — also strip query params
+  if (!avatarUrl.startsWith('http')) return avatarUrl.split('?')[0];
 
   return null;
 }
