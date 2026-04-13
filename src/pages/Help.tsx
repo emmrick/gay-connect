@@ -139,6 +139,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   
   const [noMatchCount, setNoMatchCount] = useState(0);
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const [isClaimingCredits, setIsClaimingCredits] = useState(false);
   const [waitStartTime, setWaitStartTime] = useState<number | null>(() => {
     try {
       const saved = localStorage.getItem('gc-help-wait-start');
