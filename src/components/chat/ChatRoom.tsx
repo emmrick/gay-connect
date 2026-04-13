@@ -15,7 +15,6 @@ import PollMessage from './PollMessage';
 import EphemeralMessageRow from './EphemeralMessageRow';
 import SnapAutoViewer from './SnapAutoViewer';
 import { usePendingGroupSnaps } from '@/hooks/usePendingGroupSnaps';
-import MembersList from './MembersList';
 import TypingIndicator from './TypingIndicator';
 import MessageReply from './MessageReply';
 import MessageSearch from './MessageSearch';
@@ -25,12 +24,9 @@ import MediaGallerySheet from './MediaGallerySheet';
 import PinnedMessagesBanner from './PinnedMessagesBanner';
 import GroupSettingsDialog from './GroupSettingsDialog';
 import VoiceRecorder from './VoiceRecorder';
-import MuteButton from './MuteButton';
-import { ArrowLeft, Users, Search, Image, Loader2, X, ChevronDown, Settings } from 'lucide-react';
+import GroupChatHeader from './group/GroupChatHeader';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface ReplyMessage {
   id: string;
@@ -50,11 +46,8 @@ interface ChatRoomProps {
 
 const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, onBack, onStartPrivateChat }: ChatRoomProps) => {
   const { user } = useAuth();
-  
-  // Track active conversation for notification suppression
   useActiveConversation(null, roomId);
   
-  // Track if any overlay is open to prevent back navigation
   const [showMembers, setShowMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -63,11 +56,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const [snapSenderName, setSnapSenderName] = useState('');
   
   const hasOverlayOpen = showMembers || showMediaGallery || showSettings;
-  
-  // Mobile back navigation - disabled when overlays are open
   useMobileNavigation({ onBack, enabled: !hasOverlayOpen });
   
-  // Search state
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchIndex, setSearchIndex] = useState(0);
@@ -80,37 +70,26 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const { createPoll, vote, lockPoll, getPollForMessage } = usePolls(roomId);
   const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePinnedMessages(roomId);
   
-  // Pending group snaps - auto-open viewer
   const { data: pendingGroupSnaps } = usePendingGroupSnaps();
   const groupSnap = pendingGroupSnaps?.get(roomId);
   
   useEffect(() => {
     if (groupSnap && !showSnapViewer) {
-      // Auto-open snap viewer when entering a group with pending snap
       setSnapMessageId(groupSnap.messageId);
-      // Try to find sender name from messages
       const senderMsg = messages.find(m => m.sender_id === groupSnap.senderId);
       setSnapSenderName(senderMsg?.senderUsername || 'Un membre');
       setShowSnapViewer(true);
     }
-  }, [groupSnap?.messageId]); // Only trigger on mount/change
+  }, [groupSnap?.messageId]);
 
-  // Mark mentions as read when opening the room
   useEffect(() => {
-    if (roomId) {
-      markMentionsAsRead(roomId);
-    }
+    if (roomId) markMentionsAsRead(roomId);
   }, [roomId, markMentionsAsRead]);
 
-  // Mark messages as read when viewing
   useEffect(() => {
     if (messages.length > 0 && user?.id) {
-      const otherMessages = messages
-        .filter(m => m.sender_id !== user.id)
-        .map(m => m.id);
-      if (otherMessages.length > 0) {
-        markAsRead(otherMessages);
-      }
+      const otherMessages = messages.filter(m => m.sender_id !== user.id).map(m => m.id);
+      if (otherMessages.length > 0) markAsRead(otherMessages);
     }
   }, [messages, user?.id, markAsRead]);
   
@@ -133,14 +112,10 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const scrollToBottom = useCallback((instant = false) => {
     const el = scrollRef.current;
     if (!el) return;
-    if (instant) {
-      el.scrollTop = el.scrollHeight;
-    } else {
-      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-    }
+    if (instant) el.scrollTop = el.scrollHeight;
+    else el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, []);
 
-  // Initial scroll only — once
   useEffect(() => {
     if (!isLoading && messages.length > 0 && !initialScrollDone.current && !searchQuery) {
       initialScrollDone.current = true;
@@ -149,46 +124,35 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
     }
   }, [isLoading, messages.length, searchQuery, scrollToBottom]);
 
-  // New message — only scroll if near bottom or own message
   useEffect(() => {
     if (messages.length > prevMsgCount.current && initialScrollDone.current && !searchQuery) {
       const lastMsg = messages[messages.length - 1];
-      const isOwnMessage = lastMsg?.sender_id === user?.id;
-      if (isOwnMessage || isNearBottomRef.current) {
+      if (lastMsg?.sender_id === user?.id || isNearBottomRef.current) {
         requestAnimationFrame(() => scrollToBottom(false));
       }
       prevMsgCount.current = messages.length;
     }
   }, [messages.length, messages, user?.id, searchQuery, scrollToBottom]);
 
-  // Typing — only if near bottom
   useEffect(() => {
     if (typingUsers.length > 0 && isNearBottomRef.current && !searchQuery) {
       requestAnimationFrame(() => scrollToBottom(false));
     }
   }, [typingUsers.length, searchQuery, scrollToBottom]);
 
-  // Auto-scroll when content grows (media loads, ephemeral elements expand)
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const observer = new ResizeObserver(() => {
       if (isNearBottomRef.current && initialScrollDone.current) {
-        requestAnimationFrame(() => {
-          if (el) el.scrollTop = el.scrollHeight;
-        });
+        requestAnimationFrame(() => { if (el) el.scrollTop = el.scrollHeight; });
       }
     });
-    // Observe the inner content wrapper
-    if (el.firstElementChild) {
-      observer.observe(el.firstElementChild);
-    } else {
-      observer.observe(el);
-    }
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    else observer.observe(el);
     return () => observer.disconnect();
   }, [roomId]);
 
-  // Handle scroll to show/hide scroll button + track position
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (el) {
@@ -198,41 +162,30 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
     }
   }, []);
 
-  // Scroll to search result
   useEffect(() => {
     if (searchResults.length > 0 && searchQuery) {
       const messageId = searchResults[searchIndex];
-      const el = document.getElementById(`message-${messageId}`);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById(`message-${messageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [searchIndex, searchResults, searchQuery]);
 
-  // Keyboard open — always scroll to bottom
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
     let prev = vv.height;
     const onResize = () => {
-      if (vv.height < prev - 50) {
-        setTimeout(() => scrollToBottom(true), 50);
-      }
+      if (vv.height < prev - 50) setTimeout(() => scrollToBottom(true), 50);
       prev = vv.height;
     };
     vv.addEventListener('resize', onResize);
     return () => vv.removeEventListener('resize', onResize);
   }, [scrollToBottom]);
 
-  const handleInputFocus = useCallback(() => {
-    // Scroll handled by visualViewport resize
-  }, []);
+  const handleInputFocus = useCallback(() => {}, []);
 
   const handleSendMessage = async (content: string) => {
     if (content.trim()) {
-      sendMessage.mutate({ 
-        content, 
-        messageType: 'text',
-        replyToId: replyTo?.id,
-      });
+      sendMessage.mutate({ content, messageType: 'text', replyToId: replyTo?.id });
       setReplyTo(null);
       stopTyping();
     }
@@ -240,49 +193,11 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
 
   const handleCreatePoll = async (question: string, options: string[], isMultipleChoice: boolean) => {
     if (!user) return;
-    // Create a message first for the poll
     const { data: msg } = await supabase
       .from('messages')
-      .insert({
-        chat_room_id: roomId,
-        sender_id: user.id,
-        content: `📊 ${question}`,
-        message_type: 'poll',
-        is_private: false,
-      })
-      .select()
-      .single();
-
-    if (msg) {
-      await createPoll.mutateAsync({ question, options, isMultipleChoice, messageId: msg.id });
-    }
-  };
-
-  const handleTyping = (hasText: boolean) => {
-    startTyping(hasText);
-  };
-
-  const handleSearchNavigate = (direction: 'prev' | 'next') => {
-    if (searchResults.length === 0) return;
-    
-    if (direction === 'next') {
-      setSearchIndex((prev) => (prev + 1) % searchResults.length);
-    } else {
-      setSearchIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
-    }
-  };
-
-  const handleStartPrivateChat = (userId: string) => {
-    setShowMembers(false);
-    onStartPrivateChat(userId);
-  };
-
-  const handleReply = (message: ReplyMessage) => {
-    setReplyTo(message);
-  };
-
-  const handleAvatarClick = (userId: string) => {
-    navigate(`/profile/${userId}`);
+      .insert({ chat_room_id: roomId, sender_id: user.id, content: `📊 ${question}`, message_type: 'poll', is_private: false })
+      .select().single();
+    if (msg) await createPoll.mutateAsync({ question, options, isMultipleChoice, messageId: msg.id });
   };
 
   const handleToggleReaction = (messageId: string, emoji: string) => {
@@ -291,129 +206,53 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
-      {/* Fixed container to prevent keyboard shift */}
+      <GroupChatHeader
+        roomId={roomId}
+        regionCode={regionCode}
+        regionName={regionName}
+        memberCount={memberCount}
+        isCustomGroup={isCustomGroup}
+        typingUsers={typingUsers}
+        showMembers={showMembers}
+        setShowMembers={setShowMembers}
+        searchOpen={searchOpen}
+        setSearchOpen={setSearchOpen}
+        onBack={onBack}
+        onShowMediaGallery={() => setShowMediaGallery(true)}
+        onShowSettings={() => setShowSettings(true)}
+        onStartPrivateChat={onStartPrivateChat}
+      />
 
-
-      {/* Suspension banner */}
-
-      {/* Header - fixed at top */}
-      <header className="flex-shrink-0 flex items-center gap-2.5 px-2 py-2.5 bg-card/95 backdrop-blur-lg border-b border-border/60 sticky top-0 z-20 shadow-[0_1px_3px_hsl(220_30%_20%/0.04)]">
-        <Button variant="ghost" size="icon" onClick={onBack} className="flex-shrink-0 rounded-full hover:bg-secondary">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        
-        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-white text-sm flex-shrink-0 shadow-sm">
-          {isCustomGroup ? regionName.charAt(0).toUpperCase() : regionCode}
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <h1 className="font-semibold text-foreground truncate text-[15px] leading-tight">
-            {isCustomGroup ? regionName : `${regionName} (${regionCode})`}
-          </h1>
-          <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mt-0.5">
-            <Users className="w-3 h-3 flex-shrink-0" />
-            <span>{memberCount} membres</span>
-            {typingUsers.length > 0 && (
-              <span className="text-primary font-medium animate-pulse truncate">• écrit…</span>
-            )}
-          </div>
-        </div>
-
-        <MuteButton conversationId={roomId} />
-
-        <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)} className="rounded-full hover:bg-secondary">
-          <Search className="w-5 h-5" />
-        </Button>
-        
-        <Sheet open={showMembers} onOpenChange={setShowMembers}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary">
-              <Users className="w-5 h-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="p-0 w-80">
-            <div className="flex items-center justify-between p-4 border-b border-border/60">
-              <h2 className="font-semibold text-[15px]">Membres</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowMembers(false)} className="rounded-full">
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <ScrollArea className="h-[calc(100vh-5rem)]">
-              <MembersList
-                regionCode={regionCode}
-                onStartPrivateChat={handleStartPrivateChat}
-                isCustomGroup={isCustomGroup}
-                roomId={roomId}
-              />
-            </ScrollArea>
-          </SheetContent>
-        </Sheet>
-
-        <Button variant="ghost" size="icon" onClick={() => setShowMediaGallery(true)} className="rounded-full hover:bg-secondary">
-          <Image className="w-5 h-5" />
-        </Button>
-
-        {isCustomGroup && (
-          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)} className="rounded-full hover:bg-secondary">
-            <Settings className="w-5 h-5" />
-          </Button>
-        )}
-      </header>
-
-      {/* Pinned messages banner */}
       <PinnedMessagesBanner
         pinnedMessages={pinnedMessages}
         onScrollToMessage={(messageId) => {
-          const el = document.getElementById(`message-${messageId}`);
-          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          document.getElementById(`message-${messageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }}
       />
 
-      {/* Group Settings Dialog */}
       {isCustomGroup && (
-        <GroupSettingsDialog
-          open={showSettings}
-          onOpenChange={setShowSettings}
-          roomId={roomId}
-          currentName={regionName}
-          onGroupDeleted={onBack}
-        />
+        <GroupSettingsDialog open={showSettings} onOpenChange={setShowSettings} roomId={roomId} currentName={regionName} onGroupDeleted={onBack} />
       )}
 
-      {/* Media Gallery */}
-      <MediaGallerySheet
-        roomId={roomId}
-        regionCode={regionCode}
-        isOpen={showMediaGallery}
-        onClose={() => setShowMediaGallery(false)}
-      />
+      <MediaGallerySheet roomId={roomId} regionCode={regionCode} isOpen={showMediaGallery} onClose={() => setShowMediaGallery(false)} />
 
-      {/* Search bar */}
       <MessageSearch
         isOpen={searchOpen}
-        onClose={() => {
-          setSearchOpen(false);
-          setSearchQuery('');
-          setSearchIndex(0);
-        }}
-        onSearch={(query) => {
-          setSearchQuery(query);
-          setSearchIndex(0);
-        }}
+        onClose={() => { setSearchOpen(false); setSearchQuery(''); setSearchIndex(0); }}
+        onSearch={(query) => { setSearchQuery(query); setSearchIndex(0); }}
         resultCount={searchResults.length}
         currentIndex={searchIndex}
-        onNavigate={handleSearchNavigate}
+        onNavigate={(direction) => {
+          if (searchResults.length === 0) return;
+          setSearchIndex(prev => direction === 'next' ? (prev + 1) % searchResults.length : (prev - 1 + searchResults.length) % searchResults.length);
+        }}
       />
       
-      <div 
-        className="flex-1 overflow-y-auto overscroll-contain" 
-        ref={scrollRef}
-        onScroll={handleScroll}
-      >
+      <div className="flex-1 overflow-y-auto overscroll-contain" ref={scrollRef} onScroll={handleScroll}>
         <div className="px-3 py-2">
-          {/* Welcome message */}
+          {/* Welcome */}
           <div className="text-center py-8">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-white text-2xl mb-4">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-primary-foreground text-2xl mb-4 shadow-md">
               {isCustomGroup ? regionName.charAt(0).toUpperCase() : regionCode}
             </div>
             <h2 className="font-display text-xl font-semibold mb-2">
@@ -424,27 +263,23 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
             </p>
           </div>
 
-          {/* Loading state */}
           {isLoading && (
             <div className="flex justify-center py-4">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
           )}
           
-          {/* Messages */}
           {messages.map((message, index) => {
             const isEphemeral = message.message_type === 'image' || message.message_type === 'video';
             const isPoll = message.message_type === 'poll';
             const poll = isPoll ? getPollForMessage(message.id) : undefined;
             const isOwn = message.sender_id === user?.id;
 
-            // Grouping: next message same sender within 2min
             const nextMsg = messages[index + 1];
             const isLastInGroup = !nextMsg ||
               nextMsg.sender_id !== message.sender_id ||
               new Date(nextMsg.created_at).getTime() - new Date(message.created_at).getTime() > 120000;
 
-            // Find last own message id for read receipt display
             const isLastOwnMessage = isOwn && (() => {
               for (let i = messages.length - 1; i >= 0; i--) {
                 if (messages[i].sender_id === user?.id) return messages[i].id === message.id;
@@ -452,16 +287,10 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
               return false;
             })();
 
-            // Render poll message
             if (isPoll && poll) {
               return (
                 <div key={message.id} id={`message-${message.id}`} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup ? 'mb-2' : 'mb-px'}`}>
-                  <PollMessage
-                    poll={poll}
-                    isOwn={isOwn}
-                    onVote={(pollId, optionId) => vote.mutate({ pollId, optionId })}
-                    onLock={isOwn ? (pollId) => lockPoll.mutate(pollId) : undefined}
-                  />
+                  <PollMessage poll={poll} isOwn={isOwn} onVote={(pollId, optionId) => vote.mutate({ pollId, optionId })} onLock={isOwn ? (pollId) => lockPoll.mutate(pollId) : undefined} />
                 </div>
               );
             }
@@ -487,8 +316,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
                 readers={getReaders(message.id)}
                 totalMembers={memberCount}
                 chatRoomId={roomId}
-                onReply={handleReply}
-                onAvatarClick={handleAvatarClick}
+                onReply={(msg) => setReplyTo(msg)}
+                onAvatarClick={(userId) => navigate(`/profile/${userId}`)}
                 onToggleReaction={handleToggleReaction}
               />
             );
@@ -504,12 +333,10 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
             return chatMsg;
           })}
 
-          {/* Typing indicator */}
           <TypingIndicator typingUsers={typingUsers} />
         </div>
       </div>
 
-      {/* Scroll to bottom button */}
       {showScrollButton && (
         <Button
           variant="secondary"
@@ -521,35 +348,25 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
         </Button>
       )}
 
-      {/* Reply preview */}
       {replyTo && (
         <div className="flex-shrink-0">
-          <MessageReply
-            replyTo={replyTo}
-            onCancelReply={() => setReplyTo(null)}
-          />
+          <MessageReply replyTo={replyTo} onCancelReply={() => setReplyTo(null)} />
         </div>
       )}
 
-      {/* Voice recorder */}
       {showVoiceRecorder && (
         <div className="flex-shrink-0 px-4 pb-2">
-          <VoiceRecorder
-            chatRoomId={roomId}
-            isPrivate={false}
-            onMessageSent={() => setShowVoiceRecorder(false)}
-          />
+          <VoiceRecorder chatRoomId={roomId} isPrivate={false} onMessageSent={() => setShowVoiceRecorder(false)} />
         </div>
       )}
 
-      {/* Input - fixed at bottom */}
       <div className="flex-shrink-0">
-        <ChatInput 
-          onSendMessage={handleSendMessage} 
+        <ChatInput
+          onSendMessage={handleSendMessage}
           chatRoomId={roomId}
           isPrivate={false}
           isSending={sendMessage.isPending}
-          onTyping={handleTyping}
+          onTyping={(hasText) => startTyping(hasText)}
           onFocus={handleInputFocus}
           onVoiceToggle={() => setShowVoiceRecorder(!showVoiceRecorder)}
           showVoiceButton
@@ -558,16 +375,8 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
         />
       </div>
 
-      {/* Snap auto-viewer for group ephemeral media */}
       {showSnapViewer && snapMessageId && (
-        <SnapAutoViewer
-          messageId={snapMessageId}
-          senderName={snapSenderName}
-          onClose={() => {
-            setShowSnapViewer(false);
-            setSnapMessageId(null);
-          }}
-        />
+        <SnapAutoViewer messageId={snapMessageId} senderName={snapSenderName} onClose={() => { setShowSnapViewer(false); setSnapMessageId(null); }} />
       )}
     </div>
   );
