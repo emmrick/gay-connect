@@ -920,7 +920,7 @@ const Help = ({ embedded = false }: HelpProps) => {
 
       {/* Bottom bar */}
       <div
-        className="border-t border-border bg-background px-4 py-3 flex-shrink-0"
+        className="border-t border-border/50 bg-card/80 backdrop-blur-xl px-4 py-3 flex-shrink-0"
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
       >
         {isWaiting && (
@@ -934,16 +934,16 @@ const Help = ({ embedded = false }: HelpProps) => {
           />
         )}
 
-        {/* Always-visible "Contact agent" button in chatbot phase */}
         {isChatbotPhase && !isBotTyping && (
-          <button
+          <motion.button
+            whileTap={{ scale: 0.97 }}
             onClick={handleContactAgent}
             disabled={createTicket.isPending}
-            className="w-full mb-2 flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors active:scale-[0.98]"
+            className="w-full mb-2 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-medium rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5 text-primary hover:from-primary/10 hover:to-accent/10 transition-all"
           >
             <Headphones className="w-3.5 h-3.5" />
             {createTicket.isPending ? 'Connexion en cours...' : 'Contacter un agent'}
-          </button>
+          </motion.button>
         )}
 
         <div className="max-w-lg mx-auto flex items-end gap-2">
@@ -962,7 +962,7 @@ const Help = ({ embedded = false }: HelpProps) => {
                 }
               }
             }}
-            className="flex-1 rounded-2xl bg-muted border-0 min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none text-sm leading-5"
+            className="flex-1 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50 min-h-[40px] max-h-[120px] py-[10px] px-4 resize-none text-sm leading-5 focus:border-primary/50"
             rows={1}
             disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
           />
