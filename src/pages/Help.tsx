@@ -33,6 +33,7 @@ interface ChatMessage {
   text: string;
   isTyping?: boolean;
   revealedLength?: number;
+  action?: 'credit_claim';
 }
 
 // Pending results for numbered suggestions
