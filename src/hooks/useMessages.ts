@@ -137,10 +137,11 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
             .eq('user_id', newMsg.sender_id)
             .maybeSingle();
 
+          const signedAvatar = await getSignedAvatarUrl(profile?.avatar_url);
           const newMessage: MessageWithProfile = {
             ...newMsg,
             senderUsername: profile?.username || 'Anonyme',
-            senderAvatar: profile?.avatar_url,
+            senderAvatar: signedAvatar,
           };
 
           queryClient.setQueryData<MessageWithProfile[]>(
