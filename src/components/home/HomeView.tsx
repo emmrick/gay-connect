@@ -8,7 +8,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useProfileVisits } from '@/hooks/useProfileVisits';
+import { useUnreadVisitsCount, useMarkVisitsSeen } from '@/hooks/useProfileVisits';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,8 +37,8 @@ const HomeView = ({
   const [activeSection, setActiveSection] = useState<HomeSection>('accueil');
   const { user } = useAuth();
 
-  const { data: visits } = useProfileVisits();
-  const visitsCount = visits?.length || 0;
+  const visitsCount = useUnreadVisitsCount();
+  const markVisitsSeen = useMarkVisitsSeen();
 
   const { data: reactionsCount = 0 } = useQuery({
     queryKey: ['profile-reactions-count', user?.id],
@@ -74,7 +74,11 @@ const HomeView = ({
   return (
     <div className="pb-4">
       <div className="px-4 py-4 space-y-4">
-        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as HomeSection)}>
+        <Tabs value={activeSection} onValueChange={(v) => {
+          const section = v as HomeSection;
+          setActiveSection(section);
+          if (section === 'visites') markVisitsSeen();
+        }}>
           <div className="flex items-center gap-2">
             <TabsList className="flex-1 grid grid-cols-4 h-11 p-1 bg-card/80 backdrop-blur-xl border border-border/40 rounded-2xl">
               <TabsTrigger
