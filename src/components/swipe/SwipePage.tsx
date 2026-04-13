@@ -14,6 +14,7 @@ import { useProfileBoost } from '@/hooks/useProfileBoost';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface SwipePageProps {
   onStartChat: (userId: string) => void;
@@ -473,6 +474,7 @@ const LikedProfileCard = ({
 }) => {
   const navigate = useNavigate();
   const { data: profile, isLoading } = useProfile(userId);
+  const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
 
   if (isLoading) {
     return (
