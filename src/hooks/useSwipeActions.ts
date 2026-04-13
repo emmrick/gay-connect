@@ -178,12 +178,17 @@ export const useSwipeActions = () => {
       // Filter out profiles with no photo at all (no avatar and no gallery photos)
       profilesList = profilesList.filter(p => p.avatar_url || (p._photos && p._photos.length > 0));
 
-      // Resolve avatar URLs to signed URLs
+      // Resolve avatar URLs and photo URLs to signed URLs
       if (profilesList.length > 0) {
         await Promise.all(
           profilesList.map(async (p) => {
             if (p.avatar_url) {
               p.avatar_url = await getSignedAvatarUrl(p.avatar_url);
+            }
+            if (p._photos && p._photos.length > 0) {
+              p._photos = await Promise.all(
+                p._photos.map(url => getSignedAvatarUrl(url).then(signed => signed || url))
+              );
             }
           })
         );

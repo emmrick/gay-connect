@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useCallback, useMemo } from 'react';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface ProfileVisit {
   id: string;
@@ -57,17 +58,20 @@ export const useProfileVisits = () => {
 
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
 
-      return data.map(visit => {
+      // Sign avatar URLs
+      const results = await Promise.all(data.map(async visit => {
         const profile = profileMap.get(visit.visitor_user_id);
+        const signedAvatar = profile?.avatar_url ? await getSignedAvatarUrl(profile.avatar_url) : null;
         return {
           id: visit.id,
           visitor_user_id: visit.visitor_user_id,
           visited_at: visit.visited_at,
           visitor_username: profile?.username || 'Anonyme',
-          visitor_avatar: profile?.avatar_url || null,
+          visitor_avatar: signedAvatar,
           visitor_age: profile?.age || null,
         };
-      });
+      }));
+      return results;
     },
     enabled: !!user?.id,
   });
