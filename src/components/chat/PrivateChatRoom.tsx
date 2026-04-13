@@ -385,7 +385,7 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
         maxAge={contactCheck?.maxAge ?? 99}
         onReactToProfile={() => {
           setShowAgeFilterDialog(false);
-          navigate(`/member/${otherUserId}`);
+          navigate(`/profile/${otherUserId}`);
         }}
       />
 

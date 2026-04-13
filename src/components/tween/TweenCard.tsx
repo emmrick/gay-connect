@@ -82,7 +82,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
         <div className="flex gap-3">
           <Avatar
             className="w-10 h-10 flex-shrink-0 cursor-pointer ring-2 ring-primary/10 hover:ring-primary/25 transition-all"
-            onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/member/${profile.user_id}`); }}
+            onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/profile/${profile.user_id}`); }}
           >
             <AvatarImage src={resolvedAvatar || ''} className="object-cover" />
             <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
@@ -95,7 +95,7 @@ const TweenCard = ({ tween }: TweenCardProps) => {
               <div className="flex items-center gap-2 min-w-0">
                 <span
                   className="font-bold text-sm truncate cursor-pointer hover:text-primary transition-colors"
-                  onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/member/${profile.user_id}`); }}
+                  onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/profile/${profile.user_id}`); }}
                 >{profile?.username || 'Anonyme'}</span>
                 <span className="text-xs text-muted-foreground/60 flex-shrink-0">· {timeAgo}</span>
               </div>
