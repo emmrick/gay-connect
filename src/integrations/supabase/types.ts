@@ -819,6 +819,27 @@ export type Database = {
         }
         Relationships: []
       }
+      chatbot_credit_claims: {
+        Row: {
+          created_at: string
+          credits_given: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_given?: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_given?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contact_age_exceptions: {
         Row: {
           allowed_user_id: string

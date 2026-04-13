@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset, MessageSquareText, RotateCcw, Clock, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Headphones, HelpCircle, X, ArrowLeft, Send, Bot, Loader2, Star, XCircle, BookOpen, MessageCircle, Shield, CreditCard, Users, Settings, Sparkles, LifeBuoy, Headset, MessageSquareText, RotateCcw, Clock, AlertTriangle, Gift, Coins } from 'lucide-react';
+import { addCreditsToUser } from '@/hooks/useCredits';
 import { useEstimatedWaitTime } from '@/hooks/useEstimatedWaitTime';
 import { Progress } from '@/components/ui/progress';
 import { playNotificationSoundStandalone } from '@/hooks/useNotificationSound';
@@ -33,6 +34,7 @@ interface ChatMessage {
   text: string;
   isTyping?: boolean;
   revealedLength?: number;
+  action?: 'credit_claim';
 }
 
 // Pending results for numbered suggestions
@@ -138,6 +140,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   
   const [noMatchCount, setNoMatchCount] = useState(0);
   const [isBotTyping, setIsBotTyping] = useState(false);
+  const [isClaimingCredits, setIsClaimingCredits] = useState(false);
   const [waitStartTime, setWaitStartTime] = useState<number | null>(() => {
     try {
       const saved = localStorage.getItem('gc-help-wait-start');
@@ -373,6 +376,71 @@ const Help = ({ embedded = false }: HelpProps) => {
     addBotMessage(`**${entry.question}**\n\n${entry.answer}${linkPart}\n\nCette réponse t'a aidé ? Tu peux me poser une **autre question** ou taper **"agent"** pour contacter un conseiller. 😊\n\n📚 Consulte aussi le **Centre d'aide** pour plus d'articles : [LINK:/aide]`);
   }, [findEntryById, addBotMessage]);
 
+  // Credit keywords detection
+  const isCreditRequest = useCallback((msg: string) => {
+    const lower = msg.toLowerCase();
+    const creditKeywords = [
+      'crédit', 'credit', 'crédits', 'credits',
+      'donner des crédits', 'avoir des crédits', 'obtenir des crédits',
+      'demande de crédit', 'besoin de crédit', 'plus de crédit',
+      'pas assez de crédit', 'manque de crédit', 'donner crédit',
+      'je veux des crédits', 'j\'ai plus de crédit', 'j\'ai pas de crédit',
+      'recharger', 'recharge', 'solde', 'gratuit',
+    ];
+    return creditKeywords.some(kw => lower.includes(kw));
+  }, []);
+
+  // Handle credit claim from chatbot
+  const handleCreditClaim = useCallback(async () => {
+    if (!user?.id || isClaimingCredits) return;
+    setIsClaimingCredits(true);
+
+    try {
+      // Check if user already claimed within the last 7 days
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const { data: recentClaims, error: checkError } = await supabase
+        .from('chatbot_credit_claims' as any)
+        .select('id, created_at')
+        .eq('user_id', user.id)
+        .gte('created_at', oneWeekAgo.toISOString())
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      if (recentClaims && recentClaims.length > 0) {
+        // Already claimed this week
+        addBotMessage(
+          `Je suis désolé, vous avez déjà bénéficié de crédits gratuits récemment. 😔\n\nLes crédits bonus via le chatbot sont délivrés **à titre exceptionnel** et sont limités à **une fois par semaine**.\n\nPour toute autre demande de crédits, veuillez **contacter un agent** en tapant **"agent"**.\n\nVous pouvez aussi gagner des crédits via :\n• La connexion quotidienne\n• Le parrainage d'amis\n• La complétion de votre profil\n\n[LINK:/credits]`
+        );
+        setIsClaimingCredits(false);
+        return;
+      }
+
+      // Grant 5 bonus credits
+      const result = await addCreditsToUser(user.id, 5, 'bonus', 'credit_claim', 'Crédits bonus offerts via le chatbot');
+      if (!result.success) throw new Error(result.error);
+
+      // Record the claim
+      await supabase
+        .from('chatbot_credit_claims' as any)
+        .insert({ user_id: user.id, credits_given: 5 } as any);
+
+      addBotMessage(
+        `D'accord, je vous envoie **5 crédits Bonus** ! 🎁✨\n\nLes crédits ont été ajoutés à votre compte. Vous pouvez vérifier votre solde dans la section Crédits.\n\n⚠️ **Attention** : les crédits bonus sont délivrés **à titre exceptionnel** et ne sont pas souvent disponibles. Cette offre est limitée à **une fois par semaine**.\n\n[LINK:/credits]`
+      );
+      toast.success('🎁 5 crédits bonus ajoutés à votre compte !');
+    } catch (err: any) {
+      console.error('Credit claim error:', err);
+      addBotMessage(
+        `Oups, une erreur est survenue lors de l'attribution des crédits. 😕\n\nVeuillez réessayer plus tard ou **contacter un agent** en tapant **"agent"**.`
+      );
+    } finally {
+      setIsClaimingCredits(false);
+    }
+  }, [user?.id, isClaimingCredits, addBotMessage]);
+
   // Initialize chatbot on first load
   useEffect(() => {
     if (hasInitializedRef.current) return;
@@ -406,6 +474,16 @@ const Help = ({ embedded = false }: HelpProps) => {
     // Check if user wants to contact an agent
     if (lowerMsg === 'agent' || lowerMsg.includes('contacter un agent') || lowerMsg.includes('parler agent') || lowerMsg.includes('conseiller')) {
       handleContactAgent();
+      return;
+    }
+
+    // Check if user is asking for credits
+    if (isCreditRequest(lowerMsg)) {
+      setChatMessages(prev => [...prev, {
+        type: 'bot',
+        text: `💳 La demande de crédits via le chatbot n'est pas disponible directement. Vous devez contacter le **service client** pour cela.\n\nToutefois, dans une démarche d'économie et de générosité de notre plateforme, et étant donné que nous pouvons rencontrer des soucis techniques, nous vous accordons **5 crédits bonus** exceptionnels. 🎁\n\nCliquez sur le bouton ci-dessous pour réclamer vos crédits :`,
+        action: 'credit_claim',
+      }]);
       return;
     }
 
@@ -453,7 +531,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         );
       }
     }
-  }, [freeText, isBotTyping, chatMessages, allFaqArticles, allCategories, showAnswer, addBotMessage, noMatchCount]);
+  }, [freeText, isBotTyping, chatMessages, allFaqArticles, allCategories, showAnswer, addBotMessage, noMatchCount, isCreditRequest]);
 
   // Contact agent
   const handleContactAgent = async () => {
@@ -807,16 +885,41 @@ const Help = ({ embedded = false }: HelpProps) => {
                       <Bot className="w-3.5 h-3.5 text-primary" />
                     </div>
                   )}
-                  <div className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
-                    msg.type === 'user'
-                      ? "bg-primary text-primary-foreground rounded-br-md shadow-primary/10"
-                      : "bg-card/80 backdrop-blur-sm border border-border/50 text-foreground rounded-bl-md"
-                  )}>
-                    <p className="whitespace-pre-line">
-                      <BoldText text={msg.isTyping ? msg.text.slice(0, msg.revealedLength || 0) : msg.text} />
-                      {msg.isTyping && <span className="inline-block w-0.5 h-4 bg-foreground/70 animate-pulse ml-0.5 align-text-bottom" />}
-                    </p>
+                  <div className="max-w-[80%]">
+                    <div className={cn(
+                      "rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
+                      msg.type === 'user'
+                        ? "bg-primary text-primary-foreground rounded-br-md shadow-primary/10"
+                        : "bg-card/80 backdrop-blur-sm border border-border/50 text-foreground rounded-bl-md"
+                    )}>
+                      <p className="whitespace-pre-line">
+                        <BoldText text={msg.isTyping ? msg.text.slice(0, msg.revealedLength || 0) : msg.text} />
+                        {msg.isTyping && <span className="inline-block w-0.5 h-4 bg-foreground/70 animate-pulse ml-0.5 align-text-bottom" />}
+                      </p>
+                    </div>
+                    {/* Credit claim button */}
+                    {msg.action === 'credit_claim' && !msg.isTyping && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-2"
+                      >
+                        <Button
+                          onClick={handleCreditClaim}
+                          disabled={isClaimingCredits}
+                          className="w-full gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md"
+                          size="sm"
+                        >
+                          {isClaimingCredits ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Gift className="w-4 h-4" />
+                          )}
+                          {isClaimingCredits ? 'Attribution en cours...' : '🎁 Réclamer 5 crédits bonus'}
+                        </Button>
+                      </motion.div>
+                    )}
                   </div>
                 </>
               )}
