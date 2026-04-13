@@ -6,6 +6,7 @@ import { fr } from 'date-fns/locale';
 import { Heart, Clock, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface ReactionItem {
   id: string;
@@ -57,8 +58,9 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
 
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
 
-      return (data as any[]).map(reaction => {
+      const results = await Promise.all((data as any[]).map(async reaction => {
         const profile = profileMap.get(reaction.reactor_user_id);
+        const signedAvatar = profile?.avatar_url ? await getSignedAvatarUrl(profile.avatar_url) : null;
         return {
           id: reaction.id,
           reactor_user_id: reaction.reactor_user_id,
@@ -66,9 +68,10 @@ const ReactionsTab = ({ onViewProfile }: ReactionsTabProps) => {
           created_at: reaction.created_at,
           is_seen: reaction.is_seen,
           reactor_username: profile?.username || 'Anonyme',
-          reactor_avatar: profile?.avatar_url || null,
+          reactor_avatar: signedAvatar,
         };
-      });
+      }));
+      return results;
     },
     enabled: !!user?.id,
   });
