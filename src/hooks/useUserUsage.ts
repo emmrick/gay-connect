@@ -21,10 +21,9 @@ interface UserUsage {
 
 export const useUserUsage = () => {
   const { user } = useAuth();
-  const { isPremium } = useSubscription();
   const queryClient = useQueryClient();
 
-  const limits = isPremium ? PREMIUM_LIMITS : FREE_LIMITS;
+  const limits = FREE_LIMITS;
 
   // Fetch or create user usage record
   const query = useQuery({
