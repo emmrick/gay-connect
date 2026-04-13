@@ -18,6 +18,12 @@ cleanupOutdatedCaches();
 // Precache files injected by workbox (the manifest will be injected here)
 precacheAndRoute(self.__WB_MANIFEST);
 
+// Never cache OAuth redirect paths
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/~oauth'),
+  new NetworkFirst({ cacheName: 'oauth-bypass' })
+);
+
 // Cache Supabase API calls with NetworkFirst strategy
 registerRoute(
   ({ url }) => url.origin.includes('supabase.co'),
