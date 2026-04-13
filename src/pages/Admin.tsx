@@ -97,6 +97,13 @@ const Admin = () => {
   const { data: activeTask } = useActiveTask();
   const autoOpenedReportRef = useRef<string | null>(null);
 
+  // Clean URL params after reading
+  useEffect(() => {
+    if (searchParams.get('section')) {
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+
   const { data: isModerator } = useQuery({
     queryKey: ['is-moderator', user?.id],
     queryFn: async () => {
