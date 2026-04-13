@@ -74,7 +74,11 @@ const HomeView = ({
   return (
     <div className="pb-4">
       <div className="px-4 py-4 space-y-4">
-        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as HomeSection)}>
+        <Tabs value={activeSection} onValueChange={(v) => {
+          const section = v as HomeSection;
+          setActiveSection(section);
+          if (section === 'visites') markVisitsSeen();
+        }}>
           <div className="flex items-center gap-2">
             <TabsList className="flex-1 grid grid-cols-4 h-11 p-1 bg-card/80 backdrop-blur-xl border border-border/40 rounded-2xl">
               <TabsTrigger
