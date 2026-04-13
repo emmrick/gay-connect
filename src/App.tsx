@@ -33,7 +33,7 @@ import DossierAccessPopup from "@/components/moderation/DossierAccessPopup";
 import ProfileSelectorModal from "@/components/couple/ProfileSelectorModal";
 
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
-import CookieConsentBanner from "@/components/CookieConsentBanner";
+
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 
 import MaintenanceGuard from "@/components/maintenance/MaintenanceGuard";
