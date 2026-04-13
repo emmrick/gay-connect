@@ -9,10 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState } from 'react';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import AdminCommandBar from './AdminCommandBar';
 
@@ -116,14 +113,8 @@ const groupConfig: Record<NavGroup, { label: string; icon: string }> = {
 const groupOrder: NavGroup[] = ['tasks', 'moderation', 'users', 'finances', 'communication', 'config', 'logs'];
 
 const AdminSidebar = ({ 
-  activeSection, 
-  onSectionChange, 
-  pendingReports = 0,
-  blockedCount = 0,
-  pendingPurchases = 0,
-  pendingVerifications = 0,
-  isAdmin = false,
-  modPermissions,
+  activeSection, onSectionChange, pendingReports = 0, blockedCount = 0,
+  pendingPurchases = 0, pendingVerifications = 0, isAdmin = false, modPermissions,
 }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -152,11 +143,11 @@ const AdminSidebar = ({
       <button
         onClick={() => onSectionChange(item.id)}
         className={cn(
-          "relative w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 group",
+          "relative w-full flex items-center gap-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 group",
           collapsed ? "justify-center p-2.5" : "px-3 py-[7px]",
           isActive 
-            ? "bg-primary/10 text-primary" 
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            ? "bg-primary/10 text-primary shadow-sm" 
+            : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
         )}
       >
         <Icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-primary" : "group-hover:text-foreground")} />
@@ -164,17 +155,17 @@ const AdminSidebar = ({
           <>
             <span className="flex-1 text-left truncate">{item.label}</span>
             {item.badge !== undefined && item.badge > 0 && (
-              <span className="flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 bg-destructive text-destructive-foreground">
+              <span className="flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 bg-destructive text-destructive-foreground shadow-sm">
                 {item.badge}
               </span>
             )}
           </>
         )}
         {collapsed && item.badge !== undefined && item.badge > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full shadow-sm" />
         )}
         {isActive && !collapsed && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.3)]" />
         )}
       </button>
     );
@@ -184,8 +175,7 @@ const AdminSidebar = ({
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
           <TooltipContent side="right" className="text-xs font-medium">
-            {item.label}
-            {item.badge ? ` (${item.badge})` : ''}
+            {item.label}{item.badge ? ` (${item.badge})` : ''}
           </TooltipContent>
         </Tooltip>
       );
@@ -195,48 +185,42 @@ const AdminSidebar = ({
 
   return (
     <TooltipProvider>
-      <div 
-        className={cn(
-          "h-screen border-r flex flex-col transition-all duration-200 bg-card border-border/40",
-          collapsed ? "w-[56px]" : "w-[240px]"
-        )}
-      >
+      <div className={cn(
+        "h-screen border-r flex flex-col transition-all duration-200 bg-card/80 backdrop-blur-xl border-border/30",
+        collapsed ? "w-[56px]" : "w-[240px]"
+      )}>
         {/* Header */}
         <div className={cn(
-          "flex items-center h-14 px-3 border-b border-border/40",
+          "flex items-center h-14 px-3 border-b border-border/30",
           collapsed ? "justify-center" : "justify-between"
         )}>
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center">
                 <Shield className="w-3.5 h-3.5 text-primary" />
               </div>
-              <span className="font-semibold text-sm">{isAdmin ? 'Admin' : 'Modération'}</span>
+              <span className="font-display font-semibold text-sm">{isAdmin ? 'Admin' : 'Modération'}</span>
             </div>
           )}
           <Button 
-            variant="ghost" 
-            size="icon"
+            variant="ghost" size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground flex-shrink-0"
+            className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground flex-shrink-0"
           >
             {collapsed ? <Menu className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
           </Button>
         </div>
 
-        {/* Search (desktop expanded only) */}
+        {/* Search */}
         {!collapsed && (
-          <div className="px-2 py-2 border-b border-border/40">
+          <div className="px-2 py-2 border-b border-border/30">
             <AdminCommandBar onNavigate={onSectionChange} className="w-full" />
           </div>
         )}
 
-        {/* Dashboard button */}
-        <div className={cn("border-b border-border/40", collapsed ? "p-1.5" : "p-2")}>
-          <NavButton
-            item={{ id: 'dashboard', label: 'Dashboard', icon: Home, group: 'tasks' }}
-            isActive={activeSection === 'dashboard'}
-          />
+        {/* Dashboard */}
+        <div className={cn("border-b border-border/30", collapsed ? "p-1.5" : "p-2")}>
+          <NavButton item={{ id: 'dashboard', label: 'Dashboard', icon: Home, group: 'tasks' }} isActive={activeSection === 'dashboard'} />
         </div>
 
         {/* Navigation */}
@@ -249,12 +233,12 @@ const AdminSidebar = ({
                 <div key={group} className={groupIndex > 0 ? "mt-3" : ""}>
                   {!collapsed ? (
                     <div className="flex items-center gap-1.5 px-3 mb-1">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
                         {groupConfig[group]?.label}
                       </span>
                     </div>
                   ) : (
-                    groupIndex > 0 && <div className="h-px bg-border/40 mx-1.5 my-2" />
+                    groupIndex > 0 && <div className="h-px bg-border/25 mx-1.5 my-2" />
                   )}
                   <div className="space-y-0.5">
                     {items.map((item) => (
@@ -268,28 +252,18 @@ const AdminSidebar = ({
         </ScrollArea>
 
         {/* Footer */}
-        <div className={cn("border-t border-border/40", collapsed ? "p-1.5" : "p-2")}>
+        <div className={cn("border-t border-border/30", collapsed ? "p-1.5" : "p-2")}>
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="w-full h-8 rounded-md text-muted-foreground hover:text-foreground"
-                  onClick={() => window.history.back()}
-                >
+                <Button variant="ghost" size="icon" className="w-full h-8 rounded-lg text-muted-foreground hover:text-foreground" onClick={() => window.history.back()}>
                   <LogOut className="w-3.5 h-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right" className="text-xs">Quitter</TooltipContent>
             </Tooltip>
           ) : (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs h-8"
-              onClick={() => window.history.back()}
-            >
+            <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs h-8" onClick={() => window.history.back()}>
               <LogOut className="w-3.5 h-3.5" />
               Quitter
             </Button>
