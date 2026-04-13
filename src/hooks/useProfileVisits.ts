@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 
 interface ProfileVisit {
   id: string;
@@ -10,6 +10,22 @@ interface ProfileVisit {
   visitor_username: string;
   visitor_avatar: string | null;
   visitor_age: number | null;
+}
+
+const VISITS_SEEN_KEY = 'visits_last_seen_at';
+
+function getLastSeenAt(userId: string): string | null {
+  try {
+    return localStorage.getItem(`${VISITS_SEEN_KEY}_${userId}`);
+  } catch {
+    return null;
+  }
+}
+
+function setLastSeenAt(userId: string) {
+  try {
+    localStorage.setItem(`${VISITS_SEEN_KEY}_${userId}`, new Date().toISOString());
+  } catch {}
 }
 
 export const useProfileVisits = () => {
@@ -82,6 +98,32 @@ export const useProfileVisits = () => {
   }, [user?.id, queryClient]);
 
   return query;
+};
+
+/** Returns the count of unread visits (since the user last opened the Visits tab) */
+export const useUnreadVisitsCount = () => {
+  const { user } = useAuth();
+  const { data: visits } = useProfileVisits();
+
+  const unreadCount = useMemo(() => {
+    if (!user?.id || !visits?.length) return 0;
+    const lastSeen = getLastSeenAt(user.id);
+    if (!lastSeen) return visits.length; // Never opened → all are new
+    return visits.filter(v => new Date(v.visited_at) > new Date(lastSeen)).length;
+  }, [user?.id, visits]);
+
+  return unreadCount;
+};
+
+/** Mark all visits as seen (call when user opens the Visits tab) */
+export const useMarkVisitsSeen = () => {
+  const { user } = useAuth();
+
+  return useCallback(() => {
+    if (user?.id) {
+      setLastSeenAt(user.id);
+    }
+  }, [user?.id]);
 };
 
 export const useRecordProfileVisit = () => {
