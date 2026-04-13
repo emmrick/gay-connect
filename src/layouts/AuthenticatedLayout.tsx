@@ -12,6 +12,7 @@ import { useIsAdmin } from '@/hooks/useAdmin';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
+import UpdateDetector from '@/components/UpdateDetector';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import SuspensionBanner from '@/components/moderation/SuspensionBanner';
 import AdBanner from '@/components/ads/AdBanner';
@@ -145,12 +146,14 @@ const AuthenticatedLayout = () => {
 
   return (
     <div
-      className="h-dvh h-screen bg-background flex flex-col overflow-hidden"
+      className="h-dvh h-screen bg-background flex flex-col overflow-hidden relative"
       style={{
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         paddingRight: 'env(safe-area-inset-right, 0px)',
       }}
     >
+      <UpdateDetector />
+
       {/* Verification Reminder Banner */}
       <Suspense fallback={null}>
         <VerificationReminderBanner />
