@@ -17,6 +17,9 @@ import LowCreditsAlert from "@/components/credits/LowCreditsAlert";
 import { CreditDeductionProvider } from "@/components/credits/CreditDeductionAnimation";
 import { AgeConfirmationModal } from "@/components/AgeConfirmationModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
+import CookieConsentBanner from "@/components/cookie/CookieConsentBanner";
+import { useCookieScripts } from "@/hooks/useCookieScripts";
 
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
@@ -30,7 +33,7 @@ import DossierAccessPopup from "@/components/moderation/DossierAccessPopup";
 import ProfileSelectorModal from "@/components/couple/ProfileSelectorModal";
 
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
-import CookieConsentBanner from "@/components/CookieConsentBanner";
+
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 
 import MaintenanceGuard from "@/components/maintenance/MaintenanceGuard";
@@ -184,7 +187,6 @@ const AuthenticatedApp = () => {
                       <OnboardingGuideDialog />
                       <GlobalMissionOverlay />
                       <DossierAccessPopup />
-                      <CookieConsentBanner />
                       <ProfileSelectorModal />
                     </>
                   </TooltipProvider>
@@ -198,15 +200,24 @@ const AuthenticatedApp = () => {
   );
 };
 
+const CookieScriptLoader = () => {
+  useCookieScripts();
+  return null;
+};
+
 const AppContent = () => {
   useGlobalErrorHandler();
 
   return (
-    <AuthProvider>
-      <AppLockGate>
-        <AuthenticatedApp />
-      </AppLockGate>
-    </AuthProvider>
+    <CookieConsentProvider>
+      <CookieScriptLoader />
+      <AuthProvider>
+        <AppLockGate>
+          <AuthenticatedApp />
+        </AppLockGate>
+      </AuthProvider>
+      <CookieConsentBanner />
+    </CookieConsentProvider>
   );
 };
 

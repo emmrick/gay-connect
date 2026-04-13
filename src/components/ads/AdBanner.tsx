@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAds, useAdClick } from '@/hooks/useAds';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCookieConsent } from '@/contexts/CookieConsentContext';
 import { cn } from '@/lib/utils';
 
 interface AdBannerProps {
@@ -17,6 +18,7 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
   const { currentAd, isAdFree, rotationIndex, getAdByOffset } = useAds(placement);
   const handleClick = useAdClick();
   const { user } = useAuth();
+  const { preferences, hasConsented } = useCookieConsent();
   const [dismissed, setDismissed] = useState(false);
   const impressionTracked = useRef(new Set<string>());
 
@@ -43,6 +45,8 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
   // Reset dismissed on rotation
   useEffect(() => { setDismissed(false); }, [rotationIndex]);
 
+  // Don't show ads if user hasn't consented to advertising cookies
+  if (!hasConsented || !preferences.advertising) return null;
   if (isAdFree || !ad || dismissed) return null;
 
   if (placement === 'compact') {
