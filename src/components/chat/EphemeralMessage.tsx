@@ -13,13 +13,14 @@ interface EphemeralMessageProps {
   messageId: string;
   messageType: 'image' | 'video';
   senderName: string;
+  senderAvatar?: string | null;
   isOwn: boolean;
   chatRoomId?: string;
   recipientId?: string;
   allEphemeralMessageIds?: string[];
 }
 
-const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomId, recipientId }: EphemeralMessageProps) => {
+const EphemeralMessage = ({ messageId, messageType, senderName, senderAvatar, isOwn, chatRoomId, recipientId }: EphemeralMessageProps) => {
   const [showMedia, setShowMedia] = useState(false);
   const { media, isLoading, markAsViewed } = useEphemeralMedia(messageId);
   const { user } = useAuth();
@@ -99,6 +100,7 @@ const EphemeralMessage = ({ messageId, messageType, senderName, isOwn, chatRoomI
       type: messageType,
       src: media.signedUrl,
       senderName,
+      senderAvatar,
       duration: media.view_duration,
       isOwn,
       onViewed: handleViewed,

@@ -198,6 +198,7 @@ const ChatMessage = ({
                 messageId={message.id}
                 messageType={message.type as 'image' | 'video'}
                 senderName={message.senderName}
+                senderAvatar={message.senderAvatar}
                 isOwn={isOwn}
                 chatRoomId={chatRoomId}
               />

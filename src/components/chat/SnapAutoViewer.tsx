@@ -10,6 +10,7 @@ import EphemeralMediaViewer from './EphemeralMediaViewer';
 interface SnapAutoViewerProps {
   messageId: string;
   senderName: string;
+  senderAvatar?: string | null;
   onClose: () => void;
 }
 
@@ -17,7 +18,7 @@ interface SnapAutoViewerProps {
  * Auto-opened ephemeral viewer when entering a conversation with a pending snap.
  * Handles viewing, marking as viewed, and screenshot detection.
  */
-const SnapAutoViewer = ({ messageId, senderName, onClose }: SnapAutoViewerProps) => {
+const SnapAutoViewer = ({ messageId, senderName, senderAvatar, onClose }: SnapAutoViewerProps) => {
   const { media, isLoading, markAsViewed } = useEphemeralMedia(messageId);
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -77,6 +78,7 @@ const SnapAutoViewer = ({ messageId, senderName, onClose }: SnapAutoViewerProps)
       type={media.media_type as 'image' | 'video'}
       src={media.signedUrl}
       senderName={senderName}
+      senderAvatar={senderAvatar}
       duration={media.view_duration}
       mediaId={media.id}
       autoStart={true}

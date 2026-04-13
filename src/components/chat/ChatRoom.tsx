@@ -54,6 +54,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
   const [showSnapViewer, setShowSnapViewer] = useState(false);
   const [snapMessageId, setSnapMessageId] = useState<string | null>(null);
   const [snapSenderName, setSnapSenderName] = useState('');
+  const [snapSenderAvatar, setSnapSenderAvatar] = useState<string | null>(null);
   
   const hasOverlayOpen = showMembers || showMediaGallery || showSettings;
   useMobileNavigation({ onBack, enabled: !hasOverlayOpen });
@@ -78,6 +79,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
       setSnapMessageId(groupSnap.messageId);
       const senderMsg = messages.find(m => m.sender_id === groupSnap.senderId);
       setSnapSenderName(senderMsg?.senderUsername || 'Un membre');
+      setSnapSenderAvatar(senderMsg?.senderAvatar || null);
       setShowSnapViewer(true);
     }
   }, [groupSnap?.messageId]);
@@ -376,7 +378,7 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
       </div>
 
       {showSnapViewer && snapMessageId && (
-        <SnapAutoViewer messageId={snapMessageId} senderName={snapSenderName} onClose={() => { setShowSnapViewer(false); setSnapMessageId(null); }} />
+        <SnapAutoViewer messageId={snapMessageId} senderName={snapSenderName} senderAvatar={snapSenderAvatar} onClose={() => { setShowSnapViewer(false); setSnapMessageId(null); }} />
       )}
     </div>
   );
