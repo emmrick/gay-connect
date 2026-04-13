@@ -8,7 +8,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useProfileVisits } from '@/hooks/useProfileVisits';
+import { useUnreadVisitsCount, useMarkVisitsSeen } from '@/hooks/useProfileVisits';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,8 +37,8 @@ const HomeView = ({
   const [activeSection, setActiveSection] = useState<HomeSection>('accueil');
   const { user } = useAuth();
 
-  const { data: visits } = useProfileVisits();
-  const visitsCount = visits?.length || 0;
+  const visitsCount = useUnreadVisitsCount();
+  const markVisitsSeen = useMarkVisitsSeen();
 
   const { data: reactionsCount = 0 } = useQuery({
     queryKey: ['profile-reactions-count', user?.id],
