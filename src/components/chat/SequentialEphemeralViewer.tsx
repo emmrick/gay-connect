@@ -7,6 +7,7 @@ export interface EphemeralMediaItem {
   type: 'image' | 'video';
   src: string;
   senderName: string;
+  senderAvatar?: string | null;
   duration: number;
   isOwn: boolean;
   onViewed: () => void;
@@ -68,6 +69,7 @@ const SequentialEphemeralViewer = ({
       type={currentItem.type}
       src={currentItem.src}
       senderName={currentItem.senderName}
+      senderAvatar={currentItem.senderAvatar}
       duration={currentItem.duration}
       mediaId={currentItem.mediaId}
       autoStart={isAutoStart}
