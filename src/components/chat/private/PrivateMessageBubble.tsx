@@ -105,6 +105,7 @@ const PrivateMessageBubble = ({
             messageId={message.id}
             messageType={message.message_type as 'image' | 'video'}
             senderName={message.senderUsername}
+            senderAvatar={isOwn ? undefined : otherUserProfile?.avatar_url}
             isOwn={isOwn}
             recipientId={otherUserId}
           />
