@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, Loader2
@@ -70,7 +70,12 @@ const Admin = () => {
   const { data: stats } = useReportStats();
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>(() => {
+    // 1. Check URL ?section= param (from GlobalMissionOverlay navigate)
+    const fromUrl = searchParams.get('section');
+    if (fromUrl) return fromUrl as AdminSection;
+    // 2. Check sessionStorage (from TaskQueuePopup)
     const saved = sessionStorage.getItem('admin-navigate-section');
     if (saved) {
       sessionStorage.removeItem('admin-navigate-section');
@@ -91,6 +96,13 @@ const Admin = () => {
   const [selectedReport, setSelectedReport] = useState<ReportWithProfiles | null>(null);
   const { data: activeTask } = useActiveTask();
   const autoOpenedReportRef = useRef<string | null>(null);
+
+  // Clean URL params after reading
+  useEffect(() => {
+    if (searchParams.get('section')) {
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
 
   const { data: isModerator } = useQuery({
     queryKey: ['is-moderator', user?.id],
