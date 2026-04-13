@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { Loader2 } from 'lucide-react';
 
 interface MentionUser {
