@@ -201,15 +201,24 @@ const AuthenticatedApp = () => {
   );
 };
 
+const CookieScriptLoader = () => {
+  useCookieScripts();
+  return null;
+};
+
 const AppContent = () => {
   useGlobalErrorHandler();
 
   return (
-    <AuthProvider>
-      <AppLockGate>
-        <AuthenticatedApp />
-      </AppLockGate>
-    </AuthProvider>
+    <CookieConsentProvider>
+      <CookieScriptLoader />
+      <AuthProvider>
+        <AppLockGate>
+          <AuthenticatedApp />
+        </AppLockGate>
+      </AuthProvider>
+      <CookieConsentBanner />
+    </CookieConsentProvider>
   );
 };
 
