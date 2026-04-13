@@ -38,6 +38,7 @@ const TASK_TYPE_SECTIONS: Record<string, string> = {
   identity_verification: 'verification',
   report_review: 'reports',
   content_moderation: 'moderation',
+  ad_review: 'ads',
   user_suspension: 'users',
   credit_management: 'credits',
   withdrawal_management: 'credits',
