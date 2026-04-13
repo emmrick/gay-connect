@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, AlertTriangle, Timer, BanIcon, Sparkles, Zap } from 'lucide-react';
+import { Loader2, AlertTriangle, Timer, BanIcon, Sparkles, Zap, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
 import { useDynamicCreditCosts, DEFAULT_COSTS } from '@/hooks/useDynamicCreditCosts';
@@ -23,7 +23,6 @@ const CreditsPage = () => {
   const [showAdFreeDialog, setShowAdFreeDialog] = useState(false);
   const { data: isAdFree } = useAdFreeStatus();
 
-  // Passive recharge promo detection
   const currentInterval = dynamicCosts?.passive_recharge_interval_hours ?? DEFAULT_COSTS.passive_recharge_interval_hours;
   const currentAmount = dynamicCosts?.passive_recharge_amount ?? DEFAULT_COSTS.passive_recharge_amount;
   const defaultInterval = DEFAULT_COSTS.passive_recharge_interval_hours;
@@ -40,8 +39,17 @@ const CreditsPage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="px-4 pt-6 pb-2">
-        <h1 className="text-xl font-bold tracking-tight">Crédits</h1>
+      {/* Page header */}
+      <div className="px-4 pt-6 pb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Coins className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl font-heading font-bold tracking-tight">Crédits</h1>
+            <p className="text-xs text-muted-foreground">Gérez et rechargez vos crédits</p>
+          </div>
+        </div>
       </div>
 
       <div className="px-4 space-y-6">
@@ -58,41 +66,39 @@ const CreditsPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative overflow-hidden rounded-xl border border-orange-500/25 p-3.5"
+            className="relative overflow-hidden rounded-2xl border border-orange-500/20 p-4"
             style={{
-              background: 'linear-gradient(135deg, hsl(25 95% 53% / 0.08), hsl(35 95% 53% / 0.04))',
+              background: 'linear-gradient(135deg, hsl(25 95% 53% / 0.06), hsl(35 95% 53% / 0.03))',
             }}
           >
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <motion.div
                 className="absolute -inset-x-full top-0 h-full w-[200%]"
                 style={{
-                  background: 'linear-gradient(90deg, transparent 40%, hsl(25 95% 53% / 0.08) 50%, transparent 60%)',
+                  background: 'linear-gradient(90deg, transparent 40%, hsl(25 95% 53% / 0.06) 50%, transparent 60%)',
                 }}
                 animate={{ x: ['-100%', '100%'] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
               />
             </div>
             <div className="relative flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
                 <Zap className="w-5 h-5 text-orange-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                <p className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1.5 font-heading">
                   🔥 Recharge passive boostée !
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
                   +{currentAmount} crédit{currentAmount > 1 ? 's' : ''} toutes les <strong className="text-foreground">{currentInterval}h</strong>
                   {currentInterval < defaultInterval && (
-                    <span className="line-through ml-1 opacity-60">{defaultInterval}h</span>
+                    <span className="line-through ml-1 opacity-50">{defaultInterval}h</span>
                   )}
                   {currentAmount > defaultAmount && (
-                    <span className="ml-1">
-                      (au lieu de {defaultAmount})
-                    </span>
+                    <span className="ml-1">(au lieu de {defaultAmount})</span>
                   )}
                 </p>
-                <p className="text-[10px] text-orange-500/80 mt-1 font-medium">
+                <p className="text-[10px] text-orange-500/70 mt-1 font-semibold">
                   Profitez-en, durée limitée !
                 </p>
               </div>
@@ -102,7 +108,7 @@ const CreditsPage = () => {
 
         {/* Credit Breakdown */}
         <section>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+          <p className="text-[11px] font-heading font-semibold text-muted-foreground uppercase tracking-widest mb-3">
             Répartition
           </p>
           <CreditBreakdownCards />
@@ -113,19 +119,21 @@ const CreditsPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/50 border border-border/40"
+          className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/40"
         >
           <span className="text-[11px] text-muted-foreground leading-relaxed">
-            <span className="font-medium text-foreground">Ordre d'utilisation :</span>{' '}
+            <span className="font-semibold text-foreground">Ordre d'utilisation :</span>{' '}
             Quotidien → Passif → Bonus → Achetés
           </span>
         </motion.div>
 
         {/* Launch promo */}
-        <div className="flex items-start gap-3 rounded-xl bg-amber-500/5 border border-amber-500/15 p-3.5">
-          <Timer className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 rounded-2xl bg-amber-500/5 border border-amber-500/15 p-4">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+            <Timer className="w-4.5 h-4.5 text-amber-500" />
+          </div>
           <div>
-            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">Prix de lancement</p>
+            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 font-heading">Prix de lancement</p>
             <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
               Tarifs temporaires, valables 1 an après l'ouverture. Les prix définitifs seront plus élevés.
             </p>
@@ -145,13 +153,13 @@ const CreditsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.4 }}
             onClick={() => setShowAdFreeDialog(true)}
-            className="w-full flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3.5 text-left hover:bg-primary/10 transition-colors active:scale-[0.98]"
+            className="w-full flex items-center gap-3.5 rounded-2xl border border-primary/15 bg-primary/5 p-4 text-left hover:bg-primary/8 transition-all active:scale-[0.98]"
           >
-            <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-              <BanIcon className="w-4 h-4 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <BanIcon className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Naviguer sans publicité</p>
+              <p className="text-sm font-semibold text-foreground font-heading">Naviguer sans publicité</p>
               <p className="text-[11px] text-muted-foreground">À partir de 7 crédits/semaine</p>
             </div>
             <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
@@ -159,9 +167,13 @@ const CreditsPage = () => {
         )}
 
         {isAdFree && (
-          <div className="flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/5 p-3 text-sm text-green-700 dark:text-green-400">
-            <BanIcon className="w-4 h-4 flex-shrink-0" />
-            <span className="font-medium">Abonnement sans pub actif</span>
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <BanIcon className="w-4 h-4 text-emerald-500" />
+            </div>
+            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+              Abonnement sans pub actif
+            </span>
           </div>
         )}
 
@@ -176,7 +188,7 @@ const CreditsPage = () => {
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs text-destructive border-destructive/20 hover:bg-destructive/5"
+            className="gap-1.5 text-xs text-destructive border-destructive/20 hover:bg-destructive/5 rounded-xl"
             onClick={() => setShowClaimDialog(true)}
           >
             <AlertTriangle className="w-3.5 h-3.5" />
