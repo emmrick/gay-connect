@@ -4,7 +4,7 @@ import {
   MessageSquare, IdCard, Ticket, Coins, Bell,
   Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, ListOrdered, 
   Headphones, Star, HelpCircle, ArrowLeft, FileImage, Megaphone, Sparkles, ToggleLeft, Rocket,
-  ChevronLeft, Search
+  ChevronLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -83,15 +83,8 @@ const groupConfig: Record<NavGroup, { label: string; emoji: string }> = {
 const groupOrder: NavGroup[] = ['tasks', 'moderation', 'users', 'finances', 'communication', 'config', 'logs'];
 
 const AdminMobileNav = ({ 
-  activeSection, 
-  onSectionChange, 
-  pendingReports = 0,
-  blockedCount = 0,
-  pendingPurchases = 0,
-  pendingVerifications = 0,
-  isAdmin = false,
-  modPermissions,
-  dashboardTopSlot,
+  activeSection, onSectionChange, pendingReports = 0, blockedCount = 0,
+  pendingPurchases = 0, pendingVerifications = 0, isAdmin = false, modPermissions, dashboardTopSlot,
 }: AdminMobileNavProps) => {
 
   const visibleItems = navItems.filter(item => {
@@ -117,23 +110,18 @@ const AdminMobileNav = ({
     return acc;
   }, {} as Record<string, NavItem[]>);
 
-  // Section header when navigating into a section
+  // Section header
   if (activeSection !== 'dashboard' && activeItem) {
     const ActiveIcon = activeItem.icon;
     return (
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/40">
+      <div className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/30 shadow-sm">
         <div className="flex items-center gap-3 px-3 py-2.5" style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => onSectionChange('dashboard')}
-            className="h-8 w-8 rounded-lg shrink-0"
-          >
+          <Button variant="ghost" size="icon" onClick={() => onSectionChange('dashboard')} className="h-8 w-8 rounded-xl shrink-0">
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <ActiveIcon className="w-4 h-4 text-primary flex-shrink-0" />
-            <span className="font-semibold text-sm truncate">{activeItem.label}</span>
+            <span className="font-display font-semibold text-sm truncate">{activeItem.label}</span>
           </div>
         </div>
       </div>
@@ -144,30 +132,23 @@ const AdminMobileNav = ({
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/40">
+      <div className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/30 shadow-sm">
         <div className="flex items-center justify-between px-4 py-2.5" style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => window.history.back()}
-            className="gap-1 text-muted-foreground -ml-2 h-8"
-          >
+          <Button variant="ghost" size="sm" onClick={() => window.history.back()} className="gap-1 text-muted-foreground -ml-2 h-8">
             <ChevronLeft className="w-4 h-4" />
             <span className="text-xs">Retour</span>
           </Button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center">
               <Shield className="w-3.5 h-3.5 text-primary" />
             </div>
-            <span className="font-semibold text-sm">
-              {isAdmin ? 'Admin' : 'Modération'}
-            </span>
+            <span className="font-display font-semibold text-sm">{isAdmin ? 'Admin' : 'Modération'}</span>
           </div>
           <div className="w-16" />
         </div>
       </div>
 
-      {/* Dashboard Grid */}
+      {/* Grid */}
       <ScrollArea className="h-[calc(100dvh-52px)]">
         <div className="px-3 py-3 space-y-3 pb-8">
           {dashboardTopSlot}
@@ -179,10 +160,8 @@ const AdminMobileNav = ({
               <div key={group}>
                 <div className="flex items-center gap-2 mb-2 px-1">
                   <span className="text-xs">{config.emoji}</span>
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {config.label}
-                  </span>
-                  <div className="flex-1 h-px bg-border/30" />
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{config.label}</span>
+                  <div className="flex-1 h-px bg-border/20" />
                 </div>
                 <div className="grid grid-cols-4 gap-1.5">
                   {items.map((item) => {
@@ -193,23 +172,20 @@ const AdminMobileNav = ({
                         key={item.id}
                         onClick={() => onSectionChange(item.id)}
                         className={cn(
-                          "relative flex flex-col items-center gap-1.5 p-3 rounded-xl",
-                          "bg-card border border-border/30",
-                          "active:scale-[0.97] transition-all duration-100",
-                          "hover:border-border/50 hover:shadow-sm"
+                          "relative flex flex-col items-center gap-1.5 p-3 rounded-2xl",
+                          "bg-card/70 backdrop-blur-sm border border-border/25",
+                          "active:scale-[0.96] transition-all duration-100",
+                          "hover:border-border/40 hover:shadow-sm"
                         )}
                       >
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <Icon className="w-4 h-4 text-muted-foreground" />
+                        <div className="w-8 h-8 rounded-xl bg-primary/6 flex items-center justify-center">
+                          <Icon className="w-4 h-4 text-muted-foreground/80" />
                         </div>
                         <span className="text-[10px] font-medium text-muted-foreground text-center leading-tight line-clamp-1">
                           {item.shortLabel || item.label}
                         </span>
                         {badge !== undefined && badge > 0 && (
-                          <Badge 
-                            variant="destructive" 
-                            className="absolute -top-1 -right-1 text-[9px] px-1 py-0 min-w-[16px] h-4 text-center"
-                          >
+                          <Badge variant="destructive" className="absolute -top-1 -right-1 text-[9px] px-1 py-0 min-w-[16px] h-4 text-center shadow-sm">
                             {badge}
                           </Badge>
                         )}
