@@ -70,7 +70,12 @@ const Admin = () => {
   const { data: stats } = useReportStats();
   const { data: pendingVerificationsCount = 0 } = usePendingVerifications();
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState<AdminSection>(() => {
+    // 1. Check URL ?section= param (from GlobalMissionOverlay navigate)
+    const fromUrl = searchParams.get('section');
+    if (fromUrl) return fromUrl as AdminSection;
+    // 2. Check sessionStorage (from TaskQueuePopup)
     const saved = sessionStorage.getItem('admin-navigate-section');
     if (saved) {
       sessionStorage.removeItem('admin-navigate-section');
