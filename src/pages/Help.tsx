@@ -803,15 +803,15 @@ const Help = ({ embedded = false }: HelpProps) => {
               ) : (
                 <>
                   {msg.type === 'bot' && (
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center shrink-0 mb-0.5">
                       <Bot className="w-3.5 h-3.5 text-primary" />
                     </div>
                   )}
                   <div className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                    "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
                     msg.type === 'user'
-                      ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-muted text-foreground rounded-bl-md"
+                      ? "bg-primary text-primary-foreground rounded-br-md shadow-primary/10"
+                      : "bg-card/80 backdrop-blur-sm border border-border/50 text-foreground rounded-bl-md"
                   )}>
                     <p className="whitespace-pre-line">
                       <BoldText text={msg.isTyping ? msg.text.slice(0, msg.revealedLength || 0) : msg.text} />
