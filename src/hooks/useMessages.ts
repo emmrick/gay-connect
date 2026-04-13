@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
+import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -54,6 +55,15 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
 
       // Map profiles to messages
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      // Sign avatar URLs for private bucket
+      const signedAvatarMap = new Map<string, string | null>();
+      await Promise.all(
+        Array.from(profileMap.entries()).map(async ([userId, profile]) => {
+          const signed = await getSignedAvatarUrl(profile.avatar_url);
+          signedAvatarMap.set(userId, signed);
+        })
+      );
       
       // Create message map for replies
       const messageMap = new Map(messages.map(m => [m.id, m]));
@@ -63,7 +73,7 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
         return {
           ...msg,
           senderUsername: profileMap.get(msg.sender_id)?.username || 'Anonyme',
-          senderAvatar: profileMap.get(msg.sender_id)?.avatar_url,
+          senderAvatar: signedAvatarMap.get(msg.sender_id) ?? null,
           replyToMessage: replyTo ? {
             id: replyTo.id,
             content: replyTo.content || '',
@@ -127,10 +137,11 @@ export const useMessages = (chatRoomId: string | null, searchQuery?: string, isA
             .eq('user_id', newMsg.sender_id)
             .maybeSingle();
 
+          const signedAvatar = await getSignedAvatarUrl(profile?.avatar_url);
           const newMessage: MessageWithProfile = {
             ...newMsg,
             senderUsername: profile?.username || 'Anonyme',
-            senderAvatar: profile?.avatar_url,
+            senderAvatar: signedAvatar,
           };
 
           queryClient.setQueryData<MessageWithProfile[]>(
