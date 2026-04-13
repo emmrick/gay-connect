@@ -48,7 +48,7 @@ const useFullDashboardStats = () => {
         cq('profiles'),
         cq('profiles', { is_online: true }),
         cq('profiles', { is_verified: true }),
-        cq('profiles', undefined, { col: 'created_at', val: startOfToday }),
+        cq('credit_transactions'),
         cq('profiles', undefined, { col: 'created_at', val: startOfToday }),
         cq('profiles', undefined, { col: 'created_at', val: weekAgo }),
         cq('profiles', undefined, { col: 'created_at', val: monthAgo }),
