@@ -187,7 +187,6 @@ const AuthenticatedApp = () => {
                       <OnboardingGuideDialog />
                       <GlobalMissionOverlay />
                       <DossierAccessPopup />
-                      <CookieConsentBanner />
                       <ProfileSelectorModal />
                     </>
                   </TooltipProvider>
