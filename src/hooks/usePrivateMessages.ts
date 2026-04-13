@@ -129,10 +129,11 @@ export const usePrivateMessages = (otherUserId: string | null) => {
               .eq('user_id', newMsg.sender_id)
               .maybeSingle();
 
+            const signedAvatar = await getSignedAvatarUrl(profile?.avatar_url);
             const messageWithProfile: PrivateMessageWithProfile = {
               ...newMsg,
               senderUsername: profile?.username || 'Anonyme',
-              senderAvatar: profile?.avatar_url || null,
+              senderAvatar: signedAvatar || null,
             };
 
             queryClient.setQueryData<PrivateMessageWithProfile[]>(
