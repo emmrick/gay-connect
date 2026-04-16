@@ -35,6 +35,7 @@ const MessagesPage = () => {
   const { getOrCreateConversation, archivedConversations } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
   const { joinedGroups } = useJoinedGroups();
+  const { customGroups } = useCustomGroups();
 
   const [showMemberSearch, setShowMemberSearch] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
@@ -67,7 +68,7 @@ const MessagesPage = () => {
 
   const totalUnread = getTotalUnreadCount();
   const archivedCount = archivedConversations.length;
-  const groupsCount = joinedGroups?.length ?? 0;
+  const groupsCount = (joinedGroups?.length ?? 0) + (customGroups?.length ?? 0);
 
   return (
     <div className="flex-1 flex flex-col relative min-h-0">
