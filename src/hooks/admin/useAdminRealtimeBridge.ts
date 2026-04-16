@@ -11,6 +11,7 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminStore } from '@/stores/admin/useAdminStore';
+import { useTasksStore } from '@/stores/admin/useTasksStore';
 
 export const useAdminRealtimeBridge = (enabled: boolean) => {
   useEffect(() => {
@@ -81,6 +82,22 @@ export const useAdminRealtimeBridge = (enabled: boolean) => {
         { event: '*', schema: 'public', table: 'moderation_tasks' },
         () => {
           store().fetchTasks('pending', { force: true });
+          // Keep the dedicated tasks slice in sync as well
+          useTasksStore.getState().fetchMissions('pending', { force: true });
+        },
+      )
+      .subscribe();
+
+    const ticketsCh = supabase
+      .channel('admin-tickets-bridge')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_tickets' },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as any;
+          if (row?.id) {
+            useTasksStore.getState().upsertTicket(row);
+          }
         },
       )
       .subscribe();
@@ -89,6 +106,7 @@ export const useAdminRealtimeBridge = (enabled: boolean) => {
       supabase.removeChannel(profilesCh);
       supabase.removeChannel(reportsCh);
       supabase.removeChannel(tasksCh);
+      supabase.removeChannel(ticketsCh);
     };
   }, [enabled]);
 };
