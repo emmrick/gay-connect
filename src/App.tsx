@@ -192,7 +192,40 @@ const AuthenticatedApp = () => {
 
                           {/* Public pages */}
                           <Route path="/profile/:userId" element={<Suspense fallback={<PageFallback />}><MemberProfile /></Suspense>} />
-                          <Route path="/admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
+                          <Route path="/admin" element={<Suspense fallback={<PageFallback />}><AdminLayout /></Suspense>}>
+                            <Route index element={<AdminDashboardPage />} />
+                            <Route path="missions" element={<AdminMissionsPage />} />
+                            <Route path="support" element={<AdminSupportPage />} />
+                            <Route path="avis" element={<AdminRatingsPage />} />
+                            <Route path="identite" element={<AdminVerificationPage />} />
+                            <Route path="signalements" element={<AdminReportsPage />} />
+                            <Route path="contenu" element={<AdminContentModerationPage />} />
+                            <Route path="ia" element={<AdminAIModerationPage />} />
+                            <Route path="captures" element={<AdminScreenshotSanctionsPage />} />
+                            <Route path="membres" element={<AdminMembersPage />} />
+                            <Route path="stats" element={<AdminStatsPage />} />
+                            <Route path="equipe" element={<AdminModeratorsPage />} />
+                            <Route path="portefeuille" element={<AdminWalletPage />} />
+                            <Route path="surveillance" element={<AdminCreditsSurveillancePage />} />
+                            <Route path="achats" element={<AdminCreditPurchasesPage />} />
+                            <Route path="tarifs" element={<AdminRatesPage />} />
+                            <Route path="retraits" element={<AdminWithdrawalsPage />} />
+                            <Route path="gains" element={<AdminGlobalEarningsPage />} />
+                            <Route path="push" element={<AdminBroadcastPage />} />
+                            <Route path="popups" element={<AdminPopupsPage />} />
+                            <Route path="aide" element={<AdminFAQPage />} />
+                            <Route path="flyers" element={<AdminFlyersPage />} />
+                            <Route path="promos" element={<AdminPromoPage />} />
+                            <Route path="annonces" element={<AdminAdsPage />} />
+                            <Route path="visuels" element={<AdminPromoImagesPage />} />
+                            <Route path="updates" element={<AdminSiteUpdatesPage />} />
+                            <Route path="credits" element={<AdminCreditCostsPage />} />
+                            <Route path="swipe" element={<AdminSwipeStatsPage />} />
+                            <Route path="maintenance" element={<AdminMaintenancePage />} />
+                            <Route path="toggles" element={<AdminFeatureTogglesPage />} />
+                            <Route path="erreurs" element={<AdminErrorLogsPage />} />
+                            <Route path="securite" element={<AdminSecurityPage />} />
+                          </Route>
                           <Route path="/about" element={<Suspense fallback={<PageFallback />}><About /></Suspense>} />
                           <Route path="/legal" element={<Suspense fallback={<PageFallback />}><Legal /></Suspense>} />
                           <Route path="/regions" element={<Suspense fallback={<PageFallback />}><Regions /></Suspense>} />
