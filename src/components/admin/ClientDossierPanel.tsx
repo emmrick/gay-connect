@@ -516,8 +516,8 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                     <CreditBox label="Bonus" value={credits.bonus_credits} locked={credits.lock_bonus} />
                     <CreditBox label="Achetés" value={credits.purchased_credits} locked={credits.lock_purchased} />
                     <div className="bg-secondary/50 rounded-lg p-2.5 text-center">
-                      <p className="text-[10px] text-muted-foreground">Recharges restantes</p>
-                      <p className="text-sm font-bold">{credits.daily_claims_remaining}/7</p>
+                      <p className="text-[10px] text-muted-foreground">Quota hebdo restant</p>
+                      <p className="text-sm font-bold">{credits.weekly_credits_remaining?.toFixed(1) ?? '?'}/35</p>
                     </div>
                   </div>
                 ) : (
