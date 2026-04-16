@@ -611,20 +611,62 @@ const Help = ({ embedded = false }: HelpProps) => {
       setNoMatchCount(newCount);
       pendingSuggestions = [];
 
-      // Show available categories as text to help the user
-      const catList = allCategories.map(c => `• ${c}`).join('\n');
+      const menuAction: QuickAction[] = [
+        { label: '🏠 Voir le menu principal', value: 'menu', variant: 'subtle' },
+        { label: '👤 Contacter un agent', value: 'agent', variant: 'outline' },
+      ];
 
       if (newCount >= 2) {
         addBotMessage(
-          `Je n'ai pas trouvé de réponse dans notre base de connaissances. 😕\n\nJe te recommande de **contacter un agent** en tapant **"agent"** pour obtenir une aide personnalisée.`
+          `Je n'ai pas trouvé de réponse dans notre base de connaissances. 😕\n\nClique sur **« Contacter un agent »** pour une aide personnalisée 👇`,
+          menuAction
         );
       } else {
+        const catList = allCategories.slice(0, 6).map(c => `• ${c}`).join('\n');
         addBotMessage(
-          `Je n'ai pas trouvé de réponse correspondante. 🤔\n\nEssaie de reformuler ta question avec d'autres mots. Voici les **sujets disponibles** :\n\n${catList}\n\nOu tape **"agent"** pour contacter un conseiller.`
+          `Je n'ai pas trouvé de réponse correspondante. 🤔\n\nEssaie de reformuler ta question, ou choisis un sujet du **menu principal** 👇\n\n📂 **Sujets disponibles** :\n${catList}`,
+          menuAction
         );
       }
     }
   }, [freeText, isBotTyping, chatMessages, allFaqArticles, allCategories, showAnswer, addBotMessage, noMatchCount, isCreditRequest]);
+
+  // Handle a quick action button click (entry / topic / menu / agent)
+  const handleQuickAction = useCallback((value: string) => {
+    if (isBotTyping || chatMessages.some(m => m.isTyping)) return;
+
+    if (value === 'agent') {
+      setChatMessages(prev => [...prev, { type: 'user', text: '👤 Contacter un agent' }]);
+      void handleContactAgent();
+      return;
+    }
+    if (value === 'menu') {
+      setChatMessages(prev => [...prev, { type: 'user', text: '🏠 Menu principal' }]);
+      showMainMenu();
+      return;
+    }
+    if (value.startsWith('topic:')) {
+      const topicId = value.slice(6);
+      const topic = getTopicById(topicId);
+      if (topic) {
+        setChatMessages(prev => [...prev, { type: 'user', text: topic.label }]);
+        showTopicMenu(topicId);
+      }
+      return;
+    }
+    if (value.startsWith('entry:')) {
+      // entry:<id> or entry:<id>:<currentTopicId>
+      const rest = value.slice(6);
+      const [entryId, currentTopicId] = rest.split(':');
+      const entry = findEntryById(entryId);
+      if (entry) {
+        setChatMessages(prev => [...prev, { type: 'user', text: entry.question }]);
+        showAnswer(entryId, currentTopicId);
+      }
+      return;
+    }
+  }, [isBotTyping, chatMessages, findEntryById, showAnswer, showTopicMenu, showMainMenu]);
+
 
   // Contact agent
   const handleContactAgent = async () => {
