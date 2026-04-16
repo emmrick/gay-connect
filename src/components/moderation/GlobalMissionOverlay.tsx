@@ -27,6 +27,8 @@ import {
 } from '@/hooks/useModerationTaskQueue';
 import { useQueryClient } from '@tanstack/react-query';
 import { playMissionSound, playAcceptSound } from '@/utils/missionAudio';
+import { buildAdminPath } from '@/config/adminRoutes';
+import type { AdminSection } from '@/components/admin/AdminSidebar';
 
 const OFFER_TTL_SECONDS = 60;
 
