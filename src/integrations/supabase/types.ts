@@ -4560,6 +4560,15 @@ export type Database = {
       generate_referral_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
       get_advertiser_wallet: { Args: { _email: string }; Returns: Json }
+      get_community_public_stats: {
+        Args: never
+        Returns: {
+          online_members: number
+          total_members: number
+          total_rooms: number
+          verified_members: number
+        }[]
+      }
       get_estimated_wait_time: { Args: { _entity_id: string }; Returns: Json }
       get_exclusive_next_task: {
         Args: { _offer_ttl_seconds?: number; _user_id: string }
