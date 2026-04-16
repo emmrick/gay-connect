@@ -33,7 +33,7 @@ const MessagesPage = () => {
 
   const { getOrCreateConversation, archivedConversations } = usePrivateConversations();
   const { getTotalUnreadCount, markAsRead } = useUnreadMessages();
-  const { data: joinedGroups } = useJoinedGroups();
+  const { joinedGroups } = useJoinedGroups();
 
   const [showMemberSearch, setShowMemberSearch] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
