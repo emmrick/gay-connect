@@ -902,6 +902,14 @@ const UserCard = ({
         open={profileDialogOpen}
         onOpenChange={setProfileDialogOpen}
       />
+
+      {/* Send Email Dialog */}
+      <SendEmailDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        userId={user.user_id}
+        username={user.username}
+      />
     </div>
   );
 };
