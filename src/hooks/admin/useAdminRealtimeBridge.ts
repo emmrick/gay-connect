@@ -11,6 +11,7 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminStore } from '@/stores/admin/useAdminStore';
+import { useTasksStore } from '@/stores/admin/useTasksStore';
 
 export const useAdminRealtimeBridge = (enabled: boolean) => {
   useEffect(() => {
