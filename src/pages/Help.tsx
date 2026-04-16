@@ -737,6 +737,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
 
     resetChat();
+    navigate('/home');
   };
 
   const resetChat = () => {
@@ -765,6 +766,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setRatingEmoji(null);
     setRatingComment('');
     resetChat();
+    navigate('/home');
   };
 
   // Send to agent
@@ -938,7 +940,7 @@ const Help = ({ embedded = false }: HelpProps) => {
         className="border-b border-border/50 bg-card/80 backdrop-blur-xl flex items-center gap-3 px-3 py-2.5 flex-shrink-0"
         style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}
       >
-        <Button variant="ghost" size="icon" onClick={isChatbotPhase ? () => navigate(-1) : handleGoBack} className="shrink-0 rounded-xl hover:bg-primary/10">
+        <Button variant="ghost" size="icon" onClick={isChatbotPhase ? () => navigate('/home') : handleGoBack} className="shrink-0 rounded-xl hover:bg-primary/10">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
