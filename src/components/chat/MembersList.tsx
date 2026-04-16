@@ -243,20 +243,22 @@ const MemberCard = ({
               profile.username.charAt(0).toUpperCase()
             )}
           </div>
-          {shouldShowOnlineIndicator(profile) ? (
-            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-muted-foreground/50 rounded-full border-2 border-card cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  {getLastSeenText(profile) || 'Hors ligne'}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          <span className="absolute bottom-0 right-0">
+            {shouldShowOnlineIndicator(profile) ? (
+              <LiveOnlineDot profile={profile} size="lg" borderClassName="border-card" />
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <LiveOnlineDot profile={profile} size="lg" showOffline borderClassName="border-card" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    {getLastSeenText(profile) || 'Hors ligne'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </span>
         </div>
 
         {/* Info */}
