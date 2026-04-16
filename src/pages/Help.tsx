@@ -26,8 +26,24 @@ import {
   normalize,
   type ScoredResult,
 } from '@/lib/helpChatbotEngine';
+import {
+  CHATBOT_TOPICS,
+  MAIN_TOPIC_IDS,
+  QUICK_TOPIC_IDS,
+  getTopicById,
+  type ChatbotTopic,
+  type TopicSubAction,
+} from '@/lib/helpChatbotTopics';
 
 type ChatPhase = 'chatbot' | 'waiting_agent' | 'agent' | 'rating';
+
+/** Inline button shown under a bot message */
+interface QuickAction {
+  label: string;
+  /** Internal action id parsed by handleQuickAction */
+  value: string;
+  variant?: 'default' | 'outline' | 'ghost' | 'subtle';
+}
 
 interface ChatMessage {
   type: 'bot' | 'user' | 'system';
@@ -35,6 +51,8 @@ interface ChatMessage {
   isTyping?: boolean;
   revealedLength?: number;
   action?: 'credit_claim';
+  /** Inline clickable buttons rendered after the bubble */
+  quickActions?: QuickAction[];
 }
 
 // Pending results for numbered suggestions
@@ -107,6 +125,7 @@ const persistState = (phase: ChatPhase, messages: ChatMessage[], ticketId?: stri
   const safe = messages.map(m => ({
       type: m.type,
       text: m.text,
+      quickActions: m.quickActions,
     }));
     localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(safe));
     if (ticketId) localStorage.setItem(STORAGE_KEY_TICKET, ticketId);
@@ -349,12 +368,12 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, [chatMessages]);
 
   // Bot message with typing delay then typewriter reveal
-  const addBotMessage = useCallback((text: string) => {
+  const addBotMessage = useCallback((text: string, quickActions?: QuickAction[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
     const typingDelay = Math.min(Math.ceil(wordCount / 8) * 400, 1200);
     setIsBotTyping(true);
     setTimeout(() => {
-      setChatMessages(prev => [...prev, { type: 'bot', text, isTyping: true, revealedLength: 0 }]);
+      setChatMessages(prev => [...prev, { type: 'bot', text, isTyping: true, revealedLength: 0, quickActions }]);
       setIsBotTyping(false);
     }, typingDelay);
   }, []);
@@ -366,15 +385,90 @@ const Help = ({ embedded = false }: HelpProps) => {
     return STATIC_KNOWLEDGE.find(s => s.id === id) || null;
   }, [allFaqArticles]);
 
-  // Show answer
-  const showAnswer = useCallback((entryId: string) => {
+  // Build follow-up actions for an answer (related + back/menu/agent)
+  const buildAnswerQuickActions = useCallback((entryId: string, currentTopicId?: string): QuickAction[] => {
+    const actions: QuickAction[] = [];
+    const entry = findEntryById(entryId);
+    const category = (entry as any)?.category as string | undefined;
+
+    // Related entries from same category (up to 3)
+    if (category) {
+      const related = STATIC_KNOWLEDGE
+        .filter(s => s.category === category && s.id !== entryId)
+        .slice(0, 3);
+      for (const r of related) {
+        actions.push({ label: `📄 ${r.question}`, value: `entry:${r.id}`, variant: 'subtle' });
+      }
+    }
+
+    // Back to current topic menu
+    if (currentTopicId) {
+      const topic = getTopicById(currentTopicId);
+      if (topic) {
+        actions.push({ label: `🔙 Retour à « ${topic.label} »`, value: `topic:${currentTopicId}`, variant: 'outline' });
+      }
+    }
+
+    // Always: main menu + agent
+    actions.push({ label: '🏠 Menu principal', value: 'menu', variant: 'outline' });
+    actions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'outline' });
+
+    return actions;
+  }, [findEntryById]);
+
+  // Show answer with quick action follow-ups
+  const showAnswer = useCallback((entryId: string, currentTopicId?: string) => {
     const entry = findEntryById(entryId);
     if (!entry) return;
     setNoMatchCount(0);
     pendingSuggestions = [];
     const linkPart = (entry as any).link ? `\n\n[LINK:${(entry as any).link}]` : '';
-    addBotMessage(`**${entry.question}**\n\n${entry.answer}${linkPart}\n\nCette réponse t'a aidé ? Tu peux me poser une **autre question** ou taper **"agent"** pour contacter un conseiller. 😊\n\n📚 Consulte aussi le **Centre d'aide** pour plus d'articles : [LINK:/aide]`);
+    const actions = buildAnswerQuickActions(entryId, currentTopicId);
+    addBotMessage(
+      `**${entry.question}**\n\n${entry.answer}${linkPart}\n\n💡 Choisis une option ci-dessous ou pose une autre question 👇`,
+      actions
+    );
+  }, [findEntryById, addBotMessage, buildAnswerQuickActions]);
+
+  // Show topic menu (when user clicks a main topic block)
+  const showTopicMenu = useCallback((topicId: string) => {
+    const topic = getTopicById(topicId);
+    if (!topic) return;
+    const entry = findEntryById(topic.primaryEntryId);
+    if (!entry) return;
+
+    setNoMatchCount(0);
+    pendingSuggestions = [];
+    const linkPart = (entry as any).link ? `\n\n[LINK:${(entry as any).link}]` : '';
+
+    const subActions: QuickAction[] = topic.subActions.map(sa => ({
+      label: `${sa.emoji ?? '•'} ${sa.label}`,
+      value: `entry:${sa.entryId}:${topic.id}`,
+      variant: 'subtle',
+    }));
+    subActions.push({ label: '🏠 Menu principal', value: 'menu', variant: 'outline' });
+    subActions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'outline' });
+
+    addBotMessage(
+      `**${entry.question}**\n\n${entry.answer}${linkPart}\n\n💡 Sujets liés à **${topic.label}** — clique pour aller plus vite 👇`,
+      subActions
+    );
   }, [findEntryById, addBotMessage]);
+
+  // Show main menu (after click on "🏠 Menu principal")
+  const showMainMenu = useCallback(() => {
+    pendingSuggestions = [];
+    const mainActions: QuickAction[] = MAIN_TOPIC_IDS
+      .map(id => getTopicById(id))
+      .filter((t): t is ChatbotTopic => !!t)
+      .map(t => ({ label: t.label, value: `topic:${t.id}`, variant: 'subtle' }));
+    mainActions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'outline' });
+
+    addBotMessage(
+      `📋 **Menu principal**\n\nChoisis un sujet ci-dessous pour une réponse rapide, ou pose-moi directement ta question 😊`,
+      mainActions
+    );
+  }, [addBotMessage]);
 
   // Credit keywords detection
   const isCreditRequest = useCallback((msg: string) => {
@@ -518,20 +612,62 @@ const Help = ({ embedded = false }: HelpProps) => {
       setNoMatchCount(newCount);
       pendingSuggestions = [];
 
-      // Show available categories as text to help the user
-      const catList = allCategories.map(c => `• ${c}`).join('\n');
+      const menuAction: QuickAction[] = [
+        { label: '🏠 Voir le menu principal', value: 'menu', variant: 'subtle' },
+        { label: '👤 Contacter un agent', value: 'agent', variant: 'outline' },
+      ];
 
       if (newCount >= 2) {
         addBotMessage(
-          `Je n'ai pas trouvé de réponse dans notre base de connaissances. 😕\n\nJe te recommande de **contacter un agent** en tapant **"agent"** pour obtenir une aide personnalisée.`
+          `Je n'ai pas trouvé de réponse dans notre base de connaissances. 😕\n\nClique sur **« Contacter un agent »** pour une aide personnalisée 👇`,
+          menuAction
         );
       } else {
+        const catList = allCategories.slice(0, 6).map(c => `• ${c}`).join('\n');
         addBotMessage(
-          `Je n'ai pas trouvé de réponse correspondante. 🤔\n\nEssaie de reformuler ta question avec d'autres mots. Voici les **sujets disponibles** :\n\n${catList}\n\nOu tape **"agent"** pour contacter un conseiller.`
+          `Je n'ai pas trouvé de réponse correspondante. 🤔\n\nEssaie de reformuler ta question, ou choisis un sujet du **menu principal** 👇\n\n📂 **Sujets disponibles** :\n${catList}`,
+          menuAction
         );
       }
     }
   }, [freeText, isBotTyping, chatMessages, allFaqArticles, allCategories, showAnswer, addBotMessage, noMatchCount, isCreditRequest]);
+
+  // Handle a quick action button click (entry / topic / menu / agent)
+  const handleQuickAction = useCallback((value: string) => {
+    if (isBotTyping || chatMessages.some(m => m.isTyping)) return;
+
+    if (value === 'agent') {
+      setChatMessages(prev => [...prev, { type: 'user', text: '👤 Contacter un agent' }]);
+      void handleContactAgent();
+      return;
+    }
+    if (value === 'menu') {
+      setChatMessages(prev => [...prev, { type: 'user', text: '🏠 Menu principal' }]);
+      showMainMenu();
+      return;
+    }
+    if (value.startsWith('topic:')) {
+      const topicId = value.slice(6);
+      const topic = getTopicById(topicId);
+      if (topic) {
+        setChatMessages(prev => [...prev, { type: 'user', text: topic.label }]);
+        showTopicMenu(topicId);
+      }
+      return;
+    }
+    if (value.startsWith('entry:')) {
+      // entry:<id> or entry:<id>:<currentTopicId>
+      const rest = value.slice(6);
+      const [entryId, currentTopicId] = rest.split(':');
+      const entry = findEntryById(entryId);
+      if (entry) {
+        setChatMessages(prev => [...prev, { type: 'user', text: entry.question }]);
+        showAnswer(entryId, currentTopicId);
+      }
+      return;
+    }
+  }, [isBotTyping, chatMessages, findEntryById, showAnswer, showTopicMenu, showMainMenu]);
+
 
   // Contact agent
   const handleContactAgent = async () => {
@@ -920,6 +1056,35 @@ const Help = ({ embedded = false }: HelpProps) => {
                         </Button>
                       </motion.div>
                     )}
+
+                    {/* Inline quick actions (related topics, back, menu, agent) */}
+                    {msg.quickActions && msg.quickActions.length > 0 && !msg.isTyping && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.3 }}
+                        className="mt-2.5 flex flex-wrap gap-1.5"
+                      >
+                        {msg.quickActions.map((qa, qi) => {
+                          const isSubtle = qa.variant === 'subtle' || !qa.variant;
+                          return (
+                            <button
+                              key={`${qa.value}-${qi}`}
+                              onClick={() => handleQuickAction(qa.value)}
+                              disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
+                              className={cn(
+                                "px-3 py-1.5 text-[11px] font-medium rounded-full transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-left",
+                                isSubtle
+                                  ? "border border-primary/25 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/40"
+                                  : "border border-border/60 bg-card/60 backdrop-blur-sm text-foreground hover:bg-primary/10 hover:border-primary/30"
+                              )}
+                            >
+                              {qa.label}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
                   </div>
                 </>
               )}
@@ -936,68 +1101,66 @@ const Help = ({ embedded = false }: HelpProps) => {
             >
               <p className="text-[11px] text-muted-foreground font-medium mb-2">💡 Sujets populaires :</p>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { icon: <Home className="w-3.5 h-3.5" />, label: "Page d'accueil", query: "Comment fonctionne la page d'accueil ?" },
-                  { icon: <MessageCircle className="w-3.5 h-3.5" />, label: "Messagerie", query: "Comment fonctionne la page Messages ?" },
-                  { icon: <Heart className="w-3.5 h-3.5" />, label: "Swipe & Match", query: "Comment fonctionne le système de Swipe ?" },
-                  { icon: <CreditCard className="w-3.5 h-3.5" />, label: "Crédits", query: "Comment fonctionnent les crédits ?" },
-                  { icon: <UserCheck className="w-3.5 h-3.5" />, label: "Vérification", query: "Comment vérifier mon identité ?" },
-                  { icon: <Image className="w-3.5 h-3.5" />, label: "Albums photos", query: "Comment fonctionnent les albums photos ?" },
-                  { icon: <Lock className="w-3.5 h-3.5" />, label: "Sécurité", query: "Comment protéger mon compte ?" },
-                  { icon: <Bug className="w-3.5 h-3.5" />, label: "Problème technique", query: "J'ai un problème technique" },
-                ].map((topic, i) => (
-                  <motion.button
-                    key={topic.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 + i * 0.05 }}
-                    onClick={() => {
-                      setFreeText('');
-                      setChatMessages(prev => [...prev, { type: 'user', text: topic.query }]);
-                      const results = searchKnowledgeBase(topic.query, allFaqArticles);
-                      if (results.length > 0) {
-                        showAnswer(results[0].id);
-                      } else {
-                        addBotMessage("Je n'ai pas trouvé de réponse. Tape **\"agent\"** pour contacter un conseiller. 😊");
-                      }
-                    }}
-                    disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
-                    className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm text-foreground hover:bg-primary/10 hover:border-primary/30 transition-all active:scale-95 disabled:opacity-50 text-left"
-                  >
-                    <span className="text-primary shrink-0">{topic.icon}</span>
-                    <span className="truncate">{topic.label}</span>
-                  </motion.button>
-                ))}
+                {MAIN_TOPIC_IDS.map((tid, i) => {
+                  const topic = getTopicById(tid);
+                  if (!topic) return null;
+                  const iconMap: Record<string, JSX.Element> = {
+                    home: <Home className="w-3.5 h-3.5" />,
+                    message: <MessageCircle className="w-3.5 h-3.5" />,
+                    heart: <Heart className="w-3.5 h-3.5" />,
+                    credit: <CreditCard className="w-3.5 h-3.5" />,
+                    verify: <UserCheck className="w-3.5 h-3.5" />,
+                    image: <Image className="w-3.5 h-3.5" />,
+                    lock: <Lock className="w-3.5 h-3.5" />,
+                    bug: <Bug className="w-3.5 h-3.5" />,
+                    profile: <UserCheck className="w-3.5 h-3.5" />,
+                    bell: <Bell className="w-3.5 h-3.5" />,
+                    tween: <Sparkles className="w-3.5 h-3.5" />,
+                    group: <Users className="w-3.5 h-3.5" />,
+                    ephemeral: <Zap className="w-3.5 h-3.5" />,
+                  };
+                  return (
+                    <motion.button
+                      key={topic.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.4 + i * 0.05 }}
+                      onClick={() => {
+                        setFreeText('');
+                        setChatMessages(prev => [...prev, { type: 'user', text: topic.label }]);
+                        showTopicMenu(topic.id);
+                      }}
+                      disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
+                      className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm text-foreground hover:bg-primary/10 hover:border-primary/30 transition-all active:scale-95 disabled:opacity-50 text-left"
+                    >
+                      <span className="text-primary shrink-0">{iconMap[topic.icon] ?? <HelpCircle className="w-3.5 h-3.5" />}</span>
+                      <span className="truncate">{topic.label}</span>
+                    </motion.button>
+                  );
+                })}
               </div>
 
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {[
-                  "Comment modifier mon profil ?",
-                  "Médias éphémères",
-                  "Groupes de discussion",
-                  "Page Tween",
-                  "Notifications",
-                ].map((q, i) => (
-                  <motion.button
-                    key={q}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.8 + i * 0.05 }}
-                    onClick={() => {
-                      setChatMessages(prev => [...prev, { type: 'user', text: q }]);
-                      const results = searchKnowledgeBase(q, allFaqArticles);
-                      if (results.length > 0) {
-                        showAnswer(results[0].id);
-                      } else {
-                        addBotMessage("Je n'ai pas trouvé de réponse. Tape **\"agent\"** pour contacter un conseiller. 😊");
-                      }
-                    }}
-                    disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
-                    className="px-3 py-1.5 text-[11px] font-medium rounded-full border border-primary/25 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/40 transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    {q}
-                  </motion.button>
-                ))}
+                {QUICK_TOPIC_IDS.map((tid, i) => {
+                  const topic = getTopicById(tid);
+                  if (!topic) return null;
+                  return (
+                    <motion.button
+                      key={topic.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.8 + i * 0.05 }}
+                      onClick={() => {
+                        setChatMessages(prev => [...prev, { type: 'user', text: topic.label }]);
+                        showTopicMenu(topic.id);
+                      }}
+                      disabled={isBotTyping || chatMessages.some(m => m.isTyping)}
+                      className="px-3 py-1.5 text-[11px] font-medium rounded-full border border-primary/25 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/40 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {topic.label}
+                    </motion.button>
+                  );
+                })}
               </div>
             </motion.div>
           )}
