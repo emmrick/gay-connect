@@ -18,6 +18,7 @@ import {
   Plus, Minus, RefreshCw, AlertCircle, Search, Clock, Hash,
   Headphones, ChevronDown, ChevronRight
 } from 'lucide-react';
+import SendEmailDialog from './SendEmailDialog';
 
 interface ClientDossierPanelProps {
   userId: string;
@@ -32,6 +33,7 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
   const [accessRequestId, setAccessRequestId] = useState<string | null>(null);
   const [accessRequestPending, setAccessRequestPending] = useState(false);
   const [sendingAccessRequest, setSendingAccessRequest] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Fetch user profile
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -331,6 +333,15 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
                 </p>
               )}
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-shrink-0"
+              onClick={() => setEmailDialogOpen(true)}
+            >
+              <Mail className="w-4 h-4 mr-1.5" />
+              Email
+            </Button>
           </div>
 
           {/* Quick stats */}
