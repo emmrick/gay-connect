@@ -7,6 +7,7 @@ import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useConversationStatus } from '@/hooks/useConversationStatus';
 import { shouldShowOnlineIndicator } from '@/hooks/useOnlineStatus';
+import { useUserPresence } from '@/stores/presenceStore';
 import { usePendingEphemeralSnaps } from '@/hooks/usePendingEphemeralSnaps';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
