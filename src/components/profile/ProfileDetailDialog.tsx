@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tables } from '@/integrations/supabase/types';
-import { shouldShowOnlineIndicator, getDetailedLastSeenText } from '@/hooks/useOnlineStatus';
+import { useLivePresence } from '@/hooks/useLivePresence';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 type Profile = Tables<'profiles'>;
