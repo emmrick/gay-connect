@@ -737,6 +737,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
 
     resetChat();
+    navigate('/home');
   };
 
   const resetChat = () => {
@@ -765,6 +766,7 @@ const Help = ({ embedded = false }: HelpProps) => {
     setRatingEmoji(null);
     setRatingComment('');
     resetChat();
+    navigate('/home');
   };
 
   // Send to agent
