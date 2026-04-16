@@ -47,13 +47,13 @@ const AdminLayout = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
-  const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
   useAdminRealtimeBridge(!!isAdmin);
 
-  // Section déduite de l'URL (slug)
-  const activeSection: AdminSection = sectionFromSlug(params.section);
+  // Section déduite de l'URL : /admin → dashboard, /admin/<slug> → section
+  const slug = location.pathname.replace(/^\/admin\/?/, '').split('/')[0] || '';
+  const activeSection: AdminSection = sectionFromSlug(slug);
 
   // Entity id éventuel (mission contextuelle)
   const [taskEntityId, setTaskEntityId] = useState<string | null>(() => {
