@@ -66,6 +66,9 @@ export interface UserCredits {
   total_credits: number;
   max_daily_credits: number;
   daily_credits_reset_date: string;
+  weekly_credits_given: number;
+  weekly_credits_remaining: number;
+  weekly_reset_date: string;
   lock_passive: boolean;
   lock_bonus: boolean;
   lock_purchased: boolean;
