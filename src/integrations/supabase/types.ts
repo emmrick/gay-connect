@@ -4124,6 +4124,8 @@ export type Database = {
           purchased_credits: number
           updated_at: string
           user_id: string
+          weekly_credits_given: number
+          weekly_reset_date: string
         }
         Insert: {
           bonus_credits?: number
@@ -4142,6 +4144,8 @@ export type Database = {
           purchased_credits?: number
           updated_at?: string
           user_id: string
+          weekly_credits_given?: number
+          weekly_reset_date?: string
         }
         Update: {
           bonus_credits?: number
@@ -4160,6 +4164,8 @@ export type Database = {
           purchased_credits?: number
           updated_at?: string
           user_id?: string
+          weekly_credits_given?: number
+          weekly_reset_date?: string
         }
         Relationships: []
       }
