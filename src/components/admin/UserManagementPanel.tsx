@@ -62,6 +62,7 @@ import { toast } from 'sonner';
 import UserProfileDialog from './UserProfileDialog';
 import ClientDossierPanel from './ClientDossierPanel';
 import SendEmailDialog from './SendEmailDialog';
+import BackfillWelcomeEmailsButton from './BackfillWelcomeEmailsButton';
 import {
   useSuspendUser,
   useBlockUser,
@@ -510,14 +511,16 @@ const UserManagementPanel = ({ initialUserId, onUserSelected }: UserManagementPa
             {users?.length || 0} utilisateur(s) trouvé(s)
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ml-auto"
-          onClick={() => refetch()}
-        >
-          <RefreshCw className="w-4 h-4" />
-        </Button>
+        <div className="ml-auto flex items-center gap-2">
+          <BackfillWelcomeEmailsButton />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => refetch()}
+          >
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
