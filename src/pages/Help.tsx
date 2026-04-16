@@ -125,6 +125,7 @@ const persistState = (phase: ChatPhase, messages: ChatMessage[], ticketId?: stri
   const safe = messages.map(m => ({
       type: m.type,
       text: m.text,
+      quickActions: m.quickActions,
     }));
     localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(safe));
     if (ticketId) localStorage.setItem(STORAGE_KEY_TICKET, ticketId);
