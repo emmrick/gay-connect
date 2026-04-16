@@ -691,6 +691,14 @@ const ClientDossierPanel = ({ userId, ticketId, onClose }: ClientDossierPanelPro
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Send Email Dialog */}
+      <SendEmailDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        userId={userId}
+        username={profile?.username}
+      />
     </div>
   );
 };
@@ -1036,14 +1044,6 @@ const ActionsSection = ({ userId, blockedStatus, queryClient, verification, tick
           </p>
         </CardContent>
       </Card>
-
-      {/* Send Email Dialog */}
-      <SendEmailDialog
-        open={emailDialogOpen}
-        onOpenChange={setEmailDialogOpen}
-        userId={userId}
-        username={profile?.username}
-      />
     </div>
   );
 };
