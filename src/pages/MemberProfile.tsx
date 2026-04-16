@@ -164,8 +164,9 @@ const MemberProfile = () => {
     return { id: album.id, name: album.name, is_private: album.is_private, coverUrl: cover?.media_url, mediaCount: count };
   }) : [];
 
-  const getLastSeenText = () => getDetailedLastSeenText(profile);
-  const isTrulyOnline = isUserTrulyOnline(profile);
+  const presence = useLivePresence(profile);
+  const getLastSeenText = () => presence.detailedLastSeenText;
+  const isTrulyOnline = presence.isOnline;
 
   const handleStartChat = async () => {
     if (!user || !userId) return;
