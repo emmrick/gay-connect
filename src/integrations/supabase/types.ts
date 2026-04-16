@@ -4512,6 +4512,7 @@ export type Database = {
         }
         Returns: Json
       }
+      backfill_welcome_emails: { Args: { _days_back?: number }; Returns: Json }
       calculate_distance: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
