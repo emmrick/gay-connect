@@ -367,12 +367,12 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, [chatMessages]);
 
   // Bot message with typing delay then typewriter reveal
-  const addBotMessage = useCallback((text: string) => {
+  const addBotMessage = useCallback((text: string, quickActions?: QuickAction[]) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
     const typingDelay = Math.min(Math.ceil(wordCount / 8) * 400, 1200);
     setIsBotTyping(true);
     setTimeout(() => {
-      setChatMessages(prev => [...prev, { type: 'bot', text, isTyping: true, revealedLength: 0 }]);
+      setChatMessages(prev => [...prev, { type: 'bot', text, isTyping: true, revealedLength: 0, quickActions }]);
       setIsBotTyping(false);
     }, typingDelay);
   }, []);
@@ -384,15 +384,90 @@ const Help = ({ embedded = false }: HelpProps) => {
     return STATIC_KNOWLEDGE.find(s => s.id === id) || null;
   }, [allFaqArticles]);
 
-  // Show answer
-  const showAnswer = useCallback((entryId: string) => {
+  // Build follow-up actions for an answer (related + back/menu/agent)
+  const buildAnswerQuickActions = useCallback((entryId: string, currentTopicId?: string): QuickAction[] => {
+    const actions: QuickAction[] = [];
+    const entry = findEntryById(entryId);
+    const category = (entry as any)?.category as string | undefined;
+
+    // Related entries from same category (up to 3)
+    if (category) {
+      const related = STATIC_KNOWLEDGE
+        .filter(s => s.category === category && s.id !== entryId)
+        .slice(0, 3);
+      for (const r of related) {
+        actions.push({ label: `📄 ${r.question}`, value: `entry:${r.id}`, variant: 'subtle' });
+      }
+    }
+
+    // Back to current topic menu
+    if (currentTopicId) {
+      const topic = getTopicById(currentTopicId);
+      if (topic) {
+        actions.push({ label: `🔙 Retour à « ${topic.label} »`, value: `topic:${currentTopicId}`, variant: 'outline' });
+      }
+    }
+
+    // Always: main menu + agent
+    actions.push({ label: '🏠 Menu principal', value: 'menu', variant: 'outline' });
+    actions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'outline' });
+
+    return actions;
+  }, [findEntryById]);
+
+  // Show answer with quick action follow-ups
+  const showAnswer = useCallback((entryId: string, currentTopicId?: string) => {
     const entry = findEntryById(entryId);
     if (!entry) return;
     setNoMatchCount(0);
     pendingSuggestions = [];
     const linkPart = (entry as any).link ? `\n\n[LINK:${(entry as any).link}]` : '';
-    addBotMessage(`**${entry.question}**\n\n${entry.answer}${linkPart}\n\nCette réponse t'a aidé ? Tu peux me poser une **autre question** ou taper **"agent"** pour contacter un conseiller. 😊\n\n📚 Consulte aussi le **Centre d'aide** pour plus d'articles : [LINK:/aide]`);
+    const actions = buildAnswerQuickActions(entryId, currentTopicId);
+    addBotMessage(
+      `**${entry.question}**\n\n${entry.answer}${linkPart}\n\n💡 Choisis une option ci-dessous ou pose une autre question 👇`,
+      actions
+    );
+  }, [findEntryById, addBotMessage, buildAnswerQuickActions]);
+
+  // Show topic menu (when user clicks a main topic block)
+  const showTopicMenu = useCallback((topicId: string) => {
+    const topic = getTopicById(topicId);
+    if (!topic) return;
+    const entry = findEntryById(topic.primaryEntryId);
+    if (!entry) return;
+
+    setNoMatchCount(0);
+    pendingSuggestions = [];
+    const linkPart = (entry as any).link ? `\n\n[LINK:${(entry as any).link}]` : '';
+
+    const subActions: QuickAction[] = topic.subActions.map(sa => ({
+      label: `${sa.emoji ?? '•'} ${sa.label}`,
+      value: `entry:${sa.entryId}:${topic.id}`,
+      variant: 'subtle',
+    }));
+    subActions.push({ label: '🏠 Menu principal', value: 'menu', variant: 'outline' });
+    subActions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'outline' });
+
+    addBotMessage(
+      `**${entry.question}**\n\n${entry.answer}${linkPart}\n\n💡 Sujets liés à **${topic.label}** — clique pour aller plus vite 👇`,
+      subActions
+    );
   }, [findEntryById, addBotMessage]);
+
+  // Show main menu (after click on "🏠 Menu principal")
+  const showMainMenu = useCallback(() => {
+    pendingSuggestions = [];
+    const mainActions: QuickAction[] = MAIN_TOPIC_IDS
+      .map(id => getTopicById(id))
+      .filter((t): t is ChatbotTopic => !!t)
+      .map(t => ({ label: t.label, value: `topic:${t.id}`, variant: 'subtle' }));
+    mainActions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'outline' });
+
+    addBotMessage(
+      `📋 **Menu principal**\n\nChoisis un sujet ci-dessous pour une réponse rapide, ou pose-moi directement ta question 😊`,
+      mainActions
+    );
+  }, [addBotMessage]);
 
   // Credit keywords detection
   const isCreditRequest = useCallback((msg: string) => {
