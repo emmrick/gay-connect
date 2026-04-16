@@ -10,7 +10,7 @@
  *  - Migration douce des anciennes URL `?section=xxx` et sessionStorage
  */
 import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
-import { Navigate, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
