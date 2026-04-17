@@ -5,10 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { BanIcon, Check, Loader2, Sparkles, Star } from 'lucide-react';
+import { BanIcon, Check, Loader2, Sparkles, Star, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useAdFreeSubscription } from '@/hooks/useAds';
 
 interface AdFreeSubscriptionDialogProps {
   open: boolean;
@@ -36,6 +37,8 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
   const queryClient = useQueryClient();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { data: currentSub } = useAdFreeSubscription();
+  const isExtending = !!currentSub?.isActive;
 
   const { data: plans } = useQuery({
     queryKey: ['ad-free-plans'],

@@ -13,7 +13,7 @@ import SendGiftSection from './SendGiftSection';
 import ContactCreditIssueDialog from './ContactCreditIssueDialog';
 import AdBanner from '@/components/ads/AdBanner';
 import AdFreeSubscriptionDialog from '@/components/ads/AdFreeSubscriptionDialog';
-import { useAdFreeStatus } from '@/hooks/useAds';
+import { useAdFreeStatus, useAdFreeSubscription } from '@/hooks/useAds';
 import { motion } from 'framer-motion';
 
 const CreditsPage = () => {
@@ -22,6 +22,7 @@ const CreditsPage = () => {
   const [showClaimDialog, setShowClaimDialog] = useState(false);
   const [showAdFreeDialog, setShowAdFreeDialog] = useState(false);
   const { data: isAdFree } = useAdFreeStatus();
+  const { data: adFreeSub } = useAdFreeSubscription();
 
   const currentInterval = dynamicCosts?.passive_recharge_interval_hours ?? DEFAULT_COSTS.passive_recharge_interval_hours;
   const currentAmount = dynamicCosts?.passive_recharge_amount ?? DEFAULT_COSTS.passive_recharge_amount;
@@ -166,15 +167,70 @@ const CreditsPage = () => {
           </motion.button>
         )}
 
-        {isAdFree && (
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <BanIcon className="w-4 h-4 text-emerald-500" />
+        {isAdFree && adFreeSub?.isActive && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 space-y-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
+                <BanIcon className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300 font-heading">
+                  Sans pub actif
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {adFreeSub.daysRemaining > 0
+                    ? `Encore ${adFreeSub.daysRemaining} jour${adFreeSub.daysRemaining > 1 ? 's' : ''}${adFreeSub.hoursRemaining > 0 ? ` et ${adFreeSub.hoursRemaining}h` : ''}`
+                    : `Encore ${adFreeSub.hoursRemaining}h`}
+                  {' · '}
+                  Expire le {adFreeSub.expiresAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
             </div>
-            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-              Abonnement sans pub actif
-            </span>
-          </div>
+
+            {/* Progress bar — visual countdown */}
+            {adFreeSub.startsAt && (
+              <div className="space-y-1.5">
+                {(() => {
+                  const total = adFreeSub.expiresAt.getTime() - adFreeSub.startsAt.getTime();
+                  const elapsed = Date.now() - adFreeSub.startsAt.getTime();
+                  const pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
+                  return (
+                    <>
+                      <div className="h-1.5 rounded-full bg-emerald-500/15 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>{adFreeSub.startsAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                        <span>{Math.round(100 - pct)}% restant</span>
+                        <span>{adFreeSub.expiresAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Renew CTA */}
+            <Button
+              onClick={() => setShowAdFreeDialog(true)}
+              size="sm"
+              variant="outline"
+              className="w-full border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Prolonger à l'avance
+            </Button>
+            <p className="text-[10px] text-center text-muted-foreground">
+              Renouvelez maintenant pour ajouter du temps à votre période actuelle.
+            </p>
+          </motion.div>
         )}
 
         {/* Ad */}
