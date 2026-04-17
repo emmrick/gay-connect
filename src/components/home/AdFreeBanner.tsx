@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { BanIcon, HelpCircle, X, Sparkles } from 'lucide-react';
+import { BanIcon, HelpCircle, X, Sparkles, Clock } from 'lucide-react';
 import AdFreeSubscriptionDialog from '@/components/ads/AdFreeSubscriptionDialog';
+import { useAdFreeSubscription } from '@/hooks/useAds';
 
 const STORAGE_KEY = 'gc_ad_free_banner';
 
@@ -32,6 +33,42 @@ const shouldShow = (): boolean => {
 const AdFreeBanner = () => {
   const [visible, setVisible] = useState(() => shouldShow());
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
+  const { data: sub } = useAdFreeSubscription();
+
+  // When user has an active subscription, show a status block instead of the promo banner
+  if (sub?.isActive) {
+    return (
+      <>
+        <div className="relative rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 to-emerald-500/4 p-3.5 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+            <BanIcon className="w-4 h-4 text-emerald-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300 leading-tight">
+              ✨ Sans pub actif
+            </p>
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+              <Clock className="w-3 h-3" />
+              {sub.daysRemaining > 0
+                ? `${sub.daysRemaining} j${sub.hoursRemaining > 0 ? ` ${sub.hoursRemaining}h` : ''} restant${sub.daysRemaining > 1 ? 's' : ''}`
+                : `${sub.hoursRemaining}h restantes`}
+              {' · '}jusqu'au {sub.expiresAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowSubscribeDialog(true)}
+            className="text-[11px] font-bold text-primary hover:underline shrink-0"
+          >
+            Prolonger
+          </button>
+        </div>
+        <AdFreeSubscriptionDialog
+          open={showSubscribeDialog}
+          onOpenChange={setShowSubscribeDialog}
+        />
+      </>
+    );
+  }
 
   if (!visible) return null;
 
