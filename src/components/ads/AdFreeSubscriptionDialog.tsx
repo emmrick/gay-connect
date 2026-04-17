@@ -5,10 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { BanIcon, Check, Loader2, Sparkles, Star } from 'lucide-react';
+import { BanIcon, Check, Loader2, Sparkles, Star, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useAdFreeSubscription } from '@/hooks/useAds';
 
 interface AdFreeSubscriptionDialogProps {
   open: boolean;
@@ -36,6 +37,8 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
   const queryClient = useQueryClient();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { data: currentSub } = useAdFreeSubscription();
+  const isExtending = !!currentSub?.isActive;
 
   const { data: plans } = useQuery({
     queryKey: ['ad-free-plans'],
@@ -97,6 +100,7 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
       });
 
       queryClient.invalidateQueries({ queryKey: ['ad-free-status'] });
+      queryClient.invalidateQueries({ queryKey: ['ad-free-subscription'] });
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
       onOpenChange(false);
     } catch (err: any) {
@@ -114,12 +118,31 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
             <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
               <BanIcon className="w-4 h-4 text-primary" />
             </div>
-            Navigation sans pub
+            {isExtending ? 'Prolonger sans pub' : 'Navigation sans pub'}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            Profitez d'une expérience sans publicité en échange de crédits.
+            {isExtending
+              ? 'Ajoutez du temps à votre abonnement actuel en utilisant des crédits.'
+              : "Profitez d'une expérience sans publicité en échange de crédits."}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Active subscription banner */}
+        {isExtending && currentSub?.isActive && (
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-1">
+            <div className="flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                Abonnement actif
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              Expire le <strong className="text-foreground">{currentSub.expiresAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+              {' '}({currentSub.daysRemaining > 0 ? `${currentSub.daysRemaining} j` : `${currentSub.hoursRemaining} h`} restant{currentSub.daysRemaining > 1 ? 's' : ''}).
+              {' '}La nouvelle durée s'<strong className="text-foreground">ajoutera</strong> à cette date.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-4 pt-2">
           {/* Plans */}
@@ -184,11 +207,13 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
             ) : (
               <Sparkles className="w-4 h-4 mr-2" />
             )}
-            Souscrire pour {selected?.credits_cost ?? '...'} crédits
+            {isExtending ? 'Prolonger pour' : 'Souscrire pour'} {selected?.credits_cost ?? '...'} crédits
           </Button>
 
           <p className="text-[10px] text-center text-muted-foreground">
-            Les crédits seront déduits immédiatement. Pas de renouvellement automatique.
+            {isExtending
+              ? 'Les crédits seront déduits immédiatement. La durée choisie s\'ajoute à votre période actuelle.'
+              : 'Les crédits seront déduits immédiatement. Pas de renouvellement automatique.'}
           </p>
         </div>
       </DialogContent>
