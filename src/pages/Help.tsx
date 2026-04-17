@@ -431,26 +431,41 @@ const Help = ({ embedded = false }: HelpProps) => {
   }, [findEntryById, addBotMessage, buildAnswerQuickActions]);
 
   // Show topic menu (when user clicks a main topic block)
+  // Displays ONLY the list of sub-questions — does NOT auto-answer with the primary entry.
+  // The user must click a specific sub-question to receive a detailed answer.
   const showTopicMenu = useCallback((topicId: string) => {
     const topic = getTopicById(topicId);
     if (!topic) return;
-    const entry = findEntryById(topic.primaryEntryId);
-    if (!entry) return;
 
     setNoMatchCount(0);
     pendingSuggestions = [];
-    const linkPart = (entry as any).link ? `\n\n[LINK:${(entry as any).link}]` : '';
 
-    const subActions: QuickAction[] = topic.subActions.map(sa => ({
-      label: `${sa.emoji ?? '•'} ${sa.label}`,
-      value: `entry:${sa.entryId}:${topic.id}`,
-      variant: 'subtle',
-    }));
+    const subActions: QuickAction[] = [];
+
+    // Primary entry is offered as a clickable option (general overview of the topic)
+    const primaryEntry = findEntryById(topic.primaryEntryId);
+    if (primaryEntry) {
+      subActions.push({
+        label: `📖 ${primaryEntry.question}`,
+        value: `entry:${topic.primaryEntryId}:${topic.id}`,
+        variant: 'subtle',
+      });
+    }
+
+    // Sub-questions
+    topic.subActions.forEach(sa => {
+      subActions.push({
+        label: `${sa.emoji ?? '•'} ${sa.label}`,
+        value: `entry:${sa.entryId}:${topic.id}`,
+        variant: 'subtle',
+      });
+    });
+
     subActions.push({ label: '🏠 Menu principal', value: 'menu', variant: 'outline' });
     subActions.push({ label: '👤 Contacter un agent', value: 'agent', variant: 'outline' });
 
     addBotMessage(
-      `**${entry.question}**\n\n${entry.answer}${linkPart}\n\n💡 Sujets liés à **${topic.label}** — clique pour aller plus vite 👇`,
+      `📂 **${topic.label}**\n\nVoici les questions les plus fréquentes sur ce sujet. Clique sur celle qui t'intéresse 👇`,
       subActions
     );
   }, [findEntryById, addBotMessage]);
