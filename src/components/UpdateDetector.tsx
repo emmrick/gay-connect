@@ -1,18 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Sparkles, AlertTriangle, X } from 'lucide-react';
+import { RefreshCw, Sparkles, AlertTriangle, Rocket } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 
 const CHECK_INTERVAL = 30_000; // 30s
-const DISMISS_KEY = 'update-detector-dismissed-hash';
 
 const UpdateDetector = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<'idle' | 'loading' | 'ready'>('idle');
-  const [latestHash, setLatestHash] = useState<string | null>(null);
   const initialHash = useRef<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -41,10 +39,6 @@ const UpdateDetector = () => {
       if (!initialHash.current) return;
       const newHash = await getPageHash();
       if (newHash && newHash !== initialHash.current && mounted) {
-        // Don't re-show if user already dismissed this exact version
-        const dismissed = localStorage.getItem(DISMISS_KEY);
-        if (dismissed === newHash) return;
-        setLatestHash(newHash);
         setUpdateAvailable(true);
         clearInterval(intervalRef.current);
       }
@@ -55,6 +49,17 @@ const UpdateDetector = () => {
       clearInterval(intervalRef.current);
     };
   }, [getPageHash]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (updateAvailable) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+  }, [updateAvailable]);
 
   const handleUpdate = useCallback(() => {
     setIsUpdating(true);
@@ -83,113 +88,111 @@ const UpdateDetector = () => {
     }, delay + 400);
   }, []);
 
-  const handleDismiss = useCallback(() => {
-    if (latestHash) localStorage.setItem(DISMISS_KEY, latestHash);
-    setUpdateAvailable(false);
-  }, [latestHash]);
-
   return (
     <AnimatePresence>
       {updateAvailable && (
         <motion.div
-          initial={{ y: -120, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -120, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed inset-x-0 top-0 z-[9999]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-card/95 backdrop-blur-xl border-b border-primary/20 shadow-[0_4px_24px_hsl(var(--primary)/0.15)]">
-            <div className="max-w-lg mx-auto px-4 py-3">
-              {!isUpdating ? (
-                <>
-                  {/* Notification mode */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-lg">🚀</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-display font-semibold mb-0.5">
-                        Nouvelle mise à jour disponible !
-                      </p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        Une nouvelle version est prête avec des améliorations et corrections importantes.
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleDismiss}
-                      className="p-1 rounded-lg hover:bg-secondary transition-colors flex-shrink-0"
-                      aria-label="Fermer"
-                    >
-                      <X className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </div>
+          <motion.div
+            initial={{ scale: 0.9, y: 20, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0.9, y: 20, opacity: 0 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+            className="w-full max-w-sm bg-card border border-primary/20 rounded-3xl shadow-[0_20px_60px_hsl(var(--primary)/0.25)] overflow-hidden"
+          >
+            {!isUpdating ? (
+              <div className="p-6">
+                {/* Hero icon */}
+                <div className="flex justify-center mb-4">
+                  <motion.div
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30"
+                  >
+                    <Rocket className="w-8 h-8 text-primary-foreground" />
+                  </motion.div>
+                </div>
 
-                  <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-500 bg-amber-500/10 rounded-lg px-2.5 py-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span>Recommandée pour éviter les bugs et conflits.</span>
-                  </div>
+                <h2 className="text-center text-lg font-display font-bold mb-2">
+                  Nouvelle mise à jour disponible !
+                </h2>
+                <p className="text-center text-sm text-muted-foreground mb-4 leading-relaxed">
+                  Une nouvelle version du site est prête avec des améliorations et corrections importantes.
+                </p>
 
-                  <div className="mt-2.5 flex gap-2">
-                    <Button
-                      onClick={handleUpdate}
-                      size="sm"
-                      className="flex-1 gap-1.5 h-9"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      Mettre à jour
-                    </Button>
-                    <Button
-                      onClick={handleDismiss}
-                      size="sm"
-                      variant="ghost"
-                      className="h-9"
-                    >
-                      Plus tard
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Loading mode */}
-                  <div className="flex items-center gap-2.5 mb-2.5">
-                    <motion.div
-                      animate={{ rotate: phase === 'loading' ? 360 : 0 }}
-                      transition={{ repeat: phase === 'loading' ? Infinity : 0, duration: 1, ease: 'linear' }}
-                      className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0"
-                    >
-                      {phase === 'ready' ? (
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
-                      ) : (
-                        <RefreshCw className="w-3.5 h-3.5 text-primary" />
-                      )}
-                    </motion.div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-display font-semibold">
-                        {phase === 'ready' ? 'Mise à jour terminée !' : 'Mise à jour en cours…'}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {phase === 'ready' ? 'Rechargement automatique' : 'Patiente quelques secondes…'}
-                      </p>
-                    </div>
-                    <span className="text-xs font-display font-bold text-primary tabular-nums">
-                      {progress}%
-                    </span>
-                  </div>
+                <div className="bg-secondary/50 rounded-xl p-3 mb-4">
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    👉 Clique sur <strong>« Mettre à jour »</strong> puis patiente quelques secondes le temps du chargement.
+                  </p>
+                </div>
 
-                  <div className="relative">
-                    <Progress value={progress} className="h-2 bg-secondary/50" />
-                    {phase === 'loading' && progress < 100 && (
-                      <motion.div
-                        className="absolute top-0 left-0 h-full w-16 rounded-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                        animate={{ x: ['-64px', '300px'] }}
-                        transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                      />
+                <div className="flex items-start gap-2 text-[11px] text-amber-600 dark:text-amber-500 bg-amber-500/10 rounded-xl px-3 py-2.5 mb-4">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">
+                    Cette mise à jour est <strong>obligatoire</strong> pour éviter les bugs et conflits. Elle est requise pour continuer à utiliser le site.
+                  </span>
+                </div>
+
+                <Button
+                  onClick={handleUpdate}
+                  size="lg"
+                  className="w-full gap-2 h-12 text-base font-semibold shadow-lg shadow-primary/20"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Mettre à jour
+                </Button>
+
+                <p className="text-center text-[10px] text-muted-foreground mt-3">
+                  Merci pour ta compréhension 🙏
+                </p>
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="flex flex-col items-center gap-3 mb-5">
+                  <motion.div
+                    animate={{ rotate: phase === 'loading' ? 360 : 0 }}
+                    transition={{ repeat: phase === 'loading' ? Infinity : 0, duration: 1, ease: 'linear' }}
+                    className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center"
+                  >
+                    {phase === 'ready' ? (
+                      <Sparkles className="w-7 h-7 text-primary" />
+                    ) : (
+                      <RefreshCw className="w-7 h-7 text-primary" />
                     )}
+                  </motion.div>
+                  <div className="text-center">
+                    <p className="text-base font-display font-bold">
+                      {phase === 'ready' ? 'Mise à jour terminée !' : 'Mise à jour en cours…'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {phase === 'ready'
+                        ? 'Rechargement automatique du site'
+                        : 'Patiente quelques secondes, ne ferme pas la page'}
+                    </p>
                   </div>
-                </>
-              )}
-            </div>
-          </div>
+                </div>
+
+                <div className="relative mb-2">
+                  <Progress value={progress} className="h-3 bg-secondary/50" />
+                  {phase === 'loading' && progress < 100 && (
+                    <motion.div
+                      className="absolute top-0 left-0 h-full w-16 rounded-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                      animate={{ x: ['-64px', '320px'] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                    />
+                  )}
+                </div>
+                <p className="text-right text-xs font-display font-bold text-primary tabular-nums">
+                  {progress}%
+                </p>
+              </div>
+            )}
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
