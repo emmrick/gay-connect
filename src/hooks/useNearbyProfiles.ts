@@ -113,13 +113,15 @@ export const useNearbyProfiles = (
 
       if (error) throw error;
 
-      // Filter to only verified users
-      const { data: verifiedUsers } = await supabase
-        .from('identity_verifications')
+      // Filter to only verified users (using profiles.is_verified as source of truth)
+      const userIds = (data || []).map((p: any) => p.user_id);
+      const { data: verifiedProfiles } = await supabase
+        .from('profiles')
         .select('user_id')
-        .eq('status', 'approved');
+        .in('user_id', userIds)
+        .eq('is_verified', true);
 
-      const verifiedUserIds = new Set((verifiedUsers || []).map(v => v.user_id));
+      const verifiedUserIds = new Set((verifiedProfiles || []).map(v => v.user_id));
       const geoProfiles = (data || [])
         .filter(p => verifiedUserIds.has(p.user_id) && !!p.avatar_url)
         .map(fixStaleOnlineStatus);
