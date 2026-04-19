@@ -53,6 +53,8 @@ interface AdminSidebarProps {
   pendingVerifications?: number;
   isAdmin?: boolean;
   modPermissions?: ModPermissions | null;
+  /** Widget rendu en bas de sidebar (ex: TaskQueuePopup). Masqué quand collapsed. */
+  bottomSlot?: React.ReactNode;
 }
 
 type NavGroup = 'tasks' | 'moderation' | 'users' | 'finances' | 'communication' | 'config' | 'logs';
@@ -115,6 +117,7 @@ const groupOrder: NavGroup[] = ['tasks', 'moderation', 'users', 'finances', 'com
 const AdminSidebar = ({ 
   activeSection, onSectionChange, pendingReports = 0, blockedCount = 0,
   pendingPurchases = 0, pendingVerifications = 0, isAdmin = false, modPermissions,
+  bottomSlot,
 }: AdminSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -250,6 +253,13 @@ const AdminSidebar = ({
             })}
           </nav>
         </ScrollArea>
+
+        {/* Bottom slot (TaskQueuePopup widget) — caché si sidebar collapsed pour ne pas casser le layout */}
+        {bottomSlot && !collapsed && (
+          <div className="border-t border-border/30 p-2 max-h-[40vh] overflow-y-auto">
+            {bottomSlot}
+          </div>
+        )}
 
         {/* Footer */}
         <div className={cn("border-t border-border/30", collapsed ? "p-1.5" : "p-2")}>

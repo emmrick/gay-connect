@@ -235,9 +235,12 @@ const AdminLayout = () => {
           isAdmin={!!isAdmin}
           modPermissions={modPermissions}
         />
+        {/* Widget mission rendu en barre fine sticky sous le header (au lieu d'occuper la zone centrale) */}
+        <div className="sticky top-[52px] z-30 bg-background/80 backdrop-blur-md border-b border-border/30 px-3 py-2">
+          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+        </div>
         <main className="flex-1 overflow-auto">
           <div className="p-3 pb-8">
-            <TaskQueuePopup onNavigateToSection={handleSectionChange} />
             <Outlet context={outletContext} />
           </div>
         </main>
@@ -264,6 +267,7 @@ const AdminLayout = () => {
         pendingVerifications={pendingVerificationsCount}
         isAdmin={!!isAdmin}
         modPermissions={modPermissions}
+        bottomSlot={<TaskQueuePopup onNavigateToSection={handleSectionChange} />}
       />
 
       <main className="flex-1 overflow-auto">
@@ -277,7 +281,6 @@ const AdminLayout = () => {
         </div>
 
         <div className="max-w-6xl mx-auto p-6 space-y-6">
-          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
           <Outlet context={outletContext} />
         </div>
       </main>
@@ -294,3 +297,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+
