@@ -183,55 +183,7 @@ const TweenComposer = () => {
     setErrorMsg(null);
   };
 
-  // ─── Upload avec progression XHR (fetch ne donne pas de progression) ───────
-  const uploadWithProgress = useCallback(
-    async (path: string, file: File): Promise<void> => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) throw new Error('Session expirée — reconnecte-toi puis réessaie.');
-
-      const supabaseUrl = (supabase as unknown as { supabaseUrl: string }).supabaseUrl
-        || import.meta.env.VITE_SUPABASE_URL;
-      const url = `${supabaseUrl}/storage/v1/object/media/${encodeURIComponent(path)}`;
-
-      return new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', url, true);
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-        xhr.setRequestHeader('x-upsert', 'false');
-        xhr.setRequestHeader('cache-control', 'max-age=31536000');
-        if (file.type) xhr.setRequestHeader('content-type', file.type);
-
-        xhr.upload.onprogress = (ev) => {
-          if (ev.lengthComputable) {
-            const pct = Math.round((ev.loaded / ev.total) * 100);
-            setUploadProgress(pct);
-            if (pct < 100) setUploadStage(`Envoi du média… ${pct}%`);
-            else setUploadStage('Finalisation côté serveur…');
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else {
-            let msg = `Erreur ${xhr.status}`;
-            try {
-              const body = JSON.parse(xhr.responseText);
-              msg = body.message || body.error || msg;
-            } catch {
-              if (xhr.responseText) msg = xhr.responseText.slice(0, 200);
-            }
-            reject(new Error(msg));
-          }
-        };
-        xhr.onerror = () => reject(new Error('Connexion interrompue pendant l\'envoi.'));
-        xhr.ontimeout = () => reject(new Error('Délai dépassé pendant l\'envoi.'));
-
-        xhr.send(file);
-      });
-    },
-    []
-  );
+  // (uploadWithProgress est défini plus haut, avant l'early return)
 
   const handlePublish = async () => {
     if (!canPublish) return;
