@@ -3,9 +3,12 @@ import { ShoppingCart, Gift, BarChart3, Coins, Sparkles, Heart, TrendingUp } fro
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
 import { useActiveProfile } from '@/contexts/ActiveProfileContext';
-import { motion } from 'framer-motion';
+import { useActivePromotion } from '@/hooks/useActivePromotion';
+import { motion, AnimatePresence } from 'framer-motion';
 import BuyCreditDialog from './BuyCreditDialog';
 import CreditHistorySheet from './CreditHistorySheet';
+import PromotionBadge from './PromotionBadge';
+import CreditBalanceProgress from './CreditBalanceProgress';
 import { cn } from '@/lib/utils';
 
 interface CreditWalletHeaderProps {
