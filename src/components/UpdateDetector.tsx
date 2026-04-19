@@ -48,16 +48,16 @@ const UpdateDetector = () => {
   const [phase, setPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [retryCount, setRetryCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  // Source de vérité : la version réellement embarquée dans le bundle JS chargé.
+  // On NE lit PAS le localStorage : sinon, après un reload servi par le cache du
+  // Service Worker, `stored` peut être en avance sur le bundle réellement servi
+  // et masquer indéfiniment les nouvelles mises à jour.
   const localVersionRef = useRef<string>(BUILD_VERSION);
 
-  // Initialise la version locale (priorité au localStorage si présent)
+  // Synchronise le localStorage avec le BUILD_VERSION effectif (pour debug uniquement).
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
+    if (BUILD_VERSION !== 'dev') {
       localStorage.setItem(STORAGE_KEY, BUILD_VERSION);
-      localVersionRef.current = BUILD_VERSION;
-    } else {
-      localVersionRef.current = stored;
     }
   }, []);
 
