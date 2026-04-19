@@ -44,5 +44,3 @@ const ReferralDialog = () => {
 
 export default ReferralDialog;
 
-
-export default ReferralDialog;
