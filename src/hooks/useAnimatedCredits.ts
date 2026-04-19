@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { useCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
 import { deductCredits as deductCreditsBase, checkSufficientCredits, CREDIT_COSTS, getDynamicCreditCost } from '@/hooks/useCredits';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 
@@ -21,7 +20,6 @@ interface UseAnimatedCreditsResult {
 }
 
 export const useAnimatedCredits = (): UseAnimatedCreditsResult => {
-  const { showDeduction } = useCreditDeduction();
   const { showInsufficientCreditsDialog } = useCreditCheck();
 
   const deductWithAnimation = useCallback(async (
