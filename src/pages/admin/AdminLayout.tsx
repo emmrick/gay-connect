@@ -132,12 +132,15 @@ const AdminLayout = () => {
   const pendingReportsCount = useMemo(() => stats?.pending || 0, [stats?.pending]);
 
   // Navigation centralisée (sidebar / mobile nav / command bar / TaskQueuePopup)
+  // IMPORTANT : on utilise `replace: true` pour la navigation INTERNE entre sections
+  // afin de ne pas empiler 30 entrées d'historique. Ainsi un seul "Retour" suffit
+  // pour sortir réellement de l'admin.
   const handleSectionChange = useCallback(
     (section: AdminSection | string) => {
       // Membre ciblé (depuis modale signalement par ex.)
       if (typeof section === 'string' && section.startsWith('users:')) {
         const uid = section.split(':')[1];
-        navigate(`${buildAdminPath('users')}?user=${uid}`);
+        navigate(`${buildAdminPath('users')}?user=${uid}`, { replace: true });
         return;
       }
       const entityId = sessionStorage.getItem('admin-navigate-entity-id');
@@ -147,7 +150,9 @@ const AdminLayout = () => {
       } else if (section !== activeSection) {
         setTaskEntityId(null);
       }
-      navigate(buildAdminPath(section as AdminSection));
+      // Évite un re-navigate vers la même section
+      if (section === activeSection) return;
+      navigate(buildAdminPath(section as AdminSection), { replace: true });
     },
     [activeSection, navigate],
   );
