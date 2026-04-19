@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { useCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
 import { deductCredits as deductCreditsBase, checkSufficientCredits, CREDIT_COSTS, getDynamicCreditCost } from '@/hooks/useCredits';
 import { useCreditCheck } from '@/hooks/useCreditCheck';
 
@@ -21,7 +20,6 @@ interface UseAnimatedCreditsResult {
 }
 
 export const useAnimatedCredits = (): UseAnimatedCreditsResult => {
-  const { showDeduction } = useCreditDeduction();
   const { showInsufficientCreditsDialog } = useCreditCheck();
 
   const deductWithAnimation = useCallback(async (
@@ -31,43 +29,28 @@ export const useAnimatedCredits = (): UseAnimatedCreditsResult => {
     description?: string,
     label?: string
   ) => {
-    const result = await deductCreditsBase(userId, amount, transactionType, description);
-    
-    if (result.success) {
-      showDeduction(amount, label);
-    }
-    
-    return result;
-  }, [showDeduction]);
+    // deductCreditsBase émet déjà l'animation avec le montant FINAL (après promo).
+    return await deductCreditsBase(userId, amount, transactionType, description ?? label);
+  }, []);
 
   const checkAndDeduct = useCallback(async (
     userId: string,
     costKey: CreditCostKey,
     label?: string
   ): Promise<boolean> => {
-    // Use dynamic cost from DB instead of static
     const amount = await getDynamicCreditCost(costKey);
-    
-    // If cost is 0, action is free
     if (amount <= 0) return true;
-    
-    // Check if user has enough credits
+
     const hasCredits = await checkSufficientCredits(userId, amount);
     if (!hasCredits) {
       showInsufficientCreditsDialog(amount, label || costKey);
       return false;
     }
 
-    // Deduct credits with animation
+    // Animation déclenchée automatiquement par deductCreditsBase (montant après promo).
     const result = await deductCreditsBase(userId, amount, costKey, label);
-    
-    if (result.success) {
-      showDeduction(amount, label);
-      return true;
-    }
-    
-    return false;
-  }, [showDeduction, showInsufficientCreditsDialog]);
+    return result.success;
+  }, [showInsufficientCreditsDialog]);
 
   return {
     deductWithAnimation,

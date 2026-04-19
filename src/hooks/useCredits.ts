@@ -139,11 +139,24 @@ export const deductCredits = async (
     return { success: false, error: error.message };
   }
 
-  const result = data as { success: boolean; error?: string };
+  const result = data as { 
+    success: boolean; 
+    error?: string; 
+    final_amount?: number; 
+    original_amount?: number; 
+    discount_applied?: number; 
+    promo_label?: string | null;
+  };
   
   // Emit animation event on successful deduction (only once)
+  // Use final_amount (after promo discount) instead of original amount
   if (result.success && showAnimation) {
-    emitCreditDeduction(amount, description);
+    const displayAmount = typeof result.final_amount === 'number' ? result.final_amount : amount;
+    const hasPromo = (result.discount_applied ?? 0) > 0;
+    const label = hasPromo && result.promo_label
+      ? `${description || ''} (${result.promo_label})`.trim()
+      : description;
+    emitCreditDeduction(displayAmount, label);
   }
 
   // Invalidate credit queries to update UI immediately
