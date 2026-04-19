@@ -16,11 +16,11 @@ interface CreditWalletHeaderProps {
 }
 
 const CreditWalletHeader = ({ onOpenGift }: CreditWalletHeaderProps) => {
-  const { totalCredits, availableCredits, isLoading, credits } = useCredits();
+  const { totalCredits, availableCredits, isLoading, monthlyReferenceBalance } = useCredits();
   const { isCouple, partnerProfile } = useActiveProfile();
   const { promotion, hasActivePromotion } = useActivePromotion();
-  const highestBalance = (credits as any)?.highest_balance_ever ?? totalCredits;
-  const maxForBar = Math.max(highestBalance || 0, totalCredits, 1);
+  // Référence = solde au 1er du mois (snapshot mensuel), monte si le solde dépasse
+  const maxForBar = Math.max(monthlyReferenceBalance || 0, totalCredits, 1);
 
   if (isLoading) {
     return (

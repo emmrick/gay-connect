@@ -4159,6 +4159,8 @@ export type Database = {
           lock_passive: boolean
           lock_purchased: boolean
           monthly_daily_credits_given: number | null
+          monthly_reference_balance: number
+          monthly_reference_date: string
           monthly_reset_date: string
           passive_credits: number | null
           purchased_credits: number
@@ -4180,6 +4182,8 @@ export type Database = {
           lock_passive?: boolean
           lock_purchased?: boolean
           monthly_daily_credits_given?: number | null
+          monthly_reference_balance?: number
+          monthly_reference_date?: string
           monthly_reset_date?: string
           passive_credits?: number | null
           purchased_credits?: number
@@ -4201,6 +4205,8 @@ export type Database = {
           lock_passive?: boolean
           lock_purchased?: boolean
           monthly_daily_credits_given?: number | null
+          monthly_reference_balance?: number
+          monthly_reference_date?: string
           monthly_reset_date?: string
           passive_credits?: number | null
           purchased_credits?: number
@@ -4844,6 +4850,10 @@ export type Database = {
       redeem_flyer_promo_code: {
         Args: { _code: string; _user_id: string }
         Returns: Json
+      }
+      refresh_monthly_credit_reference: {
+        Args: { _user_id: string }
+        Returns: number
       }
       refuse_moderation_task: {
         Args: { _task_id: string; _user_id: string }

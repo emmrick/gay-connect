@@ -216,6 +216,26 @@ export const useCredits = () => {
     staleTime: 30000,
   });
 
+  // Fetch / refresh monthly reference balance (used by the progress bar).
+  // - Resets to current balance on the 1st of each month
+  // - Auto-grows if current balance exceeds the snapshot
+  const { data: monthlyReferenceBalance = 0 } = useQuery({
+    queryKey: ['monthly-credit-reference', creditUserId, query.data?.total_credits],
+    queryFn: async (): Promise<number> => {
+      if (!creditUserId) return 0;
+      const { data, error } = await supabase.rpc('refresh_monthly_credit_reference' as any, {
+        _user_id: creditUserId,
+      });
+      if (error) {
+        console.warn('refresh_monthly_credit_reference failed', error);
+        return query.data?.total_credits ?? 0;
+      }
+      return Number(data) || 0;
+    },
+    enabled: !!creditUserId && !!query.data,
+    staleTime: 60_000,
+  });
+
   // Fetch credit transactions history (couple = owner's transactions)
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
     queryKey: ['credit-transactions', creditUserId],
@@ -434,6 +454,8 @@ export const useCredits = () => {
     purchasedCredits: query.data?.purchased_credits || 0,
     totalCredits: query.data?.total_credits || 0,
     maxDailyCredits: query.data?.max_daily_credits || 5,
+    // Monthly reference balance for the progress bar (resets monthly, grows if exceeded)
+    monthlyReferenceBalance,
     // Lock states
     lockPassive: query.data?.lock_passive || false,
     lockBonus: query.data?.lock_bonus || false,
