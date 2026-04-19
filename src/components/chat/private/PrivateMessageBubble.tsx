@@ -258,4 +258,25 @@ const PrivateMessageBubble = ({
   return bubbleContent;
 };
 
-export default PrivateMessageBubble;
+// Memoize to prevent re-renders of the entire message list when typing,
+// when a new message arrives, or when an unrelated reaction changes.
+const areEqual = (prev: PrivateMessageBubbleProps, next: PrivateMessageBubbleProps) => {
+  if (prev.message.id !== next.message.id) return false;
+  if (prev.message.content !== next.message.content) return false;
+  if (prev.message.read_at !== next.message.read_at) return false;
+  if (prev.isOwn !== next.isOwn) return false;
+  if (prev.isLastInGroup !== next.isLastInGroup) return false;
+  if (prev.isLastOwnMessage !== next.isLastOwnMessage) return false;
+  if (prev.resolvedOtherAvatar !== next.resolvedOtherAvatar) return false;
+  const a = prev.getReactionsForMessage(prev.message.id);
+  const b = next.getReactionsForMessage(next.message.id);
+  if ((a?.length || 0) !== (b?.length || 0)) return false;
+  if (a && b) {
+    for (let i = 0; i < a.length; i++) {
+      if (!b[i] || a[i].emoji !== b[i].emoji || a[i].count !== b[i].count || a[i].hasReacted !== b[i].hasReacted) return false;
+    }
+  }
+  return true;
+};
+
+export default memo(PrivateMessageBubble, areEqual);

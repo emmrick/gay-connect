@@ -250,7 +250,12 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
         }}
       />
       
-      <div className="flex-1 overflow-y-auto overscroll-contain" ref={scrollRef} onScroll={handleScroll}>
+      <div
+        className="flex-1 overflow-y-auto overscroll-contain"
+        ref={scrollRef}
+        onScroll={handleScroll}
+        style={{ overflowAnchor: 'none', contain: 'layout paint' }}
+      >
         <div className="px-3 py-2">
           {/* Welcome */}
           <div className="text-center py-8">
