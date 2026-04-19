@@ -1,6 +1,8 @@
-import { motion } from 'framer-motion';
-import { MapPin, Loader2, ShieldCheck, AlertTriangle, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Loader2, ShieldCheck, AlertTriangle, RefreshCw, Satellite } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 interface GeolocationGateProps {
   /** État de la permission navigateur ('granted' | 'prompt' | 'denied' | null) */
@@ -20,6 +22,53 @@ interface GeolocationGateProps {
 const GeolocationGate = ({ permissionState, loading, error, onRequest }: GeolocationGateProps) => {
   const isDenied = permissionState === 'denied';
   const hasError = !!error && !loading;
+
+  // Barre de progression réaliste basée sur le temps écoulé / timeout (12 s).
+  // Approche asymptotique vers 95 % puis saut à 100 % à la résolution.
+  const TIMEOUT_MS = 12_000;
+  const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState<string>('Initialisation…');
+  const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!loading) {
+      // Si on était en cours et que c'est terminé sans erreur, on finit à 100 %
+      if (startRef.current !== null && !error) {
+        setProgress(100);
+        setStage('Position obtenue ✓');
+        const t = setTimeout(() => {
+          setProgress(0);
+          setStage('Initialisation…');
+          startRef.current = null;
+        }, 600);
+        return () => clearTimeout(t);
+      }
+      startRef.current = null;
+      setProgress(0);
+      setStage('Initialisation…');
+      return;
+    }
+
+    startRef.current = performance.now();
+    setProgress(2);
+    setStage('Connexion au GPS…');
+
+    const interval = setInterval(() => {
+      const elapsed = performance.now() - (startRef.current ?? performance.now());
+      const ratio = Math.min(elapsed / TIMEOUT_MS, 1);
+      // Courbe ease-out : monte vite au début, ralentit à l'approche de 95 %
+      const eased = 1 - Math.pow(1 - ratio, 2);
+      const value = Math.min(95, eased * 95);
+      setProgress(value);
+
+      if (value < 25) setStage('Connexion au GPS…');
+      else if (value < 55) setStage('Recherche des satellites…');
+      else if (value < 80) setStage('Calcul de la position…');
+      else setStage('Affinage du signal…');
+    }, 120);
+
+    return () => clearInterval(interval);
+  }, [loading, error]);
 
   return (
     <motion.div
@@ -81,6 +130,32 @@ const GeolocationGate = ({ permissionState, loading, error, onRequest }: Geoloca
             <span className="leading-relaxed text-left">{error}</span>
           </div>
         )}
+        {/* Barre de progression du chargement GPS */}
+        <AnimatePresence>
+          {(loading || progress >= 100) && !hasError && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.25 }}
+              className="w-full max-w-md overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-1.5 text-[11px]">
+                <span className="flex items-center gap-1.5 text-muted-foreground font-medium">
+                  <Satellite className="w-3 h-3 text-primary animate-pulse" />
+                  {stage}
+                </span>
+                <span className="font-mono tabular-nums text-primary font-semibold">
+                  {Math.round(progress)}%
+                </span>
+              </div>
+              <Progress
+                value={progress}
+                className="h-1.5 bg-primary/10"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* CTA */}
         <Button
