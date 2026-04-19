@@ -134,7 +134,7 @@ const AdminMobileNav = ({
       {/* Header */}
       <div className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border/30 shadow-sm">
         <div className="flex items-center justify-between px-4 py-2.5" style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top, 0px))' }}>
-          <Button variant="ghost" size="sm" onClick={() => window.history.back()} className="gap-1 text-muted-foreground -ml-2 h-8">
+          <Button variant="ghost" size="sm" onClick={() => { window.location.assign('/home'); }} className="gap-1 text-muted-foreground -ml-2 h-8">
             <ChevronLeft className="w-4 h-4" />
             <span className="text-xs">Retour</span>
           </Button>
