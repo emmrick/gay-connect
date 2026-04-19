@@ -53,6 +53,8 @@ interface AdminSidebarProps {
   pendingVerifications?: number;
   isAdmin?: boolean;
   modPermissions?: ModPermissions | null;
+  /** Widget rendu en bas de sidebar (ex: TaskQueuePopup). Masqué quand collapsed. */
+  bottomSlot?: React.ReactNode;
 }
 
 type NavGroup = 'tasks' | 'moderation' | 'users' | 'finances' | 'communication' | 'config' | 'logs';
