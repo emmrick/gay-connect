@@ -1172,6 +1172,45 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_promotions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_percent: number
+          ends_at: string
+          id: string
+          is_active: boolean
+          label: string
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_percent: number
+          ends_at: string
+          id?: string
+          is_active?: boolean
+          label: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_percent?: number
+          ends_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_purchase_requests: {
         Row: {
           admin_notes: string | null
@@ -4113,6 +4152,7 @@ export type Database = {
           daily_claims_used: number
           daily_credits: number
           daily_credits_last_reset: string | null
+          highest_balance_ever: number
           last_daily_claim: string | null
           last_passive_credit_at: string | null
           lock_bonus: boolean
@@ -4133,6 +4173,7 @@ export type Database = {
           daily_claims_used?: number
           daily_credits?: number
           daily_credits_last_reset?: string | null
+          highest_balance_ever?: number
           last_daily_claim?: string | null
           last_passive_credit_at?: string | null
           lock_bonus?: boolean
@@ -4153,6 +4194,7 @@ export type Database = {
           daily_claims_used?: number
           daily_credits?: number
           daily_credits_last_reset?: string | null
+          highest_balance_ever?: number
           last_daily_claim?: string | null
           last_passive_credit_at?: string | null
           lock_bonus?: boolean
@@ -4559,6 +4601,17 @@ export type Database = {
       expire_stale_moderation_tasks: { Args: never; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
+      get_active_credit_promotion: {
+        Args: never
+        Returns: {
+          description: string
+          discount_percent: number
+          ends_at: string
+          id: string
+          label: string
+          starts_at: string
+        }[]
+      }
       get_advertiser_wallet: { Args: { _email: string }; Returns: Json }
       get_community_public_stats: {
         Args: never

@@ -3,9 +3,12 @@ import { ShoppingCart, Gift, BarChart3, Coins, Sparkles, Heart, TrendingUp } fro
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
 import { useActiveProfile } from '@/contexts/ActiveProfileContext';
-import { motion } from 'framer-motion';
+import { useActivePromotion } from '@/hooks/useActivePromotion';
+import { motion, AnimatePresence } from 'framer-motion';
 import BuyCreditDialog from './BuyCreditDialog';
 import CreditHistorySheet from './CreditHistorySheet';
+import PromotionBadge from './PromotionBadge';
+import CreditBalanceProgress from './CreditBalanceProgress';
 import { cn } from '@/lib/utils';
 
 interface CreditWalletHeaderProps {
@@ -13,8 +16,11 @@ interface CreditWalletHeaderProps {
 }
 
 const CreditWalletHeader = ({ onOpenGift }: CreditWalletHeaderProps) => {
-  const { totalCredits, availableCredits, isLoading } = useCredits();
+  const { totalCredits, availableCredits, isLoading, credits } = useCredits();
   const { isCouple, partnerProfile } = useActiveProfile();
+  const { promotion, hasActivePromotion } = useActivePromotion();
+  const highestBalance = (credits as any)?.highest_balance_ever ?? totalCredits;
+  const maxForBar = Math.max(highestBalance || 0, totalCredits, 1);
 
   if (isLoading) {
     return (
@@ -89,10 +95,22 @@ const CreditWalletHeader = ({ onOpenGift }: CreditWalletHeaderProps) => {
           <span className="text-sm text-muted-foreground font-medium">crédits</span>
         </div>
 
-        <p className="text-[11px] text-muted-foreground/60 mb-6 flex items-center gap-1">
+        <p className="text-[11px] text-muted-foreground/60 mb-3 flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-primary/60" />
           Utilisables immédiatement
         </p>
+
+        {/* Animated progress bar (current / highest balance ever) */}
+        <CreditBalanceProgress
+          current={totalCredits}
+          max={maxForBar}
+          isPromoActive={hasActivePromotion}
+        />
+
+        {/* Active promotion badge */}
+        <AnimatePresence>
+          {promotion && <PromotionBadge key={promotion.id} promotion={promotion} />}
+        </AnimatePresence>
 
         {/* 3 Action buttons */}
         <div className="flex gap-2.5">
