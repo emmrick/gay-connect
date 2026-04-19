@@ -4756,6 +4756,7 @@ export type Database = {
         Args: { _permissions?: Json; _target_user_id: string }
         Returns: Json
       }
+      purge_old_unread_ephemeral_media: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
