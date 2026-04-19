@@ -3,13 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Online member counts per region.
- * Realtime invalidation is handled by the unified useRealtimeProfileSync hook.
- * No dedicated realtime channel needed here anymore.
+ * - Nettoie d'abord les profils fantômes (is_online=true mais last_seen > 5 min)
+ * - Réagit en temps réel via useRealtimeProfileSync
  */
 export const useOnlineMemberCounts = () => {
   return useQuery({
     queryKey: ['online-member-counts'],
     queryFn: async (): Promise<Record<string, number>> => {
+      // Nettoyage des statuts "online" obsolètes
+      try {
+        await supabase.rpc('cleanup_stale_online_profiles');
+      } catch {
+        // silencieux
+      }
+
       const recentThreshold = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
       const { data, error } = await supabase
@@ -22,12 +29,15 @@ export const useOnlineMemberCounts = () => {
 
       const counts: Record<string, number> = {};
       data?.forEach((profile) => {
-        counts[profile.region] = (counts[profile.region] || 0) + 1;
+        if (profile.region) {
+          counts[profile.region] = (counts[profile.region] || 0) + 1;
+        }
       });
 
       return counts;
     },
-    refetchInterval: 120_000, // 2 min polling (realtime handles immediate updates)
-    staleTime: 60_000,
+    refetchInterval: 60_000, // 1 min
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 };
