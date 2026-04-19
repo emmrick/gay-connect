@@ -48,16 +48,16 @@ const UpdateDetector = () => {
   const [phase, setPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [retryCount, setRetryCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  // Source de vérité : la version réellement embarquée dans le bundle JS chargé.
+  // On NE lit PAS le localStorage : sinon, après un reload servi par le cache du
+  // Service Worker, `stored` peut être en avance sur le bundle réellement servi
+  // et masquer indéfiniment les nouvelles mises à jour.
   const localVersionRef = useRef<string>(BUILD_VERSION);
 
-  // Initialise la version locale (priorité au localStorage si présent)
+  // Synchronise le localStorage avec le BUILD_VERSION effectif (pour debug uniquement).
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
+    if (BUILD_VERSION !== 'dev') {
       localStorage.setItem(STORAGE_KEY, BUILD_VERSION);
-      localVersionRef.current = BUILD_VERSION;
-    } else {
-      localVersionRef.current = stored;
     }
   }, []);
 
@@ -120,14 +120,30 @@ const UpdateDetector = () => {
         setProgress((prev) => (mapped > prev ? mapped : prev));
       });
 
-      // Mémorise uniquement la version pour ne pas redéclencher le pop-up.
+      // Mémorise la cible visée — utile pour debug. La référence de comparaison
+      // reste BUILD_VERSION, qui sera mis à jour automatiquement après le reload.
       if (remote && remote !== 'initial') {
-        localStorage.setItem(STORAGE_KEY, remote);
+        localStorage.setItem('gc_app_version_target', remote);
       }
       setProgress(100);
       setPhase('ready');
 
-      // Simple rechargement pour récupérer le nouveau bundle servi par le CDN.
+      // Désinscrit le Service Worker pour forcer la récupération du nouveau
+      // bundle depuis le réseau (sinon le précache Workbox peut servir l'ancien).
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.unregister()));
+        }
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch {
+        // best-effort, on continue le reload même en cas d'échec
+      }
+
+      // Rechargement complet pour récupérer le nouveau bundle.
       setTimeout(() => {
         window.location.reload();
       }, 500);
