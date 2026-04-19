@@ -58,6 +58,50 @@ export const detectForbiddenWord = (message: string): string | null => {
   return null;
 };
 
+// External network / off-platform contact detection
+const EXTERNAL_NETWORK_PATTERNS = [
+  // Social networks & messaging
+  'whatsapp', 'whats app', 'wsp', 'wapp',
+  'telegram', 'tg',
+  'snapchat', 'snap', 'snapchat moi', 'mon snap', 'ton snap', 'add me snap', 'ajoute moi snap',
+  'instagram', 'insta', 'mon insta', 'ton insta', 'dm insta',
+  'facebook', 'fb', 'messenger',
+  'discord', 'mon discord', 'ton discord',
+  'tiktok',
+  'twitter', ' x ',
+  'signal app',
+  'skype',
+  'kik',
+  'grindr', 'scruff', 'planetromeo', 'romeo', 'hornet', 'bumble', 'tinder', 'wapa', 'recon',
+  // Direct invites
+  'mon numero', 'mon numéro', 'ton numero', 'ton numéro', 'donne moi ton numero', 'donne ton numero',
+  'numero de tel', 'numéro de tel', 'numero de telephone', 'numéro de téléphone',
+  'mon tel', 'ton tel', 'appelle moi au',
+  'mon mail', 'ton mail', 'mon email', 'ton email', 'gmail.com', 'hotmail', 'outlook.com', 'yahoo.com',
+  // Common French phrasings
+  'on continue sur', 'on parle sur', 'on discute sur', 'rejoins moi sur',
+  'ajoute moi sur', 'add me on', 'contact moi sur', 'contacte moi sur',
+  'ailleurs que sur', 'ailleurs qu ici', 'autre part que ici',
+];
+
+const normalizedExternalPatterns = EXTERNAL_NETWORK_PATTERNS.map(normalizeText);
+
+export const detectExternalNetwork = (message: string): string | null => {
+  const normalized = ` ${normalizeText(message)} `;
+  for (let i = 0; i < normalizedExternalPatterns.length; i++) {
+    const p = normalizedExternalPatterns[i];
+    if (!p) continue;
+    if (normalized.includes(` ${p} `) || normalized.includes(p)) {
+      return EXTERNAL_NETWORK_PATTERNS[i];
+    }
+  }
+  return null;
+};
+
+// Cooldown so we don't spam the warning in the same conversation
+const externalWarningCooldown: Map<string, number> = new Map();
+const EXTERNAL_WARNING_COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
+
 // Store recent messages per conversation for context
 const recentMessagesCache: Map<string, Array<{ sender: string; content: string }>> = new Map();
 
@@ -149,6 +193,30 @@ export const useForbiddenWords = (conversationId?: string) => {
 
   const checkMessage = useCallback(async (message: string): Promise<{ blocked: boolean; word?: string; warningCount?: number; sanctioned?: boolean }> => {
     if (!user?.id) return { blocked: false };
+
+    // === Non-blocking: warn about external-network mentions in private chats ===
+    if (conversationId) {
+      const externalHit = detectExternalNetwork(message);
+      if (externalHit) {
+        const last = externalWarningCooldown.get(conversationId) || 0;
+        if (Date.now() - last > EXTERNAL_WARNING_COOLDOWN_MS) {
+          externalWarningCooldown.set(conversationId, Date.now());
+          // Fire and forget — does not block the user's message
+          supabase
+            .from('messages')
+            .insert({
+              sender_id: user.id,
+              recipient_id: conversationId,
+              content: `⚠️ **Message automatique de sécurité**\n\nPour rester en sécurité, nous vous recommandons de privilégier les conversations sur **Gay Social**.\n\nEn dehors de notre site, nous ne sommes plus en mesure de vous protéger ni d'agir en cas de soucis ou de signalement.\n\nMerci pour votre vigilance 🙏`,
+              message_type: 'system_external_warning',
+              is_private: true,
+            } as any)
+            .then(({ error }) => {
+              if (error) console.error('[ExternalNetworkWarning] insert error:', error);
+            });
+        }
+      }
+    }
 
     // Step 1: Quick keyword detection
     const detectedWord = detectForbiddenWord(message);
