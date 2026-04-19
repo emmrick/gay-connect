@@ -72,7 +72,7 @@ const CreditBalanceProgress = ({ current, max, isPromoActive }: CreditBalancePro
       {/* Labels */}
       <div className="flex items-center justify-between text-[10px] font-medium">
         <span className="text-muted-foreground/70">
-          {percent.toFixed(0)}% du record
+          {percent.toFixed(0)}% du solde du mois
         </span>
         <span className={cn('tabular-nums', isPromoActive ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-muted-foreground/70')}>
           {current.toFixed(1)} / {max.toFixed(1)}
