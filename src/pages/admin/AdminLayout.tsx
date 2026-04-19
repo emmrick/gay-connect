@@ -235,9 +235,12 @@ const AdminLayout = () => {
           isAdmin={!!isAdmin}
           modPermissions={modPermissions}
         />
+        {/* Widget mission rendu en barre fine sticky sous le header (au lieu d'occuper la zone centrale) */}
+        <div className="sticky top-[52px] z-30 bg-background/80 backdrop-blur-md border-b border-border/30 px-3 py-2">
+          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+        </div>
         <main className="flex-1 overflow-auto">
           <div className="p-3 pb-8">
-            <TaskQueuePopup onNavigateToSection={handleSectionChange} />
             <Outlet context={outletContext} />
           </div>
         </main>
@@ -251,6 +254,49 @@ const AdminLayout = () => {
       </div>
     );
   }
+
+  // Desktop
+  return (
+    <div className="h-screen bg-background flex overflow-hidden">
+      <AdminSidebar
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+        pendingReports={pendingReportsCount}
+        blockedCount={0}
+        pendingPurchases={pendingPurchasesCount}
+        pendingVerifications={pendingVerificationsCount}
+        isAdmin={!!isAdmin}
+        modPermissions={modPermissions}
+        bottomSlot={<TaskQueuePopup onNavigateToSection={handleSectionChange} />}
+      />
+
+      <main className="flex-1 overflow-auto">
+        <div className="sticky top-0 z-40 bg-card/70 backdrop-blur-xl border-b border-border/30 shadow-sm">
+          <div className="flex items-center justify-between px-6 h-14">
+            <h1 className="text-sm font-display font-semibold text-muted-foreground">
+              {titleForSection(activeSection)}
+            </h1>
+            <AdminCommandBar onNavigate={handleSectionChange} className="w-64" />
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto p-6 space-y-6">
+          <Outlet context={outletContext} />
+        </div>
+      </main>
+
+      {selectedReport && (
+        <ReportDetailDialog
+          report={selectedReport}
+          open={!!selectedReport}
+          onOpenChange={(open) => !open && setSelectedReport(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default AdminLayout;
 
   // Desktop
   return (

@@ -254,6 +254,13 @@ const AdminSidebar = ({
           </nav>
         </ScrollArea>
 
+        {/* Bottom slot (TaskQueuePopup widget) — caché si sidebar collapsed pour ne pas casser le layout */}
+        {bottomSlot && !collapsed && (
+          <div className="border-t border-border/30 p-2 max-h-[40vh] overflow-y-auto">
+            {bottomSlot}
+          </div>
+        )}
+
         {/* Footer */}
         <div className={cn("border-t border-border/30", collapsed ? "p-1.5" : "p-2")}>
           {collapsed ? (
