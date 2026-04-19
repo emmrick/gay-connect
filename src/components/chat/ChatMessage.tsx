@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Message } from '@/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -315,4 +315,29 @@ const ChatMessage = ({
   );
 };
 
-export default ChatMessage;
+// Memoize: only re-render when actual displayed data changes.
+// Prevents the entire message list from re-rendering when a new message arrives,
+// when a reaction is added elsewhere, or when typing in the input.
+const areEqual = (prev: ChatMessageProps, next: ChatMessageProps) => {
+  if (prev.message.id !== next.message.id) return false;
+  if (prev.message.content !== next.message.content) return false;
+  if (prev.message.senderAvatar !== next.message.senderAvatar) return false;
+  if (prev.isOwn !== next.isOwn) return false;
+  if (prev.isHighlighted !== next.isHighlighted) return false;
+  if (prev.isLastInGroup !== next.isLastInGroup) return false;
+  if (prev.isLastOwnMessage !== next.isLastOwnMessage) return false;
+  if (prev.totalMembers !== next.totalMembers) return false;
+  if ((prev.reactions?.length || 0) !== (next.reactions?.length || 0)) return false;
+  if ((prev.readers?.length || 0) !== (next.readers?.length || 0)) return false;
+  // Shallow check reactions content (emoji + count + hasReacted)
+  if (prev.reactions && next.reactions) {
+    for (let i = 0; i < prev.reactions.length; i++) {
+      const a = prev.reactions[i];
+      const b = next.reactions[i];
+      if (!b || a.emoji !== b.emoji || a.count !== b.count || a.hasReacted !== b.hasReacted) return false;
+    }
+  }
+  return true;
+};
+
+export default memo(ChatMessage, areEqual);
