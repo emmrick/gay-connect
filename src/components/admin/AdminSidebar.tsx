@@ -256,14 +256,14 @@ const AdminSidebar = ({
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="w-full h-8 rounded-lg text-muted-foreground hover:text-foreground" onClick={() => window.history.back()}>
+                <Button variant="ghost" size="icon" className="w-full h-8 rounded-lg text-muted-foreground hover:text-foreground" onClick={() => { window.location.assign('/home'); }}>
                   <LogOut className="w-3.5 h-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right" className="text-xs">Quitter</TooltipContent>
             </Tooltip>
           ) : (
-            <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs h-8" onClick={() => window.history.back()}>
+            <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground text-xs h-8" onClick={() => { window.location.assign('/home'); }}>
               <LogOut className="w-3.5 h-3.5" />
               Quitter
             </Button>
