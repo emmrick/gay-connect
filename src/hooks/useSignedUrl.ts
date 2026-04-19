@@ -44,7 +44,9 @@ export const useSignedUrl = (bucket: string, path: string | null) => {
 
         setSignedUrl(data.signedUrl);
       } catch (err) {
-        console.error('Error getting signed URL:', err);
+        // Silencieux : "Object not found" est normal pour des médias purgés
+        // (ephemeral, médias supprimés, anciens messages). Pas la peine de
+        // polluer les logs d'erreurs.
         setError(err instanceof Error ? err : new Error('Failed to get signed URL'));
         setSignedUrl(null);
       } finally {
@@ -81,13 +83,12 @@ export const getSignedUrl = async (bucket: string, path: string): Promise<string
       .createSignedUrl(cleanPath, SIGNED_URL_EXPIRY_SECONDS);
 
     if (error) {
-      console.error('Error getting signed URL:', error);
+      // Silencieux : objet supprimé / éphémère expiré → comportement attendu
       return null;
     }
 
     return data.signedUrl;
-  } catch (err) {
-    console.error('Error getting signed URL:', err);
+  } catch {
     return null;
   }
 };
