@@ -95,10 +95,22 @@ const CreditWalletHeader = ({ onOpenGift }: CreditWalletHeaderProps) => {
           <span className="text-sm text-muted-foreground font-medium">crédits</span>
         </div>
 
-        <p className="text-[11px] text-muted-foreground/60 mb-6 flex items-center gap-1">
+        <p className="text-[11px] text-muted-foreground/60 mb-3 flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-primary/60" />
           Utilisables immédiatement
         </p>
+
+        {/* Animated progress bar (current / highest balance ever) */}
+        <CreditBalanceProgress
+          current={totalCredits}
+          max={maxForBar}
+          isPromoActive={hasActivePromotion}
+        />
+
+        {/* Active promotion badge */}
+        <AnimatePresence>
+          {promotion && <PromotionBadge key={promotion.id} promotion={promotion} />}
+        </AnimatePresence>
 
         {/* 3 Action buttons */}
         <div className="flex gap-2.5">
