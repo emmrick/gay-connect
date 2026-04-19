@@ -108,33 +108,29 @@ const UpdateDetector = () => {
     setProgress(0);
 
     try {
-      // ── Étape 1/3 : récupération de la nouvelle version (0 → 15%) ──
-      setProgress(5);
+      // ── Étape 1/2 : récupération de la nouvelle version (0 → 20%) ──
+      setProgress(10);
       const remote = await fetchRemoteVersion();
-      setProgress(15);
+      setProgress(20);
 
-      // ── Étape 2/3 : nettoyage caches + service workers (15 → 90%) ──
-      // La progression réelle vient de clearAllCaches via onProgress (0..1)
-      await clearAllCaches((ratio) => {
-        // Mappe 0..1 sur la plage 15 → 90
-        const mapped = 15 + Math.round(ratio * 75);
+      // ── Étape 2/2 : petite progression visuelle (20 → 95%) ──
+      // Aucun cache, service worker ou localStorage n'est touché.
+      await simulateProgress((ratio) => {
+        const mapped = 20 + Math.round(ratio * 75);
         setProgress((prev) => (mapped > prev ? mapped : prev));
       });
-      setProgress(90);
 
-      // ── Étape 3/3 : persistance de la version (90 → 100%) ──
+      // Mémorise uniquement la version pour ne pas redéclencher le pop-up.
       if (remote && remote !== 'initial') {
         localStorage.setItem(STORAGE_KEY, remote);
       }
       setProgress(100);
       setPhase('ready');
 
-      // Hard reload avec cache-busting
+      // Simple rechargement pour récupérer le nouveau bundle servi par le CDN.
       setTimeout(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('_v', Date.now().toString());
-        window.location.replace(url.toString());
-      }, 600);
+        window.location.reload();
+      }, 500);
     } catch {
       setPhase('error');
     }
