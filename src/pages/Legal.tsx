@@ -13,7 +13,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import DataExportDialog from '@/components/profile/DataExportDialog';
 import SEOHead from '@/components/seo/SEOHead';
-import { useInMobiCmp } from '@/hooks/useInMobiCmp';
+
 
 // Define searchable sections
 const LEGAL_SECTIONS = [
@@ -36,8 +36,7 @@ const Legal = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Charge le Consent Manager InMobi (TCF 2.3) uniquement sur cette page
-  useInMobiCmp();
+  // Le Consent Manager InMobi est désormais chargé globalement depuis index.html
 
   // Filter sections based on search
   const filteredSections = useMemo(() => {
