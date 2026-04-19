@@ -194,9 +194,6 @@ export const useForbiddenWords = (conversationId?: string) => {
   const checkMessage = useCallback(async (message: string): Promise<{ blocked: boolean; word?: string; warningCount?: number; sanctioned?: boolean }> => {
     if (!user?.id) return { blocked: false };
 
-  const checkMessage = useCallback(async (message: string): Promise<{ blocked: boolean; word?: string; warningCount?: number; sanctioned?: boolean }> => {
-    if (!user?.id) return { blocked: false };
-
     // === Non-blocking: warn about external-network mentions in private chats ===
     if (conversationId) {
       const externalHit = detectExternalNetwork(message);
