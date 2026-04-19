@@ -4653,6 +4653,7 @@ export type Database = {
         }[]
       }
       cleanup_expired_suspensions: { Args: never; Returns: number }
+      cleanup_stale_online_profiles: { Args: never; Returns: number }
       complete_moderation_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: Json
