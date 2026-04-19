@@ -126,9 +126,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
                 <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
                 <span className="truncate">
                   {formatDistance(profile.distance_km) ?? 'Distance inconnue'}
-                  {profile.distance_km !== null && profile.region && ' · '}
-                  {profile.distance_km === null && profile.region ? profile.region : ''}
-                  {profile.distance_km !== null && profile.region ? profile.region : ''}
+                  {profile.distance_km !== null && profile.region && ` · ${profile.region}`}
                 </span>
               </span>
             )}
