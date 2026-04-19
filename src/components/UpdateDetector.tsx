@@ -277,7 +277,7 @@ const UpdateDetector = () => {
                       <Progress value={progress} className="h-3 bg-secondary/50" />
                       {phase === 'loading' && progress < 100 && (
                         <motion.div
-                          className="absolute top-0 left-0 h-full w-16 rounded-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          className="absolute top-0 left-0 h-full w-16 rounded-full bg-gradient-to-r from-transparent via-primary-foreground/30 to-transparent"
                           animate={{ x: ['-64px', '320px'] }}
                           transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
                         />
