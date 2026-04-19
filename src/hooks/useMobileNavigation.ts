@@ -22,15 +22,16 @@ export const useMobileNavigation = ({
   useEffect(() => {
     if (!enabled || !onBack) return;
 
-    // Push a sentinel state so pressing back triggers popstate instead of leaving
+    // Push a sentinel state so pressing back triggers popstate instead of leaving.
+    // On NE re-pousse PAS de sentinelle après chaque popstate : sinon l'historique
+    // se remplit de sentinelles fantômes qui bloquent toute sortie ultérieure
+    // (admin, autres pages…) et provoquent des "redirections" inattendues.
     if (!hasSetup.current) {
       window.history.pushState({ appGuard: true }, '', window.location.href);
       hasSetup.current = true;
     }
 
     const handlePopState = (e: PopStateEvent) => {
-      // Re-push sentinel so subsequent back presses are also caught
-      window.history.pushState({ appGuard: true }, '', window.location.href);
       onBack();
     };
 
