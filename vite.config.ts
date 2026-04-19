@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    versionJsonPlugin(),
     mode === "development" && componentTagger(),
     VitePWA({
       strategies: 'injectManifest',
