@@ -99,7 +99,9 @@ const IdentityVerificationDialog = ({ open, onOpenChange }: IdentityVerification
       }
     })
     .catch((error) => {
-      console.error('Camera access error:', error);
+      // Erreur utilisateur (permission refusée, caméra occupée…) :
+      // on informe via toast plus bas, on ne pollue pas error_logs.
+      if (import.meta.env.DEV) console.warn('Camera access:', error);
       setIsCameraActive(false);
       
       // Provide more specific error messages

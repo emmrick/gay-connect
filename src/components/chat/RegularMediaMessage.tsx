@@ -47,13 +47,13 @@ const RegularMediaMessage = ({ mediaUrl, mediaType, isOwn }: RegularMediaMessage
           .createSignedUrl(cleanPath, SIGNED_URL_EXPIRY_SECONDS);
 
         if (error) {
-          console.error('Error getting signed URL:', error);
+          // Média supprimé / inexistant : on affiche le placeholder sans
+          // remonter dans error_logs.
           setImageError(true);
         } else {
           setSignedUrl(data.signedUrl);
         }
-      } catch (error) {
-        console.error('Error getting signed URL:', error);
+      } catch {
         setImageError(true);
       } finally {
         setIsLoading(false);

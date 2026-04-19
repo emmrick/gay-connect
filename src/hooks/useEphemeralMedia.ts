@@ -33,7 +33,7 @@ export const useEphemeralMedia = (messageId: string | null) => {
         .createSignedUrl(data.media_url, 3600);
 
       if (signedUrlError) {
-        console.error('Error getting signed URL:', signedUrlError);
+        // Média éphémère expiré / purgé : retour silencieux
         return null;
       }
 
