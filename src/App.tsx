@@ -26,6 +26,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import CookieConsentBanner from "@/components/cookie/CookieConsentBanner";
 import { useCookieScripts } from "@/hooks/useCookieScripts";
+import UpdateDetector from "@/components/UpdateDetector";
 
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
@@ -291,6 +292,7 @@ const AppContent = () => {
   return (
     <CookieConsentProvider>
       <CookieScriptLoader />
+      <UpdateDetector />
       <AuthProvider>
         <AppLockGate>
           <AuthenticatedApp />

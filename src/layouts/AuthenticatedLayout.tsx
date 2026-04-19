@@ -12,7 +12,6 @@ import { useIsAdmin } from '@/hooks/useAdmin';
 import { useIdentityVerification } from '@/hooks/useIdentityVerification';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
-import UpdateDetector from '@/components/UpdateDetector';
 import BottomNavBar from '@/components/navigation/BottomNavBar';
 import SuspensionBanner from '@/components/moderation/SuspensionBanner';
 import AdBanner from '@/components/ads/AdBanner';
@@ -152,7 +151,7 @@ const AuthenticatedLayout = () => {
         paddingRight: 'env(safe-area-inset-right, 0px)',
       }}
     >
-      <UpdateDetector />
+      
 
       {/* Verification Reminder Banner */}
       <Suspense fallback={null}>
