@@ -120,7 +120,13 @@ const AdminSidebar = ({
   pendingPurchases = 0, pendingVerifications = 0, isAdmin = false, modPermissions,
   bottomSlot,
 }: AdminSidebarProps) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const isTablet = useIsTablet();
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+
+  // Collapse automatique en mode tablette pour préserver l'espace de contenu
+  React.useEffect(() => {
+    if (isTablet) setCollapsed(true);
+  }, [isTablet]);
 
   const visibleItems = navItems.filter((item) => {
     if (!item.adminOnly) return true;
