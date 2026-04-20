@@ -369,123 +369,155 @@ const MemberProfile = () => {
           </motion.div>
         )}
 
-        {/* Bio — citation magazine */}
-        {profile.bio && (
-          <motion.section
-            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }}
-          >
-            <blockquote className="relative pl-3 border-l-2 border-primary">
-              <p className="font-display text-base sm:text-lg leading-snug text-foreground italic">
-                « {profile.bio} »
-              </p>
-            </blockquote>
-          </motion.section>
-        )}
-
-        {/* Réactions */}
-        {userId && (
-          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-            <SectionLabel icon={<Sparkles className="w-3 h-3" />}>Réagir</SectionLabel>
-            <ProfileReactions profileUserId={userId} />
-          </motion.section>
-        )}
-
-        {/* Physique — grid éditoriale */}
-        {(extendedProfile?.height || extendedProfile?.weight || extendedProfile?.body_type || extendedProfile?.endowment) && (
-          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
-            <SectionLabel>Physique</SectionLabel>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {extendedProfile?.height && (
-                <StatBlock icon={<Ruler className="w-3.5 h-3.5" />} label="Taille" value={`${extendedProfile.height} cm`} />
+        {/* ===== ONGLETS Informations / Tweens ===== */}
+        <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2 bg-background/85 backdrop-blur-xl">
+          <div className="flex gap-1 p-1 bg-secondary/60 border border-border/40 rounded-full">
+            <button
+              onClick={() => setActiveTab('info')}
+              className={cn(
+                "flex-1 py-2 px-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
+                activeTab === 'info'
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               )}
-              {extendedProfile?.weight && (
-                <StatBlock icon={<Weight className="w-3.5 h-3.5" />} label="Poids" value={`${extendedProfile.weight} kg`} />
+            >
+              <Info className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+              Informations
+            </button>
+            <button
+              onClick={() => setActiveTab('tweens')}
+              className={cn(
+                "flex-1 py-2 px-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
+                activeTab === 'tweens'
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               )}
-              {extendedProfile?.body_type && BODY_TYPE_LABELS[extendedProfile.body_type] && (
-                <StatBlock icon={<User className="w-3.5 h-3.5" />} label="Corps" value={BODY_TYPE_LABELS[extendedProfile.body_type]} />
-              )}
-              {extendedProfile?.endowment && extendedProfile.endowment !== 'no_answer' && ENDOWMENT_LABELS[extendedProfile.endowment] && (
-                <StatBlock icon={<span className="text-xs">🍆</span>} label="Membre" value={ENDOWMENT_LABELS[extendedProfile.endowment]} />
-              )}
-            </div>
-          </motion.section>
-        )}
-
-        {/* Identité */}
-        {(extendedProfile?.ethnicity || extendedProfile?.relationship_status || (extendedProfile?.hiv_status && extendedProfile.hiv_status !== 'no_answer')) && (
-          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
-            <SectionLabel>Identité</SectionLabel>
-            <div className="flex flex-wrap gap-2">
-              {extendedProfile?.ethnicity && ETHNICITY_LABELS[extendedProfile.ethnicity] && (
-                <Pill>{ETHNICITY_LABELS[extendedProfile.ethnicity]}</Pill>
-              )}
-              {extendedProfile?.relationship_status && RELATIONSHIP_LABELS[extendedProfile.relationship_status] && (
-                <Pill icon={<Heart className="w-3.5 h-3.5 text-pink-500" />}>
-                  {RELATIONSHIP_LABELS[extendedProfile.relationship_status]}
-                </Pill>
-              )}
-              {extendedProfile?.hiv_status && extendedProfile.hiv_status !== 'no_answer' && HIV_STATUS_LABELS[extendedProfile.hiv_status] && (
-                <Pill>{HIV_STATUS_LABELS[extendedProfile.hiv_status]}</Pill>
-              )}
-            </div>
-          </motion.section>
-        )}
-
-        {/* Tribus */}
-        {extendedProfile?.tribes && extendedProfile.tribes.length > 0 && (
-          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35 }}>
-            <SectionLabel icon={<Sparkles className="w-3 h-3" />}>Tribus</SectionLabel>
-            <div className="flex flex-wrap gap-2">
-              {extendedProfile.tribes.map((tribe: string) => (
-                <Badge key={tribe} variant="outline" className="text-xs py-1 px-2.5 font-medium border-border/50 bg-card/50">
-                  {TRIBE_LABELS[tribe] || tribe}
-                </Badge>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* Recherche */}
-        {extendedProfile?.looking_for && extendedProfile.looking_for.length > 0 && (
-          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
-            <SectionLabel icon={<Heart className="w-3 h-3" />}>Recherche</SectionLabel>
-            <div className="flex flex-wrap gap-2">
-              {extendedProfile.looking_for.map((item: string) => (
-                <Badge key={item} className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 text-xs py-1 px-2.5 shadow-md font-semibold">
-                  {LOOKING_FOR_LABELS[item] || item}
-                </Badge>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* Albums */}
-        {userId && (
-          <motion.section
-            id="albums-section"
-            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}
-          >
-            <MemberProfileAlbumsSection profileUserId={userId} profileUsername={profile.username} onStartChat={handleStartChat} />
-          </motion.section>
-        )}
-
-        {/* Tweens */}
-        {userId && (
-          <motion.section initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}>
-            <MemberTweenSection userId={userId} username={profile.username} />
-          </motion.section>
-        )}
-
-        {/* Footer édito : Membre depuis */}
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
-          className="pt-2 pb-4 text-center"
-        >
-          <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/70 uppercase tracking-[0.2em] font-bold">
-            <Calendar className="w-3 h-3" />
-            <span>Membre depuis {new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+            >
+              <MessageCircle className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+              Tweens
+            </button>
           </div>
-        </motion.div>
+        </div>
+
+        {activeTab === 'info' && (
+          <motion.div
+            key="info-tab"
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="space-y-5"
+          >
+            {/* Bio — citation magazine */}
+            {profile.bio && (
+              <section>
+                <blockquote className="relative pl-3 border-l-2 border-primary">
+                  <p className="font-display text-base sm:text-lg leading-snug text-foreground italic">
+                    « {profile.bio} »
+                  </p>
+                </blockquote>
+              </section>
+            )}
+
+            {/* Réactions */}
+            {userId && (
+              <section>
+                <SectionLabel icon={<Sparkles className="w-3 h-3" />}>Réagir</SectionLabel>
+                <ProfileReactions profileUserId={userId} />
+              </section>
+            )}
+
+            {/* Physique */}
+            {(extendedProfile?.height || extendedProfile?.weight || extendedProfile?.body_type || extendedProfile?.endowment) && (
+              <section>
+                <SectionLabel>Physique</SectionLabel>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {extendedProfile?.height && (
+                    <StatBlock icon={<Ruler className="w-3.5 h-3.5" />} label="Taille" value={`${extendedProfile.height} cm`} />
+                  )}
+                  {extendedProfile?.weight && (
+                    <StatBlock icon={<Weight className="w-3.5 h-3.5" />} label="Poids" value={`${extendedProfile.weight} kg`} />
+                  )}
+                  {extendedProfile?.body_type && BODY_TYPE_LABELS[extendedProfile.body_type] && (
+                    <StatBlock icon={<User className="w-3.5 h-3.5" />} label="Corps" value={BODY_TYPE_LABELS[extendedProfile.body_type]} />
+                  )}
+                  {extendedProfile?.endowment && extendedProfile.endowment !== 'no_answer' && ENDOWMENT_LABELS[extendedProfile.endowment] && (
+                    <StatBlock icon={<span className="text-xs">🍆</span>} label="Membre" value={ENDOWMENT_LABELS[extendedProfile.endowment]} />
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Identité */}
+            {(extendedProfile?.ethnicity || extendedProfile?.relationship_status || (extendedProfile?.hiv_status && extendedProfile.hiv_status !== 'no_answer')) && (
+              <section>
+                <SectionLabel>Identité</SectionLabel>
+                <div className="flex flex-wrap gap-2">
+                  {extendedProfile?.ethnicity && ETHNICITY_LABELS[extendedProfile.ethnicity] && (
+                    <Pill>{ETHNICITY_LABELS[extendedProfile.ethnicity]}</Pill>
+                  )}
+                  {extendedProfile?.relationship_status && RELATIONSHIP_LABELS[extendedProfile.relationship_status] && (
+                    <Pill icon={<Heart className="w-3.5 h-3.5 text-pink-500" />}>
+                      {RELATIONSHIP_LABELS[extendedProfile.relationship_status]}
+                    </Pill>
+                  )}
+                  {extendedProfile?.hiv_status && extendedProfile.hiv_status !== 'no_answer' && HIV_STATUS_LABELS[extendedProfile.hiv_status] && (
+                    <Pill>{HIV_STATUS_LABELS[extendedProfile.hiv_status]}</Pill>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Tribus */}
+            {extendedProfile?.tribes && extendedProfile.tribes.length > 0 && (
+              <section>
+                <SectionLabel icon={<Sparkles className="w-3 h-3" />}>Tribus</SectionLabel>
+                <div className="flex flex-wrap gap-2">
+                  {extendedProfile.tribes.map((tribe: string) => (
+                    <Badge key={tribe} variant="outline" className="text-xs py-1 px-2.5 font-medium border-border/50 bg-card/50">
+                      {TRIBE_LABELS[tribe] || tribe}
+                    </Badge>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Recherche */}
+            {extendedProfile?.looking_for && extendedProfile.looking_for.length > 0 && (
+              <section>
+                <SectionLabel icon={<Heart className="w-3 h-3" />}>Recherche</SectionLabel>
+                <div className="flex flex-wrap gap-2">
+                  {extendedProfile.looking_for.map((item: string) => (
+                    <Badge key={item} className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 text-xs py-1 px-2.5 shadow-md font-semibold">
+                      {LOOKING_FOR_LABELS[item] || item}
+                    </Badge>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Albums */}
+            {userId && (
+              <section id="albums-section">
+                <MemberProfileAlbumsSection profileUserId={userId} profileUsername={profile.username} onStartChat={handleStartChat} />
+              </section>
+            )}
+
+            {/* Footer édito : Membre depuis */}
+            <div className="pt-2 pb-4 text-center">
+              <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/70 uppercase tracking-[0.2em] font-bold">
+                <Calendar className="w-3 h-3" />
+                <span>Membre depuis {new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'tweens' && userId && (
+          <motion.div
+            key="tweens-tab"
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          >
+            <MemberTweenSection userId={userId} username={profile.username} />
+          </motion.div>
+        )}
       </div>
 
       {/* ===== STICKY FOOTER ACTIONS ===== */}
