@@ -1,0 +1,96 @@
+/**
+ * AdminTopBar — barre supérieure mobile (admin) avec breadcrumb dynamique,
+ * compteur d'alertes et accès rapide à la recherche (cmd+k).
+ */
+import { ArrowLeft, Search, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
+interface AdminTopBarProps {
+  title: string;
+  subtitle?: string;
+  showBack?: boolean;
+  onBack?: () => void;
+  alertCount?: number;
+  onAlertClick?: () => void;
+  onSearchClick?: () => void;
+  rightSlot?: React.ReactNode;
+  className?: string;
+}
+
+const AdminTopBar = ({
+  title,
+  subtitle,
+  showBack,
+  onBack,
+  alertCount = 0,
+  onAlertClick,
+  onSearchClick,
+  rightSlot,
+  className,
+}: AdminTopBarProps) => {
+  return (
+    <header
+      className={cn(
+        "sticky top-0 z-40 bg-card/85 backdrop-blur-2xl border-b border-border/30",
+        className,
+      )}
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    >
+      <div className="flex items-center gap-2 px-3 h-14">
+        {showBack ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="w-9 h-9 rounded-xl shrink-0 -ml-1"
+            aria-label="Retour"
+          >
+            <ArrowLeft className="w-4.5 h-4.5" />
+          </Button>
+        ) : null}
+
+        <div className="flex-1 min-w-0">
+          <h1 className="font-display text-base font-bold leading-none truncate">{title}</h1>
+          {subtitle ? (
+            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{subtitle}</p>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {onSearchClick ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onSearchClick}
+              className="w-9 h-9 rounded-xl text-muted-foreground"
+              aria-label="Rechercher"
+            >
+              <Search className="w-4 h-4" />
+            </Button>
+          ) : null}
+          {onAlertClick ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onAlertClick}
+              className="relative w-9 h-9 rounded-xl text-muted-foreground"
+              aria-label="Alertes"
+            >
+              <Bell className="w-4 h-4" />
+              {alertCount > 0 ? (
+                <Badge className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 rounded-full bg-destructive text-destructive-foreground border border-card text-[9px] font-bold flex items-center justify-center">
+                  {alertCount > 9 ? '9+' : alertCount}
+                </Badge>
+              ) : null}
+            </Button>
+          ) : null}
+          {rightSlot}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default AdminTopBar;

@@ -20,7 +20,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { usePendingVerifications } from '@/hooks/usePendingVerifications';
 import { Button } from '@/components/ui/button';
 import AdminSidebar, { AdminSection, ModPermissions } from '@/components/admin/AdminSidebar';
-import AdminMobileNav from '@/components/admin/AdminMobileNav';
+import AdminBottomTabs from '@/components/admin/AdminBottomTabs';
+import AdminTopBar from '@/components/admin/AdminTopBar';
 import AdminCommandBar from '@/components/admin/AdminCommandBar';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
@@ -194,24 +195,36 @@ const AdminLayout = () => {
     setSelectedReport,
   };
 
-  // Mobile : Dashboard = grille pleine
+  // ===== MOBILE LAYOUT =====
   if (isMobile) {
+    const totalAlerts =
+      pendingReportsCount + pendingPurchasesCount + pendingVerificationsCount;
+
+    // Dashboard mobile : grille des modules + widget mission
     if (activeSection === 'dashboard') {
       return (
-        <div className="min-h-[100dvh] bg-background flex flex-col">
-          <AdminMobileNav
+        <div className="min-h-[100dvh] bg-background flex flex-col pb-[calc(60px+env(safe-area-inset-bottom,0px))]">
+          <AdminTopBar
+            title={isAdmin ? 'Admin' : 'Modération'}
+            subtitle="Tableau de bord"
+            alertCount={totalAlerts}
+            onAlertClick={() => handleSectionChange('reports')}
+          />
+          <main className="flex-1 overflow-y-auto">
+            <div className="px-3 py-3">
+              <TaskQueuePopup onNavigateToSection={handleSectionChange} />
+            </div>
+            <Outlet context={outletContext} />
+          </main>
+          <AdminBottomTabs
             activeSection="dashboard"
             onSectionChange={handleSectionChange}
             pendingReports={pendingReportsCount}
-            blockedCount={0}
             pendingPurchases={pendingPurchasesCount}
             pendingVerifications={pendingVerificationsCount}
             isAdmin={!!isAdmin}
             modPermissions={modPermissions}
-            dashboardTopSlot={<TaskQueuePopup onNavigateToSection={handleSectionChange} />}
           />
-          {/* Outlet inutilisé sur dashboard mobile (rendu inline par AdminMobileNav) */}
-          <Outlet context={outletContext} />
           {selectedReport && (
             <ReportDetailDialog
               report={selectedReport}
@@ -223,27 +236,30 @@ const AdminLayout = () => {
       );
     }
 
+    // Section interne : top bar avec back + bottom tabs
     return (
-      <div className="min-h-[100dvh] bg-background flex flex-col">
-        <AdminMobileNav
+      <div className="min-h-[100dvh] bg-background flex flex-col pb-[calc(60px+env(safe-area-inset-bottom,0px))]">
+        <AdminTopBar
+          title={titleForSection(activeSection)}
+          showBack
+          onBack={() => handleSectionChange('dashboard')}
+          alertCount={totalAlerts}
+          onAlertClick={() => handleSectionChange('reports')}
+        />
+        <main className="flex-1 overflow-auto">
+          <div className="p-3 pb-6">
+            <Outlet context={outletContext} />
+          </div>
+        </main>
+        <AdminBottomTabs
           activeSection={activeSection}
           onSectionChange={handleSectionChange}
           pendingReports={pendingReportsCount}
-          blockedCount={0}
           pendingPurchases={pendingPurchasesCount}
           pendingVerifications={pendingVerificationsCount}
           isAdmin={!!isAdmin}
           modPermissions={modPermissions}
         />
-        {/* Widget mission rendu en barre fine sticky sous le header (au lieu d'occuper la zone centrale) */}
-        <div className="sticky top-[52px] z-30 bg-background/80 backdrop-blur-md border-b border-border/30 px-3 py-2">
-          <TaskQueuePopup onNavigateToSection={handleSectionChange} />
-        </div>
-        <main className="flex-1 overflow-auto">
-          <div className="p-3 pb-8">
-            <Outlet context={outletContext} />
-          </div>
-        </main>
         {selectedReport && (
           <ReportDetailDialog
             report={selectedReport}
