@@ -36,6 +36,7 @@ const SignupForm = ({ onSubmit, isLoading, defaultReferralCode = '', showCoupleI
       username2: '',
       age2: undefined as any,
       referralCode: defaultReferralCode,
+      acceptTerms: false as any,
     },
   });
 
