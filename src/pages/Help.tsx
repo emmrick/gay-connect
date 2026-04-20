@@ -755,15 +755,19 @@ const Help = ({ embedded = false }: HelpProps) => {
         )}
 
         {isChatbot && (
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={handleContactAgent}
-            disabled={createTicket.isPending}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:opacity-95 shadow-md shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            <Headphones className="w-4 h-4" />
-            {createTicket.isPending ? 'Connexion en cours…' : 'Parler à un agent'}
-          </motion.button>
+          <div className="flex flex-col items-center gap-1 text-center">
+            <p className="text-[11px] text-muted-foreground">
+              💡 Choisis une rubrique ci-dessus pour une réponse instantanée
+            </p>
+            <button
+              onClick={promptAgentConfirmation}
+              disabled={createTicket.isPending || isBotTyping || messages.some((m) => m.isTyping)}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:text-primary transition-colors rounded-full disabled:opacity-50"
+            >
+              <Headphones className="w-3.5 h-3.5" />
+              {createTicket.isPending ? 'Connexion en cours…' : "Tu n'as pas trouvé ? Parler à un agent"}
+            </button>
+          </div>
         )}
 
         {(isAgent || isWaiting) && (
