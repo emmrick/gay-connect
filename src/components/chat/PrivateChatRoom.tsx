@@ -74,6 +74,12 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePrivatePinnedMessages(otherUserId);
   const pinnedIdSet = useMemo(() => new Set(pinnedMessages.map((p: any) => p.message_id)), [pinnedMessages]);
 
+  const { suggestions: smartSuggestions, isLoading: smartLoading, dismiss: dismissSmart } = useSmartReplies({
+    messages,
+    otherUserId,
+    enabled: !hasBlocked,
+  });
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
