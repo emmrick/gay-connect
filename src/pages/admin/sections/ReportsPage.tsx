@@ -99,7 +99,7 @@ const ReportsPage = () => {
         }
       />
 
-      <AdminTabsBar tabs={tabs} value={tab} onChange={setTab} />
+      <AdminTabsBar<TabValue> tabs={tabs} value={tab} onChange={setTab} />
 
       <AdminFilterBar
         searchValue={search}
