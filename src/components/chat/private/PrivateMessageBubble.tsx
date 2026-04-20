@@ -306,6 +306,8 @@ const areEqual = (prev: PrivateMessageBubbleProps, next: PrivateMessageBubblePro
   if (prev.isLastInGroup !== next.isLastInGroup) return false;
   if (prev.isLastOwnMessage !== next.isLastOwnMessage) return false;
   if (prev.resolvedOtherAvatar !== next.resolvedOtherAvatar) return false;
+  if (prev.isPinned !== next.isPinned) return false;
+  if (prev.isHighlighted !== next.isHighlighted) return false;
   const a = prev.getReactionsForMessage(prev.message.id);
   const b = next.getReactionsForMessage(next.message.id);
   if ((a?.length || 0) !== (b?.length || 0)) return false;
