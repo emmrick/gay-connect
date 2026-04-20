@@ -2,11 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { startOfDay, subDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Users, Activity, Shield, MessageSquare, UserPlus,
   AlertTriangle, IdCard, ShoppingCart, Headphones, ListOrdered,
   TrendingUp, Eye, Globe, ArrowRight, Zap, Image, Clock,
-  BarChart3, Hash, Wallet
+  BarChart3, Hash, Wallet, Sparkles,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
