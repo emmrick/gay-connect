@@ -79,6 +79,7 @@ const MemberProfile = () => {
   const { toast: toastHook } = useToast();
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showChatBot, setShowChatBot] = useState(false);
+  const [activeTab, setActiveTab] = useState<'info' | 'tweens'>('info');
 
   const { data: profile, isLoading } = useProfile(userId || '');
   const { photos } = useProfilePhotos(userId || '');
