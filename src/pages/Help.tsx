@@ -25,7 +25,7 @@ import HelpChatBubble from '@/components/help/HelpChatBubble';
 import HelpQuickChips, { type HelpChip } from '@/components/help/HelpQuickChips';
 import HelpBreadcrumb from '@/components/help/HelpBreadcrumb';
 import {
-  HELP_FLOW, HELP_ROOT_ID, findNodeById, findPathToNode,
+  HELP_FLOW, HELP_ROOT_ID, findNodeById, findPathToNode, findParentNode,
 } from '@/lib/help/helpFlow';
 import type { HelpBreadcrumbStep, HelpNode } from '@/lib/help/helpFlow.types';
 
@@ -189,12 +189,15 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   }, [liveTicket?.status, liveTicket?.assigned_to, phase]);
 
-  // Auto-scroll
+  // Auto-scroll : à chaque changement, et instantané pendant le typewriter
+  // pour que la dernière ligne soit toujours visible au-dessus de la barre fixe.
   const typingReveal = messages.find((m) => m.isTyping)?.revealedLength;
+  const isTypingActive = messages.some((m) => m.isTyping);
   useEffect(() => {
-    const t = setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+    const behavior: ScrollBehavior = isTypingActive ? 'auto' : 'smooth';
+    const t = setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior, block: 'end' }), 30);
     return () => clearTimeout(t);
-  }, [messages.length, ticketMessages.length, phase, agentTyping.length, isBotTyping, typingReveal]);
+  }, [messages.length, ticketMessages.length, phase, agentTyping.length, isBotTyping, typingReveal, isTypingActive]);
 
   // Typewriter
   useEffect(() => {
@@ -243,18 +246,43 @@ const Help = ({ embedded = false }: HelpProps) => {
     }, typingDelay);
   }, []);
 
-  /** Construit les chips à partir des enfants d'un node + boutons retour/agent */
+  /**
+   * Construit les chips affichées sous une bulle bot.
+   * Priorité : sous-rubriques → suggestions liées (FAQ croisée) → navigation arrière.
+   * L'escalade « Parler à un agent » n'est PAS proposée ici (bouton dédié en bas).
+   */
   const buildChipsForNode = useCallback((node: HelpNode): HelpChip[] => {
     const chips: HelpChip[] = [];
-    if (node.children) {
+
+    // 1) Sous-rubriques (catégorie) ou suggestions liées (feuille)
+    if (node.children && node.children.length > 0) {
       for (const child of node.children) {
         chips.push({ id: child.id, label: child.label, emoji: child.emoji, variant: 'subtle' });
       }
+    } else if (node.related && node.related.length > 0) {
+      // Feuille : on propose les FAQ croisées comme prochaines questions
+      for (const relId of node.related) {
+        const relNode = findNodeById(relId);
+        if (relNode) {
+          chips.push({ id: relNode.id, label: relNode.label, emoji: relNode.emoji, variant: 'subtle' });
+        }
+      }
     }
+
+    // 2) Navigation arrière (parent direct + menu principal)
     if (node.id !== HELP_ROOT_ID) {
+      const parent = findParentNode(node.id);
+      if (parent && parent.id !== HELP_ROOT_ID) {
+        chips.push({
+          id: parent.id,
+          label: `Retour : ${parent.label}`,
+          emoji: '↩️',
+          variant: 'outline',
+        });
+      }
       chips.push({ id: HELP_ROOT_ID, label: 'Menu principal', emoji: '🏠', variant: 'outline' });
     }
-    chips.push({ id: '__agent', label: 'Parler à un agent', emoji: '👤', variant: 'outline' });
+
     return chips;
   }, []);
 
@@ -274,15 +302,19 @@ const Help = ({ embedded = false }: HelpProps) => {
       let intro = '';
       if (node.id === HELP_ROOT_ID) {
         const displayName = userProfile?.username || 'cher utilisateur';
-        intro = `📋 **Menu principal**\n\nBonjour **${displayName}** ! Choisis une rubrique ci-dessous pour obtenir une réponse instantanée. Si tu ne trouves pas, tu peux **parler à un agent** à tout moment 👇`;
+        intro = `📋 **Menu principal**\n\nBonjour **${displayName}** ! Choisis une rubrique ci-dessous pour obtenir une réponse instantanée.\n\n💡 La plupart des questions trouvent leur réponse ici en quelques clics — explore les rubriques avant de contacter un agent.`;
       } else if (node.children && node.children.length > 0) {
         // Catégorie : afficher les sous-rubriques
         intro = node.answer
           ? `${node.answer}\n\n📂 **${node.label}** — choisis une question :`
           : `📂 **${node.emoji ?? ''} ${node.label}**\n\nChoisis la question qui t'intéresse 👇`;
       } else {
-        // Feuille : afficher uniquement la réponse
-        intro = node.answer || `Désolé, aucune réponse disponible pour cette rubrique.`;
+        // Feuille : afficher uniquement la réponse + footer suggestions/retour
+        const base = node.answer || `Désolé, aucune réponse disponible pour cette rubrique.`;
+        const hasRelated = (node.related?.length ?? 0) > 0;
+        intro = hasRelated
+          ? `${base}\n\n💡 **Questions liées** :`
+          : `${base}\n\n↩️ Reviens en arrière ou choisis une autre rubrique :`;
       }
 
       const chips = buildChipsForNode(node);
@@ -304,14 +336,41 @@ const Help = ({ embedded = false }: HelpProps) => {
   const handleChipSelect = useCallback(
     (chipId: string) => {
       if (isBotTyping || messages.some((m) => m.isTyping)) return;
-      if (chipId === '__agent') {
+      if (chipId === '__agent_confirm') {
+        // Confirmation utilisateur → on lance vraiment l'escalade
         void handleContactAgent();
+        return;
+      }
+      if (chipId === '__agent_cancel') {
+        // L'utilisateur préfère continuer avec l'aide automatique → retour menu
+        navigateToNode(HELP_ROOT_ID, { showUserBubble: false });
         return;
       }
       navigateToNode(chipId, { showUserBubble: true });
     },
     [isBotTyping, messages, navigateToNode]
   );
+
+  /**
+   * Étape de confirmation avant l'escalade vers un agent.
+   * On rappelle d'abord à l'utilisateur que la plupart des questions trouvent
+   * leur réponse dans le menu, puis on lui demande de confirmer.
+   */
+  const promptAgentConfirmation = useCallback(() => {
+    if (isBotTyping || messages.some((m) => m.isTyping)) return;
+    setMessages((prev) => [
+      ...prev,
+      { type: 'user', text: '👤 Parler à un agent' },
+    ]);
+    addBotMessage(
+      "Avant de te mettre en relation avec un conseiller (délai d'attente possible), as-tu vérifié que ta question n'est pas dans une rubrique ?\n\n💡 La plupart des sujets (crédits, profil, sécurité, paiement…) sont expliqués pas à pas dans le **Menu principal**.\n\nSouhaites-tu vraiment **continuer** vers un agent humain ?",
+      [
+        { id: '__agent_cancel', label: 'Revenir au menu', emoji: '🏠', variant: 'subtle' },
+        { id: '__agent_confirm', label: 'Oui, parler à un agent', emoji: '👤', variant: 'outline' },
+      ],
+      '__agent_prompt',
+    );
+  }, [addBotMessage, isBotTyping, messages]);
 
   // Breadcrumb steps
   const breadcrumbSteps: HelpBreadcrumbStep[] = (() => {
@@ -595,7 +654,7 @@ const Help = ({ embedded = false }: HelpProps) => {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto px-3 py-4 space-y-2">
+        <div className="max-w-lg mx-auto px-3 py-4 pb-8 space-y-2">
           {/* Chatbot bubbles */}
           {isChatbot && messages.map((msg, i) => (
             <HelpChatBubble
@@ -678,7 +737,7 @@ const Help = ({ embedded = false }: HelpProps) => {
             </motion.div>
           )}
 
-          <div ref={scrollEndRef} />
+          <div ref={scrollEndRef} className="h-2" />
         </div>
       </div>
 
@@ -699,15 +758,19 @@ const Help = ({ embedded = false }: HelpProps) => {
         )}
 
         {isChatbot && (
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={handleContactAgent}
-            disabled={createTicket.isPending}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:opacity-95 shadow-md shadow-primary/30 active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            <Headphones className="w-4 h-4" />
-            {createTicket.isPending ? 'Connexion en cours…' : 'Parler à un agent'}
-          </motion.button>
+          <div className="flex flex-col items-center gap-1 text-center">
+            <p className="text-[11px] text-muted-foreground">
+              💡 Choisis une rubrique ci-dessus pour une réponse instantanée
+            </p>
+            <button
+              onClick={promptAgentConfirmation}
+              disabled={createTicket.isPending || isBotTyping || messages.some((m) => m.isTyping)}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:text-primary transition-colors rounded-full disabled:opacity-50"
+            >
+              <Headphones className="w-3.5 h-3.5" />
+              {createTicket.isPending ? 'Connexion en cours…' : "Tu n'as pas trouvé ? Parler à un agent"}
+            </button>
+          </div>
         )}
 
         {(isAgent || isWaiting) && (
