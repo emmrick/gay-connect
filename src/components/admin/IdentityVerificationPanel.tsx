@@ -18,6 +18,12 @@ import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModerato
 import { useLogModerationAction } from '@/hooks/useModerationActions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
+import {
+  AdminSectionHeader,
+  StatTile,
+  AdminTable,
+  type AdminColumn,
+} from './ui';
 
 interface VerificationWithProfile {
   id: string;
