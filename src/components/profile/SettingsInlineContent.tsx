@@ -489,20 +489,35 @@ const SettingsInlineContent = ({ type, onBack, onContactAdmin, onClose }: Settin
       case 'help':
         return (
           <div className="space-y-4">
-            {/* Primary CTA: ChatBot */}
+            {/* Primary CTA: Revoir le guide d'onboarding */}
             <button
-              onClick={() => { onClose(); navigate('/help'); }}
-              className="w-full relative overflow-hidden flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/8 to-transparent border border-primary/20 hover:from-primary/20 active:scale-[0.99] transition-all"
+              onClick={() => { onClose(); openOnboardingTour(); }}
+              className="w-full relative overflow-hidden flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/8 to-transparent border border-primary/30 hover:from-primary/25 active:scale-[0.99] transition-all"
             >
-              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-primary/15 blur-2xl" />
-              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/25">
-                <Bot className="w-6 h-6 text-primary-foreground" />
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-primary/20 blur-2xl" />
+              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30">
+                <BookOpen className="w-6 h-6 text-primary-foreground" />
               </div>
               <div className="relative flex-1 text-left">
-                <p className="font-bold text-[15px] text-foreground leading-tight">Assistant Gay Social</p>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Réponses instantanées par chatbot</p>
+                <p className="font-bold text-[15px] text-foreground leading-tight">📖 Revoir le guide d'utilisation</p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">Redécouvre les fonctionnalités étape par étape</p>
               </div>
               <ChevronRight className="relative w-5 h-5 text-primary/60 flex-shrink-0" />
+            </button>
+
+            {/* Secondary CTA: ChatBot d'assistance */}
+            <button
+              onClick={() => { onClose(); navigate('/help'); }}
+              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-muted/40 hover:bg-muted/60 active:scale-[0.99] transition-all border border-border/30"
+            >
+              <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-5 h-5 text-violet-500" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-semibold text-[14.5px] text-foreground">Assistant Gay Social</p>
+                <p className="text-[11.5px] text-muted-foreground mt-0.5">Réponses instantanées par chatbot</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
             </button>
 
             <button
