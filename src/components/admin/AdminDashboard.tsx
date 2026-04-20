@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { AdminSection } from './AdminSidebar';
+import { StatTile, ActionTile, AdminSectionHeader, AdminCard, EmptyState } from './ui';
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -120,13 +121,13 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
   const onlinePercent = stats.totalUsers > 0 ? Math.round((stats.onlineUsers / stats.totalUsers) * 100) : 0;
   const verifiedPercent = stats.totalUsers > 0 ? Math.round((stats.verifiedUsers / stats.totalUsers) * 100) : 0;
 
-  const urgentActions = [
-    { id: 'pending-tasks' as AdminSection, label: 'Missions', icon: ListOrdered, count: stats.pendingTasks, color: 'text-orange-500', bg: 'bg-orange-500/8', borderColor: 'border-orange-500/20', glow: 'shadow-orange-500/5' },
-    { id: 'reports' as AdminSection, label: 'Signalements', icon: AlertTriangle, count: pendingReports, color: 'text-red-500', bg: 'bg-red-500/8', borderColor: 'border-red-500/20', glow: 'shadow-red-500/5' },
-    { id: 'verification' as AdminSection, label: 'Vérifications', icon: IdCard, count: pendingVerifications, color: 'text-blue-500', bg: 'bg-blue-500/8', borderColor: 'border-blue-500/20', glow: 'shadow-blue-500/5' },
-    { id: 'credit-purchases' as AdminSection, label: 'Achats', icon: ShoppingCart, count: pendingPurchases, color: 'text-emerald-500', bg: 'bg-emerald-500/8', borderColor: 'border-emerald-500/20', glow: 'shadow-emerald-500/5' },
-    { id: 'support' as AdminSection, label: 'Support', icon: Headphones, count: stats.openTickets, color: 'text-violet-500', bg: 'bg-violet-500/8', borderColor: 'border-violet-500/20', glow: 'shadow-violet-500/5' },
-  ].filter(a => a.count > 0);
+  const urgentActions = ([
+    { id: 'pending-tasks' as AdminSection, label: 'Missions', icon: ListOrdered, count: stats.pendingTasks, accent: 'orange' as const },
+    { id: 'reports' as AdminSection, label: 'Signalements', icon: AlertTriangle, count: pendingReports, accent: 'red' as const },
+    { id: 'verification' as AdminSection, label: 'Vérifications', icon: IdCard, count: pendingVerifications, accent: 'blue' as const },
+    { id: 'credit-purchases' as AdminSection, label: 'Achats', icon: ShoppingCart, count: pendingPurchases, accent: 'emerald' as const },
+    { id: 'support' as AdminSection, label: 'Support', icon: Headphones, count: stats.openTickets, accent: 'violet' as const },
+  ]).filter((a) => a.count > 0);
 
   const taskTypeLabel = (type: string) => {
     const map: Record<string, { label: string; icon: string }> = {
@@ -186,53 +187,55 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
 
       {/* Urgent Actions */}
       {urgentActions.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-orange-500" />
-            <h3 className="text-sm font-display font-semibold">Actions urgentes</h3>
-            <Badge variant="secondary" className="text-[10px] h-5 bg-orange-500/10 text-orange-600 border-orange-500/20">
-              {urgentActions.reduce((acc, a) => acc + a.count, 0)} en attente
-            </Badge>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            {urgentActions.map((action) => (
-              <button
-                key={action.id}
-                onClick={() => onNavigate(action.id)}
-                className={cn(
-                  "flex flex-col items-start gap-2 p-3.5 rounded-2xl border backdrop-blur-sm transition-all",
-                  "hover:shadow-lg active:scale-[0.97]",
-                  action.borderColor, action.bg, action.glow
-                )}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <action.icon className={cn("w-4 h-4", action.color)} />
-                  <span className={cn("text-xl font-display font-bold", action.color)}>{action.count}</span>
-                </div>
-                <span className="text-[11px] font-medium text-foreground/70">{action.label}</span>
-              </button>
+        <section className="animate-fade-in">
+          <AdminSectionHeader
+            icon={Zap}
+            eyebrow="À traiter"
+            title="Actions urgentes"
+            action={
+              <Badge variant="secondary" className="text-[10px] h-5 bg-orange-500/10 text-orange-600 border-orange-500/20">
+                {urgentActions.reduce((acc, a) => acc + a.count, 0)} en attente
+              </Badge>
+            }
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            {urgentActions.map((action, i) => (
+              <div key={action.id} className="animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
+                <ActionTile
+                  label={action.label}
+                  icon={action.icon}
+                  count={action.count}
+                  accent={action.accent}
+                  onClick={() => onNavigate(action.id)}
+                />
+              </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KPICard title="Membres" value={stats.totalUsers} icon={Users} trend={`+${stats.newUsersToday} aujourd'hui`} onClick={() => onNavigate('users')} />
-        <KPICard title="En ligne" value={stats.onlineUsers} icon={Activity} trend={`${onlinePercent}% actifs`} pulse />
-        <KPICard title="Vérifiés" value={stats.verifiedUsers} icon={Shield} trend={`${verifiedPercent}%`} onClick={() => onNavigate('verification')} />
-        <KPICard title="Conversations" value={stats.totalConversations} icon={MessageSquare} trend="total" />
-      </div>
+      <section className="animate-fade-in" style={{ animationDelay: '60ms' }}>
+        <AdminSectionHeader eyebrow="Vue d'ensemble" title="Indicateurs clés" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatTile label="Membres" value={stats.totalUsers} icon={Users} accent="primary" trend={{ value: `+${stats.newUsersToday} aujourd'hui`, direction: 'up' }} onClick={() => onNavigate('users')} />
+          <StatTile label="En ligne" value={stats.onlineUsers} icon={Activity} accent="emerald" pulse trend={{ value: `${onlinePercent}%`, direction: 'neutral' }} />
+          <StatTile label="Vérifiés" value={stats.verifiedUsers} icon={Shield} accent="blue" trend={{ value: `${verifiedPercent}%`, direction: 'up' }} onClick={() => onNavigate('verification')} />
+          <StatTile label="Conversations" value={stats.totalConversations} icon={MessageSquare} accent="violet" />
+        </div>
+      </section>
 
       {/* Secondary KPIs */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-        <MiniKPI label="Messages total" value={stats.totalMessages} icon={MessageSquare} />
-        <MiniKPI label="Msg aujourd'hui" value={stats.messagesToday} icon={Clock} />
-        <MiniKPI label="Msg / semaine" value={stats.messagesWeek} icon={BarChart3} />
-        <MiniKPI label="Photos" value={stats.totalPhotos} icon={Image} />
-        <MiniKPI label="Albums" value={stats.totalAlbums} icon={Hash} />
-        <MiniKPI label="Conversations" value={stats.totalConversations} icon={Wallet} />
-      </div>
+      <section className="animate-fade-in" style={{ animationDelay: '120ms' }}>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+          <MiniKPI label="Messages total" value={stats.totalMessages} icon={MessageSquare} />
+          <MiniKPI label="Msg aujourd'hui" value={stats.messagesToday} icon={Clock} />
+          <MiniKPI label="Msg / semaine" value={stats.messagesWeek} icon={BarChart3} />
+          <MiniKPI label="Photos" value={stats.totalPhotos} icon={Image} />
+          <MiniKPI label="Albums" value={stats.totalAlbums} icon={Hash} />
+          <MiniKPI label="Conversations" value={stats.totalConversations} icon={Wallet} />
+        </div>
+      </section>
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -393,30 +396,28 @@ const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pend
 
       {/* Quick Navigation */}
       {isAdmin && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-display font-semibold text-muted-foreground">Accès rapide</h3>
+        <section className="animate-fade-in">
+          <AdminSectionHeader eyebrow="Raccourcis" title="Accès rapide" />
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {([
-              { id: 'users' as AdminSection, label: 'Utilisateurs', icon: Users },
-              { id: 'credits-surveillance' as AdminSection, label: 'Crédits', icon: TrendingUp },
-              { id: 'moderators' as AdminSection, label: 'Équipe', icon: Eye },
-              { id: 'broadcast' as AdminSection, label: 'Broadcast', icon: Globe },
-              { id: 'maintenance' as AdminSection, label: 'Maintenance', icon: Shield },
-              { id: 'stats' as AdminSection, label: 'Analytics', icon: BarChart3 },
+              { id: 'users' as AdminSection, label: 'Utilisateurs', icon: Users, accent: 'primary' as const },
+              { id: 'credits-surveillance' as AdminSection, label: 'Crédits', icon: TrendingUp, accent: 'emerald' as const },
+              { id: 'moderators' as AdminSection, label: 'Équipe', icon: Eye, accent: 'violet' as const },
+              { id: 'broadcast' as AdminSection, label: 'Broadcast', icon: Globe, accent: 'blue' as const },
+              { id: 'maintenance' as AdminSection, label: 'Maintenance', icon: Shield, accent: 'orange' as const },
+              { id: 'stats' as AdminSection, label: 'Analytics', icon: BarChart3, accent: 'primary' as const },
             ]).map((item) => (
-              <button
+              <ActionTile
                 key={item.id}
+                label={item.label}
+                icon={item.icon}
+                accent={item.accent}
+                variant="quick"
                 onClick={() => onNavigate(item.id)}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-border/30 bg-card/60 backdrop-blur-sm hover:bg-card/80 hover:border-border/50 hover:shadow-sm transition-all active:scale-[0.97]"
-              >
-                <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center">
-                  <item.icon className="w-4 h-4 text-primary/70" />
-                </div>
-                <span className="text-[10px] font-medium text-muted-foreground">{item.label}</span>
-              </button>
+              />
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );
