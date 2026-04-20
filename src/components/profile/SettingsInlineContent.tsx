@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { usePrivacySettings } from '@/hooks/usePrivacySettings';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useLocalSettings, type AccentColor, type TextSize, type Density, type ChatBackground } from '@/hooks/useLocalSettings';
+import { openOnboardingTour } from '@/hooks/useOnboarding';
 import NotificationPreferencesSection from './NotificationPreferencesSection';
 
 type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help' | 'language';
