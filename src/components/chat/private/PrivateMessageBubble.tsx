@@ -1,7 +1,8 @@
 import { memo } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Check, CheckCheck, AlertTriangle } from 'lucide-react';
+import { Check, CheckCheck, AlertTriangle, Pin } from 'lucide-react';
+import { useLongPress } from '@/hooks/useLongPress';
 import EmojiMessageEffect, { isEmojiOnlyMessage } from '../EmojiMessageEffect';
 import EmojiReactionPicker from '../EmojiReactionPicker';
 import MessageReactions from '../MessageReactions';
@@ -24,6 +25,9 @@ interface PrivateMessageBubbleProps {
   otherUserId: string;
   onToggleReaction: (messageId: string, emoji: string) => void;
   getReactionsForMessage: (messageId: string) => any[];
+  isPinned?: boolean;
+  isHighlighted?: boolean;
+  onLongPress?: (message: any) => void;
 }
 
 const PrivateMessageBubble = ({
@@ -36,7 +40,11 @@ const PrivateMessageBubble = ({
   otherUserId,
   onToggleReaction,
   getReactionsForMessage,
+  isPinned = false,
+  isHighlighted = false,
+  onLongPress,
 }: PrivateMessageBubbleProps) => {
+  const longPressHandlers = useLongPress(() => onLongPress?.(message), { delay: 450 });
   const isEphemeralMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && !message.content.startsWith('http');
   const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && message.content.startsWith('http');
   const isAlbumShare = message.message_type === 'album_share';
