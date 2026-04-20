@@ -162,12 +162,9 @@ const TweenCard = ({ tween }: TweenCardProps) => {
             {/* Content */}
             <p className="mt-1.5 text-sm whitespace-pre-wrap break-words leading-relaxed">{renderBoldText(tween.content)}</p>
 
-            {/* Media */}
-            {tween.media_url && tween.media_type === 'image' && (
-              <img src={tween.media_url} alt="" className="w-full rounded-xl mt-3 max-h-80 object-cover border border-border/20" loading="lazy" />
-            )}
-            {tween.media_url && tween.media_type === 'video' && (
-              <video src={tween.media_url} controls className="w-full rounded-xl mt-3 max-h-80 object-cover border border-border/20" />
+            {/* Media (filigrané + non téléchargeable) */}
+            {tween.media_url && (tween.media_type === 'image' || tween.media_type === 'video') && (
+              <TweenMedia url={tween.media_url} type={tween.media_type as 'image' | 'video'} />
             )}
 
             {/* Poll */}
@@ -197,6 +194,23 @@ const TweenCard = ({ tween }: TweenCardProps) => {
                 <MessageCircle className="w-[18px] h-[18px]" />
                 <span className="font-semibold text-xs">{tween.comments_count || ''}</span>
               </motion.button>
+
+              {user && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  className={cn(
+                    "ml-auto flex items-center gap-1.5 text-sm transition-all px-3 py-1.5 rounded-xl",
+                    isFavorited
+                      ? "text-amber-500 bg-amber-500/10"
+                      : "text-muted-foreground hover:text-amber-500 hover:bg-amber-500/5"
+                  )}
+                  onClick={handleFavorite}
+                  aria-label={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  title={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                >
+                  <Bookmark className={cn("w-[18px] h-[18px] transition-transform", isFavorited && "fill-current scale-110")} />
+                </motion.button>
+              )}
             </div>
           </div>
         </div>
