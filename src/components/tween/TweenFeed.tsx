@@ -1,12 +1,15 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useTweenFeed } from '@/hooks/useTweens';
 import TweenCard from './TweenCard';
 import TweenComposer from './TweenComposer';
+import MyTweensTab from './MyTweensTab';
 import AdBanner from '@/components/ads/AdBanner';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Globe2, User } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const TweenFeed = () => {
+  const [tab, setTab] = useState<'public' | 'mine'>('public');
   const {
     data,
     fetchNextPage,
@@ -35,10 +38,28 @@ const TweenFeed = () => {
   const tweens = data?.pages.flat() || [];
 
   return (
-    <div className="max-w-xl mx-auto space-y-4">
-      <TweenComposer />
+    <Tabs value={tab} onValueChange={(v) => setTab(v as 'public' | 'mine')} className="max-w-xl mx-auto">
+      <TabsList className="grid grid-cols-2 w-full h-11 mb-4 bg-muted/60 backdrop-blur-sm border border-border/40 rounded-2xl p-1">
+        <TabsTrigger
+          value="public"
+          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1.5 font-semibold text-sm"
+        >
+          <Globe2 className="w-4 h-4" />
+          Fil public
+        </TabsTrigger>
+        <TabsTrigger
+          value="mine"
+          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1.5 font-semibold text-sm"
+        >
+          <User className="w-4 h-4" />
+          Mes Tweens
+        </TabsTrigger>
+      </TabsList>
 
-      {isLoading ? (
+      <TabsContent value="public" className="space-y-4 mt-0">
+        <TweenComposer />
+
+        {isLoading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -75,14 +96,19 @@ const TweenFeed = () => {
         ))
       )}
 
-      <div ref={sentinelRef} className="h-1" />
+        <div ref={sentinelRef} className="h-1" />
 
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-4">
-          <Loader2 className="w-5 h-5 animate-spin text-primary" />
-        </div>
-      )}
-    </div>
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          </div>
+        )}
+      </TabsContent>
+
+      <TabsContent value="mine" className="mt-0">
+        <MyTweensTab />
+      </TabsContent>
+    </Tabs>
   );
 };
 
