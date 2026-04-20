@@ -66,13 +66,16 @@ const PushNotificationBanner = () => {
     <AnimatePresence>
       {showBanner && (
         <motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="fixed top-4 left-4 right-4 z-[100] mx-auto max-w-md"
+          className="fixed left-4 right-4 z-[100] mx-auto max-w-md"
+          style={{
+            bottom: 'calc(88px + max(0.75rem, env(safe-area-inset-bottom, 0px)))',
+          }}
         >
-          <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/20 backdrop-blur-xl border border-primary/30 rounded-2xl p-4 shadow-2xl shadow-primary/20">
+          <div className="bg-card/95 backdrop-blur-xl border border-primary/30 rounded-2xl p-4 shadow-2xl shadow-primary/20">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                 <BellRing className="w-5 h-5 text-primary" />
