@@ -96,14 +96,19 @@ const TweenFeed = () => {
         ))
       )}
 
-      <div ref={sentinelRef} className="h-1" />
+        <div ref={sentinelRef} className="h-1" />
 
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-4">
-          <Loader2 className="w-5 h-5 animate-spin text-primary" />
-        </div>
-      )}
-    </div>
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          </div>
+        )}
+      </TabsContent>
+
+      <TabsContent value="mine" className="mt-0">
+        <MyTweensTab />
+      </TabsContent>
+    </Tabs>
   );
 };
 
