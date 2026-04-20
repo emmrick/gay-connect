@@ -12,6 +12,7 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import AdminCommandBar from './AdminCommandBar';
+import { useIsTablet } from '@/hooks/use-tablet';
 
 export type AdminSection =
   | 'dashboard'
