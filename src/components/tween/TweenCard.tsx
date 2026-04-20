@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Heart, MessageCircle, Trash2, MoreHorizontal, Flag, Pencil } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, MoreHorizontal, Flag, Pencil, Bookmark } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -9,10 +9,12 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from '@/hooks/useTweens';
+import { useTweenFavoriteIds, useToggleTweenFavorite } from '@/hooks/useTweenFavorites';
 import TweenDetailDialog from './TweenDetailDialog';
 import TweenEditDialog from './TweenEditDialog';
 import TweenReportDialog from './TweenReportDialog';
 import TweenFollowButton from './TweenFollowButton';
+import TweenMedia from './TweenMedia';
 import { motion } from 'framer-motion';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
@@ -67,11 +69,14 @@ const TweenCard = ({ tween }: TweenCardProps) => {
   const navigate = useNavigate();
   const toggleLike = useToggleTweenLike();
   const deleteTween = useDeleteTween();
+  const { data: favoriteIds } = useTweenFavoriteIds();
+  const toggleFavorite = useToggleTweenFavorite();
   const [showDetail, setShowDetail] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
   const isOwn = user?.id === tween.user_id;
+  const isFavorited = favoriteIds?.has(tween.id) ?? false;
   const profile = tween.profiles;
   const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
   const timeAgo = formatDistanceToNow(new Date(tween.created_at), { addSuffix: true, locale: fr });
@@ -79,6 +84,11 @@ const TweenCard = ({ tween }: TweenCardProps) => {
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleLike.mutate({ tweenId: tween.id, isLiked: !!tween.user_has_liked });
+  };
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleFavorite.mutate({ tweenId: tween.id, isFavorited });
   };
 
   return (
@@ -152,12 +162,9 @@ const TweenCard = ({ tween }: TweenCardProps) => {
             {/* Content */}
             <p className="mt-1.5 text-sm whitespace-pre-wrap break-words leading-relaxed">{renderBoldText(tween.content)}</p>
 
-            {/* Media */}
-            {tween.media_url && tween.media_type === 'image' && (
-              <img src={tween.media_url} alt="" className="w-full rounded-xl mt-3 max-h-80 object-cover border border-border/20" loading="lazy" />
-            )}
-            {tween.media_url && tween.media_type === 'video' && (
-              <video src={tween.media_url} controls className="w-full rounded-xl mt-3 max-h-80 object-cover border border-border/20" />
+            {/* Media (filigrané + non téléchargeable) */}
+            {tween.media_url && (tween.media_type === 'image' || tween.media_type === 'video') && (
+              <TweenMedia url={tween.media_url} type={tween.media_type as 'image' | 'video'} />
             )}
 
             {/* Poll */}
@@ -187,6 +194,23 @@ const TweenCard = ({ tween }: TweenCardProps) => {
                 <MessageCircle className="w-[18px] h-[18px]" />
                 <span className="font-semibold text-xs">{tween.comments_count || ''}</span>
               </motion.button>
+
+              {user && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  className={cn(
+                    "ml-auto flex items-center gap-1.5 text-sm transition-all px-3 py-1.5 rounded-xl",
+                    isFavorited
+                      ? "text-accent bg-accent/10"
+                      : "text-muted-foreground hover:text-accent hover:bg-accent/5"
+                  )}
+                  onClick={handleFavorite}
+                  aria-label={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  title={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                >
+                  <Bookmark className={cn("w-[18px] h-[18px] transition-transform", isFavorited && "fill-current scale-110")} />
+                </motion.button>
+              )}
             </div>
           </div>
         </div>

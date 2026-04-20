@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTweenComments, useCreateTweenComment, useToggleTweenLike, type Tween, type TweenComment } from '@/hooks/useTweens';
+import TweenMedia from './TweenMedia';
 import { motion } from 'framer-motion';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
@@ -100,11 +101,8 @@ const TweenDetailDialog = ({ tween, open, onOpenChange }: TweenDetailDialogProps
               </div>
               <p className="mt-2 text-sm whitespace-pre-wrap break-words leading-relaxed">{tween.content}</p>
 
-              {tween.media_url && tween.media_type === 'image' && (
-                <img src={tween.media_url} alt="" className="w-full rounded-xl mt-3 max-h-64 object-cover border border-border/20" />
-              )}
-              {tween.media_url && tween.media_type === 'video' && (
-                <video src={tween.media_url} controls className="w-full rounded-xl mt-3 max-h-64 border border-border/20" />
+              {tween.media_url && (tween.media_type === 'image' || tween.media_type === 'video') && (
+                <TweenMedia url={tween.media_url} type={tween.media_type as 'image' | 'video'} />
               )}
 
               <div className="flex items-center gap-1 mt-3">

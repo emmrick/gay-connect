@@ -3,13 +3,14 @@ import { useTweenFeed } from '@/hooks/useTweens';
 import TweenCard from './TweenCard';
 import TweenComposer from './TweenComposer';
 import MyTweensTab from './MyTweensTab';
+import TweenFavoritesTab from './TweenFavoritesTab';
 import AdBanner from '@/components/ads/AdBanner';
-import { Loader2, Sparkles, Globe2, User } from 'lucide-react';
+import { Loader2, Sparkles, Globe2, User, Bookmark } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const TweenFeed = () => {
-  const [tab, setTab] = useState<'public' | 'mine'>('public');
+  const [tab, setTab] = useState<'public' | 'mine' | 'favorites'>('public');
   const {
     data,
     fetchNextPage,
@@ -38,21 +39,30 @@ const TweenFeed = () => {
   const tweens = data?.pages.flat() || [];
 
   return (
-    <Tabs value={tab} onValueChange={(v) => setTab(v as 'public' | 'mine')} className="max-w-xl mx-auto">
-      <TabsList className="grid grid-cols-2 w-full h-11 mb-4 bg-muted/60 backdrop-blur-sm border border-border/40 rounded-2xl p-1">
+    <Tabs value={tab} onValueChange={(v) => setTab(v as 'public' | 'mine' | 'favorites')} className="max-w-xl mx-auto">
+      <TabsList className="grid grid-cols-3 w-full h-11 mb-4 bg-muted/60 backdrop-blur-sm border border-border/40 rounded-2xl p-1">
         <TabsTrigger
           value="public"
-          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1.5 font-semibold text-sm"
+          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1.5 font-semibold text-xs sm:text-sm"
         >
           <Globe2 className="w-4 h-4" />
-          Fil public
+          <span className="hidden sm:inline">Fil public</span>
+          <span className="sm:hidden">Public</span>
         </TabsTrigger>
         <TabsTrigger
           value="mine"
-          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1.5 font-semibold text-sm"
+          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1.5 font-semibold text-xs sm:text-sm"
         >
           <User className="w-4 h-4" />
-          Mes Tweens
+          <span className="hidden sm:inline">Mes Tweens</span>
+          <span className="sm:hidden">Mes</span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="favorites"
+          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1.5 font-semibold text-xs sm:text-sm"
+        >
+          <Bookmark className="w-4 h-4" />
+          <span>Favoris</span>
         </TabsTrigger>
       </TabsList>
 
@@ -107,6 +117,10 @@ const TweenFeed = () => {
 
       <TabsContent value="mine" className="mt-0">
         <MyTweensTab />
+      </TabsContent>
+
+      <TabsContent value="favorites" className="mt-0">
+        <TweenFavoritesTab />
       </TabsContent>
     </Tabs>
   );
