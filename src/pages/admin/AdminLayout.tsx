@@ -324,6 +324,8 @@ const AdminLayout = () => {
           onOpenChange={(open) => !open && setSelectedReport(null)}
         />
       )}
+
+      <AdminShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 };
