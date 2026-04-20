@@ -38,6 +38,8 @@ import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog
 import AppLockGate from "@/components/security/AppLockGate";
 import DossierAccessPopup from "@/components/moderation/DossierAccessPopup";
 import ProfileSelectorModal from "@/components/couple/ProfileSelectorModal";
+import { TweenUploadProvider } from "@/contexts/TweenUploadContext";
+import TweenUploadIndicator from "@/components/tween/TweenUploadIndicator";
 
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 
