@@ -18,6 +18,12 @@ import { useRecordEarning, useTaskRates, formatCents } from '@/hooks/useModerato
 import { useLogModerationAction } from '@/hooks/useModerationActions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
+import {
+  AdminSectionHeader,
+  StatTile,
+  AdminTable,
+  type AdminColumn,
+} from './ui';
 
 interface VerificationWithProfile {
   id: string;
@@ -300,14 +306,6 @@ const IdentityVerificationPanel = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   const renderDocImage = (url: string | null, label: string) => (
     <div className="space-y-1.5">
       <p className="text-xs sm:text-sm font-medium text-center">{label}</p>
@@ -331,66 +329,156 @@ const IdentityVerificationPanel = () => {
     </div>
   );
 
+  const verifications = (pendingVerifications || []) as VerificationWithProfile[];
+
+  const verifColumns: AdminColumn<VerificationWithProfile>[] = [
+    {
+      key: 'user',
+      header: 'Utilisateur',
+      cell: (v) => (
+        <div className="flex items-center gap-3 min-w-0">
+          <Avatar className="w-9 h-9 shrink-0">
+            <AvatarImage src={v.profiles?.avatar_url || ''} />
+            <AvatarFallback>
+              <User className="w-4 h-4" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="font-medium text-sm truncate">{v.profiles?.username || 'Utilisateur'}</p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {v.profiles?.age ? `${v.profiles.age} ans • ` : ''}
+              {v.profiles?.region}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'submitted',
+      header: 'Soumis',
+      sortable: true,
+      sortValue: (v) => (v.submitted_at ? new Date(v.submitted_at).getTime() : 0),
+      cell: (v) => (
+        <Badge variant="outline" className="text-[11px] gap-1 bg-amber-500/10 text-amber-600 border-amber-500/30">
+          <Clock className="w-3 h-3" />
+          {v.submitted_at
+            ? formatDistanceToNow(new Date(v.submitted_at), { addSuffix: true, locale: fr })
+            : '—'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'viewed',
+      header: 'Consulté',
+      hideOnMobile: true,
+      cell: (v) =>
+        v.admin_viewed_at ? (
+          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+            <Eye className="w-3 h-3" />
+            {formatDistanceToNow(new Date(v.admin_viewed_at), { addSuffix: true, locale: fr })}
+          </span>
+        ) : (
+          <span className="text-[11px] text-blue-600 font-medium">Nouveau</span>
+        ),
+    },
+    {
+      key: 'reward',
+      header: 'Récompense',
+      hideOnMobile: true,
+      cell: () => (
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+          <Euro className="w-3 h-3" />
+          {formatCents(verificationRate)}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      cell: (v) => (
+        <Button
+          size="sm"
+          className="h-8 px-3"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewVerification(v);
+          }}
+        >
+          <Eye className="w-3.5 h-3.5 mr-1" />
+          Examiner
+        </Button>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-          <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-        </div>
-        <div>
-          <h2 className="font-display text-base sm:text-lg font-semibold">Vérifications d'identité</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            {pendingVerifications?.length || 0} demande(s) en attente
-          </p>
-        </div>
+    <div className="space-y-5">
+      <AdminSectionHeader icon={Shield} eyebrow="Modération" title="Vérifications d'identité" />
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <StatTile label="En attente" value={verifications.length} icon={Clock} accent="orange" />
+        <StatTile
+          label="Récompense / dossier"
+          value={formatCents(verificationRate)}
+          icon={Euro}
+          accent="emerald"
+        />
+        <StatTile
+          label="Non consultés"
+          value={verifications.filter((v) => !v.admin_viewed_at).length}
+          icon={Eye}
+          accent="blue"
+        />
       </div>
 
-      {/* List */}
-      {pendingVerifications && pendingVerifications.length > 0 ? (
-        <div className="space-y-2.5 sm:space-y-3">
-          {pendingVerifications.map((verification) => (
-            <div 
-              key={verification.id}
-              className="rounded-xl p-3 sm:p-4 bg-card border border-border shadow-sm"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="w-10 h-10 sm:w-12 sm:h-12 shrink-0">
-                  <AvatarImage src={verification.profiles?.avatar_url || ''} />
-                  <AvatarFallback><User className="w-5 h-5 sm:w-6 sm:h-6" /></AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm sm:text-base truncate">{verification.profiles?.username || 'Utilisateur'}</p>
-                  <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
-                    <span>{verification.profiles?.age || '?'} ans</span>
-                    <span>•</span>
-                    <span className="truncate">{verification.profiles?.region}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <Badge variant="outline" className="text-[10px] sm:text-xs flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {verification.submitted_at && formatDistanceToNow(new Date(verification.submitted_at), { addSuffix: true, locale: fr })}
-                  </Badge>
-                  <Button 
-                    size="sm" 
-                    className="h-8 text-xs sm:text-sm"
-                    onClick={() => handleViewVerification(verification as VerificationWithProfile)}
-                  >
-                    <Eye className="w-3.5 h-3.5 mr-1" />
-                    Examiner
-                  </Button>
-                </div>
+      <AdminTable
+        data={verifications}
+        columns={verifColumns}
+        rowKey={(v) => v.id}
+        loading={isLoading}
+        emptyIcon={Shield}
+        emptyTitle="Aucune vérification en attente"
+        emptyDescription="Toutes les vérifications d'identité ont été traitées."
+        mobileCard={(v) => (
+          <div className="rounded-2xl border border-border/50 bg-card p-3.5 space-y-3">
+            <div className="flex items-center gap-3">
+              <Avatar className="w-11 h-11 shrink-0">
+                <AvatarImage src={v.profiles?.avatar_url || ''} />
+                <AvatarFallback>
+                  <User className="w-5 h-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{v.profiles?.username || 'Utilisateur'}</p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {v.profiles?.age ? `${v.profiles.age} ans • ` : ''}
+                  {v.profiles?.region}
+                </p>
               </div>
+              {!v.admin_viewed_at && (
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" aria-label="Nouveau" />
+              )}
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 sm:py-12 text-muted-foreground">
-          <Shield className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-50" />
-          <p className="text-sm">Aucune demande de vérification en attente</p>
-        </div>
-      )}
+            <div className="flex items-center justify-between gap-2">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                <Clock className="w-3 h-3" />
+                {v.submitted_at
+                  ? formatDistanceToNow(new Date(v.submitted_at), { addSuffix: true, locale: fr })
+                  : '—'}
+              </Badge>
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+                <Euro className="w-3 h-3" />
+                {formatCents(verificationRate)}
+              </span>
+            </div>
+            <Button size="sm" className="w-full h-9" onClick={() => handleViewVerification(v)}>
+              <Eye className="w-3.5 h-3.5 mr-1.5" />
+              Examiner le dossier
+            </Button>
+          </div>
+        )}
+      />
 
       {/* View Verification Dialog — fullscreen on mobile */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
