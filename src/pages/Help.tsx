@@ -25,7 +25,7 @@ import HelpChatBubble from '@/components/help/HelpChatBubble';
 import HelpQuickChips, { type HelpChip } from '@/components/help/HelpQuickChips';
 import HelpBreadcrumb from '@/components/help/HelpBreadcrumb';
 import {
-  HELP_FLOW, HELP_ROOT_ID, findNodeById, findPathToNode,
+  HELP_FLOW, HELP_ROOT_ID, findNodeById, findPathToNode, findParentNode,
 } from '@/lib/help/helpFlow';
 import type { HelpBreadcrumbStep, HelpNode } from '@/lib/help/helpFlow.types';
 
