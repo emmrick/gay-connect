@@ -23,6 +23,10 @@ import AdminSidebar, { AdminSection, ModPermissions } from '@/components/admin/A
 import AdminBottomTabs from '@/components/admin/AdminBottomTabs';
 import AdminTopBar from '@/components/admin/AdminTopBar';
 import AdminCommandBar from '@/components/admin/AdminCommandBar';
+import AdminBreadcrumbs from '@/components/admin/AdminBreadcrumbs';
+import AdminLiveIndicator from '@/components/admin/AdminLiveIndicator';
+import AdminShortcutsDialog from '@/components/admin/AdminShortcutsDialog';
+import { useAdminShortcuts } from '@/hooks/admin/useAdminShortcuts';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import { useAdminRealtimeBridge } from '@/hooks/admin/useAdminRealtimeBridge';
