@@ -289,10 +289,10 @@ const MemberProfile = () => {
           )}
         </div>
 
-        {/* ===== HEADLINE ÉDITORIALE — chevauche le bas du hero ===== */}
+        {/* ===== HEADLINE ÉDITORIALE ===== */}
         <motion.div
           initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
-          className="relative -mt-16 px-4 z-10"
+          className="relative mt-5 px-4 z-10"
         >
           {/* Position badge au-dessus du nom */}
           {extendedProfile?.sexual_position && POSITION_LABELS[extendedProfile.sexual_position] && extendedProfile.sexual_position !== 'no_answer' && (
