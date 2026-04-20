@@ -42,7 +42,7 @@ const formatBytes = (bytes: number): string => {
 const TweenComposer = () => {
   const { user, profile } = useAuth();
   const resolvedAvatar = useAvatarUrl(profile?.avatar_url);
-  const createTween = useCreateTween();
+  const { enqueue } = useTweenUploads();
 
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState('');
@@ -52,85 +52,16 @@ const TweenComposer = () => {
   const [showPoll, setShowPoll] = useState(false);
   const [pollOptions, setPollOptions] = useState(['', '']);
 
-  // Upload state
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0); // 0-100
-  const [uploadStage, setUploadStage] = useState<string>('');
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // ─── Upload fiable via SDK storage + retries mobile ─────────────────────────
-  // Optimisé : retries plus rapides + cache plus long pour fluidifier la publication vidéo.
-  const uploadTweenMedia = useCallback(
-    async (path: string, file: File): Promise<void> => {
-      const maxRetries = 3;
-
-      for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
-        setUploadStage(
-          attempt === 1
-            ? 'Envoi du média…'
-            : `Nouvelle tentative d’envoi (${attempt}/${maxRetries})…`
-        );
-        setUploadProgress(Math.min(20 + (attempt - 1) * 15, 50));
-
-        try {
-          const { error } = await supabase.storage
-            .from('media')
-            .upload(path, file, {
-              cacheControl: '31536000', // 1 an : médias immuables (nom unique)
-              upsert: attempt > 1,
-              contentType: file.type || undefined,
-            });
-
-          if (!error) {
-            return;
-          }
-
-          const rawMessage = error.message || 'Erreur d\'envoi.';
-          const isRetryable = /LockManager|timed out|network|fetch|load failed|failed to fetch|abort|aborted/i.test(rawMessage);
-
-          if (!isRetryable || attempt === maxRetries) {
-            throw new Error(
-              isRetryable
-                ? 'Connexion interrompue pendant l\'envoi. Vérifie ton réseau puis réessaie.'
-                : rawMessage
-            );
-          }
-        } catch (err) {
-          const rawMessage = err instanceof Error ? err.message : 'Erreur d\'envoi.';
-          const isRetryable = /LockManager|timed out|network|fetch|load failed|failed to fetch|abort|aborted/i.test(rawMessage);
-
-          if (!isRetryable || attempt === maxRetries) {
-            throw new Error(
-              isRetryable
-                ? 'Connexion interrompue pendant l\'envoi. Vérifie ton réseau puis réessaie.'
-                : rawMessage
-            );
-          }
-        }
-
-        // Backoff réduit pour relancer plus vite après une coupure brève
-        await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
-      }
-
-      throw new Error('Connexion interrompue pendant l\'envoi. Vérifie ton réseau puis réessaie.');
-    },
-    []
-  );
 
   if (!user) return null;
 
   const charCount = content.length;
   const charPercent = Math.min((charCount / 300) * 100, 100);
   const hasContent = content.trim().length > 0 || !!mediaFile;
-  const canPublish =
-    hasContent &&
-    charCount <= 300 &&
-    !createTween.isPending &&
-    !uploading;
+  const canPublish = hasContent && charCount <= 300;
 
   const handleBold = () => {
     const el = textareaRef.current;
