@@ -1,22 +1,17 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCreateTween } from '@/hooks/useTweens';
-import { supabase } from '@/integrations/supabase/client';
+import { useTweenUploads } from '@/contexts/TweenUploadContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
 import {
   Image as ImageIcon,
   Video,
   BarChart3,
   X,
-  Loader2,
   Send,
   Bold,
   Sparkles,
-  AlertTriangle,
-  CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -25,11 +20,9 @@ import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 // ─── Limites & formats ───────────────────────────────────────────────────────
 const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 1 Go
-const MAX_IMAGE_SIZE = 25 * 1024 * 1024;   // 25 Mo (raisonnable + cohérent)
+const MAX_IMAGE_SIZE = 25 * 1024 * 1024;   // 25 Mo
 const ACCEPTED_IMAGE = 'image/*';
 const ACCEPTED_VIDEO = 'video/*';
-
-// Formats iPhone bruts qui sont uploadés mais difficiles à afficher partout
 const RAW_IPHONE_TYPES = ['image/heic', 'image/heif'];
 
 const formatBytes = (bytes: number): string => {
@@ -80,7 +73,6 @@ const TweenComposer = () => {
   };
 
   const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
-    setErrorMsg(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -94,8 +86,6 @@ const TweenComposer = () => {
       e.target.value = '';
       return;
     }
-
-    // Avertir doucement les utilisateurs iPhone qui partagent en HEIC
     if (type === 'image' && RAW_IPHONE_TYPES.includes(file.type)) {
       toast.info('Format HEIC iPhone détecté — l\'affichage peut être plus lent sur certains appareils.');
     }
@@ -110,7 +100,6 @@ const TweenComposer = () => {
     setMediaFile(null);
     setMediaPreview(null);
     setMediaType(null);
-    setErrorMsg(null);
   };
 
   const resetForm = () => {
@@ -118,81 +107,33 @@ const TweenComposer = () => {
     removeMedia();
     setShowPoll(false);
     setPollOptions(['', '']);
-    setUploadProgress(0);
-    setUploadStage('');
-    setErrorMsg(null);
   };
 
-  const handlePublish = async () => {
+  const handlePublish = () => {
     if (!canPublish) return;
-    setErrorMsg(null);
-    let mediaUrl: string | undefined;
 
-    if (mediaFile && mediaType) {
-      setUploading(true);
-      setUploadProgress(5);
-      setUploadStage('Préparation de l\'envoi…');
-      try {
-        const ext = (mediaFile.name.split('.').pop() || 'bin').toLowerCase();
-        const path = `${user.id}/tweens/${Date.now()}.${ext}`;
+    const validPollOptions = showPoll ? pollOptions.filter((o) => o.trim()) : undefined;
 
-        await uploadTweenMedia(path, mediaFile);
+    // Génère un preview qui survit à la fermeture (on ne révoque pas tout de suite)
+    const previewForQueue = mediaPreview || undefined;
 
-        setUploadProgress(75);
-        setUploadStage('Génération du lien sécurisé…');
+    enqueue({
+      userId: user.id,
+      content: content.trim(),
+      mediaFile: mediaFile || undefined,
+      mediaType: mediaType || undefined,
+      pollOptions: validPollOptions,
+      preview: previewForQueue,
+    });
 
-        let signedUrl: string | undefined;
-        for (let attempt = 1; attempt <= 2; attempt += 1) {
-          const { data: signed, error: signError } = await supabase.storage
-            .from('media')
-            .createSignedUrl(path, 60 * 60 * 24 * 365);
-
-          if (!signError && signed?.signedUrl) {
-            signedUrl = signed.signedUrl;
-            break;
-          }
-
-          if (attempt === 2) {
-            throw new Error(signError?.message || 'Impossible de générer le lien du média.');
-          }
-
-          // Retry plus rapide pour la signature (opération légère)
-          await new Promise((resolve) => setTimeout(resolve, 250));
-        }
-
-        mediaUrl = signedUrl;
-        setUploadProgress(90);
-        setUploadStage('Publication du Tween…');
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Erreur d\'envoi inconnue.';
-        console.error('[Tween] upload error:', err);
-        setErrorMsg(message);
-        toast.error(message, { duration: 6000 });
-        setUploading(false);
-        return;
-      }
-    }
-
-    try {
-      const validPollOptions = showPoll ? pollOptions.filter(o => o.trim()) : undefined;
-      await createTween.mutateAsync({
-        content: content.trim(),
-        mediaUrl,
-        mediaType: mediaType || undefined,
-        pollOptions: validPollOptions?.length && validPollOptions.length >= 2 ? validPollOptions : undefined,
-      });
-      setUploadProgress(100);
-      setUploadStage('Publication terminée');
-      resetForm();
-      setOpen(false);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Publication impossible.';
-      console.error('[Tween] insert error:', err);
-      setErrorMsg(message);
-      toast.error(message, { duration: 6000 });
-    } finally {
-      setUploading(false);
-    }
+    // Reset visuel SANS révoquer l'URL (pour que l'indicateur garde la miniature)
+    setContent('');
+    setMediaFile(null);
+    setMediaPreview(null);
+    setMediaType(null);
+    setShowPoll(false);
+    setPollOptions(['', '']);
+    setOpen(false);
   };
 
   const renderPreview = (text: string) => {
@@ -209,7 +150,6 @@ const TweenComposer = () => {
     <Dialog
       open={open}
       onOpenChange={(o) => {
-        if (uploading || createTween.isPending) return; // empêche fermeture pendant upload
         setOpen(o);
         if (!o) resetForm();
       }}
@@ -276,8 +216,7 @@ const TweenComposer = () => {
               onChange={(e) => setContent(e.target.value)}
               maxLength={300}
               rows={4}
-              disabled={uploading}
-              className="w-full min-h-[100px] bg-transparent border-0 p-0 text-[15px] leading-relaxed resize-none focus:outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+              className="w-full min-h-[100px] bg-transparent border-0 p-0 text-[15px] leading-relaxed resize-none focus:outline-none placeholder:text-muted-foreground/40"
               autoFocus
             />
           </div>
@@ -317,68 +256,14 @@ const TweenComposer = () => {
                 <div className="absolute bottom-2 left-3 text-[11px] font-medium text-white/90 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
                   {mediaFile && formatBytes(mediaFile.size)}
                 </div>
-                {!uploading && (
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    className="absolute top-2.5 right-2.5 rounded-full w-8 h-8 bg-background/80 backdrop-blur-sm hover:bg-background shadow-md"
-                    onClick={removeMedia}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Upload progress */}
-          <AnimatePresence>
-            {uploading && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-1.5 text-foreground font-medium">
-                      <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                      {uploadStage || 'Envoi en cours…'}
-                    </span>
-                    <span className="font-mono tabular-nums text-primary font-semibold">{uploadProgress}%</span>
-                  </div>
-                  <Progress value={uploadProgress} className="h-1.5 bg-primary/10" />
-                  <p className="text-[10px] text-muted-foreground">
-                    Garde la fenêtre ouverte jusqu'à la fin de l'envoi.
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Error */}
-          <AnimatePresence>
-            {errorMsg && !uploading && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 rounded-xl px-3 py-2.5 border border-destructive/20">
-                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-semibold mb-0.5">Échec de la publication</p>
-                    <p className="leading-relaxed">{errorMsg}</p>
-                    <button
-                      onClick={() => { setErrorMsg(null); void handlePublish(); }}
-                      className="mt-1.5 text-[11px] font-bold underline underline-offset-2 hover:no-underline"
-                    >
-                      Réessayer
-                    </button>
-                  </div>
-                </div>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute top-2.5 right-2.5 rounded-full w-8 h-8 bg-background/80 backdrop-blur-sm hover:bg-background shadow-md"
+                  onClick={removeMedia}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -431,16 +316,16 @@ const TweenComposer = () => {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-0.5">
               <input type="file" accept={ACCEPTED_IMAGE} ref={fileRef} className="hidden" onChange={(e) => handleMediaSelect(e, 'image')} />
-              <ToolbarButton icon={ImageIcon} label="Photo" onClick={() => fileRef.current?.click()} disabled={!!mediaFile || uploading} />
+              <ToolbarButton icon={ImageIcon} label="Photo" onClick={() => fileRef.current?.click()} disabled={!!mediaFile} />
 
               <input type="file" accept={ACCEPTED_VIDEO} ref={videoRef} className="hidden" onChange={(e) => handleMediaSelect(e, 'video')} />
-              <ToolbarButton icon={Video} label="Vidéo" onClick={() => videoRef.current?.click()} disabled={!!mediaFile || uploading} />
+              <ToolbarButton icon={Video} label="Vidéo" onClick={() => videoRef.current?.click()} disabled={!!mediaFile} />
 
-              <ToolbarButton icon={BarChart3} label="Sondage" onClick={() => setShowPoll(!showPoll)} disabled={!!mediaFile || uploading} active={showPoll} />
+              <ToolbarButton icon={BarChart3} label="Sondage" onClick={() => setShowPoll(!showPoll)} disabled={!!mediaFile} active={showPoll} />
 
               <div className="w-px h-5 bg-border/40 mx-1" />
 
-              <ToolbarButton icon={Bold} label="Gras" onClick={handleBold} disabled={uploading} />
+              <ToolbarButton icon={Bold} label="Gras" onClick={handleBold} />
             </div>
 
             <div className="flex items-center gap-3">
@@ -473,22 +358,8 @@ const TweenComposer = () => {
                 disabled={!canPublish}
                 className="rounded-full px-5 h-9 font-bold shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/25 transition-all bg-gradient-to-r from-primary to-accent hover:opacity-90"
               >
-                {uploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                    {uploadProgress}%
-                  </>
-                ) : createTween.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                    Envoi…
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-1.5" />
-                    Publier
-                  </>
-                )}
+                <Send className="w-4 h-4 mr-1.5" />
+                Publier
               </Button>
             </div>
           </div>
