@@ -245,7 +245,7 @@ const MemberProfile = () => {
           <ProfilePhotoCarousel
             photos={allPhotos}
             username={profile.username}
-            className="aspect-[4/5] sm:aspect-[4/5] max-h-[62vh]"
+            className="max-h-[62vh]"
             albumSlides={albumSlides}
             onAlbumClick={() => {
               document.getElementById('albums-section')?.scrollIntoView({ behavior: 'smooth' });
