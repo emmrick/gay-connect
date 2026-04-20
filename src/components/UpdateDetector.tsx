@@ -149,13 +149,17 @@ const UpdateDetector = () => {
       setProgress(100);
       setPhase('ready');
 
-      // Désinscrit le Service Worker + purge les caches (best-effort, borné à 2s)
+      // Purge les caches et force la mise à jour du Service Worker SANS le désinscrire.
+      // ⚠️ NE PAS appeler `registration.unregister()` : cela supprimerait l'abonnement
+      // Push Notifications (PushSubscription est lié au SW). On utilise update() à la place,
+      // ce qui récupère la nouvelle version du SW tout en conservant les souscriptions push.
       try {
         await Promise.race([
           (async () => {
             if ('serviceWorker' in navigator) {
               const regs = await navigator.serviceWorker.getRegistrations();
-              await Promise.all(regs.map((r) => r.unregister().catch(() => false)));
+              // update() = télécharge le nouveau SW, conserve les push subscriptions
+              await Promise.all(regs.map((r) => r.update().catch(() => false)));
             }
             if ('caches' in window) {
               const keys = await caches.keys();
