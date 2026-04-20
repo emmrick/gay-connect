@@ -40,7 +40,6 @@ const PrivateChatInput = ({
   const [showShareAlbum, setShowShareAlbum] = useState(false);
   const [showSnapCapture, setShowSnapCapture] = useState(false);
   const [showGiftDialog, setShowGiftDialog] = useState(false);
-  const [showSavedMessages, setShowSavedMessages] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { checkMessage } = useForbiddenWords(recipientId);
 
@@ -109,12 +108,12 @@ const PrivateChatInput = ({
       {/* Panneau options */}
       {showOptions && (
         <div className="px-4 py-4 grid grid-cols-4 gap-2 border-b border-border/30 animate-in slide-in-from-bottom-2 fade-in duration-200">
-          <ActionTile
-            icon={MessageSquareText}
-            label="Enregistrés"
-            tone="violet"
-            onClick={() => { setShowSavedMessages(true); setShowOptions(false); }}
-          />
+          <div className="flex flex-col items-center gap-1.5">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-violet-500/10 text-violet-500 transition-all duration-200 hover:scale-105 hover:shadow-md [&_button]:w-full [&_button]:h-full [&_button]:rounded-2xl [&_button]:bg-transparent [&_button]:hover:bg-transparent">
+              <SavedMessagesDialog onSelectMessage={handleSelectSavedMessage} />
+            </div>
+            <span className="text-[10px] font-medium text-muted-foreground">Enregistrés</span>
+          </div>
           <ActionTile
             icon={Camera}
             label="Selfie"
@@ -139,11 +138,6 @@ const PrivateChatInput = ({
       )}
 
       {/* Dialogs */}
-      <SavedMessagesDialog
-        open={showSavedMessages}
-        onOpenChange={setShowSavedMessages}
-        onSelectMessage={handleSelectSavedMessage}
-      />
       {onSendGift && (
         <SendGiftDialog
           isOpen={showGiftDialog}
