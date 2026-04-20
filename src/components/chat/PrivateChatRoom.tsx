@@ -18,6 +18,7 @@ import { useActiveConversation } from '@/hooks/useActiveConversation';
 import { useCreditGifts } from '@/hooks/useCreditGifts';
 import { useCanContactUser, useAddContactException } from '@/hooks/useContactAgeFilter';
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
+import { usePrivatePinnedMessages } from '@/hooks/usePrivatePinnedMessages';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,9 +27,12 @@ import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import AgeFilterBlockedDialog from './AgeFilterBlockedDialog';
 import SnapAutoViewer from './SnapAutoViewer';
+import MessageSearch from './MessageSearch';
 import PrivateChatHeader from './private/PrivateChatHeader';
 import PrivateMessageBubble from './private/PrivateMessageBubble';
 import PrivateTypingBubble from './private/PrivateTypingBubble';
+import PrivatePinnedBanner from './private/PrivatePinnedBanner';
+import PrivateMessageActionsSheet from './private/PrivateMessageActionsSheet';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatRoomProps {
