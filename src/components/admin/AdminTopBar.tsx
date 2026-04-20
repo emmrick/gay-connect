@@ -38,36 +38,36 @@ const AdminTopBar = ({
       )}
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
-      <div className="flex items-center gap-2 px-3 h-14">
+      <div className="flex items-center gap-1.5 px-2 h-14">
         {showBack ? (
           <Button
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="w-9 h-9 rounded-xl shrink-0 -ml-1"
+            className="w-11 h-11 rounded-xl shrink-0"
             aria-label="Retour"
           >
-            <ArrowLeft className="w-4.5 h-4.5" />
+            <ArrowLeft className="w-5 h-5" />
           </Button>
         ) : null}
 
-        <div className="flex-1 min-w-0">
-          <h1 className="font-display text-base font-bold leading-none truncate">{title}</h1>
+        <div className="flex-1 min-w-0 px-1">
+          <h1 className="font-display text-base font-bold leading-tight truncate">{title}</h1>
           {subtitle ? (
-            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{subtitle}</p>
+            <p className="text-[11px] text-muted-foreground leading-tight truncate">{subtitle}</p>
           ) : null}
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0">
           {onSearchClick ? (
             <Button
               variant="ghost"
               size="icon"
               onClick={onSearchClick}
-              className="w-9 h-9 rounded-xl text-muted-foreground"
+              className="w-11 h-11 rounded-xl text-muted-foreground"
               aria-label="Rechercher"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-5 h-5" />
             </Button>
           ) : null}
           {onAlertClick ? (
@@ -75,12 +75,12 @@ const AdminTopBar = ({
               variant="ghost"
               size="icon"
               onClick={onAlertClick}
-              className="relative w-9 h-9 rounded-xl text-muted-foreground"
+              className="relative w-11 h-11 rounded-xl text-muted-foreground"
               aria-label="Alertes"
             >
-              <Bell className="w-4 h-4" />
+              <Bell className="w-5 h-5" />
               {alertCount > 0 ? (
-                <Badge className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 rounded-full bg-destructive text-destructive-foreground border border-card text-[9px] font-bold flex items-center justify-center">
+                <Badge className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground border-2 border-card text-[9px] font-bold flex items-center justify-center leading-none">
                   {alertCount > 9 ? '9+' : alertCount}
                 </Badge>
               ) : null}

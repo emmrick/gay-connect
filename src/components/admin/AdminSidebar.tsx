@@ -7,11 +7,12 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import AdminCommandBar from './AdminCommandBar';
+import { useIsTablet } from '@/hooks/use-tablet';
 
 export type AdminSection =
   | 'dashboard'
@@ -119,7 +120,13 @@ const AdminSidebar = ({
   pendingPurchases = 0, pendingVerifications = 0, isAdmin = false, modPermissions,
   bottomSlot,
 }: AdminSidebarProps) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const isTablet = useIsTablet();
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+
+  // Collapse automatique en mode tablette pour préserver l'espace de contenu
+  useEffect(() => {
+    if (isTablet) setCollapsed(true);
+  }, [isTablet]);
 
   const visibleItems = navItems.filter((item) => {
     if (!item.adminOnly) return true;
