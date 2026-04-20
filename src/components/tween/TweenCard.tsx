@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Heart, MessageCircle, Trash2, MoreHorizontal, Flag, Pencil } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, MoreHorizontal, Flag, Pencil, Bookmark } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -9,10 +9,12 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from '@/hooks/useTweens';
+import { useTweenFavoriteIds, useToggleTweenFavorite } from '@/hooks/useTweenFavorites';
 import TweenDetailDialog from './TweenDetailDialog';
 import TweenEditDialog from './TweenEditDialog';
 import TweenReportDialog from './TweenReportDialog';
 import TweenFollowButton from './TweenFollowButton';
+import TweenMedia from './TweenMedia';
 import { motion } from 'framer-motion';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
