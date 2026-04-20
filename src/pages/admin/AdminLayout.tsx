@@ -203,7 +203,7 @@ const AdminLayout = () => {
     // Dashboard mobile : grille des modules + widget mission
     if (activeSection === 'dashboard') {
       return (
-        <div className="min-h-[100dvh] bg-background flex flex-col pb-[calc(60px+env(safe-area-inset-bottom,0px))]">
+        <div className="min-h-[100dvh] bg-background flex flex-col pb-[calc(64px+env(safe-area-inset-bottom,0px))]">
           <AdminTopBar
             title={isAdmin ? 'Admin' : 'Modération'}
             subtitle="Tableau de bord"
@@ -238,7 +238,7 @@ const AdminLayout = () => {
 
     // Section interne : top bar avec back + bottom tabs
     return (
-      <div className="min-h-[100dvh] bg-background flex flex-col pb-[calc(60px+env(safe-area-inset-bottom,0px))]">
+      <div className="min-h-[100dvh] bg-background flex flex-col pb-[calc(64px+env(safe-area-inset-bottom,0px))]">
         <AdminTopBar
           title={titleForSection(activeSection)}
           showBack
