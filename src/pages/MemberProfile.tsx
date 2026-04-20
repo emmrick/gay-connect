@@ -346,7 +346,7 @@ const MemberProfile = () => {
       </motion.section>
 
       {/* ===== CONTENU SCROLLABLE ===== */}
-      <div className="px-5 pt-8 space-y-8 max-w-2xl mx-auto">
+      <div className="px-4 pt-5 space-y-5 max-w-2xl mx-auto">
         {/* Anniversaire */}
         {isBday && (
           <motion.div
@@ -374,8 +374,8 @@ const MemberProfile = () => {
           <motion.section
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }}
           >
-            <blockquote className="relative pl-5 border-l-2 border-primary">
-              <p className="font-display text-xl sm:text-2xl leading-snug text-foreground italic">
+            <blockquote className="relative pl-3 border-l-2 border-primary">
+              <p className="font-display text-base sm:text-lg leading-snug text-foreground italic">
                 « {profile.bio} »
               </p>
             </blockquote>
@@ -437,7 +437,7 @@ const MemberProfile = () => {
             <SectionLabel icon={<Sparkles className="w-3 h-3" />}>Tribus</SectionLabel>
             <div className="flex flex-wrap gap-2">
               {extendedProfile.tribes.map((tribe: string) => (
-                <Badge key={tribe} variant="outline" className="text-sm py-1.5 px-3 font-medium border-border/50 bg-card/50">
+                <Badge key={tribe} variant="outline" className="text-xs py-1 px-2.5 font-medium border-border/50 bg-card/50">
                   {TRIBE_LABELS[tribe] || tribe}
                 </Badge>
               ))}
@@ -451,7 +451,7 @@ const MemberProfile = () => {
             <SectionLabel icon={<Heart className="w-3 h-3" />}>Recherche</SectionLabel>
             <div className="flex flex-wrap gap-2">
               {extendedProfile.looking_for.map((item: string) => (
-                <Badge key={item} className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 text-sm py-1.5 px-3 shadow-md font-semibold">
+                <Badge key={item} className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 text-xs py-1 px-2.5 shadow-md font-semibold">
                   {LOOKING_FOR_LABELS[item] || item}
                 </Badge>
               ))}
@@ -546,7 +546,7 @@ const MemberProfile = () => {
 /* ---------- Sous-composants éditoriaux ---------- */
 
 const SectionLabel = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
-  <div className="flex items-center gap-1.5 mb-3 text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
+  <div className="flex items-center gap-1.5 mb-2 text-[9px] uppercase tracking-[0.18em] font-bold text-muted-foreground">
     {icon}
     <span>{children}</span>
     <span className="flex-1 h-px bg-border/60 ml-1" />
@@ -554,17 +554,17 @@ const SectionLabel = ({ children, icon }: { children: React.ReactNode; icon?: Re
 );
 
 const StatBlock = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-  <div className="rounded-2xl bg-secondary/50 border border-border/40 p-3 text-center">
-    <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+  <div className="rounded-xl bg-secondary/50 border border-border/40 p-2 text-center">
+    <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">
       {icon}
-      <span className="text-[10px] uppercase tracking-wider font-bold">{label}</span>
+      <span className="text-[9px] uppercase tracking-wider font-bold">{label}</span>
     </div>
-    <p className="font-display text-base font-black text-foreground leading-tight">{value}</p>
+    <p className="font-display text-sm font-black text-foreground leading-tight">{value}</p>
   </div>
 );
 
 const Pill = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
-  <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border/50 text-sm font-medium">
+  <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-border/50 text-xs font-medium">
     {icon}
     <span>{children}</span>
   </div>
