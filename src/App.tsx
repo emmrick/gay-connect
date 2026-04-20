@@ -38,6 +38,8 @@ import OnboardingGuideDialog from "@/components/onboarding/OnboardingGuideDialog
 import AppLockGate from "@/components/security/AppLockGate";
 import DossierAccessPopup from "@/components/moderation/DossierAccessPopup";
 import ProfileSelectorModal from "@/components/couple/ProfileSelectorModal";
+import { TweenUploadProvider } from "@/contexts/TweenUploadContext";
+import TweenUploadIndicator from "@/components/tween/TweenUploadIndicator";
 
 import { useRealtimeProfileSync } from "@/hooks/useRealtimeProfileSync";
 
@@ -169,6 +171,7 @@ const AuthenticatedApp = () => {
       <MaintenanceGuard>
         <CreditDialogProvider>
           <CreditDeductionProvider>
+            <TweenUploadProvider>
             <BlockedUserGuard>
               <VerificationGuard>
                 <ProfilePhotoGuard>
@@ -269,11 +272,13 @@ const AuthenticatedApp = () => {
                       <GlobalMissionOverlay />
                       <DossierAccessPopup />
                       <ProfileSelectorModal />
+                      <TweenUploadIndicator />
                     </>
                   </TooltipProvider>
                 </ProfilePhotoGuard>
               </VerificationGuard>
             </BlockedUserGuard>
+            </TweenUploadProvider>
           </CreditDeductionProvider>
         </CreditDialogProvider>
       </MaintenanceGuard>
