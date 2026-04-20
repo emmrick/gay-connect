@@ -121,7 +121,8 @@ export const useNearbyProfiles = (
       const verifiedUserIds = new Set((verifiedProfiles || []).map(v => v.user_id));
       const geoProfiles = (data || [])
         .filter(p => verifiedUserIds.has(p.user_id) && !!p.avatar_url)
-        .map(fixStaleOnlineStatus);
+        .map(fixStaleOnlineStatus)
+        .map((p: any) => ({ ...p, is_verified: true }));
 
       // Filter out suspended/blocked users
       const checks = await Promise.all(
