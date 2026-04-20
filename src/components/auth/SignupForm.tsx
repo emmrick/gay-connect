@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, Eye, EyeOff, Loader2, User, Calendar, Heart } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, User, Calendar, Heart, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { signupSchema, SignupFormData } from '@/lib/validations/auth';
 import AccountTypeSelector from './AccountTypeSelector';
 import RegionSelect from './RegionSelect';
 import ReferralCodeInput from './ReferralCodeInput';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 interface SignupFormProps {
   onSubmit: (data: SignupFormData) => Promise<void>;
