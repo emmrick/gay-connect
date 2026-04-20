@@ -19,7 +19,7 @@ const SmartReplyChips = ({ suggestions, isLoading, onPick, onDismiss }: SmartRep
         'border-b border-border/30 animate-in fade-in slide-in-from-bottom-1 duration-300',
       )}
     >
-      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-fuchsia-500/20 flex items-center justify-center">
+      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
         <Sparkles className="w-3.5 h-3.5 text-primary" />
       </div>
 

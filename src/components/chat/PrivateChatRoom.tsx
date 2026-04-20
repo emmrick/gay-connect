@@ -33,6 +33,8 @@ import PrivateMessageBubble from './private/PrivateMessageBubble';
 import PrivateTypingBubble from './private/PrivateTypingBubble';
 import PrivatePinnedBanner from './private/PrivatePinnedBanner';
 import PrivateMessageActionsSheet from './private/PrivateMessageActionsSheet';
+import SmartReplyChips from './private/SmartReplyChips';
+import { useSmartReplies } from '@/hooks/useSmartReplies';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatRoomProps {
