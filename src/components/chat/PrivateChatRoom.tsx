@@ -474,15 +474,26 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
             </div>
           </div>
         ) : (
-          <PrivateChatInput
-            onSendMessage={handleSendMessage}
-            recipientId={otherUserId}
-            recipientName={otherUserProfile?.username}
-            isSending={sendMessage.isPending}
-            onFocus={handleInputFocus}
-            onTyping={startTyping}
-            onSendGift={handleSendGift}
-          />
+          <>
+            <SmartReplyChips
+              suggestions={smartSuggestions}
+              isLoading={smartLoading}
+              onPick={(text) => {
+                dismissSmart();
+                handleSendMessage(text);
+              }}
+              onDismiss={dismissSmart}
+            />
+            <PrivateChatInput
+              onSendMessage={handleSendMessage}
+              recipientId={otherUserId}
+              recipientName={otherUserProfile?.username}
+              isSending={sendMessage.isPending}
+              onFocus={handleInputFocus}
+              onTyping={startTyping}
+              onSendGift={handleSendGift}
+            />
+          </>
         )}
       </div>
 
