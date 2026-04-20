@@ -69,6 +69,9 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   const addException = useAddContactException();
   const [showAgeFilterDialog, setShowAgeFilterDialog] = useState(false);
 
+  const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePrivatePinnedMessages(otherUserId);
+  const pinnedIdSet = useMemo(() => new Set(pinnedMessages.map((p: any) => p.message_id)), [pinnedMessages]);
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
@@ -76,6 +79,52 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   const [snapViewerMessageId, setSnapViewerMessageId] = useState<string | null>(null);
   const snapAutoOpenDone = useRef(false);
   const screenshotNotifiedRef = useRef(false);
+
+  // Search state
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchIndex, setSearchIndex] = useState(0);
+
+  // Action sheet (long-press)
+  const [actionMessage, setActionMessage] = useState<any | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [] as any[];
+    return messages.filter((m: any) => {
+      const isText = !m.message_type || m.message_type === 'text';
+      return isText && m.content?.toLowerCase().includes(q);
+    });
+  }, [messages, searchQuery]);
+
+  const scrollToMessage = useCallback((messageId: string) => {
+    const el = document.getElementById(`pmsg-${messageId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(messageId);
+      setTimeout(() => setHighlightedMessageId((cur) => cur === messageId ? null : cur), 1800);
+    }
+  }, []);
+
+  // Reset search index when query changes
+  useEffect(() => { setSearchIndex(0); }, [searchQuery]);
+
+  // Auto-scroll to current search match
+  useEffect(() => {
+    if (searchResults.length > 0 && searchOpen) {
+      const target = searchResults[Math.min(searchIndex, searchResults.length - 1)];
+      if (target) scrollToMessage(target.id);
+    }
+  }, [searchIndex, searchResults, searchOpen, scrollToMessage]);
+
+  const handleSearchNavigate = useCallback((dir: 'prev' | 'next') => {
+    if (searchResults.length === 0) return;
+    setSearchIndex((i) => {
+      if (dir === 'next') return (i + 1) % searchResults.length;
+      return (i - 1 + searchResults.length) % searchResults.length;
+    });
+  }, [searchResults.length]);
 
   const lastOwnMessageId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
