@@ -20,7 +20,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { usePendingVerifications } from '@/hooks/usePendingVerifications';
 import { Button } from '@/components/ui/button';
 import AdminSidebar, { AdminSection, ModPermissions } from '@/components/admin/AdminSidebar';
-import AdminMobileNav from '@/components/admin/AdminMobileNav';
 import AdminBottomTabs from '@/components/admin/AdminBottomTabs';
 import AdminTopBar from '@/components/admin/AdminTopBar';
 import AdminCommandBar from '@/components/admin/AdminCommandBar';
