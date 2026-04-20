@@ -1,30 +1,37 @@
-import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, Inbox, RefreshCcw, Search } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
 import ReportCard from '@/components/admin/ReportCard';
-import { useAdminReports, ReportStatus } from '@/hooks/useAdmin';
+import {
+  AdminSectionHeader,
+  AdminFilterBar,
+  AdminTabsBar,
+  AdminListSkeleton,
+  EmptyState,
+  type AdminTab,
+} from '@/components/admin/ui';
+import { useAdminReports, useReportStats, ReportStatus } from '@/hooks/useAdmin';
 import { useActiveTask } from '@/hooks/useModerationTaskQueue';
 import type { AdminOutletContext } from '../AdminLayout';
 
-const labels: Record<ReportStatus, string> = {
-  pending: 'En attente',
-  reviewed: 'En cours',
-  resolved: 'Résolus',
-  dismissed: 'Rejetés',
-};
+type TabValue = ReportStatus | 'all';
 
 const ReportsPage = () => {
   const { setSelectedReport } = useOutletContext<AdminOutletContext>();
-  const [selectedStatus, setSelectedStatus] = useState<ReportStatus | 'all'>('pending');
-  const { data: reports, isLoading } = useAdminReports(
-    selectedStatus === 'all' ? undefined : selectedStatus,
+  const [tab, setTab] = useState<TabValue>('pending');
+  const [search, setSearch] = useState('');
+  const queryClient = useQueryClient();
+
+  const { data: reports, isLoading, isFetching } = useAdminReports(
+    tab === 'all' ? undefined : tab,
   );
+  const { data: stats } = useReportStats();
   const { data: activeTask } = useActiveTask();
   const autoOpened = useRef<string | null>(null);
 
+  // Auto-ouverture mission contextuelle
   useEffect(() => {
     if (
       activeTask?.task_type === 'report_review' &&
@@ -36,46 +43,108 @@ const ReportsPage = () => {
       if (match) {
         setSelectedReport(match);
         autoOpened.current = activeTask.target_entity_id;
-      } else if (selectedStatus !== 'all') {
-        setSelectedStatus('all');
+      } else if (tab !== 'all') {
+        setTab('all');
       }
     }
-  }, [activeTask, reports, selectedStatus, setSelectedReport]);
+  }, [activeTask, reports, tab, setSelectedReport]);
+
+  // Filtrage côté client (recherche)
+  const filtered = useMemo(() => {
+    if (!reports) return [];
+    if (!search.trim()) return reports;
+    const q = search.toLowerCase();
+    return reports.filter((r) => {
+      return (
+        r.reported_user?.username?.toLowerCase().includes(q) ||
+        r.reporter?.username?.toLowerCase().includes(q) ||
+        r.reason?.toLowerCase().includes(q) ||
+        r.description?.toLowerCase().includes(q) ||
+        r.message?.content?.toLowerCase().includes(q)
+      );
+    });
+  }, [reports, search]);
+
+  const tabs: AdminTab<TabValue>[] = [
+    { value: 'pending', label: 'En attente', count: stats?.pending, tone: 'warning' },
+    { value: 'reviewed', label: 'En cours', count: stats?.reviewed, tone: 'info' },
+    { value: 'resolved', label: 'Résolus', count: stats?.resolved, tone: 'success' },
+    { value: 'dismissed', label: 'Rejetés', tone: 'default' },
+    { value: 'all', label: 'Tous', tone: 'default' },
+  ];
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
+    queryClient.invalidateQueries({ queryKey: ['report-stats'] });
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <AlertTriangle className="w-5 h-5" />
-        <h2 className="text-lg font-semibold">Signalements</h2>
+    <div className="space-y-3">
+      <AdminSectionHeader
+        icon={AlertTriangle}
+        eyebrow="Modération"
+        title="Signalements"
+        action={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            className="h-8 gap-1.5 text-xs"
+            disabled={isFetching}
+          >
+            <RefreshCcw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Actualiser</span>
+          </Button>
+        }
+      />
+
+      <AdminTabsBar tabs={tabs} value={tab} onChange={setTab} />
+
+      <AdminFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Rechercher par membre, motif, contenu…"
+      />
+
+      <div className="min-h-[200px]">
+        {isLoading ? (
+          <AdminListSkeleton count={5} />
+        ) : filtered.length === 0 ? (
+          search ? (
+            <EmptyState
+              icon={Search}
+              title="Aucun résultat"
+              description={`Aucun signalement ne correspond à « ${search} ».`}
+              action={
+                <Button variant="outline" size="sm" onClick={() => setSearch('')}>
+                  Effacer la recherche
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={Inbox}
+              title="Tout est en ordre 👌"
+              description={
+                tab === 'pending'
+                  ? 'Aucun signalement en attente de traitement.'
+                  : 'Aucun signalement dans cette catégorie.'
+              }
+            />
+          )
+        ) : (
+          <div className="space-y-2.5 animate-in fade-in duration-200">
+            {filtered.map((report) => (
+              <ReportCard
+                key={report.id}
+                report={report}
+                onClick={() => setSelectedReport(report)}
+              />
+            ))}
+          </div>
+        )}
       </div>
-      <Tabs value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as ReportStatus | 'all')}>
-        <TabsList className="w-full grid grid-cols-5 h-9">
-          <TabsTrigger value="pending" className="text-xs">En attente</TabsTrigger>
-          <TabsTrigger value="reviewed" className="text-xs">En cours</TabsTrigger>
-          <TabsTrigger value="resolved" className="text-xs">Résolus</TabsTrigger>
-          <TabsTrigger value="dismissed" className="text-xs">Rejetés</TabsTrigger>
-          <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
-        </TabsList>
-        <TabsContent value={selectedStatus} className="mt-3">
-          <ScrollArea className="h-[calc(100dvh-280px)]">
-            {isLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-              </div>
-            ) : reports?.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                Aucun signalement {selectedStatus !== 'all' && `avec le statut "${labels[selectedStatus as ReportStatus]}"`}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {reports?.map((report) => (
-                  <ReportCard key={report.id} report={report} onClick={() => setSelectedReport(report)} />
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
