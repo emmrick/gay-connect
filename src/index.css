@@ -659,3 +659,14 @@ html {
             mask-size: 20px 20px;
   }
 }
+
+/* Utility: scrollbar-hide (used in admin tabs/horizontal scroll) */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

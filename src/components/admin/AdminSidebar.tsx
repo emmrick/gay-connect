@@ -121,12 +121,28 @@ const AdminSidebar = ({
   bottomSlot,
 }: AdminSidebarProps) => {
   const isTablet = useIsTablet();
-  const [collapsed, setCollapsed] = useState<boolean>(false);
+  // Persistance de l'état collapsed dans localStorage
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('admin-sidebar-collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // Collapse automatique en mode tablette pour préserver l'espace de contenu
   useEffect(() => {
     if (isTablet) setCollapsed(true);
   }, [isTablet]);
+
+  // Sauvegarde de l'état collapsed
+  useEffect(() => {
+    try {
+      localStorage.setItem('admin-sidebar-collapsed', String(collapsed));
+    } catch {
+      /* ignore quota errors */
+    }
+  }, [collapsed]);
 
   const visibleItems = navItems.filter((item) => {
     if (!item.adminOnly) return true;
