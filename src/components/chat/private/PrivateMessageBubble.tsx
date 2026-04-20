@@ -1,7 +1,8 @@
 import { memo } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Check, CheckCheck, AlertTriangle } from 'lucide-react';
+import { Check, CheckCheck, AlertTriangle, Pin } from 'lucide-react';
+import { useLongPress } from '@/hooks/useLongPress';
 import EmojiMessageEffect, { isEmojiOnlyMessage } from '../EmojiMessageEffect';
 import EmojiReactionPicker from '../EmojiReactionPicker';
 import MessageReactions from '../MessageReactions';
@@ -24,6 +25,9 @@ interface PrivateMessageBubbleProps {
   otherUserId: string;
   onToggleReaction: (messageId: string, emoji: string) => void;
   getReactionsForMessage: (messageId: string) => any[];
+  isPinned?: boolean;
+  isHighlighted?: boolean;
+  onLongPress?: (message: any) => void;
 }
 
 const PrivateMessageBubble = ({
@@ -36,7 +40,11 @@ const PrivateMessageBubble = ({
   otherUserId,
   onToggleReaction,
   getReactionsForMessage,
+  isPinned = false,
+  isHighlighted = false,
+  onLongPress,
 }: PrivateMessageBubbleProps) => {
+  const longPressHandlers = useLongPress(() => onLongPress?.(message), { delay: 450 });
   const isEphemeralMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && !message.content.startsWith('http');
   const isRegularMedia = (message.message_type === 'image' || message.message_type === 'video') && message.content && message.content.startsWith('http');
   const isAlbumShare = message.message_type === 'album_share';
@@ -156,8 +164,29 @@ const PrivateMessageBubble = ({
         </div>
       )}
 
-      <div className={cn("max-w-[78%] flex flex-col", isOwn ? "items-end" : "items-start")}>
-        <div className="group/msg relative flex items-center gap-1">
+      <div
+        id={`pmsg-${message.id}`}
+        className={cn(
+          "max-w-[78%] flex flex-col scroll-mt-24",
+          isOwn ? "items-end" : "items-start",
+        )}
+      >
+        {isPinned && (
+          <div className={cn(
+            "flex items-center gap-1 mb-0.5 text-[10px] font-medium text-primary/80",
+            isOwn ? "pr-2" : "pl-1"
+          )}>
+            <Pin className="w-2.5 h-2.5 fill-primary/40" />
+            <span>Épinglé</span>
+          </div>
+        )}
+        <div
+          className={cn(
+            "group/msg relative flex items-center gap-1 rounded-[24px] transition-all",
+            isHighlighted && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background shadow-[0_0_24px_-4px_hsl(var(--primary)/0.55)]"
+          )}
+          {...longPressHandlers}
+        >
           {isOwn && !isEphemeralMedia && (
             <div className="hidden md:block opacity-0 group-hover/msg:opacity-100 transition-opacity">
               <EmojiReactionPicker onSelect={(emoji) => onToggleReaction(message.id, emoji)} />
@@ -277,6 +306,8 @@ const areEqual = (prev: PrivateMessageBubbleProps, next: PrivateMessageBubblePro
   if (prev.isLastInGroup !== next.isLastInGroup) return false;
   if (prev.isLastOwnMessage !== next.isLastOwnMessage) return false;
   if (prev.resolvedOtherAvatar !== next.resolvedOtherAvatar) return false;
+  if (prev.isPinned !== next.isPinned) return false;
+  if (prev.isHighlighted !== next.isHighlighted) return false;
   const a = prev.getReactionsForMessage(prev.message.id);
   const b = next.getReactionsForMessage(next.message.id);
   if ((a?.length || 0) !== (b?.length || 0)) return false;

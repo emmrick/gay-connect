@@ -2839,6 +2839,41 @@ export type Database = {
         }
         Relationships: []
       }
+      private_pinned_messages: {
+        Row: {
+          id: string
+          message_id: string
+          pinned_at: string
+          pinned_by: string
+          user_a_id: string
+          user_b_id: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          pinned_at?: string
+          pinned_by: string
+          user_a_id: string
+          user_b_id: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          pinned_at?: string
+          pinned_by?: string
+          user_a_id?: string
+          user_b_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_pinned_messages_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_boosts: {
         Row: {
           created_at: string

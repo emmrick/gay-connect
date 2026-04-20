@@ -4,7 +4,7 @@
  * Logique métier inchangée : props et handlers identiques.
  */
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Flag, Ban, UserCheck, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -30,6 +30,7 @@ interface PrivateChatHeaderProps {
   isUnblocking: boolean;
   onShowBlockDialog: () => void;
   onShowReportDialog: () => void;
+  onToggleSearch?: () => void;
 }
 
 const PrivateChatHeader = ({
@@ -45,6 +46,7 @@ const PrivateChatHeader = ({
   isUnblocking,
   onShowBlockDialog,
   onShowReportDialog,
+  onToggleSearch,
 }: PrivateChatHeaderProps) => {
   const navigate = useNavigate();
   const presence = useLivePresence(otherUserProfile);
@@ -140,6 +142,17 @@ const PrivateChatHeader = ({
         </button>
       )}
 
+      {onToggleSearch && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleSearch}
+          className="flex-shrink-0 h-10 w-10 rounded-full hover:bg-muted/60 active:scale-95 transition-transform"
+          aria-label="Rechercher"
+        >
+          <Search className="w-[18px] h-[18px]" />
+        </Button>
+      )}
       <MuteButton conversationId={otherUserId} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

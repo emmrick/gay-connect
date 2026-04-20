@@ -18,6 +18,7 @@ import { useActiveConversation } from '@/hooks/useActiveConversation';
 import { useCreditGifts } from '@/hooks/useCreditGifts';
 import { useCanContactUser, useAddContactException } from '@/hooks/useContactAgeFilter';
 import { usePrivateMessageReactions } from '@/hooks/usePrivateMessageReactions';
+import { usePrivatePinnedMessages } from '@/hooks/usePrivatePinnedMessages';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,9 +27,12 @@ import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import AgeFilterBlockedDialog from './AgeFilterBlockedDialog';
 import SnapAutoViewer from './SnapAutoViewer';
+import MessageSearch from './MessageSearch';
 import PrivateChatHeader from './private/PrivateChatHeader';
 import PrivateMessageBubble from './private/PrivateMessageBubble';
 import PrivateTypingBubble from './private/PrivateTypingBubble';
+import PrivatePinnedBanner from './private/PrivatePinnedBanner';
+import PrivateMessageActionsSheet from './private/PrivateMessageActionsSheet';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatRoomProps {
@@ -65,6 +69,9 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   const addException = useAddContactException();
   const [showAgeFilterDialog, setShowAgeFilterDialog] = useState(false);
 
+  const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePrivatePinnedMessages(otherUserId);
+  const pinnedIdSet = useMemo(() => new Set(pinnedMessages.map((p: any) => p.message_id)), [pinnedMessages]);
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
@@ -72,6 +79,52 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   const [snapViewerMessageId, setSnapViewerMessageId] = useState<string | null>(null);
   const snapAutoOpenDone = useRef(false);
   const screenshotNotifiedRef = useRef(false);
+
+  // Search state
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchIndex, setSearchIndex] = useState(0);
+
+  // Action sheet (long-press)
+  const [actionMessage, setActionMessage] = useState<any | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [] as any[];
+    return messages.filter((m: any) => {
+      const isText = !m.message_type || m.message_type === 'text';
+      return isText && m.content?.toLowerCase().includes(q);
+    });
+  }, [messages, searchQuery]);
+
+  const scrollToMessage = useCallback((messageId: string) => {
+    const el = document.getElementById(`pmsg-${messageId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(messageId);
+      setTimeout(() => setHighlightedMessageId((cur) => cur === messageId ? null : cur), 1800);
+    }
+  }, []);
+
+  // Reset search index when query changes
+  useEffect(() => { setSearchIndex(0); }, [searchQuery]);
+
+  // Auto-scroll to current search match
+  useEffect(() => {
+    if (searchResults.length > 0 && searchOpen) {
+      const target = searchResults[Math.min(searchIndex, searchResults.length - 1)];
+      if (target) scrollToMessage(target.id);
+    }
+  }, [searchIndex, searchResults, searchOpen, scrollToMessage]);
+
+  const handleSearchNavigate = useCallback((dir: 'prev' | 'next') => {
+    if (searchResults.length === 0) return;
+    setSearchIndex((i) => {
+      if (dir === 'next') return (i + 1) % searchResults.length;
+      return (i - 1 + searchResults.length) % searchResults.length;
+    });
+  }, [searchResults.length]);
 
   const lastOwnMessageId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -285,6 +338,24 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
         isUnblocking={unblockUser.isPending}
         onShowBlockDialog={() => setShowBlockDialog(true)}
         onShowReportDialog={() => setShowReportDialog(true)}
+        onToggleSearch={() => setSearchOpen((v) => !v)}
+      />
+
+      {/* Search bar */}
+      <MessageSearch
+        isOpen={searchOpen}
+        onClose={() => { setSearchOpen(false); setSearchQuery(''); }}
+        onSearch={setSearchQuery}
+        resultCount={searchResults.length}
+        currentIndex={searchIndex}
+        onNavigate={handleSearchNavigate}
+      />
+
+      {/* Pinned banner */}
+      <PrivatePinnedBanner
+        pinnedMessages={pinnedMessages}
+        onScrollToMessage={scrollToMessage}
+        onUnpin={(id) => unpinMessage.mutate(id)}
       />
 
       {/* Dialogs */}
@@ -345,6 +416,9 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
                     otherUserId={otherUserId}
                     onToggleReaction={handleToggleReaction}
                     getReactionsForMessage={getReactionsForMessage}
+                    isPinned={pinnedIdSet.has(message.id)}
+                    isHighlighted={highlightedMessageId === message.id}
+                    onLongPress={(m) => setActionMessage(m)}
                   />
                 </div>
               );
@@ -423,6 +497,16 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
           onClose={() => setSnapViewerMessageId(null)}
         />
       )}
+
+      <PrivateMessageActionsSheet
+        open={!!actionMessage}
+        onOpenChange={(o) => { if (!o) setActionMessage(null); }}
+        message={actionMessage}
+        isPinned={actionMessage ? isMessagePinned(actionMessage.id) : false}
+        onPin={() => actionMessage && pinMessage.mutate(actionMessage.id)}
+        onUnpin={() => actionMessage && unpinMessage.mutate(actionMessage.id)}
+        onReact={(emoji) => actionMessage && handleToggleReaction(actionMessage.id, emoji)}
+      />
     </div>
   );
 };
