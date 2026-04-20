@@ -266,7 +266,7 @@ const SignupForm = ({ onSubmit, isLoading, defaultReferralCode = '', showCoupleI
                           Je certifie avoir au moins 18 ans
                         </span>{' '}
                         et j'accepte les{' '}
-                        <Link to="/legal/cgu" target="_blank" className="text-primary font-semibold underline underline-offset-2">
+                        <Link to="/legal" target="_blank" className="text-primary font-semibold underline underline-offset-2">
                           Conditions Générales d'Utilisation
                         </Link>
                         , les{' '}
@@ -274,7 +274,7 @@ const SignupForm = ({ onSubmit, isLoading, defaultReferralCode = '', showCoupleI
                           Règles de conduite
                         </Link>
                         , la{' '}
-                        <Link to="/legal/confidentialite" target="_blank" className="text-primary font-semibold underline underline-offset-2">
+                        <Link to="/legal" target="_blank" className="text-primary font-semibold underline underline-offset-2">
                           Politique de confidentialité
                         </Link>{' '}
                         et l'utilisation des cookies.
