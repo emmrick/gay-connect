@@ -165,7 +165,7 @@ export function AdminTable<T>({
                 {selectable && (
                   <TableHead className="w-10">
                     <Checkbox
-                      checked={allSelected || (someSelected && 'indeterminate')}
+                      checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                       onCheckedChange={toggleAll}
                       aria-label="Tout sélectionner"
                     />
