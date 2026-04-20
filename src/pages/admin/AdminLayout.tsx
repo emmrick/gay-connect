@@ -54,8 +54,10 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useAdminRealtimeBridge(!!isAdmin);
+  useAdminShortcuts({ enabled: !!isAdmin, onHelpRequested: () => setShortcutsOpen(true) });
 
   // Section déduite de l'URL : /admin → dashboard, /admin/<slug> → section
   const slug = location.pathname.replace(/^\/admin\/?/, '').split('/')[0] || '';
