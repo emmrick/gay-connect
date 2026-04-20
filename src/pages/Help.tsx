@@ -93,6 +93,7 @@ const Help = ({ embedded = false }: HelpProps) => {
   });
 
   const scrollEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const agentJoinedRef = useRef(false);
   const hasInitializedRef = useRef(false);
   const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -189,14 +190,18 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   }, [liveTicket?.status, liveTicket?.assigned_to, phase]);
 
-  // Auto-scroll : à chaque changement, et instantané pendant le typewriter
-  // pour que la dernière ligne soit toujours visible au-dessus de la barre fixe.
+  // Auto-scroll : synchrone (sans setTimeout pour ne pas être annulé par le typewriter à 18ms).
+  // On scrolle directement le conteneur pour que la dernière ligne reste toujours visible
+  // au-dessus de la barre fixe, y compris pendant que le bot écrit en direct.
   const typingReveal = messages.find((m) => m.isTyping)?.revealedLength;
   const isTypingActive = messages.some((m) => m.isTyping);
   useEffect(() => {
-    const behavior: ScrollBehavior = isTypingActive ? 'auto' : 'smooth';
-    const t = setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior, block: 'end' }), 30);
-    return () => clearTimeout(t);
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    } else {
+      scrollEndRef.current?.scrollIntoView({ block: 'end' });
+    }
   }, [messages.length, ticketMessages.length, phase, agentTyping.length, isBotTyping, typingReveal, isTypingActive]);
 
   // Typewriter
@@ -653,7 +658,7 @@ const Help = ({ embedded = false }: HelpProps) => {
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto px-3 py-4 pb-8 space-y-2">
           {/* Chatbot bubbles */}
           {isChatbot && messages.map((msg, i) => (
