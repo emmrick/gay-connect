@@ -10,10 +10,21 @@ import type { HelpNode } from './helpFlow.types';
 
 export const HELP_ROOT_ID = 'root';
 
+/** ID spécial : intercepté dans Help.tsx pour relancer le tour d'onboarding plein écran. */
+export const HELP_OPEN_TOUR_ID = '__open_onboarding_tour';
+
 export const HELP_FLOW: HelpNode = {
   id: HELP_ROOT_ID,
   label: 'Menu principal',
   children: [
+    // ─────────────────────────────  0. GUIDE INTERACTIF (CTA permanente)  ─────────────────────────────
+    {
+      id: HELP_OPEN_TOUR_ID,
+      label: 'Revoir le guide complet',
+      emoji: '🎓',
+      answer:
+        "🎓 **Le guide interactif** te présente toutes les fonctionnalités de Gay Social en 10 étapes claires (profil, swipe, messagerie, crédits, sécurité…).\n\n👉 Touche le bouton ci-dessous pour le lancer plein écran.",
+    },
     // ─────────────────────────────  1. PROFIL  ─────────────────────────────
     {
       id: 'profile',
