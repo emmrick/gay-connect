@@ -107,48 +107,76 @@ const UpdateDetector = () => {
     setPhase('loading');
     setProgress(0);
 
+    // Filet de sécurité ABSOLU : quoi qu'il arrive, on recharge dans 8s max.
+    // Évite que le pop-up reste bloqué si une promesse ne résout jamais
+    // (SW lent, onglet en arrière-plan, requête réseau qui pend, etc.).
+    const hardReloadTimer = window.setTimeout(() => {
+      try {
+        window.location.reload();
+      } catch {
+        window.location.href = window.location.href;
+      }
+    }, 8000);
+
+    const doReload = () => {
+      clearTimeout(hardReloadTimer);
+      try {
+        window.location.reload();
+      } catch {
+        window.location.href = window.location.href;
+      }
+    };
+
     try {
       // ── Étape 1/2 : récupération de la nouvelle version (0 → 20%) ──
       setProgress(10);
-      const remote = await fetchRemoteVersion();
+      // Timeout court pour ne pas bloquer si le réseau pend
+      const remote = await Promise.race([
+        fetchRemoteVersion(),
+        new Promise<null>((res) => setTimeout(() => res(null), 2500)),
+      ]);
       setProgress(20);
 
       // ── Étape 2/2 : petite progression visuelle (20 → 95%) ──
-      // Aucun cache, service worker ou localStorage n'est touché.
       await simulateProgress((ratio) => {
         const mapped = 20 + Math.round(ratio * 75);
         setProgress((prev) => (mapped > prev ? mapped : prev));
       });
 
-      // Mémorise la cible visée — utile pour debug. La référence de comparaison
-      // reste BUILD_VERSION, qui sera mis à jour automatiquement après le reload.
       if (remote && remote !== 'initial') {
         localStorage.setItem('gc_app_version_target', remote);
       }
       setProgress(100);
       setPhase('ready');
 
-      // Désinscrit le Service Worker pour forcer la récupération du nouveau
-      // bundle depuis le réseau (sinon le précache Workbox peut servir l'ancien).
+      // Désinscrit le Service Worker + purge les caches (best-effort, borné à 2s)
       try {
-        if ('serviceWorker' in navigator) {
-          const regs = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(regs.map((r) => r.unregister()));
-        }
-        if ('caches' in window) {
-          const keys = await caches.keys();
-          await Promise.all(keys.map((k) => caches.delete(k)));
-        }
+        await Promise.race([
+          (async () => {
+            if ('serviceWorker' in navigator) {
+              const regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map((r) => r.unregister().catch(() => false)));
+            }
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map((k) => caches.delete(k).catch(() => false)));
+            }
+          })(),
+          new Promise((res) => setTimeout(res, 2000)),
+        ]);
       } catch {
-        // best-effort, on continue le reload même en cas d'échec
+        // best-effort
       }
 
-      // Rechargement complet pour récupérer le nouveau bundle.
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      // Rechargement (le hardReloadTimer servira de fallback si jamais ce setTimeout
+      // est gelé par le navigateur — onglet en arrière-plan par exemple).
+      setTimeout(doReload, 400);
     } catch {
-      setPhase('error');
+      // En cas d'erreur, on recharge quand même : la nouvelle version
+      // ne peut être récupérée que via un reload complet.
+      setPhase('ready');
+      setProgress(100);
+      setTimeout(doReload, 600);
     }
   }, []);
 
