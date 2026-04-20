@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Bell, Moon, Shield, HelpCircle,
-  ChevronRight, Coins, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone, UserCheck, Heart, Sparkles
+  ChevronRight, Coins, LogOut, FileText, Scale, Ban, Lock, Trash2, Download, Megaphone, UserCheck, Heart, Sparkles, Languages
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import ContactAgeFilterSheet from './ContactAgeFilterSheet';
 import CoupleSettings from '@/components/couple/CoupleSettings';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help';
+type SettingsType = 'notifications' | 'appearance' | 'privacy' | 'help' | 'language';
 
 interface ProfileSettingsDrawerProps {
   isAdmin?: boolean;
@@ -85,9 +85,10 @@ const ProfileSettingsDrawer = ({
     {
       title: 'Préférences',
       items: [
-        { icon: Bell, label: 'Notifications', description: 'Alertes et sons', type: 'notifications', color: 'text-blue-500', bgColor: 'bg-blue-500/12' },
-        { icon: Moon, label: 'Apparence', description: 'Thème et affichage', type: 'appearance', color: 'text-indigo-500', bgColor: 'bg-indigo-500/12' },
+        { icon: Bell, label: 'Notifications', description: 'Alertes, sons, ne pas déranger', type: 'notifications', color: 'text-blue-500', bgColor: 'bg-blue-500/12' },
+        { icon: Moon, label: 'Apparence', description: 'Thème, couleurs, taille', type: 'appearance', color: 'text-indigo-500', bgColor: 'bg-indigo-500/12' },
         { icon: Shield, label: 'Confidentialité', description: 'Visibilité du profil', type: 'privacy', color: 'text-emerald-500', bgColor: 'bg-emerald-500/12' },
+        { icon: Languages, label: 'Langue & Région', description: 'Choix de la langue', type: 'language', color: 'text-cyan-500', bgColor: 'bg-cyan-500/12' },
       ],
     },
     {
@@ -102,7 +103,7 @@ const ProfileSettingsDrawer = ({
     {
       title: 'Aide',
       items: [
-        { icon: HelpCircle, label: 'Aide & Support', description: 'FAQ et contact', type: 'help', color: 'text-orange-500', bgColor: 'bg-orange-500/12' },
+        { icon: HelpCircle, label: 'Aide & Support', description: 'ChatBot, FAQ et contact', type: 'help', color: 'text-orange-500', bgColor: 'bg-orange-500/12' },
       ],
     },
   ];
