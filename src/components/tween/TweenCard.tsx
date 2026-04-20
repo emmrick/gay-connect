@@ -201,8 +201,8 @@ const TweenCard = ({ tween }: TweenCardProps) => {
                   className={cn(
                     "ml-auto flex items-center gap-1.5 text-sm transition-all px-3 py-1.5 rounded-xl",
                     isFavorited
-                      ? "text-amber-500 bg-amber-500/10"
-                      : "text-muted-foreground hover:text-amber-500 hover:bg-amber-500/5"
+                      ? "text-accent bg-accent/10"
+                      : "text-muted-foreground hover:text-accent hover:bg-accent/5"
                   )}
                   onClick={handleFavorite}
                   aria-label={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
