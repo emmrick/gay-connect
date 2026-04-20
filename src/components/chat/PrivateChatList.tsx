@@ -289,7 +289,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -60 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.18 }}
                   onClick={() => {
                     if (!wasLongPressRef.current) {
                       onSelectConversation(conv.otherUser.user_id, hasSnap);
@@ -299,20 +299,35 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                   onPointerUp={handleLongPressEnd}
                   onPointerLeave={handleLongPressEnd}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-3.5 cursor-pointer transition-all duration-200 select-none rounded-2xl mx-1 my-0.5",
-                    "hover:bg-secondary/70 active:scale-[0.98]",
-                    isSelected && "bg-primary/8 ring-1 ring-primary/15",
-                    hasSnap && !isSelected && (isSnapPhoto ? "bg-teal-500/[0.06]" : "bg-orange-500/[0.06]"),
-                    hasUnread && !hasSnap && !isSelected && "bg-primary/[0.04]"
+                    'flex items-center gap-3 px-3 py-3 cursor-pointer transition-all duration-200 select-none rounded-2xl mx-1.5 my-0.5',
+                    'hover:bg-muted/50 active:scale-[0.985] active:bg-muted/70',
+                    isSelected && 'bg-primary/10 ring-1 ring-primary/20 shadow-sm',
+                    hasSnap && !isSelected && (isSnapPhoto ? 'bg-teal-500/[0.05]' : 'bg-orange-500/[0.05]'),
+                    hasUnread && !hasSnap && !isSelected && 'bg-primary/[0.04]',
                   )}
                 >
-                  {/* Avatar */}
+                  {/* Avatar with halo */}
                   <div className="relative flex-shrink-0">
-                    <div className={cn(
-                      "w-14 h-14 rounded-full overflow-hidden transition-shadow duration-200",
-                      hasSnap && `ring-2 ${snapRingClass} ring-offset-2 ring-offset-background`,
-                      hasUnread && !hasSnap && "ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
-                    )}>
+                    {/* Halo glow when snap or unread */}
+                    {(hasSnap || hasUnread) && (
+                      <div
+                        className={cn(
+                          'absolute inset-0 -m-0.5 rounded-full blur-md opacity-40 animate-pulse',
+                          hasSnap && (isSnapPhoto ? 'bg-teal-500' : 'bg-orange-500'),
+                          hasUnread && !hasSnap && 'bg-primary',
+                        )}
+                      />
+                    )}
+                    <div
+                      className={cn(
+                        'relative w-14 h-14 rounded-full overflow-hidden ring-2 ring-background',
+                        hasSnap && (isSnapPhoto
+                          ? 'shadow-[0_0_0_2.5px_hsl(180_70%_45%/0.7)]'
+                          : 'shadow-[0_0_0_2.5px_hsl(25_85%_55%/0.7)]'),
+                        hasUnread && !hasSnap && 'shadow-[0_0_0_2px_hsl(var(--primary)/0.4)]',
+                        !hasSnap && !hasUnread && 'shadow-[0_0_0_1px_hsl(var(--border))]',
+                      )}
+                    >
                       {conv.otherUser.avatar_url ? (
                         <img
                           src={conv.otherUser.avatar_url}
@@ -321,7 +336,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-primary font-bold text-xl">
+                        <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/15 to-accent/20 flex items-center justify-center text-primary font-bold text-xl">
                           {conv.otherUser.username.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -329,25 +344,33 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                     <LiveOnlineDot
                       profile={conv.otherUser}
                       size="lg"
-                      borderClassName="border-background"
-                      className="absolute bottom-0.5 right-0.5"
+                      borderClassName="border-background border-2"
+                      className="absolute bottom-0 right-0 shadow-md"
                     />
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <span className={cn(
-                        "text-[15px] truncate leading-tight font-body",
-                        hasUnread || hasSnap ? "font-bold text-foreground" : "font-medium text-foreground"
-                      )}>
+                      <span
+                        className={cn(
+                          'text-[15.5px] truncate leading-tight font-display tracking-tight',
+                          hasUnread || hasSnap ? 'font-bold text-foreground' : 'font-semibold text-foreground/95',
+                        )}
+                      >
                         {conv.otherUser.username}
                       </span>
                       {conv.lastMessage && (
-                        <span className={cn(
-                          "text-[11px] flex-shrink-0 tabular-nums",
-                          hasSnap ? `${snapColorClass} font-semibold` : hasUnread ? "text-primary font-semibold" : "text-muted-foreground"
-                        )}>
+                        <span
+                          className={cn(
+                            'text-[11px] flex-shrink-0 tabular-nums font-medium',
+                            hasSnap
+                              ? `${snapColorClass}`
+                              : hasUnread
+                                ? 'text-primary'
+                                : 'text-muted-foreground/70',
+                          )}
+                        >
                           {formatDistanceToNow(new Date(conv.lastMessage.created_at), {
                             addSuffix: false,
                             locale: fr,
@@ -357,19 +380,17 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       {hasSnap ? (
-                        <div className={cn("flex items-center gap-1.5 text-[13px] font-semibold", snapColorClass)}>
-                          {isSnapPhoto ? (
-                            <Camera className="w-4 h-4" />
-                          ) : (
-                            <Video className="w-4 h-4" />
-                          )}
+                        <div className={cn('flex items-center gap-1.5 text-[13px] font-semibold', snapColorClass)}>
+                          {isSnapPhoto ? <Camera className="w-4 h-4" /> : <Video className="w-4 h-4" />}
                           <span>{isSnapPhoto ? 'Nouveau Selfie' : 'Nouvelle Vidéo'}</span>
                         </div>
                       ) : (
-                        <p className={cn(
-                          "text-[13px] truncate leading-snug",
-                          hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground"
-                        )}>
+                        <p
+                          className={cn(
+                            'text-[13.5px] truncate leading-snug',
+                            hasUnread ? 'text-foreground/85 font-semibold' : 'text-muted-foreground/85',
+                          )}
+                        >
                           {getMessagePreview(conv)}
                         </p>
                       )}
@@ -377,7 +398,8 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
                         <motion.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center shadow-sm"
+                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                          className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-[11px] font-bold flex items-center justify-center shadow-[0_2px_6px_-1px_hsl(var(--primary)/0.5)]"
                         >
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </motion.span>
@@ -387,15 +409,12 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
 
                   {/* Context menu */}
                   <DropdownMenu>
-                    <DropdownMenuTrigger
-                      asChild
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button className="p-2 -mr-1 rounded-full hover:bg-muted/80 text-muted-foreground/60 hover:text-muted-foreground flex-shrink-0 transition-colors">
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <button className="p-2 -mr-1 rounded-full hover:bg-muted/80 text-muted-foreground/50 hover:text-muted-foreground flex-shrink-0 transition-colors active:scale-90">
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-52" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuContent align="end" className="w-52 rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
                       {hasUnread ? (
                         <DropdownMenuItem onClick={(e) => handleMarkAsRead(e, conv.otherUser.user_id)}>
                           <MailOpen className="w-4 h-4 mr-2.5" />
