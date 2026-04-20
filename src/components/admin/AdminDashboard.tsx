@@ -99,6 +99,7 @@ const useFullDashboardStats = () => {
 const COLORS = ['hsl(var(--primary))', 'hsl(220, 70%, 55%)', 'hsl(280, 60%, 55%)', 'hsl(340, 65%, 55%)', 'hsl(160, 60%, 45%)', 'hsl(30, 70%, 55%)'];
 
 const AdminDashboard = ({ onNavigate, pendingReports, pendingVerifications, pendingPurchases, isAdmin }: AdminDashboardProps) => {
+  const { profile } = useAuth();
   const { data: stats, isLoading } = useFullDashboardStats();
 
   if (isLoading) {
