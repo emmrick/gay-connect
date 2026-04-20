@@ -251,9 +251,8 @@ const MemberProfile = () => {
             }}
           />
 
-          {/* Gradients éditoriaux */}
+          {/* Gradient haut uniquement (lisibilité top bar) */}
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/55 to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background via-background/85 to-transparent pointer-events-none" />
 
           {/* Top bar flottante */}
           <div className="absolute top-0 inset-x-0 pt-[env(safe-area-inset-top)] z-20">
