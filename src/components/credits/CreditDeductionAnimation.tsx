@@ -91,8 +91,8 @@ export const CreditDeductionProvider = ({ children }: CreditDeductionProviderPro
                 <Coins className="w-4 h-4 text-red-500" />
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm text-red-500">
-                  -{deduction.amount}
+                <span className="font-semibold text-sm text-red-500 tabular-nums">
+                  -{Number(deduction.amount).toFixed(2)}
                 </span>
                 {deduction.label && (
                   <span className="text-xs text-muted-foreground max-w-40 truncate">
@@ -124,9 +124,9 @@ export const CreditDeductionBadge = ({ amount, show, onComplete }: CreditDeducti
           animate={{ opacity: 1, scale: 1, y: -10 }}
           exit={{ opacity: 0, scale: 0.5, y: -30 }}
           transition={{ duration: 0.3 }}
-          className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg"
+          className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg tabular-nums"
         >
-          -{amount}
+          -{Number(amount).toFixed(2)}
         </motion.div>
       )}
     </AnimatePresence>
