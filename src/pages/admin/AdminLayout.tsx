@@ -23,6 +23,10 @@ import AdminSidebar, { AdminSection, ModPermissions } from '@/components/admin/A
 import AdminBottomTabs from '@/components/admin/AdminBottomTabs';
 import AdminTopBar from '@/components/admin/AdminTopBar';
 import AdminCommandBar from '@/components/admin/AdminCommandBar';
+import AdminBreadcrumbs from '@/components/admin/AdminBreadcrumbs';
+import AdminLiveIndicator from '@/components/admin/AdminLiveIndicator';
+import AdminShortcutsDialog from '@/components/admin/AdminShortcutsDialog';
+import { useAdminShortcuts } from '@/hooks/admin/useAdminShortcuts';
 import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import { useAdminRealtimeBridge } from '@/hooks/admin/useAdminRealtimeBridge';
@@ -50,8 +54,10 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useAdminRealtimeBridge(!!isAdmin);
+  useAdminShortcuts({ enabled: !!isAdmin, onHelpRequested: () => setShortcutsOpen(true) });
 
   // Section déduite de l'URL : /admin → dashboard, /admin/<slug> → section
   const slug = location.pathname.replace(/^\/admin\/?/, '').split('/')[0] || '';
@@ -293,11 +299,14 @@ const AdminLayout = () => {
 
       <main className="flex-1 overflow-auto">
         <div className="sticky top-0 z-40 bg-card/70 backdrop-blur-xl border-b border-border/30 shadow-sm">
-          <div className="flex items-center justify-between px-4 md:px-6 h-14">
-            <h1 className="text-sm font-display font-semibold text-muted-foreground truncate">
-              {titleForSection(activeSection)}
-            </h1>
-            <AdminCommandBar onNavigate={handleSectionChange} className="w-48 md:w-64" />
+          <div className="flex items-center justify-between gap-3 px-4 md:px-6 h-14">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <AdminBreadcrumbs section={activeSection} />
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <AdminLiveIndicator className="hidden lg:inline-flex" />
+              <AdminCommandBar onNavigate={handleSectionChange} className="w-48 md:w-64" />
+            </div>
           </div>
         </div>
 
@@ -315,6 +324,8 @@ const AdminLayout = () => {
           onOpenChange={(open) => !open && setSelectedReport(null)}
         />
       )}
+
+      <AdminShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 };
