@@ -240,6 +240,53 @@ const SignupForm = ({ onSubmit, isLoading, defaultReferralCode = '', showCoupleI
             )}
           />
 
+          {/* Conditions obligatoires */}
+          <FormField
+            control={form.control}
+            name="acceptTerms"
+            render={({ field }) => (
+              <FormItem>
+                <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
+                  <div className="flex items-start gap-3">
+                    <FormControl>
+                      <Checkbox
+                        id="acceptTerms"
+                        checked={!!field.value}
+                        onCheckedChange={(v) => field.onChange(v === true)}
+                        className="mt-0.5"
+                      />
+                    </FormControl>
+                    <div className="flex-1 min-w-0">
+                      <label
+                        htmlFor="acceptTerms"
+                        className="text-xs leading-relaxed text-foreground/90 cursor-pointer block"
+                      >
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                          Je certifie avoir au moins 18 ans
+                        </span>{' '}
+                        et j'accepte les{' '}
+                        <Link to="/legal/cgu" target="_blank" className="text-primary font-semibold underline underline-offset-2">
+                          Conditions Générales d'Utilisation
+                        </Link>
+                        , les{' '}
+                        <Link to="/regles" target="_blank" className="text-primary font-semibold underline underline-offset-2">
+                          Règles de conduite
+                        </Link>
+                        , la{' '}
+                        <Link to="/legal/confidentialite" target="_blank" className="text-primary font-semibold underline underline-offset-2">
+                          Politique de confidentialité
+                        </Link>{' '}
+                        et l'utilisation des cookies.
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Submit */}
           <Button type="submit" variant="hero" size="lg" className="w-full h-12 rounded-xl mt-2" disabled={isLoading}>
             {isLoading ? (
