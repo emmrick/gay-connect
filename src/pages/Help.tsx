@@ -351,13 +351,16 @@ const Help = ({ embedded = false }: HelpProps) => {
   const handleChipSelect = useCallback(
     (chipId: string) => {
       if (isBotTyping || messages.some((m) => m.isTyping)) return;
+      if (chipId === '__open_tour_now') {
+        // Lance directement le tour d'onboarding plein écran
+        openOnboardingTour();
+        return;
+      }
       if (chipId === '__agent_confirm') {
-        // Confirmation utilisateur → on lance vraiment l'escalade
         void handleContactAgent();
         return;
       }
       if (chipId === '__agent_cancel') {
-        // L'utilisateur préfère continuer avec l'aide automatique → retour menu
         navigateToNode(HELP_ROOT_ID, { showUserBubble: false });
         return;
       }
