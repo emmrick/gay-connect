@@ -189,12 +189,15 @@ const Help = ({ embedded = false }: HelpProps) => {
     }
   }, [liveTicket?.status, liveTicket?.assigned_to, phase]);
 
-  // Auto-scroll
+  // Auto-scroll : à chaque changement, et instantané pendant le typewriter
+  // pour que la dernière ligne soit toujours visible au-dessus de la barre fixe.
   const typingReveal = messages.find((m) => m.isTyping)?.revealedLength;
+  const isTypingActive = messages.some((m) => m.isTyping);
   useEffect(() => {
-    const t = setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+    const behavior: ScrollBehavior = isTypingActive ? 'auto' : 'smooth';
+    const t = setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior, block: 'end' }), 30);
     return () => clearTimeout(t);
-  }, [messages.length, ticketMessages.length, phase, agentTyping.length, isBotTyping, typingReveal]);
+  }, [messages.length, ticketMessages.length, phase, agentTyping.length, isBotTyping, typingReveal, isTypingActive]);
 
   // Typewriter
   useEffect(() => {
