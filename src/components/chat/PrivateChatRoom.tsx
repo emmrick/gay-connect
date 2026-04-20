@@ -338,6 +338,24 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
         isUnblocking={unblockUser.isPending}
         onShowBlockDialog={() => setShowBlockDialog(true)}
         onShowReportDialog={() => setShowReportDialog(true)}
+        onToggleSearch={() => setSearchOpen((v) => !v)}
+      />
+
+      {/* Search bar */}
+      <MessageSearch
+        isOpen={searchOpen}
+        onClose={() => { setSearchOpen(false); setSearchQuery(''); }}
+        onSearch={setSearchQuery}
+        resultCount={searchResults.length}
+        currentIndex={searchIndex}
+        onNavigate={handleSearchNavigate}
+      />
+
+      {/* Pinned banner */}
+      <PrivatePinnedBanner
+        pinnedMessages={pinnedMessages}
+        onScrollToMessage={scrollToMessage}
+        onUnpin={(id) => unpinMessage.mutate(id)}
       />
 
       {/* Dialogs */}
@@ -398,6 +416,9 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
                     otherUserId={otherUserId}
                     onToggleReaction={handleToggleReaction}
                     getReactionsForMessage={getReactionsForMessage}
+                    isPinned={pinnedIdSet.has(message.id)}
+                    isHighlighted={highlightedMessageId === message.id}
+                    onLongPress={(m) => setActionMessage(m)}
                   />
                 </div>
               );
