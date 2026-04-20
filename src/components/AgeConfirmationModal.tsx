@@ -67,7 +67,7 @@ export const AgeConfirmationModal = () => {
                 </div>
                 <h1 className="font-['Space_Grotesk'] text-3xl font-bold">
                   <span className="gradient-text">Gay</span>
-                  <span className="text-foreground">Connect</span>
+                  <span className="text-foreground"> Social</span>
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Communauté & Rencontres
