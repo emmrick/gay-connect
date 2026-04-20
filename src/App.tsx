@@ -171,6 +171,7 @@ const AuthenticatedApp = () => {
       <MaintenanceGuard>
         <CreditDialogProvider>
           <CreditDeductionProvider>
+            <TweenUploadProvider>
             <BlockedUserGuard>
               <VerificationGuard>
                 <ProfilePhotoGuard>
@@ -271,11 +272,13 @@ const AuthenticatedApp = () => {
                       <GlobalMissionOverlay />
                       <DossierAccessPopup />
                       <ProfileSelectorModal />
+                      <TweenUploadIndicator />
                     </>
                   </TooltipProvider>
                 </ProfilePhotoGuard>
               </VerificationGuard>
             </BlockedUserGuard>
+            </TweenUploadProvider>
           </CreditDeductionProvider>
         </CreditDialogProvider>
       </MaintenanceGuard>
