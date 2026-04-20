@@ -144,7 +144,7 @@ const AdminBottomTabs = ({
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         aria-label="Navigation admin"
       >
-        <div className="grid grid-cols-5 h-[60px]">
+        <div className="grid grid-cols-5 h-[64px] max-w-md mx-auto">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -154,8 +154,8 @@ const AdminBottomTabs = ({
                 key={tab.id}
                 onClick={() => handleTabClick(tab)}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-0.5 transition-colors active:bg-secondary/40",
-                  isActive ? "text-primary" : "text-muted-foreground"
+                  'relative flex flex-col items-center justify-center gap-0.5 transition-colors active:bg-secondary/40 min-h-[44px]',
+                  isActive ? 'text-primary' : 'text-muted-foreground',
                 )}
                 aria-label={tab.label}
                 aria-current={isActive ? 'page' : undefined}
@@ -164,14 +164,17 @@ const AdminBottomTabs = ({
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full bg-primary" />
                 )}
                 <div className="relative">
-                  <Icon className={cn("w-[22px] h-[22px] transition-transform", isActive && "scale-110")} strokeWidth={isActive ? 2.4 : 2} />
+                  <Icon
+                    className={cn('w-[22px] h-[22px] transition-transform', isActive && 'scale-110')}
+                    strokeWidth={isActive ? 2.4 : 2}
+                  />
                   {badge > 0 && (
-                    <Badge className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground border border-card text-[9px] font-bold flex items-center justify-center">
+                    <Badge className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground border-2 border-card text-[9px] font-bold flex items-center justify-center leading-none">
                       {badge > 99 ? '99+' : badge}
                     </Badge>
                   )}
                 </div>
-                <span className={cn("text-[10px] font-medium tracking-tight", isActive && "font-semibold")}>
+                <span className={cn('text-[10px] font-medium tracking-tight', isActive && 'font-semibold')}>
                   {tab.label}
                 </span>
               </button>
@@ -205,17 +208,17 @@ const AdminBottomTabs = ({
                       </span>
                       <div className="flex-1 h-px bg-border/30" />
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {items.map(item => {
+                    <div className="grid grid-cols-2 xs:grid-cols-3 gap-2.5">
+                      {items.map((item) => {
                         const Icon = item.icon;
                         return (
                           <button
                             key={item.id}
                             onClick={() => handleMoreItemClick(item.id)}
-                            className="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-secondary/40 hover:bg-secondary/70 active:scale-[0.97] transition-all border border-border/20"
+                            className="flex flex-col items-center justify-center gap-2 p-3.5 min-h-[88px] rounded-2xl bg-secondary/40 hover:bg-secondary/70 active:scale-[0.97] transition-all border border-border/20"
                           >
-                            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                              <Icon className="w-4 h-4 text-primary" />
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                              <Icon className="w-[18px] h-[18px] text-primary" />
                             </div>
                             <span className="text-[11px] font-medium text-center leading-tight">
                               {item.label}
