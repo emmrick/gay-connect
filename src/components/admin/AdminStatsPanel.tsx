@@ -1,21 +1,25 @@
+/**
+ * AdminStatsPanel — refonte design system.
+ * Analytics complet (KPIs, charts Recharts, top régions, vérifications, croissance).
+ * Logique métier 100% conservée (mêmes queries Supabase).
+ */
 import { useQuery } from '@tanstack/react-query';
 import { format, subDays, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  BarChart3, Users, MessageSquare, Image, Shield, TrendingUp,
-  Activity, UserPlus, Globe, Crown, Clock, Hash, Wallet,
-  Heart, Eye, Zap
+  BarChart3, Users, MessageSquare, Image as ImageIcon, Shield, TrendingUp,
+  Activity, UserPlus, Globe, Clock, Hash, Wallet,
+  Heart, Eye, Zap,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, Legend
+  AreaChart, Area, PieChart, Pie, Cell,
 } from 'recharts';
+import { AdminCard, AdminSectionHeader, StatTile, AdminListSkeleton } from './ui';
 
 const useDetailedStats = () => {
   return useQuery({
@@ -94,7 +98,6 @@ const useDetailedStats = () => {
       const dailyMessagesData = r23.data;
       const verificationStatusData = r24.data;
 
-      // Daily signups chart (14 days)
       const signupMap: Record<string, number> = {};
       for (let i = 13; i >= 0; i--) {
         signupMap[format(subDays(today, i), 'dd/MM')] = 0;
@@ -105,7 +108,6 @@ const useDetailedStats = () => {
       });
       const signupChart = Object.entries(signupMap).map(([date, count]) => ({ date, inscriptions: count }));
 
-      // Daily messages chart (7 days)
       const msgMap: Record<string, number> = {};
       for (let i = 6; i >= 0; i--) {
         msgMap[format(subDays(today, i), 'EEE', { locale: fr })] = 0;
@@ -116,7 +118,6 @@ const useDetailedStats = () => {
       });
       const messageChart = Object.entries(msgMap).map(([day, count]) => ({ day, messages: count }));
 
-      // Region stats
       const regionCounts: Record<string, number> = {};
       regionData?.forEach((p: any) => {
         if (p.region) regionCounts[p.region] = (regionCounts[p.region] || 0) + 1;
@@ -126,61 +127,51 @@ const useDetailedStats = () => {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
-      // Verification status breakdown
       const verificationBreakdown: Record<string, number> = {};
       verificationStatusData?.forEach((v: any) => {
         verificationBreakdown[v.status] = (verificationBreakdown[v.status] || 0) + 1;
       });
 
       return {
-        totalUsers: totalUsers || 0,
-        onlineUsers: onlineUsers || 0,
-        verifiedUsers: verifiedUsers || 0,
-        newUsersToday: newUsersToday || 0,
-        totalMessages: totalMessages || 0,
-        messagesWeek: messagesWeek || 0,
-        messagesToday: messagesToday || 0,
-        totalPhotos: totalPhotos || 0,
-        totalAlbums: totalAlbums || 0,
-        totalConversations: totalConversations || 0,
-        totalCredits: totalCredits || 0,
-        newUsersWeek: newUsersWeek || 0,
-        newUsersMonth: newUsersMonth || 0,
-        totalReports: totalReports || 0,
-        pendingReports: pendingReports || 0,
-        totalVerifications: totalVerifications || 0,
-        approvedVerifications: approvedVerifications || 0,
-        completedTasks: completedTasks || 0,
-        totalSwipeLikes: totalSwipeLikes || 0,
-        totalGifts: totalGifts || 0,
-        topRegions,
-        signupChart,
-        messageChart,
-        verificationBreakdown,
+        totalUsers, onlineUsers, verifiedUsers, newUsersToday, totalMessages,
+        messagesWeek, messagesToday, totalPhotos, totalAlbums, totalConversations,
+        totalCredits, newUsersWeek, newUsersMonth, totalReports, pendingReports,
+        totalVerifications, approvedVerifications, completedTasks, totalSwipeLikes, totalGifts,
+        topRegions, signupChart, messageChart, verificationBreakdown,
       };
     },
     refetchInterval: 60000,
   });
 };
 
-const COLORS = [
+const REGION_COLORS = [
   'hsl(var(--primary))', 'hsl(142, 71%, 45%)', 'hsl(220, 70%, 55%)',
   'hsl(280, 60%, 55%)', 'hsl(340, 65%, 55%)', 'hsl(30, 70%, 55%)',
-  'hsl(190, 70%, 45%)', 'hsl(60, 70%, 45%)', 'hsl(0, 70%, 55%)', 'hsl(160, 60%, 45%)'
+  'hsl(190, 70%, 45%)', 'hsl(60, 70%, 45%)', 'hsl(0, 70%, 55%)', 'hsl(160, 60%, 45%)',
 ];
+const PIE_COLORS = ['hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 84%, 60%)'];
+
+const tooltipStyle: React.CSSProperties = {
+  fontSize: 12,
+  borderRadius: 12,
+  border: '1px solid hsl(var(--border))',
+  background: 'hsl(var(--popover))',
+  color: 'hsl(var(--popover-foreground))',
+  boxShadow: '0 8px 24px -4px hsl(0 0% 0% / 0.15)',
+};
 
 const AdminStatsPanel = () => {
   const { data: stats, isLoading } = useDetailedStats();
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-24 rounded-2xl bg-muted/30 animate-pulse" />
+          ))}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-xl" />)}
-        </div>
+        <AdminListSkeleton count={3} />
       </div>
     );
   }
@@ -189,49 +180,54 @@ const AdminStatsPanel = () => {
 
   const onlinePercent = stats.totalUsers > 0 ? Math.round((stats.onlineUsers / stats.totalUsers) * 100) : 0;
   const verifiedPercent = stats.totalUsers > 0 ? Math.round((stats.verifiedUsers / stats.totalUsers) * 100) : 0;
-  
   const avgMsgPerUser = stats.totalUsers > 0 ? Math.round(stats.totalMessages / stats.totalUsers) : 0;
 
   const verificationPie = [
     { name: 'Approuvées', value: stats.verificationBreakdown['approved'] || 0 },
     { name: 'En attente', value: stats.verificationBreakdown['pending'] || 0 },
     { name: 'Rejetées', value: stats.verificationBreakdown['rejected'] || 0 },
-  ].filter(d => d.value > 0);
-
-  const PIE_COLORS = ['hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 84%, 60%)'];
+  ].filter((d) => d.value > 0);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-          <BarChart3 className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h2 className="font-display text-lg font-semibold">Analytics détaillé</h2>
-          <p className="text-sm text-muted-foreground">Données en temps réel de la plateforme</p>
-        </div>
-      </div>
+      <AdminSectionHeader
+        icon={BarChart3}
+        eyebrow="Vue d'ensemble"
+        title="Analytics détaillé"
+      />
 
       {/* Main KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard title="Utilisateurs" value={stats.totalUsers} icon={Users} color="text-primary" bgColor="bg-primary/10" />
-        <StatCard title="En ligne" value={stats.onlineUsers} icon={Activity} color="text-green-500" bgColor="bg-green-500/10" subtitle={`${onlinePercent}%`} />
-        <StatCard title="Vérifiés" value={stats.verifiedUsers} icon={Shield} color="text-blue-500" bgColor="bg-blue-500/10" subtitle={`${verifiedPercent}%`} />
-        <StatCard title="Nouveaux (jour)" value={stats.newUsersToday} icon={Clock} color="text-amber-500" bgColor="bg-amber-500/10" />
+        <StatTile label="Utilisateurs" value={stats.totalUsers} icon={Users} accent="primary" />
+        <StatTile
+          label="En ligne"
+          value={stats.onlineUsers}
+          icon={Activity}
+          accent="emerald"
+          trend={{ value: `${onlinePercent}%`, direction: 'neutral' }}
+          pulse
+        />
+        <StatTile
+          label="Vérifiés"
+          value={stats.verifiedUsers}
+          icon={Shield}
+          accent="blue"
+          trend={{ value: `${verifiedPercent}%`, direction: 'neutral' }}
+        />
+        <StatTile label="Nouveaux (jour)" value={stats.newUsersToday} icon={Clock} accent="orange" />
       </div>
 
       {/* Activity KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard title="Messages total" value={stats.totalMessages} icon={MessageSquare} color="text-indigo-500" bgColor="bg-indigo-500/10" />
-        <StatCard title="Msg aujourd'hui" value={stats.messagesToday} icon={Clock} color="text-cyan-500" bgColor="bg-cyan-500/10" />
-        <StatCard title="Msg / semaine" value={stats.messagesWeek} icon={BarChart3} color="text-violet-500" bgColor="bg-violet-500/10" />
-        <StatCard title="Msg / utilisateur" value={avgMsgPerUser} icon={Hash} color="text-teal-500" bgColor="bg-teal-500/10" />
+        <StatTile label="Messages total" value={stats.totalMessages} icon={MessageSquare} accent="violet" />
+        <StatTile label="Msg aujourd'hui" value={stats.messagesToday} icon={Clock} accent="blue" />
+        <StatTile label="Msg / semaine" value={stats.messagesWeek} icon={BarChart3} accent="violet" />
+        <StatTile label="Msg / utilisateur" value={avgMsgPerUser} icon={Hash} accent="primary" />
       </div>
 
-      {/* Content & Social KPIs */}
+      {/* Mini stats grid */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-        <MiniStat label="Photos" value={stats.totalPhotos} icon={Image} />
+        <MiniStat label="Photos" value={stats.totalPhotos} icon={ImageIcon} />
         <MiniStat label="Albums" value={stats.totalAlbums} icon={Hash} />
         <MiniStat label="Conversations" value={stats.totalConversations} icon={Wallet} />
         <MiniStat label="Likes (swipe)" value={stats.totalSwipeLikes} icon={Heart} />
@@ -239,213 +235,191 @@ const AdminStatsPanel = () => {
         <MiniStat label="Signalements" value={stats.totalReports} icon={Eye} />
       </div>
 
-      {/* Charts */}
+      {/* Charts row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Signups 14 days */}
-        <Card className="border-border/40">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-green-500" />
-              Inscriptions (14 jours)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-3">
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={stats.signupChart}>
-                <defs>
-                  <linearGradient id="statsSignupGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="date" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} interval={1} />
-                <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={25} allowDecimals={false} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
-                <Area type="monotone" dataKey="inscriptions" stroke="hsl(142, 71%, 45%)" strokeWidth={2} fill="url(#statsSignupGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
-            <div className="flex gap-4 px-3 mt-1">
-              <span className="text-[10px] text-muted-foreground">Aujourd'hui: <strong className="text-foreground">+{stats.newUsersToday}</strong></span>
-              <span className="text-[10px] text-muted-foreground">Semaine: <strong className="text-foreground">+{stats.newUsersWeek}</strong></span>
-              <span className="text-[10px] text-muted-foreground">Mois: <strong className="text-foreground">+{stats.newUsersMonth}</strong></span>
+        <ChartCard
+          icon={UserPlus}
+          iconClass="text-emerald-500"
+          title="Inscriptions (14 jours)"
+          footer={
+            <div className="flex gap-4 px-1 mt-1">
+              <FootMetric label="Aujourd'hui" value={`+${stats.newUsersToday}`} />
+              <FootMetric label="Semaine" value={`+${stats.newUsersWeek}`} />
+              <FootMetric label="Mois" value={`+${stats.newUsersMonth}`} />
             </div>
-          </CardContent>
-        </Card>
+          }
+        >
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={stats.signupChart}>
+              <defs>
+                <linearGradient id="statsSignupGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="date" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} interval={1} />
+              <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={25} allowDecimals={false} />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
+              <Area type="monotone" dataKey="inscriptions" stroke="hsl(142, 71%, 45%)" strokeWidth={2} fill="url(#statsSignupGrad)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-        {/* Messages 7 days */}
-        <Card className="border-border/40">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-indigo-500" />
-              Messages (7 jours)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-3">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={stats.messageChart}>
-                <XAxis dataKey="day" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={30} allowDecimals={false} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
-                <Bar dataKey="messages" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <ChartCard icon={MessageSquare} iconClass="text-violet-500" title="Messages (7 jours)">
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={stats.messageChart}>
+              <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={30} allowDecimals={false} />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
+              <Bar dataKey="messages" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
 
+      {/* Charts row 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Top Regions */}
-        <Card className="border-border/40">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Globe className="w-4 h-4 text-blue-500" />
-              Top 10 départements
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-3">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={stats.topRegions} layout="vertical">
-                <XAxis type="number" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <YAxis type="category" dataKey="region" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]} name="Membres">
-                  {stats.topRegions.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Verification breakdown */}
-        <Card className="border-border/40">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Shield className="w-4 h-4 text-blue-500" />
-              Vérifications d'identité
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
-            <div className="flex items-center gap-4">
-              <ResponsiveContainer width={120} height={120}>
-                <PieChart>
-                  <Pie data={verificationPie} cx="50%" cy="50%" innerRadius={30} outerRadius={50} dataKey="value" stroke="none">
-                    {verificationPie.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 flex-1">
-                {verificationPie.map((item, i) => (
-                  <div key={item.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} />
-                      <span className="text-xs">{item.name}</span>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">{item.value}</Badge>
-                  </div>
+        <ChartCard icon={Globe} iconClass="text-blue-500" title="Top 10 départements">
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={stats.topRegions} layout="vertical">
+              <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <YAxis type="category" dataKey="region" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={40} />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
+              <Bar dataKey="count" radius={[0, 6, 6, 0]} name="Membres">
+                {stats.topRegions.map((_, i) => (
+                  <Cell key={i} fill={REGION_COLORS[i % REGION_COLORS.length]} />
                 ))}
-                <div className="pt-2 border-t border-border/40">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Total</span>
-                    <span className="text-sm font-bold">{stats.totalVerifications}</span>
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard icon={Shield} iconClass="text-blue-500" title="Vérifications d'identité">
+          <div className="flex items-center gap-4">
+            <ResponsiveContainer width={140} height={140}>
+              <PieChart>
+                <Pie data={verificationPie} cx="50%" cy="50%" innerRadius={36} outerRadius={58} dataKey="value" stroke="none">
+                  {verificationPie.map((_, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="space-y-2 flex-1">
+              {verificationPie.map((item, i) => (
+                <div key={item.name} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} />
+                    <span className="text-xs">{item.name}</span>
                   </div>
+                  <Badge variant="secondary" className="text-xs">{item.value}</Badge>
+                </div>
+              ))}
+              <div className="pt-2 border-t border-border/40">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Total</span>
+                  <span className="text-sm font-bold tabular-nums">{stats.totalVerifications}</span>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </ChartCard>
       </div>
 
-      {/* Growth Progress */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            Objectifs de croissance
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <GrowthGoal label="Inscriptions / semaine" current={stats.newUsersWeek} goal={100} />
-            <GrowthGoal label="Inscriptions / mois" current={stats.newUsersMonth} goal={500} />
-            <GrowthGoal label="Taux de vérification" current={verifiedPercent} goal={80} suffix="%" />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Growth Goals */}
+      <AdminCard padding="md">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="w-4 h-4 text-emerald-500" />
+          <p className="text-sm font-display font-semibold">Objectifs de croissance</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <GrowthGoal label="Inscriptions / semaine" current={stats.newUsersWeek} goal={100} />
+          <GrowthGoal label="Inscriptions / mois" current={stats.newUsersMonth} goal={500} />
+          <GrowthGoal label="Taux de vérification" current={verifiedPercent} goal={80} suffix="%" />
+        </div>
+      </AdminCard>
 
-      {/* Moderation Stats */}
-      <Card className="border-border/40">
-        <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Activity className="w-4 h-4 text-orange-500" />
-            Modération
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-3 rounded-lg bg-muted/40">
-              <p className="text-2xl font-bold">{stats.completedTasks}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Tâches terminées</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-muted/40">
-              <p className="text-2xl font-bold">{stats.totalReports}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Signalements total</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-muted/40">
-              <p className="text-2xl font-bold text-orange-500">{stats.pendingReports}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">En attente</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-muted/40">
-              <p className="text-2xl font-bold">{stats.approvedVerifications}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Vérifiés total</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Moderation block */}
+      <AdminCard padding="md">
+        <div className="flex items-center gap-2 mb-4">
+          <Activity className="w-4 h-4 text-orange-500" />
+          <p className="text-sm font-display font-semibold">Modération</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MiniStat label="Tâches terminées" value={stats.completedTasks} />
+          <MiniStat label="Signalements total" value={stats.totalReports} />
+          <MiniStat label="En attente" value={stats.pendingReports} valueClass="text-orange-500" />
+          <MiniStat label="Vérifiés total" value={stats.approvedVerifications} valueClass="text-emerald-500" />
+        </div>
+      </AdminCard>
     </div>
   );
 };
 
-const StatCard = ({ title, value, icon: Icon, color, bgColor, subtitle }: {
-  title: string; value: number; icon: React.ElementType; color: string; bgColor: string; subtitle?: string;
+const ChartCard = ({
+  icon: Icon, iconClass, title, children, footer,
+}: {
+  icon: React.ElementType;
+  iconClass?: string;
+  title: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
 }) => (
-  <Card className="border-border/40">
-    <CardContent className="pt-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold mt-1">{value.toLocaleString()}</p>
-          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
-        </div>
-        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", bgColor)}>
-          <Icon className={cn("w-5 h-5", color)} />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+  <AdminCard padding="md">
+    <div className="flex items-center gap-2 mb-3">
+      <Icon className={cn('w-4 h-4', iconClass)} />
+      <p className="text-sm font-display font-semibold">{title}</p>
+    </div>
+    {children}
+    {footer}
+  </AdminCard>
 );
 
-const MiniStat = ({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) => (
-  <div className="flex flex-col items-center gap-1 p-2.5 rounded-xl border border-border/30 bg-card">
-    <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-    <span className="text-base font-bold">{value.toLocaleString()}</span>
+const FootMetric = ({ label, value }: { label: string; value: string }) => (
+  <span className="text-[10px] text-muted-foreground">
+    {label}: <strong className="text-foreground tabular-nums">{value}</strong>
+  </span>
+);
+
+const MiniStat = ({
+  label, value, icon: Icon, valueClass,
+}: {
+  label: string;
+  value: number;
+  icon?: React.ElementType;
+  valueClass?: string;
+}) => (
+  <div className="flex flex-col items-center gap-1 p-3 rounded-xl border border-border/40 bg-muted/20">
+    {Icon && <Icon className="w-3.5 h-3.5 text-muted-foreground" />}
+    <span className={cn('text-base font-bold tabular-nums', valueClass)}>{value.toLocaleString()}</span>
     <span className="text-[9px] text-muted-foreground text-center leading-tight">{label}</span>
   </div>
 );
 
-const GrowthGoal = ({ label, current, goal, suffix = '' }: { label: string; current: number; goal: number; suffix?: string }) => {
+const GrowthGoal = ({
+  label, current, goal, suffix = '',
+}: {
+  label: string;
+  current: number;
+  goal: number;
+  suffix?: string;
+}) => {
   const percent = Math.min(Math.round((current / goal) * 100), 100);
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">{label}</span>
-        <span className="text-xs font-semibold">{current}{suffix} / {goal}{suffix}</span>
+        <span className="text-xs font-semibold tabular-nums">
+          {current}{suffix} / {goal}{suffix}
+        </span>
       </div>
       <Progress value={percent} className="h-2" />
-      <span className={cn("text-[10px] font-medium", percent >= 100 ? 'text-green-500' : percent >= 50 ? 'text-orange-500' : 'text-red-500')}>
+      <span
+        className={cn(
+          'text-[10px] font-medium',
+          percent >= 100 ? 'text-emerald-500' : percent >= 50 ? 'text-orange-500' : 'text-red-500',
+        )}
+      >
         {percent}% atteint
       </span>
     </div>
