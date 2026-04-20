@@ -164,8 +164,29 @@ const PrivateMessageBubble = ({
         </div>
       )}
 
-      <div className={cn("max-w-[78%] flex flex-col", isOwn ? "items-end" : "items-start")}>
-        <div className="group/msg relative flex items-center gap-1">
+      <div
+        id={`pmsg-${message.id}`}
+        className={cn(
+          "max-w-[78%] flex flex-col scroll-mt-24",
+          isOwn ? "items-end" : "items-start",
+        )}
+      >
+        {isPinned && (
+          <div className={cn(
+            "flex items-center gap-1 mb-0.5 text-[10px] font-medium text-primary/80",
+            isOwn ? "pr-2" : "pl-1"
+          )}>
+            <Pin className="w-2.5 h-2.5 fill-primary/40" />
+            <span>Épinglé</span>
+          </div>
+        )}
+        <div
+          className={cn(
+            "group/msg relative flex items-center gap-1 rounded-[24px] transition-all",
+            isHighlighted && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background shadow-[0_0_24px_-4px_hsl(var(--primary)/0.55)]"
+          )}
+          {...longPressHandlers}
+        >
           {isOwn && !isEphemeralMedia && (
             <div className="hidden md:block opacity-0 group-hover/msg:opacity-100 transition-opacity">
               <EmojiReactionPicker onSelect={(emoji) => onToggleReaction(message.id, emoji)} />
