@@ -269,13 +269,19 @@ const Help = ({ embedded = false }: HelpProps) => {
   const buildChipsForNode = useCallback((node: HelpNode): HelpChip[] => {
     const chips: HelpChip[] = [];
 
+    // Cas spécial : nœud « Revoir le guide » → bouton CTA d'action directe
+    if (node.id === HELP_OPEN_TOUR_ID) {
+      chips.push({ id: '__open_tour_now', label: 'Lancer le guide interactif', emoji: '🎓', variant: 'outline' });
+      chips.push({ id: HELP_ROOT_ID, label: 'Menu principal', emoji: '🏠', variant: 'outline' });
+      return chips;
+    }
+
     // 1) Sous-rubriques (catégorie) ou suggestions liées (feuille)
     if (node.children && node.children.length > 0) {
       for (const child of node.children) {
         chips.push({ id: child.id, label: child.label, emoji: child.emoji, variant: 'subtle' });
       }
     } else if (node.related && node.related.length > 0) {
-      // Feuille : on propose les FAQ croisées comme prochaines questions
       for (const relId of node.related) {
         const relNode = findNodeById(relId);
         if (relNode) {
