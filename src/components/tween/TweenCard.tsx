@@ -12,6 +12,7 @@ import { useToggleTweenLike, useDeleteTween, useVoteTweenPoll, type Tween } from
 import TweenDetailDialog from './TweenDetailDialog';
 import TweenEditDialog from './TweenEditDialog';
 import TweenReportDialog from './TweenReportDialog';
+import TweenFollowButton from './TweenFollowButton';
 import { motion } from 'framer-motion';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
@@ -96,11 +97,14 @@ const TweenCard = ({ tween }: TweenCardProps) => {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span
                   className="font-bold text-sm truncate cursor-pointer hover:text-primary transition-colors"
                   onClick={(e) => { e.stopPropagation(); if (profile?.user_id) navigate(`/profile/${profile.user_id}`); }}
                 >{profile?.username || 'Anonyme'}</span>
+                {!isOwn && profile?.user_id && (
+                  <TweenFollowButton targetUserId={profile.user_id} variant="compact" />
+                )}
                 <span className="text-xs text-muted-foreground/60 flex-shrink-0">· {timeAgo}</span>
                 {tween.edited_at && (
                   <span className="text-[10px] text-muted-foreground/50 italic flex-shrink-0">(modifié)</span>
