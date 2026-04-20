@@ -33,6 +33,8 @@ import PrivateMessageBubble from './private/PrivateMessageBubble';
 import PrivateTypingBubble from './private/PrivateTypingBubble';
 import PrivatePinnedBanner from './private/PrivatePinnedBanner';
 import PrivateMessageActionsSheet from './private/PrivateMessageActionsSheet';
+import SmartReplyChips from './private/SmartReplyChips';
+import { useSmartReplies } from '@/hooks/useSmartReplies';
 import { cn } from '@/lib/utils';
 
 interface PrivateChatRoomProps {
@@ -71,6 +73,12 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
 
   const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePrivatePinnedMessages(otherUserId);
   const pinnedIdSet = useMemo(() => new Set(pinnedMessages.map((p: any) => p.message_id)), [pinnedMessages]);
+
+  const { suggestions: smartSuggestions, isLoading: smartLoading, dismiss: dismissSmart } = useSmartReplies({
+    messages,
+    otherUserId,
+    enabled: !hasBlocked,
+  });
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -466,15 +474,26 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
             </div>
           </div>
         ) : (
-          <PrivateChatInput
-            onSendMessage={handleSendMessage}
-            recipientId={otherUserId}
-            recipientName={otherUserProfile?.username}
-            isSending={sendMessage.isPending}
-            onFocus={handleInputFocus}
-            onTyping={startTyping}
-            onSendGift={handleSendGift}
-          />
+          <>
+            <SmartReplyChips
+              suggestions={smartSuggestions}
+              isLoading={smartLoading}
+              onPick={(text) => {
+                dismissSmart();
+                handleSendMessage(text);
+              }}
+              onDismiss={dismissSmart}
+            />
+            <PrivateChatInput
+              onSendMessage={handleSendMessage}
+              recipientId={otherUserId}
+              recipientName={otherUserProfile?.username}
+              isSending={sendMessage.isPending}
+              onFocus={handleInputFocus}
+              onTyping={startTyping}
+              onSendGift={handleSendGift}
+            />
+          </>
         )}
       </div>
 
