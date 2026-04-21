@@ -47,8 +47,16 @@ const ChatBotConfigSection = () => {
   const deleteNode = useDeleteChatbotNode();
   const aiRephrase = useAiRephrase();
   const aiSuggest = useAiSuggestBlocks();
+  const ensureConfig = useEnsureChatbotConfig();
   const { credits } = useCredits();
   const availableCredits = credits?.total_credits ?? 0;
+
+  /* ─── Migration douce : à l'ouverture, garantir une config et basculer
+        l'utilisateur sur le nouveau système (l'ancien chatbot IA n'existe plus). ─── */
+  useEffect(() => {
+    ensureConfig.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [parentStack, setParentStack] = useState<ChatbotNode[]>([]); // navigation par niveau
   const [editGreeting, setEditGreeting] = useState(false);
