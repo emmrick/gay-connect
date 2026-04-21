@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, matchPath } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import KeepAliveOutlet from '@/components/system/KeepAliveOutlet';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlockedUserContext } from '@/components/BlockedUserGuard';
