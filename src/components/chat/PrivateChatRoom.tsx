@@ -166,8 +166,32 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   useMobileScreenshotDetection({ enabled: true, onScreenshotDetected: handleScreenshotDetected });
   useMobileNavigation({ onBack, enabled: true });
 
+  // Mark as read on open + every time a new incoming message arrives + when tab regains focus
   useEffect(() => {
-    if (otherUserId) markAsRead.mutate(otherUserId);
+    if (!otherUserId || !user?.id) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+
+    const hasUnreadIncoming = messages.some(
+      (m) => m.sender_id === otherUserId && !m.read_at
+    );
+    // Always mark on first open; afterwards only when there is something unread.
+    if (hasUnreadIncoming || messages.length === 0) {
+      markAsRead.mutate(otherUserId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otherUserId, user?.id, messages.length, messages[messages.length - 1]?.id]);
+
+  // Re-mark as read when the tab/app becomes visible again
+  useEffect(() => {
+    if (!otherUserId) return;
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        markAsRead.mutate(otherUserId);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otherUserId]);
 
   // Auto-open ephemeral viewer

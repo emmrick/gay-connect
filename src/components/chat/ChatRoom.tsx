@@ -90,9 +90,22 @@ const ChatRoom = ({ roomId, regionCode, regionName, memberCount, isCustomGroup, 
 
   useEffect(() => {
     if (messages.length > 0 && user?.id) {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       const otherMessages = messages.filter(m => m.sender_id !== user.id).map(m => m.id);
       if (otherMessages.length > 0) markAsRead(otherMessages);
     }
+  }, [messages, user?.id, markAsRead]);
+
+  // Re-mark when tab/app becomes visible again
+  useEffect(() => {
+    if (!user?.id) return;
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      const otherMessages = messages.filter(m => m.sender_id !== user.id).map(m => m.id);
+      if (otherMessages.length > 0) markAsRead(otherMessages);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, [messages, user?.id, markAsRead]);
   
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
