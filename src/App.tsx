@@ -298,6 +298,7 @@ const AppContent = () => {
     <CookieConsentProvider>
       <CookieScriptLoader />
       <UpdateDetector />
+      <NativeBackButtonGuard />
       <AuthProvider>
         <AppLockGate>
           <AuthenticatedApp />
