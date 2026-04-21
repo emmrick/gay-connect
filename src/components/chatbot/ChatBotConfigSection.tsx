@@ -72,7 +72,14 @@ const ChatBotConfigSection = () => {
   const totalNodes = nodes.length;
   const { data: currentTotalCost = 0 } = useNodeCost(totalNodes);
   const { data: nextTotalCost = 0 } = useNodeCost(totalNodes + 1);
+  const { data: nextNextTotalCost = 0 } = useNodeCost(totalNodes + 2);
   const nextBlockCost = Math.max(0, nextTotalCost - currentTotalCost);
+  const followingBlockCost = Math.max(0, nextNextTotalCost - nextTotalCost);
+  const creditsAfterPurchase = Math.max(0, availableCredits - nextBlockCost);
+  const canAfford = availableCredits >= nextBlockCost;
+  const budgetUsedPct = availableCredits + currentTotalCost > 0
+    ? Math.min(100, Math.round((currentTotalCost / (currentTotalCost + availableCredits)) * 100))
+    : 0;
 
   const resetDraft = () => { setDraftLabel(''); setDraftText(''); setEditing(null); };
 
