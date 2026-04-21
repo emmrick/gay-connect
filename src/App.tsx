@@ -123,13 +123,17 @@ const ChatbotConfigPage = lazy(() => import("./pages/ChatbotConfigPage"));
 
 import { setGlobalQueryClient } from "@/hooks/useCredits";
 
-// Optimized QueryClient with better caching
+// Optimized QueryClient with aggressive caching to avoid page reloads
+// staleTime: 5min => no refetch when revisiting a page within 5 minutes
+// gcTime: 30min => keep data in memory long after the page is unmounted
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 2,
-      gcTime: 1000 * 60 * 5,
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
       retry: 1,
     },
   },
