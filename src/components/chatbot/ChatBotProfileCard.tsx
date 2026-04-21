@@ -1,7 +1,7 @@
 import { Bot, ChevronRight, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useChatbotConfig } from '@/hooks/useChatbotConfig';
+import { useChatbotConfig, useChatbotNodes } from '@/hooks/useChatbotConfig';
 
 interface ChatBotProfileCardProps {
   onOpen: () => void;
@@ -9,9 +9,10 @@ interface ChatBotProfileCardProps {
 
 const ChatBotProfileCard = ({ onOpen }: ChatBotProfileCardProps) => {
   const { data: config, isLoading } = useChatbotConfig();
+  const { data: nodes = [] } = useChatbotNodes();
 
   const isActive = config?.is_active || false;
-  const infosCount = config?.chatbot_info?.length || 0;
+  const infosCount = nodes.length;
 
   if (isLoading) {
     return (
