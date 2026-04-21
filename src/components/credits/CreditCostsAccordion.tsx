@@ -76,12 +76,12 @@ const categories: CostCategory[] = [
     ],
   },
   {
-    id: 'chatbot', emoji: '🤖', title: 'Chatbot',
+    id: 'chatbot', emoji: '🤖', title: 'ChatBot Personnel',
     items: [
-      { icon: <MessageCircle className="w-3.5 h-3.5" />, label: 'Message', costKey: 'chatbot_message', fallbackCost: CREDIT_COSTS.chatbot_message },
-      { icon: <PenLine className="w-3.5 h-3.5" />, label: 'Info (1-10)', costKey: 'chatbot_info', fallbackCost: CREDIT_COSTS.chatbot_info },
-      { icon: <PenLine className="w-3.5 h-3.5" />, label: 'Info (11+)', costKey: 'chatbot_info_extra', fallbackCost: CREDIT_COSTS.chatbot_info_extra },
-      { icon: <Zap className="w-3.5 h-3.5" />, label: 'Activer', costKey: 'chatbot_activate', fallbackCost: CREDIT_COSTS.chatbot_activate },
+      { icon: <MessageCircle className="w-3.5 h-3.5" />, label: 'Discuter (visiteur)', costKey: '_chatbot_visitor', fallbackCost: 'Gratuit', free: true },
+      { icon: <PenLine className="w-3.5 h-3.5" />, label: 'Bloc 1 (créateur)', costKey: '_chatbot_block_1', fallbackCost: 1 },
+      { icon: <PenLine className="w-3.5 h-3.5" />, label: 'Blocs suivants', costKey: '_chatbot_block_next', fallbackCost: '+2 à +30' },
+      { icon: <Zap className="w-3.5 h-3.5" />, label: 'Activer le bot', costKey: '_chatbot_activate', fallbackCost: 'Gratuit', free: true },
     ],
   },
 ];
