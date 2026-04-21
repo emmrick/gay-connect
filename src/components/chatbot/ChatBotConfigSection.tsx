@@ -448,11 +448,48 @@ const ChatBotConfigSection = () => {
             </div>
 
             {!editing && (
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-primary/5 border border-primary/20">
-                <span className="text-xs text-muted-foreground">Coût de ce bloc</span>
-                <span className="text-sm font-semibold text-primary flex items-center gap-1">
-                  <Coins className="w-3.5 h-3.5" /> {nextBlockCost} crédit{nextBlockCost > 1 ? 's' : ''}
-                </span>
+              <div className={cn(
+                'rounded-lg border p-3 space-y-2',
+                canAfford ? 'bg-primary/5 border-primary/20' : 'bg-destructive/5 border-destructive/30',
+              )}>
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Coins className="w-3 h-3" /> Récapitulatif du débit
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Solde actuel</span>
+                    <span className="font-medium tabular-nums">{availableCredits}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Coût de ce bloc (n°{totalNodes + 1})</span>
+                    <span className="font-medium text-destructive tabular-nums">−{nextBlockCost}</span>
+                  </div>
+                  <div className="border-t border-border/40 pt-1 flex items-center justify-between">
+                    <span className="font-semibold flex items-center gap-1">
+                      <ArrowRight className="w-3 h-3" /> Solde après
+                    </span>
+                    <span className={cn(
+                      'font-bold tabular-nums',
+                      canAfford ? 'text-primary' : 'text-destructive',
+                    )}>
+                      {creditsAfterPurchase}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-muted-foreground border-t border-border/40 pt-1.5 flex items-center justify-between">
+                  <span>Total investi : <strong className="text-foreground">{nextTotalCost}</strong> crédits</span>
+                  {followingBlockCost > 0 && (
+                    <span>+1 = <strong className="text-destructive">−{followingBlockCost}</strong></span>
+                  )}
+                </div>
+
+                {!canAfford && (
+                  <div className="text-[11px] text-destructive font-medium">
+                    Crédits insuffisants — il manque {nextBlockCost - availableCredits} crédit{(nextBlockCost - availableCredits) > 1 ? 's' : ''}.
+                  </div>
+                )}
               </div>
             )}
           </div>
