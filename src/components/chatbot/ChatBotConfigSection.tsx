@@ -7,7 +7,7 @@
  * - Le coût n'est PAS basé sur l'IA : c'est une grille tarifaire stockée en base
  *   (1 bloc=1, 2=3, 3=7, 4=12 … cf. table personal_chatbot_pricing)
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Bot, Plus, X, MessageSquare, Loader2, Sparkles, Wand2, ChevronRight,
   ChevronLeft, Save, Coins, Zap, TrendingUp, Wallet, ArrowRight,
@@ -30,6 +30,7 @@ import {
   useNodeCost,
   useAiRephrase,
   useAiSuggestBlocks,
+  useEnsureChatbotConfig,
   type ChatbotNode,
 } from '@/hooks/useChatbotConfig';
 import { useCredits } from '@/hooks/useCredits';
