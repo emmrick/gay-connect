@@ -1,25 +1,31 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useEffect } from 'react';
 import { MessageCircle, Home, Sparkles, HelpCircle, Rss } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
+import { prefetchRoute, prefetchMainRoutes } from '@/lib/routePrefetch';
 
 interface BottomNavBarProps {
   unreadCount?: number;
 }
 
 const allTabs = [
-  { id: 'home', path: '/home', icon: Home, label: 'Accueil', featureKey: null },
-  { id: 'tween', path: '/tween', icon: Rss, label: 'Tween', featureKey: null },
-  { id: 'swipe', path: '/swipe', icon: Sparkles, label: 'Swipe', featureKey: 'swipe_page' },
-  { id: 'messages', path: '/messages', icon: MessageCircle, label: 'Messages', featureKey: null },
-  { id: 'help', path: '/aide/chat', icon: HelpCircle, label: 'Aide', featureKey: null },
+  { id: 'home', path: '/home', icon: Home, label: 'Accueil', featureKey: null, prefetchKey: 'home' as const },
+  { id: 'tween', path: '/tween', icon: Rss, label: 'Tween', featureKey: null, prefetchKey: 'tween' as const },
+  { id: 'swipe', path: '/swipe', icon: Sparkles, label: 'Swipe', featureKey: 'swipe_page', prefetchKey: 'swipe' as const },
+  { id: 'messages', path: '/messages', icon: MessageCircle, label: 'Messages', featureKey: null, prefetchKey: 'messages' as const },
+  { id: 'help', path: '/aide/chat', icon: HelpCircle, label: 'Aide', featureKey: null, prefetchKey: 'help' as const },
 ] as const;
 
 const BottomNavBar = memo(({ unreadCount = 0 }: BottomNavBarProps) => {
   const featureFlags = useFeatureFlags();
   const location = useLocation();
   const messageBadge = unreadCount > 0 ? unreadCount : undefined;
+
+  // Préchauffe en arrière-plan les chunks des pages principales dès le premier rendu.
+  useEffect(() => {
+    prefetchMainRoutes();
+  }, []);
 
   const tabs = useMemo(() => {
     return allTabs.filter(tab => {
@@ -52,6 +58,8 @@ const BottomNavBar = memo(({ unreadCount = 0 }: BottomNavBarProps) => {
                   key={tab.id}
                   to={tab.path}
                   onClick={() => { if ('vibrate' in navigator) navigator.vibrate(10); }}
+                  onPointerEnter={() => prefetchRoute(tab.prefetchKey)}
+                  onTouchStart={() => prefetchRoute(tab.prefetchKey)}
                   className={cn(
                     "relative flex flex-col items-center justify-center gap-1 flex-1 h-full py-2 transition-colors duration-150 active:scale-95 no-underline",
                     isActive
