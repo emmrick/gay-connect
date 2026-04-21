@@ -172,14 +172,18 @@ const AuthenticatedLayout = () => {
           paddingBottom: showBottomNav ? 'calc(82px + env(safe-area-inset-bottom, 0px))' : undefined,
         }}
       >
-        <Suspense fallback={<LazyFallback />}>
-          <Outlet context={{
-            onlineCount,
-            isRestricted,
-            isAdmin,
-            isModerator,
-          }} />
-        </Suspense>
+        <KeepAliveOutlet
+          fallbackElement={
+            <Suspense fallback={<LazyFallback />}>
+              <Outlet context={{
+                onlineCount,
+                isRestricted,
+                isAdmin,
+                isModerator,
+              }} />
+            </Suspense>
+          }
+        />
 
         {/* Global Ad Banner */}
         {showGlobalAd && (
