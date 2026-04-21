@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 
 interface UseMobileNavigationOptions {
   onBack?: () => void;
@@ -6,18 +8,26 @@ interface UseMobileNavigationOptions {
   enableSwipeBack?: boolean;
 }
 
+const isNative = () => {
+  try {
+    return Capacitor?.isNativePlatform?.() === true;
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Mobile navigation hook robuste :
  * - Pousse UNE sentinelle d'historique unique par instance (clé randomisée).
- * - Au popstate, si on quitte notre sentinelle, on appelle onBack() UNE seule fois.
+ * - Au popstate (web) ou backButton (Android natif), si on quitte notre sentinelle,
+ *   on appelle onBack() UNE seule fois.
  * - Au démontage, si la sentinelle est toujours en haut de la pile, on la consomme
  *   silencieusement via history.back() pour ne pas polluer l'historique.
- * - Empêche les doubles déclenchements via un flag de garde.
  */
-export const useMobileNavigation = ({ 
-  onBack, 
-  enabled = true, 
-  enableSwipeBack = true 
+export const useMobileNavigation = ({
+  onBack,
+  enabled = true,
+  enableSwipeBack = true,
 }: UseMobileNavigationOptions) => {
   const sentinelKeyRef = useRef<string | null>(null);
   const triggeredRef = useRef(false);
@@ -25,43 +35,59 @@ export const useMobileNavigation = ({
   useEffect(() => {
     if (!enabled || !onBack) return;
 
-    // Génère une clé unique pour cette instance
     const key = `nav_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     sentinelKeyRef.current = key;
     triggeredRef.current = false;
 
-    // Pousse la sentinelle
     window.history.pushState({ navSentinel: key }, '', window.location.href);
 
+    const trigger = () => {
+      if (triggeredRef.current) return;
+      triggeredRef.current = true;
+      onBack();
+    };
+
     const handlePopState = (e: PopStateEvent) => {
-      // Si notre sentinelle vient d'être consommée (l'état actuel ne la contient plus)
       const currentState = e.state;
       const isOurSentinelGone = !currentState || currentState.navSentinel !== key;
-      
-      if (isOurSentinelGone && !triggeredRef.current) {
-        triggeredRef.current = true;
-        onBack();
-      }
+      if (isOurSentinelGone) trigger();
     };
 
     window.addEventListener('popstate', handlePopState);
 
+    // Capacitor : bouton retour matériel Android
+    let removeNativeListener: (() => void) | null = null;
+    if (isNative()) {
+      const handle = CapacitorApp.addListener('backButton', () => {
+        // Consomme la sentinelle => popstate prendra le relais et appellera onBack
+        if (window.history.state?.navSentinel === key) {
+          window.history.back();
+        } else {
+          // Sentinelle déjà consommée : déclenche directement
+          trigger();
+        }
+      });
+      removeNativeListener = () => {
+        // handle est une Promise<PluginListenerHandle> en v8
+        Promise.resolve(handle).then((h) => h?.remove?.()).catch(() => {});
+      };
+    }
+
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      
-      // Si notre sentinelle est toujours active (démontage sans pop), on la retire
+      removeNativeListener?.();
+
       if (
         !triggeredRef.current &&
         window.history.state?.navSentinel === key
       ) {
-        // Retire silencieusement la sentinelle de la pile
         window.history.back();
       }
       sentinelKeyRef.current = null;
     };
   }, [onBack, enabled]);
 
-  // Swipe gesture détection (bord gauche → droite)
+  // Swipe gesture (bord gauche → droite) — uniquement web mobile
   useEffect(() => {
     if (!enabled || !onBack || !enableSwipeBack) return;
 
@@ -86,16 +112,15 @@ export const useMobileNavigation = ({
     const handleTouchEnd = () => {
       const deltaX = touchEndX - touchStartX;
       const deltaY = Math.abs(touchEndY - touchStartY);
-      
+
       if (
         touchStartX < 30 &&
         deltaX > minSwipeDistance &&
         deltaY < maxVerticalMovement
       ) {
-        // Déclenche le retour natif (qui consommera notre sentinelle)
         window.history.back();
       }
-      
+
       touchStartX = 0;
       touchStartY = 0;
       touchEndX = 0;

@@ -27,6 +27,7 @@ import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import CookieConsentBanner from "@/components/cookie/CookieConsentBanner";
 import { useCookieScripts } from "@/hooks/useCookieScripts";
 import UpdateDetector from "@/components/UpdateDetector";
+import NativeBackButtonGuard from "@/components/system/NativeBackButtonGuard";
 
 import AppLoadingSkeleton from "@/components/loading/AppLoadingSkeleton";
 import { PageFallback } from "@/components/loading/LazyPageLoader";
@@ -298,6 +299,7 @@ const AppContent = () => {
     <CookieConsentProvider>
       <CookieScriptLoader />
       <UpdateDetector />
+      <NativeBackButtonGuard />
       <AuthProvider>
         <AppLockGate>
           <AuthenticatedApp />
