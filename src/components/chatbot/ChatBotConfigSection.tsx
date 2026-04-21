@@ -7,7 +7,7 @@
  * - Le coût n'est PAS basé sur l'IA : c'est une grille tarifaire stockée en base
  *   (1 bloc=1, 2=3, 3=7, 4=12 … cf. table personal_chatbot_pricing)
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Bot, Plus, X, MessageSquare, Loader2, Sparkles, Wand2, ChevronRight,
   ChevronLeft, Save, Coins, Zap, TrendingUp, Wallet, ArrowRight,
@@ -30,6 +30,7 @@ import {
   useNodeCost,
   useAiRephrase,
   useAiSuggestBlocks,
+  useEnsureChatbotConfig,
   type ChatbotNode,
 } from '@/hooks/useChatbotConfig';
 import { useCredits } from '@/hooks/useCredits';
@@ -46,8 +47,16 @@ const ChatBotConfigSection = () => {
   const deleteNode = useDeleteChatbotNode();
   const aiRephrase = useAiRephrase();
   const aiSuggest = useAiSuggestBlocks();
+  const ensureConfig = useEnsureChatbotConfig();
   const { credits } = useCredits();
   const availableCredits = credits?.total_credits ?? 0;
+
+  /* ─── Migration douce : à l'ouverture, garantir une config et basculer
+        l'utilisateur sur le nouveau système (l'ancien chatbot IA n'existe plus). ─── */
+  useEffect(() => {
+    ensureConfig.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [parentStack, setParentStack] = useState<ChatbotNode[]>([]); // navigation par niveau
   const [editGreeting, setEditGreeting] = useState(false);
