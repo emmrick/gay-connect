@@ -326,7 +326,7 @@ const ChatBotConfigSection = () => {
           )}
 
           <p className="text-[10px] text-muted-foreground mt-3 leading-relaxed flex items-start gap-1.5">
-            <Zap className="w-3 h-3 text-amber-500 shrink-0 mt-px" />
+            <Zap className="w-3 h-3 text-primary shrink-0 mt-px" />
             Plus tu ajoutes de blocs, plus le palier suivant coûte cher (1·3·7·12·18·25·33·42·52·63 puis +30 par bloc).
           </p>
         </CardContent>
