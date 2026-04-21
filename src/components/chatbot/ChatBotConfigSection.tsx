@@ -226,7 +226,73 @@ const ChatBotConfigSection = () => {
       {/* ─── Carte blocs ─── */}
       <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden">
         <CardContent className="p-4">
-          {/* Breadcrumb + KPIs */}
+          {/* ── Mini-dashboard sticky : coût total & prochain palier ── */}
+          <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-3 px-4 pt-4 pb-3 bg-gradient-to-b from-card/95 to-card/80 backdrop-blur-md border-b border-border/40">
+            <div className="grid grid-cols-3 gap-2">
+              {/* Total actuel */}
+              <div className="rounded-lg bg-secondary/40 border border-border/30 p-2">
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-0.5">
+                  <Coins className="w-3 h-3" /> Investi
+                </div>
+                <div className="text-base font-bold leading-none tabular-nums">
+                  {currentTotalCost}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  {totalNodes} bloc{totalNodes > 1 ? 's' : ''}
+                </div>
+              </div>
+
+              {/* Solde */}
+              <div className="rounded-lg bg-secondary/40 border border-border/30 p-2">
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-0.5">
+                  <Wallet className="w-3 h-3" /> Solde
+                </div>
+                <div className="text-base font-bold leading-none tabular-nums">
+                  {availableCredits}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">disponible</div>
+              </div>
+
+              {/* Prochain palier */}
+              <div className={cn(
+                'rounded-lg border p-2 transition-colors',
+                canAfford
+                  ? 'bg-primary/10 border-primary/30'
+                  : 'bg-destructive/10 border-destructive/30',
+              )}>
+                <div className={cn(
+                  'flex items-center gap-1 text-[10px] mb-0.5',
+                  canAfford ? 'text-primary' : 'text-destructive',
+                )}>
+                  <TrendingUp className="w-3 h-3" /> Prochain
+                </div>
+                <div className={cn(
+                  'text-base font-bold leading-none tabular-nums',
+                  canAfford ? 'text-primary' : 'text-destructive',
+                )}>
+                  −{nextBlockCost}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  reste {creditsAfterPurchase}
+                </div>
+              </div>
+            </div>
+
+            {/* Progress budget */}
+            <div className="mt-2">
+              <Progress value={budgetUsedPct} className="h-1" />
+              <div className="flex items-center justify-between mt-1 text-[10px] text-muted-foreground">
+                <span>{budgetUsedPct}% du budget utilisé</span>
+                {followingBlockCost > nextBlockCost && (
+                  <span className="text-amber-500">
+                    +1 = −{followingBlockCost} ⚠
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Breadcrumb */}
           <div className="flex items-center justify-between mb-3 gap-2">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               {parentStack.length > 0 && (
@@ -242,9 +308,6 @@ const ChatBotConfigSection = () => {
                 {currentParent ? currentParent.label : 'Blocs principaux'}
               </h4>
             </div>
-            <Badge variant="outline" className="text-[10px] gap-1 shrink-0">
-              <Coins className="w-3 h-3" /> {totalNodes} blocs · {currentTotalCost} crédits
-            </Badge>
           </div>
 
           {/* Boutons IA */}
@@ -264,10 +327,10 @@ const ChatBotConfigSection = () => {
               size="sm"
               className="flex-1 h-9 text-xs gap-1.5"
               onClick={handleOpenNew}
-              disabled={createNode.isPending}
+              disabled={createNode.isPending || !canAfford}
             >
               <Plus className="w-3.5 h-3.5" />
-              Nouveau bloc <span className="opacity-70">· {nextBlockCost}€</span>
+              Nouveau bloc <span className="opacity-70">· −{nextBlockCost}</span>
             </Button>
           </div>
 
