@@ -10,8 +10,9 @@
 import { useMemo, useState } from 'react';
 import {
   Bot, Plus, X, MessageSquare, Loader2, Sparkles, Wand2, ChevronRight,
-  ChevronLeft, Save, Coins, Zap,
+  ChevronLeft, Save, Coins, Zap, TrendingUp, Wallet, ArrowRight,
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
