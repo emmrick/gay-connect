@@ -284,7 +284,7 @@ const ChatBotConfigSection = () => {
               <div className="flex items-center justify-between mt-1 text-[10px] text-muted-foreground">
                 <span>{budgetUsedPct}% du budget utilisé</span>
                 {followingBlockCost > nextBlockCost && (
-                  <span className="text-amber-500">
+                  <span className="text-destructive font-medium">
                     +1 = −{followingBlockCost} ⚠
                   </span>
                 )}
