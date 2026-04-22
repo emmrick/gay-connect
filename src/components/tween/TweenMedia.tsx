@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import GaySocialWatermark from '@/components/security/GaySocialWatermark';
 import { ShieldAlert, X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -7,6 +7,16 @@ interface TweenMediaProps {
   url: string;
   type: 'image' | 'video';
 }
+
+// Registre global : une seule vidéo Tween peut jouer à la fois
+const activeVideos = new Set<HTMLVideoElement>();
+const pauseAllExcept = (current: HTMLVideoElement | null) => {
+  activeVideos.forEach((v) => {
+    if (v !== current && !v.paused) {
+      v.pause();
+    }
+  });
+};
 
 /**
  * Affichage protégé d'un média Tween :
