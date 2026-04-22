@@ -110,15 +110,18 @@ const TweenMedia = memo(({ url, type }: TweenMediaProps) => {
           />
         ) : (
           <video
+            ref={inlineVideoRef}
             src={url}
             controls
             controlsList="nodownload noremoteplayback noplaybackrate"
             disablePictureInPicture
             disableRemotePlayback
             playsInline
+            preload="metadata"
             className="w-full max-h-80 object-cover bg-black"
             onContextMenu={blockContextMenu}
             onClick={(e) => e.stopPropagation()}
+            onPlay={(e) => handleVideoPlay(e.currentTarget)}
           />
         )}
 
@@ -165,6 +168,7 @@ const TweenMedia = memo(({ url, type }: TweenMediaProps) => {
             ) : (
               <div className="relative inline-block w-full">
                 <video
+                  ref={dialogVideoRef}
                   src={url}
                   controls
                   autoPlay
@@ -174,6 +178,7 @@ const TweenMedia = memo(({ url, type }: TweenMediaProps) => {
                   playsInline
                   className="max-w-[95vw] max-h-[90vh] object-contain bg-black mx-auto"
                   onContextMenu={blockContextMenu}
+                  onPlay={(e) => handleVideoPlay(e.currentTarget)}
                 />
                 <GaySocialWatermark />
               </div>
