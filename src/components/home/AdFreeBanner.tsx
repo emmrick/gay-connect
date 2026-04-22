@@ -116,13 +116,13 @@ const AdFreeBanner = () => {
             <Sparkles className="w-3.5 h-3.5" />
             Naviguer sans pub
           </button>
-          <a
-            href="/?tab=help"
+          <Link
+            to="/aide/Publicit%C3%A9s"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-foreground hover:underline transition-colors"
           >
             <HelpCircle className="w-3.5 h-3.5" />
             En savoir plus
-          </a>
+          </Link>
         </div>
       </div>
 
