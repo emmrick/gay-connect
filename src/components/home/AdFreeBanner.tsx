@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { BanIcon, HelpCircle, X, Sparkles, Clock } from 'lucide-react';
 import AdFreeSubscriptionDialog from '@/components/ads/AdFreeSubscriptionDialog';
 import { useAdFreeSubscription } from '@/hooks/useAds';
