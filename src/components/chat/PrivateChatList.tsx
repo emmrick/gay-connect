@@ -6,6 +6,7 @@ import { fr } from 'date-fns/locale';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useConversationStatus } from '@/hooks/useConversationStatus';
+import { useConversationsTypingStatus } from '@/hooks/useConversationsTypingStatus';
 import LiveOnlineDot from '@/components/presence/LiveOnlineDot';
 import { usePendingEphemeralSnaps } from '@/hooks/usePendingEphemeralSnaps';
 import { Skeleton } from '@/components/ui/skeleton';
