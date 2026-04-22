@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import GaySocialWatermark from '@/components/security/GaySocialWatermark';
 import { ShieldAlert, X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -7,6 +7,16 @@ interface TweenMediaProps {
   url: string;
   type: 'image' | 'video';
 }
+
+// Registre global : une seule vidéo Tween peut jouer à la fois
+const activeVideos = new Set<HTMLVideoElement>();
+const pauseAllExcept = (current: HTMLVideoElement | null) => {
+  activeVideos.forEach((v) => {
+    if (v !== current && !v.paused) {
+      v.pause();
+    }
+  });
+};
 
 /**
  * Affichage protégé d'un média Tween :
@@ -18,6 +28,53 @@ interface TweenMediaProps {
  */
 const TweenMedia = memo(({ url, type }: TweenMediaProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const inlineVideoRef = useRef<HTMLVideoElement>(null);
+  const dialogVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Pause auto quand la vidéo sort du viewport (scroll) ou que le composant est démonté
+  useEffect(() => {
+    if (type !== 'video') return;
+    const video = inlineVideoRef.current;
+    if (!video) return;
+
+    activeVideos.add(video);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting && !video.paused) {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(video);
+
+    const handleVisibility = () => {
+      if (document.hidden && !video.paused) {
+        video.pause();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
+      video.pause();
+      activeVideos.delete(video);
+    };
+  }, [type, url]);
+
+  // Pause la vidéo inline quand on ouvre le dialog ; pause la dialog quand on ferme
+  useEffect(() => {
+    if (type !== 'video') return;
+    if (isOpen) {
+      inlineVideoRef.current?.pause();
+    } else {
+      dialogVideoRef.current?.pause();
+    }
+  }, [isOpen, type]);
 
   const blockContextMenu = (e: React.MouseEvent | React.SyntheticEvent) => {
     e.preventDefault();
@@ -26,6 +83,10 @@ const TweenMedia = memo(({ url, type }: TweenMediaProps) => {
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsOpen(true);
+  };
+
+  const handleVideoPlay = (video: HTMLVideoElement | null) => {
+    pauseAllExcept(video);
   };
 
   return (
@@ -49,15 +110,18 @@ const TweenMedia = memo(({ url, type }: TweenMediaProps) => {
           />
         ) : (
           <video
+            ref={inlineVideoRef}
             src={url}
             controls
             controlsList="nodownload noremoteplayback noplaybackrate"
             disablePictureInPicture
             disableRemotePlayback
             playsInline
+            preload="metadata"
             className="w-full max-h-80 object-cover bg-black"
             onContextMenu={blockContextMenu}
             onClick={(e) => e.stopPropagation()}
+            onPlay={(e) => handleVideoPlay(e.currentTarget)}
           />
         )}
 
@@ -104,6 +168,7 @@ const TweenMedia = memo(({ url, type }: TweenMediaProps) => {
             ) : (
               <div className="relative inline-block w-full">
                 <video
+                  ref={dialogVideoRef}
                   src={url}
                   controls
                   autoPlay
@@ -113,6 +178,7 @@ const TweenMedia = memo(({ url, type }: TweenMediaProps) => {
                   playsInline
                   className="max-w-[95vw] max-h-[90vh] object-contain bg-black mx-auto"
                   onContextMenu={blockContextMenu}
+                  onPlay={(e) => handleVideoPlay(e.currentTarget)}
                 />
                 <GaySocialWatermark />
               </div>
