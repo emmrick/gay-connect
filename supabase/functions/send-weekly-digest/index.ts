@@ -104,13 +104,33 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Opt-outs
-  const { data: optOuts } = await supabase
+  // Opt-outs — fail-closed: if we can't load the list, abort instead of risk
+  // sending to users who opted out. Also normalise + dedupe to defend against
+  // null user_ids or duplicate rows.
+  const { data: optOuts, error: optOutsError } = await supabase
     .from('weekly_digest_unsubscribes')
     .select('user_id')
-  const optOutSet = new Set((optOuts ?? []).map((r: any) => r.user_id))
 
-  const eligible = (recipients ?? []).filter((r: any) => !optOutSet.has(r.user_id))
+  if (optOutsError) {
+    console.error('[WeeklyDigest] Failed to load opt-outs, aborting to avoid sending to unsubscribed users:', optOutsError)
+    return new Response(
+      JSON.stringify({ error: 'Failed to load opt-outs', details: optOutsError.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+
+  const optOutSet = new Set<string>(
+    (optOuts ?? [])
+      .map((r: any) => (typeof r?.user_id === 'string' ? r.user_id.trim() : null))
+      .filter((v: string | null): v is string => !!v),
+  )
+  console.log(`[WeeklyDigest] Loaded ${optOutSet.size} unique opt-outs (raw rows: ${optOuts?.length ?? 0})`)
+
+  const eligible = (recipients ?? []).filter((r: any) => {
+    const uid = typeof r?.user_id === 'string' ? r.user_id.trim() : null
+    if (!uid) return false // skip corrupted recipient rows
+    return !optOutSet.has(uid)
+  })
   console.log(`[WeeklyDigest] Eligible recipients: ${eligible.length} / ${recipients?.length ?? 0}`)
 
   let sent = 0
