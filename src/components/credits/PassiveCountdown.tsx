@@ -57,17 +57,29 @@ const PassiveCountdown = ({
   const elapsed = now - lastMs;
   const remainingMs = intervalMs - (elapsed % intervalMs);
   const remainingSec = Math.max(0, Math.floor(remainingMs / 1000));
+  const progressPct = Math.min(100, Math.max(0, ((intervalMs - remainingMs) / intervalMs) * 100));
 
   return (
-    <p
-      className={cn(
-        "text-[9px] font-semibold mt-1 flex items-center gap-1 tabular-nums",
-        isPromo ? "text-orange-500" : "text-amber-500"
-      )}
-    >
-      <Timer className="w-2.5 h-2.5 animate-pulse" />
-      +{amount} dans {formatDuration(remainingSec)}
-    </p>
+    <div className="mt-1.5 space-y-1">
+      <p
+        className={cn(
+          "text-[9px] font-semibold flex items-center gap-1 tabular-nums",
+          isPromo ? "text-orange-500" : "text-amber-500"
+        )}
+      >
+        <Timer className="w-2.5 h-2.5 animate-pulse" />
+        +{amount} dans {formatDuration(remainingSec)}
+      </p>
+      <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
+        <div
+          className={cn(
+            "h-full rounded-full transition-[width] duration-1000 ease-linear",
+            isPromo ? "bg-orange-500" : "bg-amber-500"
+          )}
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+    </div>
   );
 };
 
