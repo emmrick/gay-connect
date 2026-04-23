@@ -4538,6 +4538,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_suggestions: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          created_at: string
+          credits_awarded: number
+          description: string
+          examples: string | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          credits_awarded?: number
+          description: string
+          examples?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          credits_awarded?: number
+          description?: string
+          examples?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_usage: {
         Row: {
           albums_count: number
@@ -5087,6 +5135,14 @@ export type Database = {
       request_withdrawal: { Args: { _user_id: string }; Returns: Json }
       reserve_moderation_task: {
         Args: { _task_id: string; _user_id: string }
+        Returns: Json
+      }
+      review_suggestion: {
+        Args: {
+          _admin_notes?: string
+          _new_status: string
+          _suggestion_id: string
+        }
         Returns: Json
       }
       revoke_premium: { Args: { _target_user_id: string }; Returns: Json }
