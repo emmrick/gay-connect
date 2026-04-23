@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import PassiveCountdown from './PassiveCountdown';
 
 const CreditBreakdownCards = () => {
   const {
