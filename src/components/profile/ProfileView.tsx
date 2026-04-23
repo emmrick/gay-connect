@@ -61,6 +61,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
   const { data: isAdminUser } = useIsAdmin();
   const { favorites } = useUserFavorites();
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showSuggestionDialog, setShowSuggestionDialog] = useState(false);
   const featureFlags = useFeatureFlags();
 
   // Open edit dialog when triggered from notification redirect
