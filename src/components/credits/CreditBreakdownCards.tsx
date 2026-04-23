@@ -153,11 +153,15 @@ const CreditBreakdownCards = () => {
               )}
             </p>
 
-            {/* Promo detail */}
-            {(card as any).promo && (
-              <p className="text-[9px] text-orange-500 font-medium mt-1">
-                ⚡ +{currentAmount} / {currentInterval}h
-              </p>
+            {/* Passive countdown */}
+            {card.label === 'Passif' && (
+              <PassiveCountdown
+                lastPassiveCreditAt={lastPassiveCreditAt}
+                intervalHours={currentInterval}
+                amount={currentAmount}
+                isAtMax={passiveCredits >= currentMax}
+                isPromo={isPassivePromo}
+              />
             )}
 
             {/* Progress bar */}
