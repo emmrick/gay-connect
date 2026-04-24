@@ -1,7 +1,10 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
+const ERROR_COOLDOWN_MS = 3000;
 
 interface NotificationPreferences {
   id: string;
@@ -38,6 +41,25 @@ const defaultPreferences = {
 export const useNotificationPreferences = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const cooldownTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        window.clearTimeout(cooldownTimerRef.current);
+      }
+    };
+  }, []);
+
+  const triggerCooldown = useCallback(() => {
+    setIsCoolingDown(true);
+    if (cooldownTimerRef.current) window.clearTimeout(cooldownTimerRef.current);
+    cooldownTimerRef.current = window.setTimeout(() => {
+      setIsCoolingDown(false);
+      cooldownTimerRef.current = null;
+    }, ERROR_COOLDOWN_MS);
+  }, []);
 
   const query = useQuery({
     queryKey: ['notification-preferences', user?.id],
@@ -89,15 +111,23 @@ export const useNotificationPreferences = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-preferences', user?.id] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating preferences:', error);
-      toast.error('Erreur lors de la mise à jour des préférences');
+      const description =
+        error?.message && typeof error.message === 'string'
+          ? error.message
+          : 'Vérifie ta connexion et réessaie dans quelques secondes.';
+      toast.error('Échec de la mise à jour', {
+        description,
+      });
+      triggerCooldown();
     },
   });
 
   const togglePreference = async (key: keyof typeof defaultPreferences) => {
     if (!query.data) return;
-    
+    if (updatePreferences.isPending || isCoolingDown) return;
+
     const currentValue = query.data[key];
     await updatePreferences.mutateAsync({ [key]: !currentValue });
   };
@@ -114,6 +144,7 @@ export const useNotificationPreferences = () => {
     error: query.error,
     updatePreferences: updatePreferences.mutate,
     togglePreference,
-    isUpdating: updatePreferences.isPending,
+    isUpdating: updatePreferences.isPending || isCoolingDown,
+    hasError: updatePreferences.isError,
   };
 };
