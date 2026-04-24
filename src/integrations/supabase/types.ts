@@ -1868,6 +1868,92 @@ export type Database = {
           },
         ]
       }
+      henry_conversations: {
+        Row: {
+          age_max: number | null
+          age_min: number | null
+          created_at: string
+          current_step: string
+          id: string
+          interests: string[] | null
+          pending_message_count: number
+          region: string | null
+          relationship_goal: string | null
+          total_messages_sent: number
+          tribes: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_max?: number | null
+          age_min?: number | null
+          created_at?: string
+          current_step?: string
+          id?: string
+          interests?: string[] | null
+          pending_message_count?: number
+          region?: string | null
+          relationship_goal?: string | null
+          total_messages_sent?: number
+          tribes?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_max?: number | null
+          age_min?: number | null
+          created_at?: string
+          current_step?: string
+          id?: string
+          interests?: string[] | null
+          pending_message_count?: number
+          region?: string | null
+          relationship_goal?: string | null
+          total_messages_sent?: number
+          tribes?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      henry_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          payload: Json | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "henry_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "henry_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identity_verifications: {
         Row: {
           admin_screenshot_detected: boolean
@@ -5112,6 +5198,94 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      henry_get_or_create_conversation: {
+        Args: never
+        Returns: {
+          age_max: number | null
+          age_min: number | null
+          created_at: string
+          current_step: string
+          id: string
+          interests: string[] | null
+          pending_message_count: number
+          region: string | null
+          relationship_goal: string | null
+          total_messages_sent: number
+          tribes: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "henry_conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      henry_reset_conversation: {
+        Args: never
+        Returns: {
+          age_max: number | null
+          age_min: number | null
+          created_at: string
+          current_step: string
+          id: string
+          interests: string[] | null
+          pending_message_count: number
+          region: string | null
+          relationship_goal: string | null
+          total_messages_sent: number
+          tribes: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "henry_conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      henry_save_bot_message: {
+        Args: { _content: string; _payload?: Json }
+        Returns: string
+      }
+      henry_send_user_message: {
+        Args: { _content: string; _payload?: Json }
+        Returns: Json
+      }
+      henry_update_criteria: {
+        Args: {
+          _age_max?: number
+          _age_min?: number
+          _current_step?: string
+          _interests?: string[]
+          _region?: string
+          _relationship_goal?: string
+          _tribes?: string[]
+        }
+        Returns: {
+          age_max: number | null
+          age_min: number | null
+          created_at: string
+          current_step: string
+          id: string
+          interests: string[] | null
+          pending_message_count: number
+          region: string | null
+          relationship_goal: string | null
+          total_messages_sent: number
+          tribes: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "henry_conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       hold_support_task: {
         Args: { _task_id: string; _user_id: string }
