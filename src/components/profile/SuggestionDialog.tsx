@@ -9,10 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Lightbulb, Sparkles, Loader2, CheckCircle2, Clock, XCircle, Eye, Coins, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
+import { Lightbulb, Sparkles, Loader2, CheckCircle2, Clock, XCircle, Eye, Coins, Paperclip, X, FileText, Image as ImageIcon, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import CommunitySuggestions from './CommunitySuggestions';
 
 interface SuggestionDialogProps {
   open: boolean;
@@ -46,7 +47,7 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
   const [examples, setExamples] = useState('');
   const [attachments, setAttachments] = useState<AttachmentMeta[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [view, setView] = useState<'form' | 'history'>('form');
+  const [view, setView] = useState<'form' | 'history' | 'community'>('form');
 
   const { data: suggestions } = useQuery({
     queryKey: ['user-suggestions', user?.id],
@@ -142,18 +143,27 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex gap-2 border-b">
+        <div className="flex gap-2 border-b overflow-x-auto">
           <button
             onClick={() => setView('form')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               view === 'form' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
             Nouvelle idée
           </button>
           <button
+            onClick={() => setView('community')}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              view === 'community' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            Communauté
+          </button>
+          <button
             onClick={() => setView('history')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               view === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
@@ -162,7 +172,9 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
         </div>
 
         <ScrollArea className="flex-1 -mx-6 px-6">
-          {view === 'form' ? (
+          {view === 'community' ? (
+            <CommunitySuggestions />
+          ) : view === 'form' ? (
             <div className="space-y-4 py-2">
               <div className="rounded-lg bg-gradient-to-br from-primary/5 to-yellow-500/5 border border-primary/10 p-3 text-xs space-y-1">
                 <p className="font-semibold flex items-center gap-1.5">
