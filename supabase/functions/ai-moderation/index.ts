@@ -22,7 +22,7 @@ function isValidUUID(value: string): boolean {
   return UUID_REGEX.test(value);
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
