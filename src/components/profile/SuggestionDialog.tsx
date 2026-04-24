@@ -143,18 +143,27 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex gap-2 border-b">
+        <div className="flex gap-2 border-b overflow-x-auto">
           <button
             onClick={() => setView('form')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               view === 'form' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
             Nouvelle idée
           </button>
           <button
+            onClick={() => setView('community')}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              view === 'community' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            Communauté
+          </button>
+          <button
             onClick={() => setView('history')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               view === 'history' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
