@@ -1,14 +1,28 @@
 import { useMemo, useState } from 'react';
-import { ThumbsUp, ThumbsDown, Loader2, Lightbulb, TrendingUp, Clock, CheckCircle2, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ThumbsUp, ThumbsDown, Loader2, Lightbulb, TrendingUp, Clock, CheckCircle2, Eye, Coins, Sparkles, AlertTriangle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/hooks/useCredits';
 import { useCommunitySuggestions, useCastSuggestionVote, type CommunitySuggestion } from '@/hooks/useSuggestionVotes';
+
+const VOTE_COST = 1;
 
 type SortMode = 'top' | 'recent';
 
@@ -27,10 +41,16 @@ const STATUS_BADGE: Record<string, { label: string; icon: any; className: string
 
 const CommunitySuggestions = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { availableCredits, totalCredits, isLoading: creditsLoading } = useCredits();
   const { data: suggestions, isLoading } = useCommunitySuggestions();
   const castVote = useCastSuggestionVote();
   const [sort, setSort] = useState<SortMode>('top');
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [insufficientOpen, setInsufficientOpen] = useState(false);
+
+  const balance = availableCredits ?? totalCredits ?? 0;
+  const isBroke = !creditsLoading && balance < VOTE_COST;
 
   const sorted = useMemo(() => {
     if (!suggestions) return [];
@@ -45,12 +65,26 @@ const CommunitySuggestions = () => {
     return list;
   }, [suggestions, sort]);
 
+  const goToCredits = () => {
+    setInsufficientOpen(false);
+    navigate('/credits');
+  };
+
   const handleVote = async (s: CommunitySuggestion, type: 'up' | 'down') => {
     if (!user) return;
     if (s.user_id === user.id) {
       toast.info('Vous ne pouvez pas voter pour votre propre idée');
       return;
     }
+
+    // Vérification client : un nouveau vote coûte 1 crédit.
+    // Changer ou retirer son vote est gratuit.
+    const isNewVote = s.myVote === null;
+    if (isNewVote && balance < VOTE_COST) {
+      setInsufficientOpen(true);
+      return;
+    }
+
     setPendingId(s.id);
     try {
       const res = await castVote.mutateAsync({ suggestionId: s.id, voteType: type });
@@ -66,9 +100,8 @@ const CommunitySuggestions = () => {
     } catch (e: any) {
       const msg = e?.message ?? '';
       if (msg === 'INSUFFICIENT_CREDITS') {
-        toast.error('Crédits insuffisants', {
-          description: 'Voter coûte 1 crédit. Rechargez votre solde pour soutenir cette idée.',
-        });
+        // Filet de sécurité côté serveur
+        setInsufficientOpen(true);
       } else if (msg === 'CANNOT_VOTE_OWN_SUGGESTION') {
         toast.info('Vous ne pouvez pas voter pour votre propre idée');
       } else {
@@ -99,7 +132,7 @@ const CommunitySuggestions = () => {
 
   return (
     <div className="space-y-3 py-2">
-      {/* Tri + info coût */}
+      {/* Tri + solde de crédits */}
       <div className="flex items-center justify-between gap-2 sticky top-0 bg-background/95 backdrop-blur-sm py-2 z-10 -mx-1 px-1">
         <div className="flex gap-1">
           <Button
@@ -119,8 +152,39 @@ const CommunitySuggestions = () => {
             <Clock className="w-3 h-3 mr-1" /> Récentes
           </Button>
         </div>
-        <p className="text-[10px] text-muted-foreground">1 vote = 1 crédit</p>
+        <div
+          className={cn(
+            'flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md border',
+            isBroke
+              ? 'bg-destructive/10 text-destructive border-destructive/30'
+              : 'bg-muted/50 text-muted-foreground border-border'
+          )}
+          title="Coût d'un nouveau vote : 1 crédit"
+        >
+          <Coins className="w-3 h-3" />
+          <span className="tabular-nums">{creditsLoading ? '…' : balance}</span>
+          <span className="opacity-70">· 1 crédit/vote</span>
+        </div>
       </div>
+
+      {/* Bandeau d'alerte si solde insuffisant */}
+      {isBroke && (
+        <button
+          type="button"
+          onClick={() => setInsufficientOpen(true)}
+          className="w-full flex items-start gap-2 text-left rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 hover:bg-amber-500/15 transition-colors"
+        >
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+              Crédits insuffisants pour voter
+            </p>
+            <p className="text-[11px] text-amber-700/80 dark:text-amber-300/80 mt-0.5">
+              Il vous faut au moins 1 crédit. Touchez ici pour voir comment recharger.
+            </p>
+          </div>
+        </button>
+      )}
 
       {sorted.map((s) => {
         const cfg = STATUS_BADGE[s.status];
@@ -214,6 +278,67 @@ const CommunitySuggestions = () => {
           </div>
         );
       })}
+
+      {/* Dialogue d'explication "crédits insuffisants" */}
+      <AlertDialog open={insufficientOpen} onOpenChange={setInsufficientOpen}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <div className="mx-auto w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center mb-2">
+              <Coins className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <AlertDialogTitle className="text-center">
+              Crédits insuffisants
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p className="text-center">
+                  Soutenir une idée de la communauté coûte{' '}
+                  <span className="font-semibold text-foreground">1 crédit</span> par vote.
+                </p>
+                <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span>Votre solde actuel</span>
+                    <span className="font-semibold text-foreground tabular-nums">
+                      {balance} crédit{balance > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Coût d'un nouveau vote</span>
+                    <span className="font-semibold text-destructive tabular-nums">
+                      −{VOTE_COST}
+                    </span>
+                  </div>
+                </div>
+                <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-xs space-y-1.5">
+                  <p className="font-semibold text-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    Comment recharger&nbsp;?
+                  </p>
+                  <ul className="list-disc list-inside space-y-0.5 pl-1">
+                    <li>Achetez un pack de crédits (PayPal sécurisé)</li>
+                    <li>Récupérez vos crédits quotidiens gratuits</li>
+                    <li>Activez les crédits passifs pour gagner automatiquement</li>
+                    <li>Parrainez un ami pour 30 crédits offerts</li>
+                  </ul>
+                </div>
+                <p className="text-[11px] text-center opacity-70">
+                  💡 Modifier ou retirer un vote existant reste gratuit.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel className="mt-0">Plus tard</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={goToCredits}
+              className="bg-gradient-to-r from-primary to-primary/80"
+            >
+              <Coins className="w-4 h-4 mr-1.5" />
+              Recharger mes crédits
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
