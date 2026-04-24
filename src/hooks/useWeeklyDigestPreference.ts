@@ -13,6 +13,25 @@ const ERROR_COOLDOWN_MS = 3000;
 export const useWeeklyDigestPreference = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [isCoolingDown, setIsCoolingDown] = useState(false);
+  const cooldownTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        window.clearTimeout(cooldownTimerRef.current);
+      }
+    };
+  }, []);
+
+  const triggerCooldown = useCallback(() => {
+    setIsCoolingDown(true);
+    if (cooldownTimerRef.current) window.clearTimeout(cooldownTimerRef.current);
+    cooldownTimerRef.current = window.setTimeout(() => {
+      setIsCoolingDown(false);
+      cooldownTimerRef.current = null;
+    }, ERROR_COOLDOWN_MS);
+  }, []);
 
   const query = useQuery({
     queryKey: ['weekly-digest-unsubscribed', user?.id],
@@ -52,9 +71,16 @@ export const useWeeklyDigestPreference = () => {
       queryClient.invalidateQueries({ queryKey: ['weekly-digest-unsubscribed', user?.id] });
       toast.success(enabled ? 'E-mails hebdomadaires activés' : 'E-mails hebdomadaires désactivés');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('weekly digest pref error', error);
-      toast.error('Impossible de mettre à jour la préférence');
+      const description =
+        error?.message && typeof error.message === 'string'
+          ? error.message
+          : 'Vérifie ta connexion et réessaie dans quelques secondes.';
+      toast.error('Échec de la mise à jour', {
+        description,
+      });
+      triggerCooldown();
     },
   });
 
@@ -62,7 +88,11 @@ export const useWeeklyDigestPreference = () => {
   return {
     enabled,
     isLoading: query.isLoading,
-    isUpdating: setEnabled.isPending,
-    toggle: () => setEnabled.mutate(!enabled),
+    isUpdating: setEnabled.isPending || isCoolingDown,
+    hasError: setEnabled.isError,
+    toggle: () => {
+      if (setEnabled.isPending || isCoolingDown) return;
+      setEnabled.mutate(!enabled);
+    },
   };
 };
