@@ -19,7 +19,8 @@ import ProfileHeroCard from './ProfileHeroCard';
 import ProfileInfoCards from './ProfileInfoCards';
 import ProfileStatsGrid from './ProfileStatsGrid';
 import SuggestionDialog from './SuggestionDialog';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const POSITION_LABELS: Record<string, string> = {
   'actif': '🔝 Actif', 'passif': '🔽 Passif', 'versatile': '↕️ Versatile',
@@ -57,6 +58,7 @@ interface ProfileViewProps {
 
 const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, onNavigateToChatbot, isAdmin, isModerator, openEditProfile, onEditProfileHandled }: ProfileViewProps) => {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
   const { favorites } = useUserFavorites();
