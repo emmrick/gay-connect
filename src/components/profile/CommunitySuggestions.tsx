@@ -278,6 +278,67 @@ const CommunitySuggestions = () => {
           </div>
         );
       })}
+
+      {/* Dialogue d'explication "crédits insuffisants" */}
+      <AlertDialog open={insufficientOpen} onOpenChange={setInsufficientOpen}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <div className="mx-auto w-12 h-12 rounded-full bg-amber-500/15 flex items-center justify-center mb-2">
+              <Coins className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <AlertDialogTitle className="text-center">
+              Crédits insuffisants
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p className="text-center">
+                  Soutenir une idée de la communauté coûte{' '}
+                  <span className="font-semibold text-foreground">1 crédit</span> par vote.
+                </p>
+                <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span>Votre solde actuel</span>
+                    <span className="font-semibold text-foreground tabular-nums">
+                      {balance} crédit{balance > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Coût d'un nouveau vote</span>
+                    <span className="font-semibold text-destructive tabular-nums">
+                      −{VOTE_COST}
+                    </span>
+                  </div>
+                </div>
+                <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-xs space-y-1.5">
+                  <p className="font-semibold text-foreground flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    Comment recharger&nbsp;?
+                  </p>
+                  <ul className="list-disc list-inside space-y-0.5 pl-1">
+                    <li>Achetez un pack de crédits (PayPal sécurisé)</li>
+                    <li>Récupérez vos crédits quotidiens gratuits</li>
+                    <li>Activez les crédits passifs pour gagner automatiquement</li>
+                    <li>Parrainez un ami pour 30 crédits offerts</li>
+                  </ul>
+                </div>
+                <p className="text-[11px] text-center opacity-70">
+                  💡 Modifier ou retirer un vote existant reste gratuit.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel className="mt-0">Plus tard</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={goToCredits}
+              className="bg-gradient-to-r from-primary to-primary/80"
+            >
+              <Coins className="w-4 h-4 mr-1.5" />
+              Recharger mes crédits
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
