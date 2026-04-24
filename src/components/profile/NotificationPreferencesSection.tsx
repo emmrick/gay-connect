@@ -24,6 +24,7 @@ import { useWeeklyDigestPreference } from '@/hooks/useWeeklyDigestPreference';
 import { useNotificationSound, NOTIFICATION_SOUNDS, NotificationSoundType } from '@/hooks/useNotificationSound';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { WeeklyDigestStatus } from './WeeklyDigestStatus';
 
 interface PreferenceItemProps {
   icon: React.ElementType;
@@ -226,6 +227,10 @@ const NotificationPreferencesSection = () => {
           checked={weeklyDigest.enabled}
           onCheckedChange={weeklyDigest.toggle}
           disabled={weeklyDigest.isLoading || weeklyDigest.isUpdating}
+        />
+        <WeeklyDigestStatus
+          enabled={weeklyDigest.enabled}
+          isPreferenceLoading={weeklyDigest.isLoading}
         />
       </div>
 
