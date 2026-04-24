@@ -75,9 +75,9 @@ export const WeeklyDigestStatus = ({ enabled, isPreferenceLoading }: WeeklyDiges
       <div className="flex items-start gap-3">
         <div className={cn(
           "rounded-lg p-2 shrink-0",
-          lastSentAt ? "bg-emerald-500/10" : "bg-muted/60"
+          lastSentAt ? "bg-primary/10" : "bg-muted/60"
         )}>
-          <MailCheck className={cn("h-4 w-4", lastSentAt ? "text-emerald-500" : "text-muted-foreground")} />
+          <MailCheck className={cn("h-4 w-4", lastSentAt ? "text-primary" : "text-muted-foreground")} />
         </div>
         <div className="space-y-0.5 min-w-0 flex-1">
           <p className="text-sm font-medium">Dernier récapitulatif envoyé</p>
