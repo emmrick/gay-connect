@@ -1,14 +1,28 @@
 import { useMemo, useState } from 'react';
-import { ThumbsUp, ThumbsDown, Loader2, Lightbulb, TrendingUp, Clock, CheckCircle2, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ThumbsUp, ThumbsDown, Loader2, Lightbulb, TrendingUp, Clock, CheckCircle2, Eye, Coins, Sparkles, AlertTriangle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/hooks/useCredits';
 import { useCommunitySuggestions, useCastSuggestionVote, type CommunitySuggestion } from '@/hooks/useSuggestionVotes';
+
+const VOTE_COST = 1;
 
 type SortMode = 'top' | 'recent';
 
