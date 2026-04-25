@@ -2,7 +2,7 @@ import {
   Shield, ShieldAlert, Wallet, Euro, ArrowUpRight, PieChart, BarChart3, Users, Filter,
   MessageSquare, IdCard, Ticket, Coins, ChevronLeft, ChevronsRight, Home,
   Bell, Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench,
-  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles, ToggleLeft, Rocket, Megaphone,
+  ListOrdered, HelpCircle, Star, Headphones, FileImage, LogOut, Sparkles, ToggleLeft, Rocket, Megaphone, Radio,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ export type AdminSection =
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
   | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles'
-  | 'site-updates' | 'ads';
+  | 'site-updates' | 'ads' | 'live-content';
 
 export interface ModPermissions {
   can_manage_users?: boolean | null;
@@ -75,6 +75,7 @@ const navItems: NavItem[] = [
   { id: 'support-ratings', label: 'Avis', icon: Star, group: 'tasks' },
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation', permissionKey: 'can_manage_reports' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation', permissionKey: 'can_manage_content' },
+  { id: 'live-content', label: 'Direct', icon: Radio, group: 'moderation', permissionKey: 'can_manage_content' },
   { id: 'ai-moderation', label: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
   { id: 'verification', label: 'Identité', icon: IdCard, group: 'moderation', adminOnly: true, permissionKey: 'can_verify_identity' },

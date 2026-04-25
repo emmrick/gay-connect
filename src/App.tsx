@@ -67,6 +67,7 @@ const AdminRatingsPage = lazy(() => import("./pages/admin/sections/RatingsPage")
 const AdminVerificationPage = lazy(() => import("./pages/admin/sections/VerificationPage"));
 const AdminReportsPage = lazy(() => import("./pages/admin/sections/ReportsPage"));
 const AdminContentModerationPage = lazy(() => import("./pages/admin/sections/ContentModerationPage"));
+const AdminLiveContentPage = lazy(() => import("./pages/admin/sections/LiveContentPage"));
 const AdminAIModerationPage = lazy(() => import("./pages/admin/sections/AIModerationPage"));
 const AdminScreenshotSanctionsPage = lazy(() => import("./pages/admin/sections/ScreenshotSanctionsPage"));
 const AdminStatsPage = lazy(() => import("./pages/admin/sections/StatsPage"));
@@ -217,6 +218,7 @@ const AuthenticatedApp = () => {
                             <Route path="identite" element={<AdminVerificationPage />} />
                             <Route path="signalements" element={<AdminReportsPage />} />
                             <Route path="contenu" element={<AdminContentModerationPage />} />
+                            <Route path="direct" element={<AdminLiveContentPage />} />
                             <Route path="ia" element={<AdminAIModerationPage />} />
                             <Route path="captures" element={<AdminScreenshotSanctionsPage />} />
                             <Route path="membres" element={<AdminMembersPage />} />

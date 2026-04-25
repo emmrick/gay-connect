@@ -46,6 +46,7 @@ export const ADMIN_ROUTES: AdminRouteEntry[] = [
   { section: 'verification', slug: 'identite', title: 'Vérification identité', group: 'moderation' },
   { section: 'reports', slug: 'signalements', title: 'Signalements', group: 'moderation' },
   { section: 'moderation', slug: 'contenu', title: 'Modération de contenu', group: 'moderation' },
+  { section: 'live-content', slug: 'direct', title: 'Surveillance en direct', group: 'moderation' },
   { section: 'ai-moderation', slug: 'ia', title: 'Modération IA', group: 'moderation' },
   { section: 'screenshot-sanctions', slug: 'captures', title: 'Sanctions captures', group: 'moderation' },
   // Utilisateurs
