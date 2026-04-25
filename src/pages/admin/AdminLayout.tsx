@@ -31,6 +31,7 @@ import ReportDetailDialog from '@/components/admin/ReportDetailDialog';
 import TaskQueuePopup from '@/components/admin/TaskQueuePopup';
 import { useAdminRealtimeBridge } from '@/hooks/admin/useAdminRealtimeBridge';
 import { AdminPageTransition } from '@/components/admin/AdminPageTransition';
+import AdminModerationSubTabs from '@/components/admin/AdminModerationSubTabs';
 import {
   buildAdminPath,
   sectionFromSlug,
@@ -257,6 +258,12 @@ const AdminLayout = () => {
         />
         <main className="flex-1 overflow-auto">
           <div className="p-3 pb-6">
+            <AdminModerationSubTabs
+              activeSection={activeSection}
+              onSectionChange={handleSectionChange}
+              isAdmin={!!isAdmin}
+              modPermissions={modPermissions}
+            />
             <AdminPageTransition>
               <Outlet context={outletContext} />
             </AdminPageTransition>
