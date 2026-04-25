@@ -133,6 +133,9 @@ export const useHenryChat = () => {
       qc.invalidateQueries({ queryKey: ['henry-messages', user?.id] });
       qc.invalidateQueries({ queryKey: ['henry-conversation', user?.id] });
       if (result.credit_deducted) {
+        const amount = (result as any).credit_amount ?? 0.2;
+        // Anime le débit comme partout ailleurs sur le site
+        emitCreditDeduction(amount, 'Message à Henry');
         qc.invalidateQueries({ queryKey: ['user-credits'] });
       }
     },
