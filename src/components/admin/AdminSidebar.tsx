@@ -75,6 +75,7 @@ const navItems: NavItem[] = [
   { id: 'support-ratings', label: 'Avis', icon: Star, group: 'tasks' },
   { id: 'reports', label: 'Signalements', icon: Filter, group: 'moderation', permissionKey: 'can_manage_reports' },
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation', permissionKey: 'can_manage_content' },
+  { id: 'live-content', label: 'Direct', icon: Radio, group: 'moderation', permissionKey: 'can_manage_content' },
   { id: 'ai-moderation', label: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
   { id: 'verification', label: 'Identité', icon: IdCard, group: 'moderation', adminOnly: true, permissionKey: 'can_verify_identity' },
