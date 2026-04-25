@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
 
 export interface HenryConversationRow {
   id: string;
@@ -132,6 +133,9 @@ export const useHenryChat = () => {
       qc.invalidateQueries({ queryKey: ['henry-messages', user?.id] });
       qc.invalidateQueries({ queryKey: ['henry-conversation', user?.id] });
       if (result.credit_deducted) {
+        const amount = (result as any).credit_amount ?? 0.2;
+        // Anime le débit comme partout ailleurs sur le site
+        emitCreditDeduction(amount, 'Message à Henry');
         qc.invalidateQueries({ queryKey: ['user-credits'] });
       }
     },

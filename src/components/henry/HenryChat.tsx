@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, RefreshCw, Coins } from 'lucide-react';
+import { Sparkles, RefreshCw } from 'lucide-react';
+import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
 
 /** Rendu inline minimal : transforme **gras** en <strong>. */
 const renderRich = (text: string) => {
@@ -314,36 +315,33 @@ const HenryChat = () => {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-card/50 backdrop-blur shrink-0">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground shadow">
-          <Sparkles className="w-5 h-5" />
+      {/* Sous-bannière Henry (le header global vient de UnifiedPageHeader) */}
+      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50 bg-card/40 backdrop-blur shrink-0">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground shadow">
+          <Sparkles className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="font-bold text-base leading-tight">Henry</h1>
-          <p className="text-xs text-muted-foreground">
-            {henryTyping ? 'écrit…' : 'Votre assistant de mise en relation'}
+          <h2 className="font-bold text-sm leading-tight">Henry</h2>
+          <p className="text-[11px] text-muted-foreground">
+            {henryTyping ? 'écrit…' : `Assistant de mise en relation · ${availableCredits.toFixed(1)} crédits`}
           </p>
         </div>
-        <Badge variant="outline" className="gap-1 text-xs">
-          <Coins className="w-3 h-3" />
-          {Math.floor(availableCredits)}
-        </Badge>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => handleFreeAction('__reset__')}
           title="Recommencer"
-          className="h-9 w-9"
+          className="h-8 w-8"
         >
           <RefreshCw className="w-4 h-4" />
         </Button>
       </div>
 
       {/* Cost notice */}
-      <div className="px-4 py-2 text-[11px] text-center text-muted-foreground bg-muted/40 border-b border-border/30">
+      <div className="px-4 py-1.5 text-[11px] text-center text-muted-foreground bg-muted/40 border-b border-border/30">
         💡 0,2 crédit débité par message envoyé à Henry
       </div>
+
 
       {/* Messages */}
       <ScrollArea className="flex-1" ref={scrollRef as any}>
