@@ -258,6 +258,12 @@ const AdminLayout = () => {
         />
         <main className="flex-1 overflow-auto">
           <div className="p-3 pb-6">
+            <AdminModerationSubTabs
+              activeSection={activeSection}
+              onSectionChange={handleSectionChange}
+              isAdmin={!!isAdmin}
+              modPermissions={modPermissions}
+            />
             <AdminPageTransition>
               <Outlet context={outletContext} />
             </AdminPageTransition>
