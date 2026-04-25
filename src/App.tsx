@@ -67,6 +67,7 @@ const AdminRatingsPage = lazy(() => import("./pages/admin/sections/RatingsPage")
 const AdminVerificationPage = lazy(() => import("./pages/admin/sections/VerificationPage"));
 const AdminReportsPage = lazy(() => import("./pages/admin/sections/ReportsPage"));
 const AdminContentModerationPage = lazy(() => import("./pages/admin/sections/ContentModerationPage"));
+const AdminLiveContentPage = lazy(() => import("./pages/admin/sections/LiveContentPage"));
 const AdminAIModerationPage = lazy(() => import("./pages/admin/sections/AIModerationPage"));
 const AdminScreenshotSanctionsPage = lazy(() => import("./pages/admin/sections/ScreenshotSanctionsPage"));
 const AdminStatsPage = lazy(() => import("./pages/admin/sections/StatsPage"));
