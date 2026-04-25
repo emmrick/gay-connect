@@ -218,6 +218,7 @@ const AuthenticatedApp = () => {
                             <Route path="identite" element={<AdminVerificationPage />} />
                             <Route path="signalements" element={<AdminReportsPage />} />
                             <Route path="contenu" element={<AdminContentModerationPage />} />
+                            <Route path="direct" element={<AdminLiveContentPage />} />
                             <Route path="ia" element={<AdminAIModerationPage />} />
                             <Route path="captures" element={<AdminScreenshotSanctionsPage />} />
                             <Route path="membres" element={<AdminMembersPage />} />
