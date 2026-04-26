@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, RefreshCw } from 'lucide-react';
+import { Sparkles, RefreshCw, Send, SkipForward } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
 
 /** Rendu inline minimal : transforme **gras** en <strong>. */
@@ -77,6 +78,7 @@ const HenryChat = () => {
   const [multiSel, setMultiSel] = useState<string[]>([]);
   const [creditAlert, setCreditAlert] = useState(false);
   const [henryTyping, setHenryTyping] = useState(false);
+  const [freeText, setFreeText] = useState('');
   /** true → on demande la raison du rejet du profil courant. */
   const [askingReason, setAskingReason] = useState(false);
   const initRef = useRef(false);
@@ -186,8 +188,10 @@ const HenryChat = () => {
     if (currentStep === 'goal') criteriaUpdate.relationship_goal = rawValue;
     if (currentStep === 'age') {
       const [mn, mx] = rawValue.split('-').map(Number);
-      criteriaUpdate.age_min = mn;
-      criteriaUpdate.age_max = mx;
+      if (!isNaN(mn) && !isNaN(mx)) {
+        criteriaUpdate.age_min = mn;
+        criteriaUpdate.age_max = mx;
+      }
     }
     if (currentStep === 'region') {
       criteriaUpdate.region = rawValue === '__any__' ? null : rawValue;
@@ -196,6 +200,23 @@ const HenryChat = () => {
       criteriaUpdate.tribes = (multiValues ?? [rawValue]).filter(
         (v) => v !== 'no_pref',
       );
+    }
+    if (currentStep === 'height') {
+      if (rawValue !== '__any__') {
+        const [mn, mx] = rawValue.split('-').map(Number);
+        if (!isNaN(mn) && !isNaN(mx)) {
+          criteriaUpdate.height_min = mn;
+          criteriaUpdate.height_max = mx;
+        }
+      }
+    }
+    if (currentStep === 'languages') {
+      criteriaUpdate.languages = (multiValues ?? [rawValue]).filter(
+        (v) => v !== '__any__',
+      );
+    }
+    if (currentStep === 'availability') {
+      criteriaUpdate.availability = multiValues ?? [rawValue];
     }
     if (currentStep === 'interests') {
       criteriaUpdate.interests = multiValues ?? [rawValue];
@@ -208,6 +229,87 @@ const HenryChat = () => {
       await updateCriteria.mutateAsync(criteriaUpdate);
     }
 
+    if (nextStep === 'matching') {
+      await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
+      await runMatching();
+    } else if (nextStep !== 'free') {
+      const nextDef = HENRY_FLOW[nextStep];
+      await sendBotMessage(nextDef.question, { step: nextStep });
+    }
+  };
+
+  /** Envoi d'une réponse libre (texte personnalisé). */
+  const handleFreeTextSubmit = async () => {
+    const text = freeText.trim();
+    if (!text) return;
+    if (sendUserMessage.isPending || saveBotMessage.isPending || henryTyping) return;
+    if (availableCredits < 0.2) {
+      setCreditAlert(true);
+      return;
+    }
+
+    // Étape "free" : on n'avance pas, on laisse Henry accuser réception.
+    if (currentStep === 'free') {
+      try {
+        await sendUserMessage.mutateAsync({
+          content: text,
+          payload: { step: 'free', value: '__free_text__', text },
+        });
+      } catch (err: any) {
+        if (err?.message === 'INSUFFICIENT_CREDITS') {
+          setCreditAlert(true);
+          return;
+        }
+        toast.error('Henry ne peut pas envoyer ton message. Réessaie.');
+        return;
+      }
+      setFreeText('');
+      await sendBotMessage(
+        'Bien noté ✏️ J\'en tiens compte pour la prochaine recherche. Tu veux que je relance maintenant ?',
+        { step: 'free' },
+      );
+      return;
+    }
+
+    // Étapes guidées : on sauvegarde la note et on avance.
+    try {
+      await sendUserMessage.mutateAsync({
+        content: text,
+        payload: { step: currentStep, value: '__free_text__', text },
+      });
+    } catch (err: any) {
+      if (err?.message === 'INSUFFICIENT_CREDITS') {
+        setCreditAlert(true);
+        return;
+      }
+      toast.error('Henry ne peut pas envoyer ton message. Réessaie.');
+      return;
+    }
+
+    setFreeText('');
+
+    const nextStep = stepDef.next;
+    await updateCriteria.mutateAsync({
+      current_step: nextStep,
+      free_note_step: currentStep,
+      free_note_text: text,
+    });
+
+    if (nextStep === 'matching') {
+      await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
+      await runMatching();
+    } else if (nextStep !== 'free') {
+      const nextDef = HENRY_FLOW[nextStep];
+      await sendBotMessage(nextDef.question, { step: nextStep });
+    }
+  };
+
+  /** Passer une étape sans répondre. */
+  const handleSkipStep = async () => {
+    if (sendUserMessage.isPending || saveBotMessage.isPending || henryTyping) return;
+    const nextStep = stepDef.next;
+    await updateCriteria.mutateAsync({ current_step: nextStep });
+    setMultiSel([]);
     if (nextStep === 'matching') {
       await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
       await runMatching();
@@ -463,6 +565,52 @@ const HenryChat = () => {
                 );
               })}
             </div>
+
+            {/* Saisie libre + skip */}
+            {stepDef.freeText && (
+              <div className="mt-3 pt-3 border-t border-border/40">
+                <div className="flex gap-2 items-center">
+                  <Input
+                    value={freeText}
+                    onChange={(e) => setFreeText(e.target.value)}
+                    placeholder={stepDef.freeText.placeholder}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleFreeTextSubmit();
+                      }
+                    }}
+                    disabled={sendUserMessage.isPending || henryTyping}
+                    className="text-sm"
+                    maxLength={300}
+                  />
+                  <Button
+                    size="icon"
+                    onClick={handleFreeTextSubmit}
+                    disabled={!freeText.trim() || sendUserMessage.isPending || henryTyping}
+                    title={stepDef.freeText.submitLabel ?? 'Envoyer'}
+                    className="shrink-0"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                  {currentStep !== 'free' && currentStep !== 'greeting' && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleSkipStep}
+                      disabled={sendUserMessage.isPending || henryTyping}
+                      title="Passer cette étape"
+                      className="shrink-0"
+                    >
+                      <SkipForward className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="mt-1.5 text-[10px] text-muted-foreground/70 px-1">
+                  ✏️ Tu peux écrire ta propre réponse · Entrée pour envoyer
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

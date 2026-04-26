@@ -1872,10 +1872,15 @@ export type Database = {
         Row: {
           age_max: number | null
           age_min: number | null
+          availability: string[]
           created_at: string
           current_step: string
+          free_notes: Json
+          height_max: number | null
+          height_min: number | null
           id: string
           interests: string[] | null
+          languages: string[]
           pending_message_count: number
           region: string | null
           relationship_goal: string | null
@@ -1887,10 +1892,15 @@ export type Database = {
         Insert: {
           age_max?: number | null
           age_min?: number | null
+          availability?: string[]
           created_at?: string
           current_step?: string
+          free_notes?: Json
+          height_max?: number | null
+          height_min?: number | null
           id?: string
           interests?: string[] | null
+          languages?: string[]
           pending_message_count?: number
           region?: string | null
           relationship_goal?: string | null
@@ -1902,10 +1912,15 @@ export type Database = {
         Update: {
           age_max?: number | null
           age_min?: number | null
+          availability?: string[]
           created_at?: string
           current_step?: string
+          free_notes?: Json
+          height_max?: number | null
+          height_min?: number | null
           id?: string
           interests?: string[] | null
+          languages?: string[]
           pending_message_count?: number
           region?: string | null
           relationship_goal?: string | null
@@ -5204,10 +5219,15 @@ export type Database = {
         Returns: {
           age_max: number | null
           age_min: number | null
+          availability: string[]
           created_at: string
           current_step: string
+          free_notes: Json
+          height_max: number | null
+          height_min: number | null
           id: string
           interests: string[] | null
+          languages: string[]
           pending_message_count: number
           region: string | null
           relationship_goal: string | null
@@ -5228,10 +5248,15 @@ export type Database = {
         Returns: {
           age_max: number | null
           age_min: number | null
+          availability: string[]
           created_at: string
           current_step: string
+          free_notes: Json
+          height_max: number | null
+          height_min: number | null
           id: string
           interests: string[] | null
+          languages: string[]
           pending_message_count: number
           region: string | null
           relationship_goal: string | null
@@ -5255,38 +5280,87 @@ export type Database = {
         Args: { _content: string; _payload?: Json }
         Returns: Json
       }
-      henry_update_criteria: {
-        Args: {
-          _age_max?: number
-          _age_min?: number
-          _current_step?: string
-          _interests?: string[]
-          _region?: string
-          _relationship_goal?: string
-          _tribes?: string[]
-        }
-        Returns: {
-          age_max: number | null
-          age_min: number | null
-          created_at: string
-          current_step: string
-          id: string
-          interests: string[] | null
-          pending_message_count: number
-          region: string | null
-          relationship_goal: string | null
-          total_messages_sent: number
-          tribes: string[] | null
-          updated_at: string
-          user_id: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "henry_conversations"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      henry_update_criteria:
+        | {
+            Args: {
+              _age_max?: number
+              _age_min?: number
+              _current_step?: string
+              _interests?: string[]
+              _region?: string
+              _relationship_goal?: string
+              _tribes?: string[]
+            }
+            Returns: {
+              age_max: number | null
+              age_min: number | null
+              availability: string[]
+              created_at: string
+              current_step: string
+              free_notes: Json
+              height_max: number | null
+              height_min: number | null
+              id: string
+              interests: string[] | null
+              languages: string[]
+              pending_message_count: number
+              region: string | null
+              relationship_goal: string | null
+              total_messages_sent: number
+              tribes: string[] | null
+              updated_at: string
+              user_id: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "henry_conversations"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              _age_max?: number
+              _age_min?: number
+              _availability?: string[]
+              _current_step?: string
+              _free_note_step?: string
+              _free_note_text?: string
+              _height_max?: number
+              _height_min?: number
+              _interests?: string[]
+              _languages?: string[]
+              _region?: string
+              _relationship_goal?: string
+              _tribes?: string[]
+            }
+            Returns: {
+              age_max: number | null
+              age_min: number | null
+              availability: string[]
+              created_at: string
+              current_step: string
+              free_notes: Json
+              height_max: number | null
+              height_min: number | null
+              id: string
+              interests: string[] | null
+              languages: string[]
+              pending_message_count: number
+              region: string | null
+              relationship_goal: string | null
+              total_messages_sent: number
+              tribes: string[] | null
+              updated_at: string
+              user_id: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "henry_conversations"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       hold_support_task: {
         Args: { _task_id: string; _user_id: string }
         Returns: Json
