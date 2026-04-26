@@ -78,6 +78,7 @@ const HenryChat = () => {
   const [multiSel, setMultiSel] = useState<string[]>([]);
   const [creditAlert, setCreditAlert] = useState(false);
   const [henryTyping, setHenryTyping] = useState(false);
+  const [freeText, setFreeText] = useState('');
   /** true → on demande la raison du rejet du profil courant. */
   const [askingReason, setAskingReason] = useState(false);
   const initRef = useRef(false);
