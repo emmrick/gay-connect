@@ -477,7 +477,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                       {/* Icône centrale */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/40">
-                          <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-[wiggle_0.6s_ease-in-out_infinite]" />
+                          <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-wiggle" />
                         </div>
                       </div>
                     </div>
