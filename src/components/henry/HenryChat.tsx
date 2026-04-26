@@ -188,8 +188,10 @@ const HenryChat = () => {
     if (currentStep === 'goal') criteriaUpdate.relationship_goal = rawValue;
     if (currentStep === 'age') {
       const [mn, mx] = rawValue.split('-').map(Number);
-      criteriaUpdate.age_min = mn;
-      criteriaUpdate.age_max = mx;
+      if (!isNaN(mn) && !isNaN(mx)) {
+        criteriaUpdate.age_min = mn;
+        criteriaUpdate.age_max = mx;
+      }
     }
     if (currentStep === 'region') {
       criteriaUpdate.region = rawValue === '__any__' ? null : rawValue;
@@ -198,6 +200,23 @@ const HenryChat = () => {
       criteriaUpdate.tribes = (multiValues ?? [rawValue]).filter(
         (v) => v !== 'no_pref',
       );
+    }
+    if (currentStep === 'height') {
+      if (rawValue !== '__any__') {
+        const [mn, mx] = rawValue.split('-').map(Number);
+        if (!isNaN(mn) && !isNaN(mx)) {
+          criteriaUpdate.height_min = mn;
+          criteriaUpdate.height_max = mx;
+        }
+      }
+    }
+    if (currentStep === 'languages') {
+      criteriaUpdate.languages = (multiValues ?? [rawValue]).filter(
+        (v) => v !== '__any__',
+      );
+    }
+    if (currentStep === 'availability') {
+      criteriaUpdate.availability = multiValues ?? [rawValue];
     }
     if (currentStep === 'interests') {
       criteriaUpdate.interests = multiValues ?? [rawValue];
@@ -210,6 +229,87 @@ const HenryChat = () => {
       await updateCriteria.mutateAsync(criteriaUpdate);
     }
 
+    if (nextStep === 'matching') {
+      await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
+      await runMatching();
+    } else if (nextStep !== 'free') {
+      const nextDef = HENRY_FLOW[nextStep];
+      await sendBotMessage(nextDef.question, { step: nextStep });
+    }
+  };
+
+  /** Envoi d'une réponse libre (texte personnalisé). */
+  const handleFreeTextSubmit = async () => {
+    const text = freeText.trim();
+    if (!text) return;
+    if (sendUserMessage.isPending || saveBotMessage.isPending || henryTyping) return;
+    if (availableCredits < 0.2) {
+      setCreditAlert(true);
+      return;
+    }
+
+    // Étape "free" : on n'avance pas, on laisse Henry accuser réception.
+    if (currentStep === 'free') {
+      try {
+        await sendUserMessage.mutateAsync({
+          content: text,
+          payload: { step: 'free', value: '__free_text__', text },
+        });
+      } catch (err: any) {
+        if (err?.message === 'INSUFFICIENT_CREDITS') {
+          setCreditAlert(true);
+          return;
+        }
+        toast.error('Henry ne peut pas envoyer ton message. Réessaie.');
+        return;
+      }
+      setFreeText('');
+      await sendBotMessage(
+        'Bien noté ✏️ J\'en tiens compte pour la prochaine recherche. Tu veux que je relance maintenant ?',
+        { step: 'free' },
+      );
+      return;
+    }
+
+    // Étapes guidées : on sauvegarde la note et on avance.
+    try {
+      await sendUserMessage.mutateAsync({
+        content: text,
+        payload: { step: currentStep, value: '__free_text__', text },
+      });
+    } catch (err: any) {
+      if (err?.message === 'INSUFFICIENT_CREDITS') {
+        setCreditAlert(true);
+        return;
+      }
+      toast.error('Henry ne peut pas envoyer ton message. Réessaie.');
+      return;
+    }
+
+    setFreeText('');
+
+    const nextStep = stepDef.next;
+    await updateCriteria.mutateAsync({
+      current_step: nextStep,
+      free_note_step: currentStep,
+      free_note_text: text,
+    });
+
+    if (nextStep === 'matching') {
+      await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
+      await runMatching();
+    } else if (nextStep !== 'free') {
+      const nextDef = HENRY_FLOW[nextStep];
+      await sendBotMessage(nextDef.question, { step: nextStep });
+    }
+  };
+
+  /** Passer une étape sans répondre. */
+  const handleSkipStep = async () => {
+    if (sendUserMessage.isPending || saveBotMessage.isPending || henryTyping) return;
+    const nextStep = stepDef.next;
+    await updateCriteria.mutateAsync({ current_step: nextStep });
+    setMultiSel([]);
     if (nextStep === 'matching') {
       await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
       await runMatching();
