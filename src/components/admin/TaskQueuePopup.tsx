@@ -425,7 +425,7 @@ const TaskQueuePopup = ({ onNavigateToSection }: TaskQueuePopupProps) => {
                         : countdown <= 30
                           ? 'bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500'
                           : 'bg-gradient-to-r from-primary via-accent to-primary'
-                    } bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite]`}
+                    } bg-[length:200%_100%] animate-shimmer-bg`}
                     style={{ width: `${(countdown / OFFER_TTL_SECONDS) * 100}%` }}
                   />
                 </div>
