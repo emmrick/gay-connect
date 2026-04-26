@@ -71,9 +71,26 @@ const HenryChat = () => {
   } = useHenryChat();
   const { availableCredits } = useCredits();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [matches, setMatches] = useState<HenryProfileMatch[]>([]);
-  const [matchIndex, setMatchIndex] = useState(0);
-  const [shownIds, setShownIds] = useState<string[]>([]);
+  // Persistance des matches : ils doivent survivre au démontage du composant
+  // (navigation hors du chatbot puis retour).
+  const STORAGE_KEY = 'henry-matches-state-v1';
+  const readPersisted = () => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw) as {
+        matches: HenryProfileMatch[];
+        matchIndex: number;
+        shownIds: string[];
+      };
+    } catch {
+      return null;
+    }
+  };
+  const persisted = readPersisted();
+  const [matches, setMatches] = useState<HenryProfileMatch[]>(persisted?.matches ?? []);
+  const [matchIndex, setMatchIndex] = useState(persisted?.matchIndex ?? 0);
+  const [shownIds, setShownIds] = useState<string[]>(persisted?.shownIds ?? []);
   const [searching, setSearching] = useState(false);
   const [multiSel, setMultiSel] = useState<string[]>([]);
   const [creditAlert, setCreditAlert] = useState(false);
@@ -82,6 +99,18 @@ const HenryChat = () => {
   /** true → on demande la raison du rejet du profil courant. */
   const [askingReason, setAskingReason] = useState(false);
   const initRef = useRef(false);
+
+  // Sync vers sessionStorage à chaque changement
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ matches, matchIndex, shownIds }),
+      );
+    } catch {
+      /* quota / private mode → on ignore */
+    }
+  }, [matches, matchIndex, shownIds]);
 
   const currentStep = (conversation?.current_step ?? 'greeting') as HenryStep;
   const stepDef = HENRY_FLOW[currentStep];
