@@ -14,6 +14,11 @@ export interface HenryConversationRow {
   region: string | null;
   tribes: string[];
   interests: string[];
+  height_min: number | null;
+  height_max: number | null;
+  languages: string[];
+  availability: string[];
+  free_notes: Record<string, string>;
   current_step: string;
   pending_message_count: number;
   total_messages_sent: number;
