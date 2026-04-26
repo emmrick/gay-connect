@@ -2,6 +2,9 @@
  * Henry — flow décisionnel statique (sans IA générative).
  * Décrit la séquence de questions/boutons et les transitions de l'assistant
  * de mise en relation. Inspiré de l'ancien matchmaking.
+ *
+ * v2 : ajout de la saisie libre à chaque étape, plus d'options et
+ * 3 nouvelles étapes (taille / langues / disponibilités).
  */
 
 export type HenryStep =
@@ -10,6 +13,9 @@ export type HenryStep =
   | 'age'
   | 'region'
   | 'tribes'
+  | 'height'
+  | 'languages'
+  | 'availability'
   | 'interests'
   | 'matching'
   | 'free';
@@ -31,10 +37,20 @@ export interface HenryStepDef {
   next: HenryStep;
   /** Choix proposés (si applicable) */
   options?: HenryQuickReply[];
+  /**
+   * Active une zone de saisie libre. Le placeholder décrit ce qu'on attend.
+   * Si l'utilisateur tape du texte, il est sauvegardé dans `free_notes[step]`
+   * et utilisé comme libellé du message côté chat.
+   */
+  freeText?: {
+    placeholder: string;
+    /** Libellé du bouton "envoyer" (par défaut : Envoyer) */
+    submitLabel?: string;
+  };
 }
 
 export const HENRY_GREETING =
-  "Salut 👋 ! Moi c'est **Henry**, ton assistant de mise en relation. Je vais te poser quelques questions rapides pour te proposer des profils qui correspondent vraiment à ce que tu cherches. On commence ?";
+  "Salut 👋 ! Moi c'est **Henry**, ton assistant de mise en relation. Je vais te poser quelques questions rapides pour te proposer des profils qui correspondent vraiment à ce que tu cherches. Tu peux **cliquer sur les boutons** ou **écrire ta propre réponse** quand tu veux préciser. On commence ?";
 
 export const GOAL_OPTIONS: HenryQuickReply[] = [
   { value: 'plan_cul', label: '🔥 Un plan' },
@@ -46,6 +62,9 @@ export const GOAL_OPTIONS: HenryQuickReply[] = [
   { value: 'sortie', label: '🍻 Sortir / verre' },
   { value: 'voyage_buddy', label: '✈️ Voyage' },
   { value: 'sport_buddy', label: '🏋️ Partenaire sport' },
+  { value: 'coloc', label: '🏠 Coloc / cohab' },
+  { value: 'mentor', label: '🧭 Mentor / conseil' },
+  { value: 'kink', label: '🖤 Kink / fétiche' },
   { value: 'curieux', label: '🤔 Je découvre' },
 ];
 
@@ -71,6 +90,10 @@ export const REGION_OPTIONS: HenryQuickReply[] = [
   { value: 'rennes', label: 'Rennes' },
   { value: 'montpellier', label: 'Montpellier' },
   { value: 'reims', label: 'Reims' },
+  { value: 'tours', label: 'Tours' },
+  { value: 'grenoble', label: 'Grenoble' },
+  { value: 'dijon', label: 'Dijon' },
+  { value: 'angers', label: 'Angers' },
   { value: '__any__', label: '🌍 Partout en France' },
 ];
 
@@ -86,7 +109,39 @@ export const TRIBE_OPTIONS: HenryQuickReply[] = [
   { value: 'geek', label: '🎮 Geek' },
   { value: 'muscle', label: '🦾 Muscle' },
   { value: 'chubby', label: '🧸 Chubby' },
+  { value: 'skater', label: '🛹 Skater' },
+  { value: 'punk', label: '🤘 Punk' },
+  { value: 'metal', label: '🎸 Metal' },
+  { value: 'classy', label: '👔 Classy' },
   { value: 'no_pref', label: 'Peu importe' },
+];
+
+export const HEIGHT_OPTIONS: HenryQuickReply[] = [
+  { value: '150-165', label: '< 1m65' },
+  { value: '165-175', label: '1m65 – 1m75' },
+  { value: '175-185', label: '1m75 – 1m85' },
+  { value: '185-200', label: '> 1m85' },
+  { value: '__any__', label: 'Peu importe' },
+];
+
+export const LANGUAGE_OPTIONS: HenryQuickReply[] = [
+  { value: 'fr', label: '🇫🇷 Français' },
+  { value: 'en', label: '🇬🇧 Anglais' },
+  { value: 'es', label: '🇪🇸 Espagnol' },
+  { value: 'it', label: '🇮🇹 Italien' },
+  { value: 'de', label: '🇩🇪 Allemand' },
+  { value: 'pt', label: '🇵🇹 Portugais' },
+  { value: 'ar', label: '🇸🇦 Arabe' },
+  { value: '__any__', label: 'Peu importe' },
+];
+
+export const AVAILABILITY_OPTIONS: HenryQuickReply[] = [
+  { value: 'morning', label: '🌅 Matin' },
+  { value: 'afternoon', label: '☀️ Après-midi' },
+  { value: 'evening', label: '🌙 Soir' },
+  { value: 'night', label: '🌃 Nuit' },
+  { value: 'weekend', label: '📅 Weekends' },
+  { value: 'flexible', label: '🔀 Flexible' },
 ];
 
 export const INTEREST_OPTIONS: HenryQuickReply[] = [
@@ -102,6 +157,10 @@ export const INTEREST_OPTIONS: HenryQuickReply[] = [
   { value: 'nature', label: '🌿 Nature' },
   { value: 'mode', label: '👗 Mode' },
   { value: 'animaux', label: '🐾 Animaux' },
+  { value: 'photo', label: '📸 Photo' },
+  { value: 'danse', label: '💃 Danse' },
+  { value: 'tech', label: '💻 Tech' },
+  { value: 'spiritualite', label: '🧘 Spiritualité' },
 ];
 
 /** Raisons proposées quand l'utilisateur ne veut pas du profil affiché */
@@ -126,25 +185,67 @@ export const HENRY_FLOW: Record<HenryStep, HenryStepDef> = {
     question: '👀 Que cherches-tu en priorité en ce moment ?',
     next: 'age',
     options: GOAL_OPTIONS,
+    freeText: {
+      placeholder: 'Précise ce que tu cherches (ex: un plan tantra, un partenaire de rando…)',
+      submitLabel: 'Envoyer ma précision',
+    },
   },
   age: {
     id: 'age',
     question: '🎂 Quelle tranche d\'âge t\'intéresse ?',
     next: 'region',
     options: AGE_OPTIONS,
+    freeText: {
+      placeholder: 'Indique une tranche personnalisée (ex: 28-34 ans)',
+    },
   },
   region: {
     id: 'region',
     question: '📍 Tu préfères quelqu\'un proche de chez toi ? Choisis une ville ou laisse libre.',
     next: 'tribes',
     options: REGION_OPTIONS,
+    freeText: {
+      placeholder: 'Tape ta ville ou ton département (ex: Brest, 29, Île-de-France)',
+    },
   },
   tribes: {
     id: 'tribes',
     question: '✨ Et niveau style, qu\'est-ce qui te plaît ? *(tu peux en choisir plusieurs)*',
     multi: true,
-    next: 'interests',
+    next: 'height',
     options: TRIBE_OPTIONS,
+    freeText: {
+      placeholder: 'Décris le style qui te plaît avec tes mots',
+    },
+  },
+  height: {
+    id: 'height',
+    question: '📏 Une préférence de taille ?',
+    next: 'languages',
+    options: HEIGHT_OPTIONS,
+    freeText: {
+      placeholder: 'Précise (ex: minimum 1m80, ou peu importe)',
+    },
+  },
+  languages: {
+    id: 'languages',
+    question: '🗣️ Quelles langues parles-tu (ou veux-tu que ton match parle) ? *(plusieurs choix possibles)*',
+    multi: true,
+    next: 'availability',
+    options: LANGUAGE_OPTIONS,
+    freeText: {
+      placeholder: 'Autres langues (ex: russe, japonais…)',
+    },
+  },
+  availability: {
+    id: 'availability',
+    question: '🕒 Quand es-tu généralement dispo ? *(plusieurs choix possibles)*',
+    multi: true,
+    next: 'interests',
+    options: AVAILABILITY_OPTIONS,
+    freeText: {
+      placeholder: 'Précise tes créneaux (ex: lundi-mercredi soirs uniquement)',
+    },
   },
   interests: {
     id: 'interests',
@@ -153,6 +254,9 @@ export const HENRY_FLOW: Record<HenryStep, HenryStepDef> = {
     multi: true,
     next: 'matching',
     options: INTEREST_OPTIONS,
+    freeText: {
+      placeholder: 'Ajoute tes propres passions (ex: bricolage, escalade, jeux de société…)',
+    },
   },
   matching: {
     id: 'matching',
@@ -169,6 +273,9 @@ export const HENRY_FLOW: Record<HenryStep, HenryStepDef> = {
       { value: '__refine__', label: '⚙️ Affiner' },
       { value: '__reset__', label: '🆕 Recommencer' },
     ],
+    freeText: {
+      placeholder: 'Demande quelque chose à Henry (ex: change de ville, montre que des bears…)',
+    },
   },
 };
 
