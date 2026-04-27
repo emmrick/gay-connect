@@ -443,16 +443,18 @@ const Advertise = () => {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 py-8 space-y-10">
-          {/* Dashboard Access */}
+          {/* Dashboard Access — Magic link */}
           <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
             <CardContent className="p-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="flex-1 space-y-1">
                   <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-primary" />
+                    <LogIn className="w-4 h-4 text-primary" />
                     Accéder à mon espace annonceur
                   </h3>
-                  <p className="text-xs text-muted-foreground">Entrez l'email utilisé lors de la soumission pour gérer vos campagnes.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Recevez un lien de connexion sécurisé par email (valable 15 min).
+                  </p>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
                   <Input
@@ -461,10 +463,12 @@ const Advertise = () => {
                     value={dashboardEmail}
                     onChange={(e) => setDashboardEmail(e.target.value)}
                     className="text-sm"
-                    onKeyDown={(e) => e.key === 'Enter' && handleDashboardAccess()}
+                    onKeyDown={(e) => e.key === 'Enter' && !magicLoading && handleDashboardAccess()}
+                    disabled={magicLoading}
                   />
-                  <Button size="sm" onClick={handleDashboardAccess} className="shrink-0 gap-1">
-                    <Search className="w-3.5 h-3.5" /> Accéder
+                  <Button size="sm" onClick={handleDashboardAccess} disabled={magicLoading} className="shrink-0 gap-1">
+                    {magicLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                    {magicLoading ? 'Envoi…' : 'Recevoir le lien'}
                   </Button>
                 </div>
               </div>
