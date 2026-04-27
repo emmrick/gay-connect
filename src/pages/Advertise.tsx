@@ -998,7 +998,7 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
             </CardContent>
           </Card>
 
-          <AdvertiserStatsChart advertiserEmail={email} days={14} />
+          <AdvertiserStatsChart campaignIds={campaigns.map(c => c.id)} days={14} />
         </TabsContent>
       </Tabs>
     </div>
