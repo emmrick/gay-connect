@@ -701,6 +701,83 @@ const Advertise = () => {
                     />
                   )}
 
+                  {/* ─── Planification (optionnel) ─── */}
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <CalendarRange className="w-4 h-4 text-primary" />
+                      <h4 className="text-sm font-bold text-foreground">Planification &amp; plafonds (optionnel)</h4>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground -mt-2">
+                      Définissez une période de diffusion et/ou des plafonds pour stopper automatiquement la campagne.
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="starts_at"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Date de début</FormLabel>
+                            <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                            <FormDescription className="text-[10px]">Vide = dès l'approbation</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="ends_at"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Date de fin</FormLabel>
+                            <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                            <FormDescription className="text-[10px]">Vide = jusqu'à épuisement du budget</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="max_impressions"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs flex items-center gap-1.5"><Eye className="w-3 h-3" /> Max impressions</FormLabel>
+                            <FormControl><Input type="number" min={0} step={100} placeholder="0 = illimité" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="max_clicks"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs flex items-center gap-1.5"><Target className="w-3 h-3" /> Max clics</FormLabel>
+                            <FormControl><Input type="number" min={0} step={10} placeholder="0 = illimité" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* ─── Aperçu live des formats sélectionnés ─── */}
+                  <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-primary" />
+                      <h4 className="text-sm font-bold text-foreground">Aperçu en direct</h4>
+                      <Badge variant="outline" className="text-[10px] ml-auto">Tel que les utilisateurs verront</Badge>
+                    </div>
+                    <AdPreviewGrid
+                      selectedPlacements={form.watch('placements') || []}
+                      title={form.watch('title')}
+                      description={form.watch('description')}
+                      imageUrl={adImageUrl}
+                      hasLink={!!form.watch('link_url')}
+                    />
+                  </div>
+
                   <div className="pt-2">
                     <Button type="submit" disabled={loading} className="w-full sm:w-auto gap-2">
                       <Send className="w-4 h-4" />
@@ -906,7 +983,7 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
           )}
         </TabsContent>
 
-        <TabsContent value="stats" className="mt-4">
+        <TabsContent value="stats" className="mt-4 space-y-4">
           <Card>
             <CardContent className="p-5 space-y-4">
               <h4 className="font-bold text-sm">Résumé global</h4>
@@ -920,6 +997,8 @@ const AdvertiserDashboard = ({ email, wallet, campaigns, deposits, onTopup, onEd
               </div>
             </CardContent>
           </Card>
+
+          <AdvertiserStatsChart campaignIds={campaigns.map(c => c.id)} days={14} />
         </TabsContent>
       </Tabs>
     </div>
