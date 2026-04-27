@@ -14,8 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import NearbyMembersGrid from './NearbyMembersGrid';
 import FavoritesGrid from './FavoritesGrid';
-import AdFreeBanner from './AdFreeBanner';
-import AdBanner from '@/components/ads/AdBanner';
+import AdOrInfoBanner from './AdOrInfoBanner';
 import VisitsTab from './VisitsTab';
 import ReactionsTab from './ReactionsTab';
 
@@ -174,8 +173,7 @@ const HomeView = ({
             </motion.div>
           )}
 
-          <AdFreeBanner />
-          <AdBanner placement="native" className="mb-3" />
+          <AdOrInfoBanner placement="native" />
 
           <TabsContent value="accueil" className="mt-3">
             <NearbyMembersGrid 
