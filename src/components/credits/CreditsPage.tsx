@@ -39,7 +39,7 @@ const CreditsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="bg-background pb-24">
       {/* Page header */}
       <div className="px-4 pt-6 pb-4">
         <div className="flex items-center gap-2.5">

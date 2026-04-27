@@ -83,7 +83,7 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
   }
 
   return (
-    <div className="animate-fade-in pb-24 bg-background min-h-screen">
+    <div className="animate-fade-in pb-24 bg-background">
       <ProfileEditDialog open={showEditDialog} onOpenChange={setShowEditDialog} />
       <SuggestionDialog open={showSuggestionDialog} onOpenChange={setShowSuggestionDialog} />
 
