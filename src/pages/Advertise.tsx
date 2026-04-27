@@ -156,16 +156,32 @@ const Advertise = () => {
   const [editingAd, setEditingAd] = useState<any>(null);
   const [adImageUrl, setAdImageUrl] = useState('');
   const [showSubmitForm, setShowSubmitForm] = useState(false);
+  const [magicLoading, setMagicLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  // Check URL params for PayPal return
+  // Check URL params for PayPal return + magic-link token
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const depositId = params.get('ad_deposit');
     const token = params.get('token');
+    const magic = params.get('magic');
+
     if (depositId && token) {
       captureAdPayment(depositId, token);
       window.history.replaceState({}, '', '/advertise');
+    }
+
+    if (magic) {
+      (async () => {
+        const { data, error } = await supabase.rpc('consume_advertiser_magic_link', { _token: magic });
+        if (error || !data) {
+          toast.error('Lien invalide ou expiré. Demandez un nouveau lien.');
+        } else {
+          setActiveEmail(String(data).toLowerCase());
+          toast.success('Connexion réussie ✨');
+        }
+        window.history.replaceState({}, '', '/advertise');
+      })();
     }
   }, []);
 
@@ -222,12 +238,30 @@ const Advertise = () => {
     enabled: !!wallet?.id,
   });
 
-  const handleDashboardAccess = () => {
-    if (!dashboardEmail.trim() || !dashboardEmail.includes('@')) {
+  const handleDashboardAccess = async () => {
+    const email = dashboardEmail.trim().toLowerCase();
+    if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
       toast.error('Veuillez entrer un email valide');
       return;
     }
-    setActiveEmail(dashboardEmail.trim().toLowerCase());
+    setMagicLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('advertiser-magic-link-send', {
+        body: { email, returnUrl: window.location.origin + '/advertise' },
+      });
+      if (error || (data as any)?.error) {
+        const code = (data as any)?.error || error?.message;
+        if (code === 'rate_limited') toast.error('Trop de demandes. Réessayez dans 1h.');
+        else toast.error('Impossible d\'envoyer le lien. Vérifiez votre email.');
+      } else {
+        toast.success('📧 Lien de connexion envoyé ! Vérifiez votre boîte mail.');
+        setDashboardEmail('');
+      }
+    } catch {
+      toast.error('Erreur réseau, réessayez.');
+    } finally {
+      setMagicLoading(false);
+    }
   };
 
   const handleTopup = async () => {
