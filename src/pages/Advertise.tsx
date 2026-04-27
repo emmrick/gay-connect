@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Megaphone, Send, CheckCircle2, BarChart3, Users, Shield, Sparkles, Wallet, Eye, MousePointerClick, Pencil, CreditCard, Loader2, Search, Upload, X, Image as ImageIcon, Pause, Play, MapPin, Ticket } from 'lucide-react';
+import { ArrowLeft, Megaphone, Send, CheckCircle2, BarChart3, Users, Shield, Sparkles, Wallet, Eye, MousePointerClick, Pencil, CreditCard, Loader2, Mail, Upload, X, Image as ImageIcon, Pause, Play, MapPin, Ticket, CalendarRange, Target, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import SEOHead from '@/components/seo/SEOHead';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { AdPreviewGrid } from '@/components/ads/AdPreview';
+import { AdvertiserStatsChart } from '@/components/ads/AdvertiserStatsChart';
 
 const advertiseSchema = z.object({
   advertiser_name: z.string().trim().min(2, 'Nom requis').max(100),
@@ -31,6 +33,10 @@ const advertiseSchema = z.object({
   budget_cents: z.coerce.number().min(500, 'Budget minimum : 5€').max(1000000),
   geo_targeting: z.enum(['local', 'regional', 'national']),
   geo_postal_codes: z.string().optional(),
+  starts_at: z.string().optional(),
+  ends_at: z.string().optional(),
+  max_impressions: z.coerce.number().int().min(0).optional(),
+  max_clicks: z.coerce.number().int().min(0).optional(),
 });
 
 type AdvertiseForm = z.infer<typeof advertiseSchema>;
@@ -150,16 +156,32 @@ const Advertise = () => {
   const [editingAd, setEditingAd] = useState<any>(null);
   const [adImageUrl, setAdImageUrl] = useState('');
   const [showSubmitForm, setShowSubmitForm] = useState(false);
+  const [magicLoading, setMagicLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  // Check URL params for PayPal return
+  // Check URL params for PayPal return + magic-link token
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const depositId = params.get('ad_deposit');
     const token = params.get('token');
+    const magic = params.get('magic');
+
     if (depositId && token) {
       captureAdPayment(depositId, token);
       window.history.replaceState({}, '', '/advertise');
+    }
+
+    if (magic) {
+      (async () => {
+        const { data, error } = await supabase.rpc('consume_advertiser_magic_link', { _token: magic });
+        if (error || !data) {
+          toast.error('Lien invalide ou expiré. Demandez un nouveau lien.');
+        } else {
+          setActiveEmail(String(data).toLowerCase());
+          toast.success('Connexion réussie ✨');
+        }
+        window.history.replaceState({}, '', '/advertise');
+      })();
     }
   }, []);
 
@@ -216,12 +238,30 @@ const Advertise = () => {
     enabled: !!wallet?.id,
   });
 
-  const handleDashboardAccess = () => {
-    if (!dashboardEmail.trim() || !dashboardEmail.includes('@')) {
+  const handleDashboardAccess = async () => {
+    const email = dashboardEmail.trim().toLowerCase();
+    if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
       toast.error('Veuillez entrer un email valide');
       return;
     }
-    setActiveEmail(dashboardEmail.trim().toLowerCase());
+    setMagicLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('advertiser-magic-link-send', {
+        body: { email, returnUrl: window.location.origin + '/advertise' },
+      });
+      if (error || (data as any)?.error) {
+        const code = (data as any)?.error || error?.message;
+        if (code === 'rate_limited') toast.error('Trop de demandes. Réessayez dans 1h.');
+        else toast.error('Impossible d\'envoyer le lien. Vérifiez votre email.');
+      } else {
+        toast.success('📧 Lien de connexion envoyé ! Vérifiez votre boîte mail.');
+        setDashboardEmail('');
+      }
+    } catch {
+      toast.error('Erreur réseau, réessayez.');
+    } finally {
+      setMagicLoading(false);
+    }
   };
 
   const handleTopup = async () => {
@@ -273,6 +313,10 @@ const Advertise = () => {
       budget_cents: 1000,
       geo_targeting: 'national',
       geo_postal_codes: '',
+      starts_at: '',
+      ends_at: '',
+      max_impressions: 0,
+      max_clicks: 0,
     },
   });
 
@@ -283,7 +327,6 @@ const Advertise = () => {
         ? values.geo_postal_codes.split(',').map(c => c.trim()).filter(Boolean)
         : [];
 
-      // Create one ad per selected placement
       for (const placement of values.placements) {
         const { error } = await supabase.from('ads').insert({
           advertiser_name: values.advertiser_name,
@@ -298,6 +341,10 @@ const Advertise = () => {
           is_active: false,
           geo_targeting: values.geo_targeting,
           geo_postal_codes: postalCodes,
+          starts_at: values.starts_at ? new Date(values.starts_at).toISOString() : null,
+          ends_at: values.ends_at ? new Date(values.ends_at).toISOString() : null,
+          max_impressions: values.max_impressions && values.max_impressions > 0 ? values.max_impressions : null,
+          max_clicks: values.max_clicks && values.max_clicks > 0 ? values.max_clicks : null,
         } as any);
         if (error) throw error;
       }
@@ -403,16 +450,18 @@ const Advertise = () => {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 py-8 space-y-10">
-          {/* Dashboard Access */}
+          {/* Dashboard Access — Magic link */}
           <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
             <CardContent className="p-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="flex-1 space-y-1">
                   <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-primary" />
+                    <LogIn className="w-4 h-4 text-primary" />
                     Accéder à mon espace annonceur
                   </h3>
-                  <p className="text-xs text-muted-foreground">Entrez l'email utilisé lors de la soumission pour gérer vos campagnes.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Recevez un lien de connexion sécurisé par email (valable 15 min).
+                  </p>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
                   <Input
@@ -421,10 +470,12 @@ const Advertise = () => {
                     value={dashboardEmail}
                     onChange={(e) => setDashboardEmail(e.target.value)}
                     className="text-sm"
-                    onKeyDown={(e) => e.key === 'Enter' && handleDashboardAccess()}
+                    onKeyDown={(e) => e.key === 'Enter' && !magicLoading && handleDashboardAccess()}
+                    disabled={magicLoading}
                   />
-                  <Button size="sm" onClick={handleDashboardAccess} className="shrink-0 gap-1">
-                    <Search className="w-3.5 h-3.5" /> Accéder
+                  <Button size="sm" onClick={handleDashboardAccess} disabled={magicLoading} className="shrink-0 gap-1">
+                    {magicLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                    {magicLoading ? 'Envoi…' : 'Recevoir le lien'}
                   </Button>
                 </div>
               </div>

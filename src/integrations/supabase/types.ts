@@ -368,6 +368,36 @@ export type Database = {
           },
         ]
       }
+      advertiser_magic_links: {
+        Row: {
+          advertiser_email: string
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: string | null
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          advertiser_email: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          advertiser_email?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       advertiser_promo_codes: {
         Row: {
           bonus_cents: number
@@ -5020,6 +5050,10 @@ export type Database = {
         }
         Returns: number
       }
+      consume_advertiser_magic_link: {
+        Args: { _token: string }
+        Returns: string
+      }
       deduct_credits: {
         Args: {
           _amount: number
@@ -5460,6 +5494,10 @@ export type Database = {
       register_referral: {
         Args: { _referral_code: string; _referred_user_id: string }
         Returns: boolean
+      }
+      request_advertiser_magic_link: {
+        Args: { _email: string }
+        Returns: string
       }
       request_withdrawal: { Args: { _user_id: string }; Returns: Json }
       reserve_moderation_task: {
