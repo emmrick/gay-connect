@@ -313,6 +313,10 @@ const Advertise = () => {
       budget_cents: 1000,
       geo_targeting: 'national',
       geo_postal_codes: '',
+      starts_at: '',
+      ends_at: '',
+      max_impressions: 0,
+      max_clicks: 0,
     },
   });
 
@@ -323,7 +327,6 @@ const Advertise = () => {
         ? values.geo_postal_codes.split(',').map(c => c.trim()).filter(Boolean)
         : [];
 
-      // Create one ad per selected placement
       for (const placement of values.placements) {
         const { error } = await supabase.from('ads').insert({
           advertiser_name: values.advertiser_name,
@@ -338,6 +341,10 @@ const Advertise = () => {
           is_active: false,
           geo_targeting: values.geo_targeting,
           geo_postal_codes: postalCodes,
+          starts_at: values.starts_at ? new Date(values.starts_at).toISOString() : null,
+          ends_at: values.ends_at ? new Date(values.ends_at).toISOString() : null,
+          max_impressions: values.max_impressions && values.max_impressions > 0 ? values.max_impressions : null,
+          max_clicks: values.max_clicks && values.max_clicks > 0 ? values.max_clicks : null,
         } as any);
         if (error) throw error;
       }
