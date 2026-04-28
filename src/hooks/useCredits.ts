@@ -327,14 +327,11 @@ export const useCredits = () => {
       });
     },
     onError: (error: Error) => {
-      if (error.message === 'Insufficient credits') {
-        toast.error('Crédits insuffisants', {
-          description: 'Achetez des crédits ou réclamez vos crédits quotidiens.',
-          action: {
-            label: 'Acheter',
-            onClick: () => window.location.href = '/?tab=credits',
-          },
-        });
+      if (
+        error.message === 'Insufficient credits' ||
+        error.message === 'INSUFFICIENT_CREDITS'
+      ) {
+        notifyInsufficientCreditsSync();
       }
     },
   });
