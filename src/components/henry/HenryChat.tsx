@@ -541,10 +541,17 @@ const HenryChat = () => {
       await runMatching();
     } else if (value === '__refine__') {
       await sendUserMessage.mutateAsync({ content: 'Affiner ma recherche' });
+      // Changer de critères = nouvelle recherche → on autorise à revoir d'anciens profils
+      await clearShownProfiles();
+      setShownIds([]);
+      setMatches([]);
+      setMatchIndex(0);
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
       await updateCriteria.mutateAsync({ current_step: 'goal' });
       await sendBotMessage(HENRY_FLOW.goal.question, { step: 'goal' });
     } else if (value === '__reset__') {
       await resetConversation.mutateAsync();
+      await clearShownProfiles();
       setMatches([]);
       setShownIds([]);
       setMatchIndex(0);
