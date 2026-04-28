@@ -179,6 +179,7 @@ export const useHenryChat = () => {
       availability?: string[] | null;
       free_note_step?: string | null;
       free_note_text?: string | null;
+      setup_completed?: boolean | null;
     }) => {
       const { data, error } = await supabase.rpc('henry_update_criteria' as any, {
         _relationship_goal: params.relationship_goal ?? null,
@@ -194,6 +195,7 @@ export const useHenryChat = () => {
         _availability: params.availability ?? null,
         _free_note_step: params.free_note_step ?? null,
         _free_note_text: params.free_note_text ?? null,
+        _setup_completed: params.setup_completed ?? null,
       });
       if (error) throw error;
       return data;
@@ -202,6 +204,16 @@ export const useHenryChat = () => {
       qc.invalidateQueries({ queryKey: ['henry-conversation', user?.id] });
     },
   });
+
+  // Record a reject reason (helps Henry learn what to filter)
+  const recordRejectReason = useCallback(async (reason: string) => {
+    try {
+      await supabase.rpc('henry_record_reject_reason' as any, { _reason: reason });
+      qc.invalidateQueries({ queryKey: ['henry-conversation', user?.id] });
+    } catch (err) {
+      console.error('[henry_record_reject_reason]', err);
+    }
+  }, [qc, user?.id]);
 
   // Reset
   const resetConversation = useMutation({
