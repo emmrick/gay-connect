@@ -9,6 +9,7 @@
 
 export type HenryStep =
   | 'greeting'
+  | 'confirm'
   | 'goal'
   | 'age'
   | 'region'
