@@ -166,6 +166,18 @@ Deno.serve(async (req) => {
     scored.sort((a, b) => b.compatibility - a.compatibility)
     const top = scored.slice(0, limit)
 
+    // Persiste les profils proposés afin de ne JAMAIS les re-proposer
+    // tant que l'utilisateur n'a pas réinitialisé sa conversation Henry.
+    if (top.length > 0) {
+      try {
+        await supabase.rpc('henry_add_shown_profiles', {
+          _ids: top.map((p) => p.user_id),
+        })
+      } catch (e) {
+        console.warn('[henry-match] add_shown_profiles failed', e)
+      }
+    }
+
     // Resolve signed avatar URLs (avatars bucket is private)
     const withAvatars = await Promise.all(
       top.map(async (p) => {
