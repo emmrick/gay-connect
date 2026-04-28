@@ -201,7 +201,10 @@ export const usePrivateMessages = (otherUserId: string | null) => {
         const creditCost = await getDynamicCreditCost(costKey);
 
         const hasCredits = await checkSufficientCredits(user.id, creditCost);
-        if (!hasCredits) throw new Error('INSUFFICIENT_CREDITS');
+        if (!hasCredits) {
+          notifyInsufficientCreditsSync('Message privé');
+          throw new Error('INSUFFICIENT_CREDITS');
+        }
 
         const deductResult = await deductCredits(
           user.id, 
