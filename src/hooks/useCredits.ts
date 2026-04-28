@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCoupleCreditsUserId } from '@/hooks/useCoupleCreditsUserId';
 import { toast } from 'sonner';
 import { emitCreditDeduction } from '@/components/credits/CreditDeductionAnimation';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 // Global query client reference for standalone functions
 let globalQueryClient: QueryClient | null = null;
