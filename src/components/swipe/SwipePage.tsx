@@ -16,6 +16,7 @@ import { useCreditCheck } from '@/hooks/useCreditCheck';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import { useAds } from '@/hooks/useAds';
 
 interface SwipePageProps {
   onStartChat: (userId: string) => void;
@@ -35,6 +36,15 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
   const { profile: myProfile } = useAuth();
   const { isBoostActive, activateBoost, isActivating, boostCost, boostExpiresAt } = useProfileBoost();
   const { totalCredits } = useCreditCheck();
+
+  // Prefetch sponsored square ad on mount so the empty state / interstitial appears instantly
+  const { currentAd: prefetchedAd } = useAds('sponsored_card');
+  useEffect(() => {
+    if (prefetchedAd?.image_url) {
+      const img = new Image();
+      img.src = prefetchedAd.image_url;
+    }
+  }, [prefetchedAd?.image_url]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeCount, setSwipeCount] = useState(0);
