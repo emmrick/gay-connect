@@ -665,6 +665,39 @@ const HenryChat = () => {
         </div>
       )}
 
+      {/* Sticky "Nouveau profil" button when setup is done and no card is shown */}
+      {!askingReason &&
+        !henryTyping &&
+        !searching &&
+        !currentMatch &&
+        conversation?.setup_completed &&
+        currentStep !== 'confirm' && (
+          <div className="border-t border-border/50 bg-card/40 backdrop-blur p-3 shrink-0">
+            <div className="max-w-2xl mx-auto flex gap-2">
+              <Button
+                size="lg"
+                className="flex-1 gap-2 font-semibold"
+                onClick={() => handleFreeAction('__more__')}
+                disabled={availableCredits < 0.2}
+              >
+                <Sparkles className="w-4 h-4" />
+                Nouveau profil
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => handleFreeAction('__refine__')}
+                title="Affiner mes critères"
+              >
+                ⚙️
+              </Button>
+            </div>
+            <p className="mt-1.5 text-[10px] text-muted-foreground/70 text-center">
+              Henry utilise tes critères enregistrés · 0,2 crédit / message
+            </p>
+          </div>
+        )}
+
       {/* Quick replies */}
       {showQuickReplies && (
         <div className="border-t border-border/50 bg-card/30 backdrop-blur p-3 shrink-0">
