@@ -255,5 +255,6 @@ export const useHenryChat = () => {
     updateCriteria,
     resetConversation,
     findMatches,
+    recordRejectReason,
   };
 };
