@@ -22,6 +22,8 @@ export interface HenryConversationRow {
   current_step: string;
   pending_message_count: number;
   total_messages_sent: number;
+  setup_completed: boolean;
+  rejected_reasons: Record<string, number>;
   created_at: string;
   updated_at: string;
 }
