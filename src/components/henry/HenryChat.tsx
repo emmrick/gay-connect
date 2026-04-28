@@ -53,6 +53,9 @@ const REJECT_REPLIES: Record<string, string> = {
   age_off: 'Bien reçu, j\'ajuste l\'âge 🎂',
   no_photo: 'Ok, je privilégie des profils avec photo claire 📸',
   no_bio: 'Bien noté, je te propose des profils avec une bio 📝',
+  wrong_tribe: 'Compris, je change de style ✨',
+  wrong_goal: 'Ok, je vise quelqu\'un avec le même objectif 🎯',
+  no_chemistry: 'Pas de souci, on continue à chercher 🔍',
   other: 'D\'accord, voyons un autre profil 👇',
 };
 
