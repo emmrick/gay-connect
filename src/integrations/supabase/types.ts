@@ -1916,6 +1916,7 @@ export type Database = {
           rejected_reasons: Json
           relationship_goal: string | null
           setup_completed: boolean
+          shown_profile_ids: string[]
           total_messages_sent: number
           tribes: string[] | null
           updated_at: string
@@ -1938,6 +1939,7 @@ export type Database = {
           rejected_reasons?: Json
           relationship_goal?: string | null
           setup_completed?: boolean
+          shown_profile_ids?: string[]
           total_messages_sent?: number
           tribes?: string[] | null
           updated_at?: string
@@ -1960,6 +1962,7 @@ export type Database = {
           rejected_reasons?: Json
           relationship_goal?: string | null
           setup_completed?: boolean
+          shown_profile_ids?: string[]
           total_messages_sent?: number
           tribes?: string[] | null
           updated_at?: string
@@ -5254,6 +5257,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      henry_add_shown_profiles: { Args: { _ids: string[] }; Returns: undefined }
+      henry_clear_shown_profiles: { Args: never; Returns: undefined }
       henry_get_or_create_conversation: {
         Args: never
         Returns: {
@@ -5273,6 +5278,7 @@ export type Database = {
           rejected_reasons: Json
           relationship_goal: string | null
           setup_completed: boolean
+          shown_profile_ids: string[]
           total_messages_sent: number
           tribes: string[] | null
           updated_at: string
@@ -5308,6 +5314,7 @@ export type Database = {
           rejected_reasons: Json
           relationship_goal: string | null
           setup_completed: boolean
+          shown_profile_ids: string[]
           total_messages_sent: number
           tribes: string[] | null
           updated_at: string
@@ -5356,6 +5363,7 @@ export type Database = {
               rejected_reasons: Json
               relationship_goal: string | null
               setup_completed: boolean
+              shown_profile_ids: string[]
               total_messages_sent: number
               tribes: string[] | null
               updated_at: string
@@ -5402,6 +5410,7 @@ export type Database = {
               rejected_reasons: Json
               relationship_goal: string | null
               setup_completed: boolean
+              shown_profile_ids: string[]
               total_messages_sent: number
               tribes: string[] | null
               updated_at: string
