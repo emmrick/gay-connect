@@ -215,6 +215,16 @@ export const useHenryChat = () => {
     }
   }, [qc, user?.id]);
 
+  // Clear the server-side list of already-proposed profiles (on reset / refine)
+  const clearShownProfiles = useCallback(async () => {
+    try {
+      await supabase.rpc('henry_clear_shown_profiles' as any);
+      qc.invalidateQueries({ queryKey: ['henry-conversation', user?.id] });
+    } catch (err) {
+      console.error('[henry_clear_shown_profiles]', err);
+    }
+  }, [qc, user?.id]);
+
   // Reset
   const resetConversation = useMutation({
     mutationFn: async () => {
