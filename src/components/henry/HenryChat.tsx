@@ -560,8 +560,10 @@ const HenryChat = () => {
     if (askingReason) return false;
     if (currentMatch) return false;
     if (currentStep === 'matching') return false;
+    // Si le setup est complété ET on est en step "free", le bouton sticky "Nouveau profil" prend le relais
+    if (currentStep === 'free' && conversation?.setup_completed) return false;
     return !!stepDef.options?.length;
-  }, [searching, henryTyping, askingReason, currentMatch, currentStep, stepDef.options]);
+  }, [searching, henryTyping, askingReason, currentMatch, currentStep, stepDef.options, conversation?.setup_completed]);
 
   return (
     <div className="flex flex-col h-full bg-background">
