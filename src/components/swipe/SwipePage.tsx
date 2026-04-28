@@ -154,7 +154,7 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                 {/* Cards stack */}
                 <div className="flex-1 relative min-h-0">
                   <AnimatePresence mode="popLayout">
-                    {remainingProfiles.slice(0, 3).map((profile, index) => (
+                    {!showAdInterstitial && remainingProfiles.slice(0, 3).map((profile, index) => (
                       <SwipeCard
                         key={profile.id}
                         profile={profile}
@@ -164,24 +164,32 @@ const SwipePage = ({ onStartChat }: SwipePageProps) => {
                       />
                     ))}
                   </AnimatePresence>
+                  <AnimatePresence>
+                    {showAdInterstitial && (
+                      <SwipeAdInterstitial
+                        key="ad-interstitial"
+                        onContinue={() => setShowAdInterstitial(false)}
+                      />
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Action buttons */}
                 <div className="relative z-20 flex justify-center items-center gap-5 py-4 px-6">
                   <ActionButton
-                    onClick={() => remainingProfiles[0] && handleSwipe('left')}
+                    onClick={() => !showAdInterstitial && remainingProfiles[0] && handleSwipe('left')}
                     color="destructive"
                     size="lg"
                     icon={<X className="w-7 h-7" strokeWidth={2.5} />}
                   />
                   <ActionButton
-                    onClick={() => remainingProfiles[0] && handleSwipe('up')}
+                    onClick={() => !showAdInterstitial && remainingProfiles[0] && handleSwipe('up')}
                     color="muted"
                     size="sm"
                     icon={<EyeOff className="w-5 h-5" />}
                   />
                   <ActionButton
-                    onClick={() => remainingProfiles[0] && handleSwipe('right')}
+                    onClick={() => !showAdInterstitial && remainingProfiles[0] && handleSwipe('right')}
                     color="primary"
                     size="lg"
                     icon={<Heart className="w-7 h-7" fill="white" />}
