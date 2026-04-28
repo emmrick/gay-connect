@@ -266,5 +266,6 @@ export const useHenryChat = () => {
     resetConversation,
     findMatches,
     recordRejectReason,
+    clearShownProfiles,
   };
 };
