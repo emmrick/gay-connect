@@ -9,6 +9,7 @@
 
 export type HenryStep =
   | 'greeting'
+  | 'confirm'
   | 'goal'
   | 'age'
   | 'region'
@@ -170,6 +171,9 @@ export const REJECT_REASONS: HenryQuickReply[] = [
   { value: 'age_off', label: '🎂 Âge ne correspond pas' },
   { value: 'no_photo', label: '📷 Photo peu claire' },
   { value: 'no_bio', label: '📝 Profil vide' },
+  { value: 'wrong_tribe', label: '✨ Pas le bon style' },
+  { value: 'wrong_goal', label: '🎯 Pas le même but' },
+  { value: 'no_chemistry', label: '💔 Pas d\'alchimie' },
   { value: 'other', label: '🤷 Autre raison' },
 ];
 
@@ -179,6 +183,16 @@ export const HENRY_FLOW: Record<HenryStep, HenryStepDef> = {
     question: HENRY_GREETING,
     next: 'goal',
     options: [{ value: '__start__', label: '🚀 C\'est parti' }],
+  },
+  confirm: {
+    id: 'confirm',
+    question:
+      "J'ai jeté un œil à ton profil 👀 Voici ce que je vais utiliser pour ta recherche :",
+    next: 'matching',
+    options: [
+      { value: '__confirm__', label: '🎯 Trouver mon match' },
+      { value: '__edit__', label: '✏️ Modifier mes critères' },
+    ],
   },
   goal: {
     id: 'goal',

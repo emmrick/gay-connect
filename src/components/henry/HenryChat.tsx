@@ -19,6 +19,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   HENRY_FLOW,
   HenryStep,
@@ -51,6 +53,9 @@ const REJECT_REPLIES: Record<string, string> = {
   age_off: 'Bien reçu, j\'ajuste l\'âge 🎂',
   no_photo: 'Ok, je privilégie des profils avec photo claire 📸',
   no_bio: 'Bien noté, je te propose des profils avec une bio 📝',
+  wrong_tribe: 'Compris, je change de style ✨',
+  wrong_goal: 'Ok, je vise quelqu\'un avec le même objectif 🎯',
+  no_chemistry: 'Pas de souci, on continue à chercher 🔍',
   other: 'D\'accord, voyons un autre profil 👇',
 };
 
@@ -68,8 +73,10 @@ const HenryChat = () => {
     updateCriteria,
     resetConversation,
     findMatches,
+    recordRejectReason,
   } = useHenryChat();
   const { availableCredits } = useCredits();
+  const { profile: myProfile } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   // Persistance des matches : ils doivent survivre au démontage du composant
   // (navigation hors du chatbot puis retour).
@@ -148,7 +155,36 @@ const HenryChat = () => {
     }
   };
 
-  // Initial greeting
+  /** Construit un résumé textuel des critères pré-remplis depuis le profil */
+  const buildConfirmSummary = (conv: typeof conversation, profile: any) => {
+    if (!conv) return '';
+    const lines: string[] = [];
+    const goal = conv.relationship_goal || profile?.looking_for?.[0];
+    if (goal) {
+      const goalLabel = HENRY_FLOW.goal.options?.find((o) => o.value === goal)?.label ?? goal;
+      lines.push(`• **Recherche :** ${goalLabel}`);
+    }
+    if (conv.age_min && conv.age_max) {
+      lines.push(`• **Âge :** ${conv.age_min}–${conv.age_max} ans`);
+    }
+    if (conv.region) {
+      lines.push(`• **Zone :** ${conv.region}`);
+    } else if (profile?.region) {
+      lines.push(`• **Zone :** ${profile.region}`);
+    }
+    const tribes = (conv.tribes?.length ? conv.tribes : profile?.tribes) || [];
+    if (tribes.length > 0) {
+      const labels = tribes
+        .slice(0, 4)
+        .map((t: string) => HENRY_FLOW.tribes.options?.find((o) => o.value === t)?.label ?? t)
+        .join(', ');
+      lines.push(`• **Style :** ${labels}${tribes.length > 4 ? '…' : ''}`);
+    }
+    if (lines.length === 0) return '';
+    return lines.join('\n');
+  };
+
+  // Initial greeting + smart pre-fill from user profile
   useEffect(() => {
     if (initRef.current) return;
     if (isLoading) return;
@@ -158,9 +194,53 @@ const HenryChat = () => {
       return;
     }
     initRef.current = true;
-    sendBotMessage(HENRY_FLOW.greeting.question, { step: 'greeting' }, 400);
+
+    (async () => {
+      // Pre-fill criteria from user profile if not already set
+      const updates: any = {};
+      if (!conversation.relationship_goal && myProfile?.looking_for?.[0]) {
+        updates.relationship_goal = myProfile.looking_for[0];
+      }
+      if (!conversation.age_min && myProfile?.age) {
+        updates.age_min = Math.max(18, myProfile.age - 7);
+        updates.age_max = Math.min(99, myProfile.age + 10);
+      }
+      if (!conversation.region && myProfile?.region) {
+        updates.region = myProfile.region;
+      }
+      if ((!conversation.tribes || conversation.tribes.length === 0) && myProfile?.tribes?.length) {
+        updates.tribes = myProfile.tribes;
+      }
+
+      // Decide whether we can skip straight to confirmation
+      const hasEnough =
+        (updates.relationship_goal || conversation.relationship_goal) &&
+        (updates.age_min || conversation.age_min) &&
+        (updates.region || conversation.region);
+
+      if (hasEnough) {
+        updates.current_step = 'confirm';
+        await updateCriteria.mutateAsync(updates);
+        const greeting = conversation.setup_completed
+          ? "Re-bonjour 👋 Je relance une recherche avec tes critères enregistrés. Tu confirmes ?"
+          : "Salut 👋 Moi c'est **Henry**. J'ai jeté un œil à ton profil pour gagner du temps 😉";
+        await sendBotMessage(greeting, { step: 'greeting' }, 400);
+        const summary = buildConfirmSummary({ ...conversation, ...updates } as any, myProfile);
+        if (summary) {
+          await sendBotMessage(`${HENRY_FLOW.confirm.question}\n\n${summary}`, { step: 'confirm' }, 600);
+        } else {
+          await sendBotMessage(HENRY_FLOW.confirm.question, { step: 'confirm' }, 600);
+        }
+      } else {
+        // Apply partial updates anyway (helps next time)
+        if (Object.keys(updates).length > 0) {
+          await updateCriteria.mutateAsync(updates);
+        }
+        sendBotMessage(HENRY_FLOW.greeting.question, { step: 'greeting' }, 400);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation, messages.length, isLoading]);
+  }, [conversation, messages.length, isLoading, myProfile?.user_id]);
 
   const interests = conversation?.interests ?? [];
 
@@ -178,6 +258,42 @@ const HenryChat = () => {
     // Vérification crédits : 0.2 crédit par message
     if (availableCredits < 0.2) {
       setCreditAlert(true);
+      return;
+    }
+
+    // Step "confirm" : raccourcis dédiés
+    if (currentStep === 'confirm') {
+      try {
+        await sendUserMessage.mutateAsync({
+          content: label,
+          payload: { step: 'confirm', value },
+        });
+      } catch (err: any) {
+        if (err?.message === 'INSUFFICIENT_CREDITS') {
+          setCreditAlert(true);
+          return;
+        }
+        toast.error('Henry ne peut pas envoyer ton message.');
+        return;
+      }
+      if (value === '__confirm__') {
+        await updateCriteria.mutateAsync({ current_step: 'matching', setup_completed: true });
+        // Sync goal back to user profile if changed
+        if (conversation?.relationship_goal && myProfile?.user_id) {
+          try {
+            const current = myProfile.looking_for ?? [];
+            if (!current.includes(conversation.relationship_goal)) {
+              const next = [conversation.relationship_goal, ...current.filter((v: string) => v !== conversation.relationship_goal)];
+              await supabase.from('profiles').update({ looking_for: next }).eq('user_id', myProfile.user_id);
+            }
+          } catch { /* ignore */ }
+        }
+        await sendBotMessage(HENRY_FLOW.matching.question, { step: 'matching' });
+        await runMatching();
+      } else {
+        await updateCriteria.mutateAsync({ current_step: 'goal' });
+        await sendBotMessage(HENRY_FLOW.goal.question, { step: 'goal' });
+      }
       return;
     }
 
@@ -366,7 +482,7 @@ const HenryChat = () => {
           { step: 'matches', count: results.length },
         );
       }
-      await updateCriteria.mutateAsync({ current_step: 'free' });
+      await updateCriteria.mutateAsync({ current_step: 'free', setup_completed: true });
     } finally {
       setSearching(false);
     }
@@ -396,6 +512,8 @@ const HenryChat = () => {
         return;
       }
     }
+    // Persist rejection reason so Henry can refine future searches
+    await recordRejectReason(value);
     await sendBotMessage(REJECT_REPLIES[value] ?? REJECT_REPLIES.other);
     await goNextProfile();
   };
@@ -442,8 +560,10 @@ const HenryChat = () => {
     if (askingReason) return false;
     if (currentMatch) return false;
     if (currentStep === 'matching') return false;
+    // Si le setup est complété ET on est en step "free", le bouton sticky "Nouveau profil" prend le relais
+    if (currentStep === 'free' && conversation?.setup_completed) return false;
     return !!stepDef.options?.length;
-  }, [searching, henryTyping, askingReason, currentMatch, currentStep, stepDef.options]);
+  }, [searching, henryTyping, askingReason, currentMatch, currentStep, stepDef.options, conversation?.setup_completed]);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -546,6 +666,39 @@ const HenryChat = () => {
           </div>
         </div>
       )}
+
+      {/* Sticky "Nouveau profil" button when setup is done and no card is shown */}
+      {!askingReason &&
+        !henryTyping &&
+        !searching &&
+        !currentMatch &&
+        conversation?.setup_completed &&
+        currentStep !== 'confirm' && (
+          <div className="border-t border-border/50 bg-card/40 backdrop-blur p-3 shrink-0">
+            <div className="max-w-2xl mx-auto flex gap-2">
+              <Button
+                size="lg"
+                className="flex-1 gap-2 font-semibold"
+                onClick={() => handleFreeAction('__more__')}
+                disabled={availableCredits < 0.2}
+              >
+                <Sparkles className="w-4 h-4" />
+                Nouveau profil
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => handleFreeAction('__refine__')}
+                title="Affiner mes critères"
+              >
+                ⚙️
+              </Button>
+            </div>
+            <p className="mt-1.5 text-[10px] text-muted-foreground/70 text-center">
+              Henry utilise tes critères enregistrés · 0,2 crédit / message
+            </p>
+          </div>
+        )}
 
       {/* Quick replies */}
       {showQuickReplies && (
