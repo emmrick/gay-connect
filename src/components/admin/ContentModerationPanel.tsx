@@ -53,6 +53,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
+import ModerationSummaryDialog, { ModerationSummaryItem } from './ModerationSummaryDialog';
 
 interface Message {
   id: string;
@@ -250,6 +251,7 @@ const ContentModerationPanel = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: string; id: string; label: string } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [summaryItem, setSummaryItem] = useState<ModerationSummaryItem | null>(null);
 
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -483,7 +485,18 @@ const ContentModerationPanel = () => {
                         En attente
                       </Badge>
                     </div>
-                    <div className="p-3 space-y-2">
+                    <div
+                      className="p-3 space-y-2 cursor-pointer hover:bg-muted/30"
+                      onClick={() => setSummaryItem({
+                        kind: 'pending-photo',
+                        id: photo.id,
+                        userId: photo.user_id,
+                        username: photo.profile?.username,
+                        avatarUrl: photo.profile?.avatar_url ?? null,
+                        photoUrl: photo.signed_url,
+                        createdAt: photo.created_at,
+                      })}
+                    >
                       <div className="flex items-center gap-2">
                         <User className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-sm font-medium">{photo.profile?.username || 'Inconnu'}</span>
@@ -491,7 +504,7 @@ const ContentModerationPanel = () => {
                       <p className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(photo.created_at), { addSuffix: true, locale: fr })}
                       </p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                         <Button
                           size="sm"
                           className="flex-1 gap-1"
@@ -554,7 +567,21 @@ const ContentModerationPanel = () => {
                 {messages?.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`p-3 rounded-lg border transition-colors ${
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSummaryItem({
+                      kind: 'message',
+                      id: msg.id,
+                      userId: msg.sender_id,
+                      username: msg.sender?.username,
+                      avatarUrl: msg.sender?.avatar_url ?? null,
+                      content: msg.content,
+                      messageType: msg.message_type,
+                      isPrivate: msg.is_private,
+                      createdAt: msg.created_at,
+                      deletedAt: msg.deleted_at,
+                    })}
+                    className={`p-3 rounded-lg border transition-colors cursor-pointer ${
                       msg.deleted_at 
                         ? 'border-orange-500/30 bg-orange-500/5' 
                         : 'border-border bg-card hover:bg-muted/50'
@@ -591,7 +618,7 @@ const ContentModerationPanel = () => {
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => confirmDelete('message', msg.id, msg.content || 'message')}
+                          onClick={(e) => { e.stopPropagation(); confirmDelete('message', msg.id, msg.content || 'message'); }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -637,18 +664,30 @@ const ContentModerationPanel = () => {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {photos?.map((photo) => (
-                  <div key={photo.id} className="group relative">
+                  <div
+                    key={photo.id}
+                    className="group relative cursor-pointer"
+                    onClick={() => setSummaryItem({
+                      kind: 'reported-photo',
+                      id: photo.id,
+                      userId: photo.user_id,
+                      username: photo.profile?.username,
+                      avatarUrl: photo.profile?.avatar_url ?? null,
+                      photoUrl: photo.signed_url || photo.photo_url,
+                      isPrimary: photo.is_primary,
+                      createdAt: photo.created_at,
+                    })}
+                  >
                     <div className="aspect-square rounded-lg overflow-hidden bg-secondary">
                       <img
                         src={photo.signed_url || photo.photo_url}
                         alt=""
-                        className="w-full h-full object-cover cursor-pointer"
-                        onClick={() => setPreviewImage(photo.signed_url || photo.photo_url)}
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2">
                       <p className="text-white text-xs font-medium">{photo.profile?.username}</p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                         <Button
                           size="icon"
                           variant="secondary"
@@ -712,7 +751,20 @@ const ContentModerationPanel = () => {
                 {albums?.map((album) => (
                   <div
                     key={album.id}
-                    className="p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSummaryItem({
+                      kind: 'album',
+                      id: album.id,
+                      userId: album.user_id,
+                      username: album.profile?.username,
+                      avatarUrl: album.profile?.avatar_url ?? null,
+                      name: album.name,
+                      isPrivate: album.is_private,
+                      mediaCount: album.media_count,
+                      createdAt: album.created_at,
+                    })}
+                    className="p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -741,7 +793,7 @@ const ContentModerationPanel = () => {
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => confirmDelete('album', album.id, album.name)}
+                        onClick={(e) => { e.stopPropagation(); confirmDelete('album', album.id, album.name); }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -785,6 +837,20 @@ const ContentModerationPanel = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Moderation Summary Dialog */}
+      <ModerationSummaryDialog
+        item={summaryItem}
+        onClose={() => setSummaryItem(null)}
+        onPreviewImage={(url) => setPreviewImage(url)}
+        onApprove={(id) => approvePhoto.mutate(id)}
+        onReject={(id) => rejectPhoto.mutate({ photoId: id, reason: 'Photo non conforme aux règles' })}
+        onDelete={(it) => {
+          if (it.kind === 'message') confirmDelete('message', it.id, it.content || 'message');
+          else if (it.kind === 'reported-photo') confirmDelete('photo', it.id, 'cette photo');
+          else if (it.kind === 'album') confirmDelete('album', it.id, it.name);
+        }}
+      />
     </div>
   );
 };
