@@ -45,36 +45,32 @@ const ModerationSummaryDialog = ({ item, onClose, onDelete, onApprove, onReject,
   const open = !!item;
   const userId = item?.userId;
 
-  // Fetch full profile + reports + sanctions in parallel
+  // Fetch full profile + reports + photo stats in parallel
   const { data: details, isLoading } = useQuery({
     queryKey: ['mod-summary', item?.kind, item?.id, userId],
     queryFn: async () => {
       if (!userId) return null;
-      const [profileRes, reportsRes, sanctionsRes, photosCountRes] = await Promise.all([
+      const [profileRes, reportsRes, photosRes] = await Promise.all([
         supabase.from('profiles')
-          .select('user_id, username, avatar_url, age, city, country, bio, created_at, is_verified')
+          .select('user_id, username, avatar_url, age, region, bio, created_at, is_verified')
           .eq('user_id', userId).maybeSingle(),
         supabase.from('reports')
           .select('id, reason, status, created_at')
           .eq('reported_user_id', userId)
           .order('created_at', { ascending: false }).limit(20),
-        supabase.from('user_suspensions')
-          .select('id, reason, suspended_until, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false }).limit(5),
         supabase.from('profile_photos')
-          .select('id, status', { count: 'exact', head: false })
+          .select('id, status')
           .eq('user_id', userId),
       ]);
+      const photos = (photosRes.data ?? []) as Array<{ id: string; status: string | null }>;
       return {
         profile: profileRes.data,
         reports: reportsRes.data ?? [],
-        sanctions: sanctionsRes.data ?? [],
         photoStats: {
-          total: photosCountRes.data?.length ?? 0,
-          approved: photosCountRes.data?.filter((p: any) => p.status === 'approved').length ?? 0,
-          pending: photosCountRes.data?.filter((p: any) => p.status === 'pending').length ?? 0,
-          rejected: photosCountRes.data?.filter((p: any) => p.status === 'rejected').length ?? 0,
+          total: photos.length,
+          approved: photos.filter(p => p.status === 'approved').length,
+          pending: photos.filter(p => p.status === 'pending').length,
+          rejected: photos.filter(p => p.status === 'rejected').length,
         },
       };
     },
