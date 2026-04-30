@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 import { BanIcon, Check, Loader2, Sparkles, Star, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -88,7 +89,7 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
       if (error || !result?.success) {
         const msg = result?.error || error?.message || 'Erreur inconnue';
         if (msg.includes('Insufficient') || msg.includes('insuffisants')) {
-          toast.error('Crédits insuffisants', { description: 'Rechargez votre solde pour souscrire.' });
+          notifyInsufficientCreditsSync('Abonnement sans pub');
         } else {
           toast.error(msg);
         }

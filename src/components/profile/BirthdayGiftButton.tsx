@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { deductCredits, checkSufficientCredits } from '@/hooks/useCredits';
 import { addCreditsToUser } from '@/hooks/useCredits';
 import { toast } from 'sonner';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -60,7 +61,7 @@ const BirthdayGiftButton = ({ recipientId, recipientUsername }: BirthdayGiftButt
       // Check credits
       const hasCredits = await checkSufficientCredits(user.id, amount);
       if (!hasCredits) {
-        toast.error('Crédits insuffisants');
+        notifyInsufficientCreditsSync('Cadeau d\'anniversaire');
         setSending(false);
         return;
       }

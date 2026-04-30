@@ -38,6 +38,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 const ChatBotConfigSection = () => {
   const { data: config, isLoading } = useChatbotConfig();
@@ -104,7 +105,7 @@ const ChatBotConfigSection = () => {
     // Activation : 10 crédits une seule fois (jamais re-facturé après)
     const alreadyPaid = (config as any)?.activation_paid === true;
     if (!alreadyPaid && availableCredits < 10) {
-      toast.error(`Crédits insuffisants : 10 crédits requis pour la 1re activation.`);
+      notifyInsufficientCreditsSync('Activation du chatbot');
       return;
     }
     if (!alreadyPaid) {
@@ -143,7 +144,8 @@ const ChatBotConfigSection = () => {
       await updateNode.mutateAsync({ id: editing.id, label, response_text: text });
     } else {
       if (availableCredits < nextBlockCost) {
-        return toast.error(`Crédits insuffisants. Il faut ${nextBlockCost} crédit${nextBlockCost > 1 ? 's' : ''}.`);
+        notifyInsufficientCreditsSync(`Bloc chatbot (${nextBlockCost} cr requis)`);
+        return;
       }
       await createNode.mutateAsync({
         label,

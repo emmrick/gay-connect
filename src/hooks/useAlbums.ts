@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCreateNotification } from '@/hooks/useNotifications';
 import { CREDIT_COSTS, deductCredits, checkSufficientCredits, getDynamicCreditCost } from '@/hooks/useCredits';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 interface Album {
   id: string;
@@ -141,7 +142,7 @@ export const useAlbums = (userId?: string) => {
     },
     onError: (error: Error) => {
       if (error.message === 'INSUFFICIENT_CREDITS') {
-        toast.error('Crédits insuffisants pour créer un album');
+        notifyInsufficientCreditsSync('Création d\'album');
       } else {
         toast.error(error.message || 'Erreur lors de la création');
       }
