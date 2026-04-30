@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import {
   User, Clock, Flag, MessageSquare, Image as ImageIcon, Folder,
   Lock, ShieldCheck, AlertTriangle, Trash2, Eye, ExternalLink,
+  MapPin, Calendar, FileText, History, Gavel,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 
