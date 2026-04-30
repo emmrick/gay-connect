@@ -348,9 +348,7 @@ export const useSwipeActions = () => {
     },
     onError: (error: Error) => {
       if (error.message.includes('insuffisants')) {
-        toast.error('Crédits insuffisants', {
-          description: 'Achetez des crédits pour continuer.',
-        });
+        notifyInsufficientCreditsSync('Action swipe');
       } else {
         toast.error('Erreur', {
           description: error.message,
