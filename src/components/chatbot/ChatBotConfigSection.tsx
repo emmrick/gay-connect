@@ -38,6 +38,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 
 const ChatBotConfigSection = () => {
   const { data: config, isLoading } = useChatbotConfig();
