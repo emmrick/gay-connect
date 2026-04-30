@@ -162,7 +162,7 @@ const ModerationSummaryDialog = ({ item, onClose, onDelete, onApprove, onReject,
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                   {details?.profile?.age && <span>{details.profile.age} ans</span>}
-                  {details?.profile?.city && <span>· {details.profile.city}</span>}
+                  {details?.profile?.region && <span>· {details.profile.region}</span>}
                 </div>
               </div>
               <Button asChild size="sm" variant="outline" className="gap-1">
