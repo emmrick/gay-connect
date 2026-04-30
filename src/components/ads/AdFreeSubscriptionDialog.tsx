@@ -89,7 +89,7 @@ const AdFreeSubscriptionDialog = ({ open, onOpenChange }: AdFreeSubscriptionDial
       if (error || !result?.success) {
         const msg = result?.error || error?.message || 'Erreur inconnue';
         if (msg.includes('Insufficient') || msg.includes('insuffisants')) {
-          toast.error('Crédits insuffisants', { description: 'Rechargez votre solde pour souscrire.' });
+          notifyInsufficientCreditsSync('Abonnement sans pub');
         } else {
           toast.error(msg);
         }
