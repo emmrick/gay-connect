@@ -142,7 +142,7 @@ export const useAlbums = (userId?: string) => {
     },
     onError: (error: Error) => {
       if (error.message === 'INSUFFICIENT_CREDITS') {
-        toast.error('Crédits insuffisants pour créer un album');
+        notifyInsufficientCreditsSync('Création d\'album');
       } else {
         toast.error(error.message || 'Erreur lors de la création');
       }
