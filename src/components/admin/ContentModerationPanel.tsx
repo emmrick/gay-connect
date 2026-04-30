@@ -53,6 +53,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
+import ModerationSummaryDialog, { ModerationSummaryItem } from './ModerationSummaryDialog';
 
 interface Message {
   id: string;
