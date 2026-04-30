@@ -5,6 +5,7 @@ import { useCreditCheck } from './useCreditCheck';
 import { deductCredits, getDynamicCreditCost } from './useCredits';
 import { notifySwipeMatch } from '@/services/pushNotificationService';
 import { toast } from 'sonner';
+import { notifyInsufficientCreditsSync } from '@/lib/credits/insufficientCreditsToast';
 import { useMemo } from 'react';
 import { getSignedAvatarUrl } from '@/hooks/useAvatarUrl';
 
