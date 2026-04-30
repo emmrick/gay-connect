@@ -10,7 +10,12 @@
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+// Anti-spam : 1 toast global toutes les 8 s, ET 1 toast par "contexte" (action)
+// toutes les 15 s, même si plusieurs requêtes échouent en parallèle.
+const GLOBAL_COOLDOWN_MS = 8000;
+const PER_CONTEXT_COOLDOWN_MS = 15000;
 let lastShownAt = 0;
+const lastShownByContext = new Map<string, number>();
 
 /** Formate un nombre de jours/heures restantes en FR. */
 const formatRemaining = (msUntilReset: number): string => {
