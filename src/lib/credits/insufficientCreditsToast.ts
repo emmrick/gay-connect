@@ -96,6 +96,7 @@ export const notifyInsufficientCredits = async (
         }`;
 
   toast.error('Crédits insuffisants', {
+    id: `insufficient-credits:${ctxKey}`, // déduplication native sonner
     description,
     duration: 6000,
     action: {
