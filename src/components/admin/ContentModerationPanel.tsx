@@ -504,7 +504,7 @@ const ContentModerationPanel = () => {
                       <p className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(photo.created_at), { addSuffix: true, locale: fr })}
                       </p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                         <Button
                           size="sm"
                           className="flex-1 gap-1"
