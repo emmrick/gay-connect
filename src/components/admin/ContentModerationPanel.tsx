@@ -567,7 +567,21 @@ const ContentModerationPanel = () => {
                 {messages?.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`p-3 rounded-lg border transition-colors ${
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSummaryItem({
+                      kind: 'message',
+                      id: msg.id,
+                      userId: msg.sender_id,
+                      username: msg.sender?.username,
+                      avatarUrl: msg.sender?.avatar_url ?? null,
+                      content: msg.content,
+                      messageType: msg.message_type,
+                      isPrivate: msg.is_private,
+                      createdAt: msg.created_at,
+                      deletedAt: msg.deleted_at,
+                    })}
+                    className={`p-3 rounded-lg border transition-colors cursor-pointer ${
                       msg.deleted_at 
                         ? 'border-orange-500/30 bg-orange-500/5' 
                         : 'border-border bg-card hover:bg-muted/50'
