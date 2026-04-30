@@ -640,10 +640,10 @@ const ContentModerationPanel = () => {
                   <div key={photo.id} className="group relative">
                     <div className="aspect-square rounded-lg overflow-hidden bg-secondary">
                       <img
-                        src={photo.photo_url}
+                        src={photo.signed_url || photo.photo_url}
                         alt=""
                         className="w-full h-full object-cover cursor-pointer"
-                        onClick={() => setPreviewImage(photo.photo_url)}
+                        onClick={() => setPreviewImage(photo.signed_url || photo.photo_url)}
                       />
                     </div>
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2">
@@ -653,7 +653,7 @@ const ContentModerationPanel = () => {
                           size="icon"
                           variant="secondary"
                           className="h-8 w-8"
-                          onClick={() => setPreviewImage(photo.photo_url)}
+                          onClick={() => setPreviewImage(photo.signed_url || photo.photo_url)}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
