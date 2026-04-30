@@ -58,8 +58,23 @@ export const notifyInsufficientCredits = async (
   context?: string,
 ): Promise<void> => {
   const now = Date.now();
-  if (now - lastShownAt < 4000) return;
+  const ctxKey = (context || '__default__').toLowerCase();
+
+  // 1) Cooldown global : pas plus d'un toast toutes les 8s, tous contextes confondus
+  if (now - lastShownAt < GLOBAL_COOLDOWN_MS) return;
+  // 2) Cooldown par contexte : pas plus d'un toast par action toutes les 15s
+  const lastForCtx = lastShownByContext.get(ctxKey) ?? 0;
+  if (now - lastForCtx < PER_CONTEXT_COOLDOWN_MS) return;
+
   lastShownAt = now;
+  lastShownByContext.set(ctxKey, now);
+
+  // GC léger : on retire les contextes anciens pour éviter une croissance infinie
+  if (lastShownByContext.size > 50) {
+    for (const [k, t] of lastShownByContext) {
+      if (now - t > PER_CONTEXT_COOLDOWN_MS * 4) lastShownByContext.delete(k);
+    }
+  }
 
   // Récupère l'user courant (sans bloquer si non dispo)
   let userId: string | null = null;
