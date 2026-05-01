@@ -16,6 +16,8 @@ import { template as welcomeEmail } from './welcome.tsx'
 import { template as customMessage } from './custom-message.tsx'
 import { template as weeklyDigest } from './weekly-digest.tsx'
 import { template as advertiserMagicLink } from './advertiser-magic-link.tsx'
+import { template as suggestionApproved } from './suggestion-approved.tsx'
+import { template as suggestionRejected } from './suggestion-rejected.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'verification-reminder': verificationReminder,
@@ -25,4 +27,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'custom-message': customMessage,
   'weekly-digest': weeklyDigest,
   'advertiser-magic-link': advertiserMagicLink,
+  'suggestion-approved': suggestionApproved,
+  'suggestion-rejected': suggestionRejected,
 }
