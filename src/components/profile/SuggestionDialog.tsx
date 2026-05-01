@@ -84,8 +84,71 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
         .order('created_at', { ascending: false });
       return data ?? [];
     },
-    enabled: !!user?.id && open,
+    enabled: !!user?.id,
   });
+
+  // Realtime: refresh + toast on status change for the current user's suggestions
+  useEffect(() => {
+    if (!user?.id) return;
+    const prevStatusMap = new Map<string, string>(
+      (suggestions ?? []).map((s: any) => [s.id, s.status])
+    );
+
+    const channel = supabase
+      .channel(`user-suggestions-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_suggestions',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const next: any = payload.new;
+          const prev: any = payload.old;
+
+          if (payload.eventType === 'UPDATE' && next?.status && prev?.status && next.status !== prev.status) {
+            const cfg = STATUS_CONFIG[next.status];
+            if (cfg) {
+              const title = next.title ? `« ${String(next.title).slice(0, 40)}${String(next.title).length > 40 ? '…' : ''} »` : 'Votre proposition';
+              if (next.status === 'approved') {
+                toast.success(`🎉 ${title} approuvée !`, {
+                  description: next.credits_awarded > 0 ? `+${next.credits_awarded} crédits crédités` : 'Merci pour votre idée !',
+                });
+              } else if (next.status === 'rejected') {
+                toast.error(`${title} refusée`, { description: next.admin_notes ?? undefined });
+              } else if (next.status === 'in_review') {
+                toast.info(`${title} est en cours d'examen`);
+              }
+            }
+          } else if (payload.eventType === 'INSERT' && next?.id && !prevStatusMap.has(next.id)) {
+            // Inserted from another tab/device
+            toast.info('Nouvelle proposition enregistrée');
+          }
+
+          qc.invalidateQueries({ queryKey: ['user-suggestions', user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // We intentionally exclude `suggestions` to avoid re-subscribing on every refetch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, qc]);
+
+  // Status counts for the badge breakdown
+  const statusCounts = (suggestions ?? []).reduce(
+    (acc: Record<string, number>, s: any) => {
+      acc[s.status] = (acc[s.status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+  const pendingCount = (statusCounts.pending ?? 0) + (statusCounts.in_review ?? 0);
+  const approvedCount = statusCounts.approved ?? 0;
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user?.id) return;
@@ -156,10 +219,27 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
 
   const isFormValid = title.trim().length >= 5 && description.trim().length >= 30;
 
-  const tabs: { key: ViewMode; label: string; icon: any; badge?: number }[] = [
+  type TabDef = {
+    key: ViewMode;
+    label: string;
+    icon: any;
+    badge?: number;
+    dot?: 'approved' | 'pending' | null;
+    pulse?: boolean;
+  };
+
+  const tabs: TabDef[] = [
     { key: 'form', label: 'Nouvelle', icon: PenLine },
     { key: 'community', label: 'Communauté', icon: Users },
-    { key: 'history', label: 'Mes idées', icon: History, badge: suggestions?.length },
+    {
+      key: 'history',
+      label: 'Mes idées',
+      icon: History,
+      badge: suggestions?.length,
+      // Priority: approved (green) > pending/in_review (amber)
+      dot: approvedCount > 0 ? 'approved' : pendingCount > 0 ? 'pending' : null,
+      pulse: pendingCount > 0 && approvedCount === 0,
+    },
   ];
 
   return (
@@ -223,10 +303,37 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
                     <Icon className="w-3.5 h-3.5" />
                     <span className="truncate">{t.label}</span>
                     {t.badge ? (
-                      <span className="ml-0.5 min-w-[16px] h-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full bg-primary/15 text-primary font-bold">
+                      <span
+                        className={cn(
+                          'ml-0.5 min-w-[16px] h-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full font-bold transition-colors',
+                          t.dot === 'approved'
+                            ? 'bg-green-500/15 text-green-600 dark:text-green-400'
+                            : t.dot === 'pending'
+                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                            : 'bg-primary/15 text-primary'
+                        )}
+                      >
                         {t.badge}
                       </span>
                     ) : null}
+                    {t.dot && (
+                      <span className="absolute top-1 right-1 flex h-2 w-2">
+                        {t.pulse && (
+                          <span
+                            className={cn(
+                              'animate-ping absolute inline-flex h-full w-full rounded-full opacity-60',
+                              t.dot === 'approved' ? 'bg-green-500' : 'bg-amber-500'
+                            )}
+                          />
+                        )}
+                        <span
+                          className={cn(
+                            'relative inline-flex rounded-full h-2 w-2 ring-2 ring-card',
+                            t.dot === 'approved' ? 'bg-green-500' : 'bg-amber-500'
+                          )}
+                        />
+                      </span>
+                    )}
                   </button>
                 );
               })}
