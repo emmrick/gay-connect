@@ -219,10 +219,27 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
 
   const isFormValid = title.trim().length >= 5 && description.trim().length >= 30;
 
-  const tabs: { key: ViewMode; label: string; icon: any; badge?: number }[] = [
+  type TabDef = {
+    key: ViewMode;
+    label: string;
+    icon: any;
+    badge?: number;
+    dot?: 'approved' | 'pending' | null;
+    pulse?: boolean;
+  };
+
+  const tabs: TabDef[] = [
     { key: 'form', label: 'Nouvelle', icon: PenLine },
     { key: 'community', label: 'Communauté', icon: Users },
-    { key: 'history', label: 'Mes idées', icon: History, badge: suggestions?.length },
+    {
+      key: 'history',
+      label: 'Mes idées',
+      icon: History,
+      badge: suggestions?.length,
+      // Priority: approved (green) > pending/in_review (amber)
+      dot: approvedCount > 0 ? 'approved' : pendingCount > 0 ? 'pending' : null,
+      pulse: pendingCount > 0 && approvedCount === 0,
+    },
   ];
 
   return (
