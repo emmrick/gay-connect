@@ -303,10 +303,37 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
                     <Icon className="w-3.5 h-3.5" />
                     <span className="truncate">{t.label}</span>
                     {t.badge ? (
-                      <span className="ml-0.5 min-w-[16px] h-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full bg-primary/15 text-primary font-bold">
+                      <span
+                        className={cn(
+                          'ml-0.5 min-w-[16px] h-4 px-1 text-[10px] leading-none flex items-center justify-center rounded-full font-bold transition-colors',
+                          t.dot === 'approved'
+                            ? 'bg-green-500/15 text-green-600 dark:text-green-400'
+                            : t.dot === 'pending'
+                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                            : 'bg-primary/15 text-primary'
+                        )}
+                      >
                         {t.badge}
                       </span>
                     ) : null}
+                    {t.dot && (
+                      <span className="absolute top-1 right-1 flex h-2 w-2">
+                        {t.pulse && (
+                          <span
+                            className={cn(
+                              'animate-ping absolute inline-flex h-full w-full rounded-full opacity-60',
+                              t.dot === 'approved' ? 'bg-green-500' : 'bg-amber-500'
+                            )}
+                          />
+                        )}
+                        <span
+                          className={cn(
+                            'relative inline-flex rounded-full h-2 w-2 ring-2 ring-card',
+                            t.dot === 'approved' ? 'bg-green-500' : 'bg-amber-500'
+                          )}
+                        />
+                      </span>
+                    )}
                   </button>
                 );
               })}
