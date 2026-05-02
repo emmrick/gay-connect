@@ -338,7 +338,12 @@ const ContentModerationPanel = () => {
   const { user } = useAuth();
   const { data: activeTask } = useActiveTask();
   const { data: reportedUserIds = [], isLoading: reportedUsersLoading, refetch: refetchReportedUsers } = useReportedUsers();
-  const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useRecentMessages(messageSearch);
+  const { data: conversations, isLoading: messagesLoading, refetch: refetchMessages } = useRecentConversations(messageSearch);
+  const [openConversation, setOpenConversation] = useState<Conversation | null>(null);
+  const { data: threadMessages, isLoading: threadLoading } = useConversationMessages(
+    openConversation?.userA.id,
+    openConversation?.userB.id,
+  );
   const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } = useProfilePhotos(reportedUserIds);
   const { data: albums, isLoading: albumsLoading, refetch: refetchAlbums } = useAlbums(reportedUserIds);
 
