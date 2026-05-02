@@ -58,6 +58,8 @@ import ModerationSummaryDialog, { ModerationSummaryItem } from './ModerationSumm
 interface Message {
   id: string;
   sender_id: string;
+  recipient_id: string | null;
+  chat_room_id: string | null;
   content: string | null;
   message_type: string;
   created_at: string;
@@ -68,6 +70,14 @@ interface Message {
     username: string;
     avatar_url: string | null;
   };
+}
+
+interface Conversation {
+  key: string;
+  userA: { id: string; username: string; avatar_url: string | null };
+  userB: { id: string; username: string; avatar_url: string | null };
+  lastMessage: Message;
+  messageCount: number;
 }
 
 interface ProfilePhoto {
