@@ -619,13 +619,13 @@ const ContentModerationPanel = () => {
           </ScrollArea>
         </TabsContent>
 
-        {/* Messages Tab */}
+        {/* Messages Tab — grouped conversations */}
         <TabsContent value="messages" className="space-y-4">
           <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher dans les messages..."
+                placeholder="Rechercher dans les conversations..."
                 value={messageSearch}
                 onChange={(e) => setMessageSearch(e.target.value)}
                 className="pl-9"
@@ -636,88 +636,65 @@ const ContentModerationPanel = () => {
             </Button>
           </div>
 
-          <ScrollArea className="h-[400px]">
+          <ScrollArea className="h-[500px]">
             {messagesLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 rounded-lg" />
+                  <Skeleton key={i} className="h-20 rounded-lg" />
                 ))}
               </div>
-            ) : messages?.length === 0 ? (
+            ) : !conversations || conversations.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Aucun message trouvé</p>
+                <p>Aucune conversation trouvée</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {messages?.map((msg) => (
-                  <div
-                    key={msg.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setSummaryItem({
-                      kind: 'message',
-                      id: msg.id,
-                      userId: msg.sender_id,
-                      username: msg.sender?.username,
-                      avatarUrl: msg.sender?.avatar_url ?? null,
-                      content: msg.content,
-                      messageType: msg.message_type,
-                      isPrivate: msg.is_private,
-                      createdAt: msg.created_at,
-                      deletedAt: msg.deleted_at,
-                    })}
-                    className={`p-3 rounded-lg border transition-colors cursor-pointer ${
-                      msg.deleted_at 
-                        ? 'border-orange-500/30 bg-orange-500/5' 
-                        : 'border-border bg-card hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={msg.sender?.avatar_url || ''} />
-                        <AvatarFallback>
-                          {msg.sender?.username?.charAt(0).toUpperCase() || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm">{msg.sender?.username || 'Inconnu'}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: fr })}
-                          </span>
-                          {msg.is_private && (
-                            <Badge variant="outline" className="text-xs">Privé</Badge>
-                          )}
-                          {msg.deleted_at && (
-                            <Badge variant="secondary" className="text-xs bg-orange-500/20 text-orange-500">
-                              Supprimé par l'utilisateur
-                            </Badge>
-                          )}
+                {conversations.map((conv) => {
+                  const last = conv.lastMessage;
+                  const lastSender = last.sender_id === conv.userA.id ? conv.userA : conv.userB;
+                  return (
+                    <div
+                      key={conv.key}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setOpenConversation(conv)}
+                      className="p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex -space-x-3 shrink-0">
+                          <Avatar className="w-9 h-9 border-2 border-background">
+                            <AvatarImage src={conv.userA.avatar_url || ''} />
+                            <AvatarFallback>{conv.userA.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                          </Avatar>
+                          <Avatar className="w-9 h-9 border-2 border-background">
+                            <AvatarImage src={conv.userB.avatar_url || ''} />
+                            <AvatarFallback>{conv.userB.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                          </Avatar>
                         </div>
-                        <p className={`text-sm mt-1 truncate ${msg.deleted_at ? 'text-orange-500/80 italic' : 'text-muted-foreground'}`}>
-                          {msg.content || `[${msg.message_type}]`}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm truncate">
+                              {conv.userA.username} ↔ {conv.userB.username}
+                            </span>
+                            <Badge variant="outline" className="text-[10px]">{conv.messageCount} msg</Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(last.created_at), { addSuffix: true, locale: fr })}
+                            </span>
+                          </div>
+                          <p className={`text-sm mt-1 truncate ${last.deleted_at ? 'text-orange-500/80 italic' : 'text-muted-foreground'}`}>
+                            <span className="font-medium">{lastSender.username}: </span>
+                            {last.content || `[${last.message_type}]`}
+                          </p>
+                        </div>
                       </div>
-                      {!msg.deleted_at && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); confirmDelete('message', msg.id, msg.content || 'message'); }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
         </TabsContent>
-
-        {/* Photos Tab */}
         <TabsContent value="photos" className="space-y-4">
           <div className="flex justify-between items-center">
             <p className="text-sm text-muted-foreground flex items-center gap-2">
