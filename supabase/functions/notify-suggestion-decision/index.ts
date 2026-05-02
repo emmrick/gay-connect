@@ -42,6 +42,15 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
+    // Load notification preferences (defaults to true)
+    const { data: prefs } = await admin
+      .from("notification_preferences")
+      .select("suggestion_decisions_push, suggestion_decisions_email")
+      .eq("user_id", payload.user_id)
+      .maybeSingle();
+    const pushEnabled = prefs?.suggestion_decisions_push ?? true;
+    const emailEnabled = prefs?.suggestion_decisions_email ?? true;
+
     // Resolve recipient: email + pseudo
     const { data: authUserRes } = await admin.auth.admin.getUserById(
       payload.user_id,
