@@ -105,16 +105,17 @@ interface Album {
   };
 }
 
-const useRecentMessages = (search: string) => {
+const useRecentConversations = (search: string) => {
   return useQuery({
-    queryKey: ['admin-messages', search],
-    queryFn: async (): Promise<Message[]> => {
-      // Admin sees ALL messages including deleted ones
+    queryKey: ['admin-conversations', search],
+    queryFn: async (): Promise<Conversation[]> => {
       let query = supabase
         .from('messages')
-        .select('id, sender_id, content, message_type, created_at, is_private, deleted_at, deleted_by')
+        .select('id, sender_id, recipient_id, chat_room_id, content, message_type, created_at, is_private, deleted_at, deleted_by')
+        .eq('is_private', true)
+        .not('recipient_id', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (search.trim()) {
         query = query.ilike('content', `%${search}%`);
@@ -123,14 +124,29 @@ const useRecentMessages = (search: string) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch sender profiles
-      const senderIds = [...new Set(data?.map(m => m.sender_id) || [])];
+      // Group by user pair (canonical key = sorted ids)
+      const groups = new Map<string, Message[]>();
+      for (const msg of (data || []) as Message[]) {
+        if (!msg.recipient_id) continue;
+        const [a, b] = [msg.sender_id, msg.recipient_id].sort();
+        const key = `${a}__${b}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(msg);
+      }
+
+      // Resolve profiles
+      const userIds = new Set<string>();
+      groups.forEach((_, key) => {
+        const [a, b] = key.split('__');
+        userIds.add(a);
+        userIds.add(b);
+      });
+
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, username, avatar_url')
-        .in('user_id', senderIds);
+        .in('user_id', [...userIds]);
 
-      // Sign avatar URLs (private bucket)
       const signedMap = new Map<string, string | null>();
       await Promise.all(
         (profiles || []).map(async (p) => {
@@ -140,14 +156,69 @@ const useRecentMessages = (search: string) => {
       );
 
       const profileMap = new Map(
-        (profiles || []).map(p => [p.user_id, { ...p, avatar_url: signedMap.get(p.user_id) ?? null }])
+        (profiles || []).map(p => [p.user_id, { id: p.user_id, username: p.username, avatar_url: signedMap.get(p.user_id) ?? null }])
       );
 
-      return (data || []).map(msg => ({
-        ...msg,
-        sender: profileMap.get(msg.sender_id),
-      }));
+      const conversations: Conversation[] = [];
+      groups.forEach((msgs, key) => {
+        const [a, b] = key.split('__');
+        // already sorted desc by created_at because data is sorted desc; first is latest
+        const lastMessage = msgs[0];
+        conversations.push({
+          key,
+          userA: profileMap.get(a) || { id: a, username: 'Inconnu', avatar_url: null },
+          userB: profileMap.get(b) || { id: b, username: 'Inconnu', avatar_url: null },
+          lastMessage,
+          messageCount: msgs.length,
+        });
+      });
+
+      // Sort by latest message desc
+      conversations.sort(
+        (x, y) => new Date(y.lastMessage.created_at).getTime() - new Date(x.lastMessage.created_at).getTime()
+      );
+      return conversations;
     },
+    refetchInterval: 15000,
+  });
+};
+
+const useConversationMessages = (userA?: string, userB?: string) => {
+  return useQuery({
+    queryKey: ['admin-conversation-thread', userA, userB],
+    queryFn: async (): Promise<Message[]> => {
+      if (!userA || !userB) return [];
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id, sender_id, recipient_id, chat_room_id, content, message_type, created_at, is_private, deleted_at, deleted_by')
+        .eq('is_private', true)
+        .or(`and(sender_id.eq.${userA},recipient_id.eq.${userB}),and(sender_id.eq.${userB},recipient_id.eq.${userA})`)
+        .order('created_at', { ascending: true })
+        .limit(500);
+
+      if (error) throw error;
+
+      const userIds = [userA, userB];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url')
+        .in('user_id', userIds);
+
+      const signedMap = new Map<string, string | null>();
+      await Promise.all(
+        (profiles || []).map(async (p) => {
+          const url = await getSignedAvatarUrl(p.avatar_url);
+          signedMap.set(p.user_id, url);
+        })
+      );
+      const profileMap = new Map(
+        (profiles || []).map(p => [p.user_id, { username: p.username, avatar_url: signedMap.get(p.user_id) ?? null }])
+      );
+
+      return ((data || []) as Message[]).map(m => ({ ...m, sender: profileMap.get(m.sender_id) }));
+    },
+    enabled: !!userA && !!userB,
+    refetchInterval: 10000,
   });
 };
 
