@@ -67,8 +67,8 @@ serve(async (req) => {
     const isApproved = payload.status === "approved";
     const titleShort = (payload.title ?? "Votre proposition").slice(0, 80);
 
-    // 1. Push notification (best-effort)
-    try {
+    // 1. Push notification (best-effort, respects preference)
+    if (pushEnabled) {
       const pushBody = {
         userId: payload.user_id,
         title: isApproved
