@@ -58,6 +58,8 @@ import ModerationSummaryDialog, { ModerationSummaryItem } from './ModerationSumm
 interface Message {
   id: string;
   sender_id: string;
+  recipient_id: string | null;
+  chat_room_id: string | null;
   content: string | null;
   message_type: string;
   created_at: string;
@@ -68,6 +70,14 @@ interface Message {
     username: string;
     avatar_url: string | null;
   };
+}
+
+interface Conversation {
+  key: string;
+  userA: { id: string; username: string; avatar_url: string | null };
+  userB: { id: string; username: string; avatar_url: string | null };
+  lastMessage: Message;
+  messageCount: number;
 }
 
 interface ProfilePhoto {
@@ -95,16 +105,17 @@ interface Album {
   };
 }
 
-const useRecentMessages = (search: string) => {
+const useRecentConversations = (search: string) => {
   return useQuery({
-    queryKey: ['admin-messages', search],
-    queryFn: async (): Promise<Message[]> => {
-      // Admin sees ALL messages including deleted ones
+    queryKey: ['admin-conversations', search],
+    queryFn: async (): Promise<Conversation[]> => {
       let query = supabase
         .from('messages')
-        .select('id, sender_id, content, message_type, created_at, is_private, deleted_at, deleted_by')
+        .select('id, sender_id, recipient_id, chat_room_id, content, message_type, created_at, is_private, deleted_at, deleted_by')
+        .eq('is_private', true)
+        .not('recipient_id', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (search.trim()) {
         query = query.ilike('content', `%${search}%`);
@@ -113,14 +124,29 @@ const useRecentMessages = (search: string) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch sender profiles
-      const senderIds = [...new Set(data?.map(m => m.sender_id) || [])];
+      // Group by user pair (canonical key = sorted ids)
+      const groups = new Map<string, Message[]>();
+      for (const msg of (data || []) as Message[]) {
+        if (!msg.recipient_id) continue;
+        const [a, b] = [msg.sender_id, msg.recipient_id].sort();
+        const key = `${a}__${b}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(msg);
+      }
+
+      // Resolve profiles
+      const userIds = new Set<string>();
+      groups.forEach((_, key) => {
+        const [a, b] = key.split('__');
+        userIds.add(a);
+        userIds.add(b);
+      });
+
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, username, avatar_url')
-        .in('user_id', senderIds);
+        .in('user_id', [...userIds]);
 
-      // Sign avatar URLs (private bucket)
       const signedMap = new Map<string, string | null>();
       await Promise.all(
         (profiles || []).map(async (p) => {
@@ -130,14 +156,69 @@ const useRecentMessages = (search: string) => {
       );
 
       const profileMap = new Map(
-        (profiles || []).map(p => [p.user_id, { ...p, avatar_url: signedMap.get(p.user_id) ?? null }])
+        (profiles || []).map(p => [p.user_id, { id: p.user_id, username: p.username, avatar_url: signedMap.get(p.user_id) ?? null }])
       );
 
-      return (data || []).map(msg => ({
-        ...msg,
-        sender: profileMap.get(msg.sender_id),
-      }));
+      const conversations: Conversation[] = [];
+      groups.forEach((msgs, key) => {
+        const [a, b] = key.split('__');
+        // already sorted desc by created_at because data is sorted desc; first is latest
+        const lastMessage = msgs[0];
+        conversations.push({
+          key,
+          userA: profileMap.get(a) || { id: a, username: 'Inconnu', avatar_url: null },
+          userB: profileMap.get(b) || { id: b, username: 'Inconnu', avatar_url: null },
+          lastMessage,
+          messageCount: msgs.length,
+        });
+      });
+
+      // Sort by latest message desc
+      conversations.sort(
+        (x, y) => new Date(y.lastMessage.created_at).getTime() - new Date(x.lastMessage.created_at).getTime()
+      );
+      return conversations;
     },
+    refetchInterval: 15000,
+  });
+};
+
+const useConversationMessages = (userA?: string, userB?: string) => {
+  return useQuery({
+    queryKey: ['admin-conversation-thread', userA, userB],
+    queryFn: async (): Promise<Message[]> => {
+      if (!userA || !userB) return [];
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id, sender_id, recipient_id, chat_room_id, content, message_type, created_at, is_private, deleted_at, deleted_by')
+        .eq('is_private', true)
+        .or(`and(sender_id.eq.${userA},recipient_id.eq.${userB}),and(sender_id.eq.${userB},recipient_id.eq.${userA})`)
+        .order('created_at', { ascending: true })
+        .limit(500);
+
+      if (error) throw error;
+
+      const userIds = [userA, userB];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, username, avatar_url')
+        .in('user_id', userIds);
+
+      const signedMap = new Map<string, string | null>();
+      await Promise.all(
+        (profiles || []).map(async (p) => {
+          const url = await getSignedAvatarUrl(p.avatar_url);
+          signedMap.set(p.user_id, url);
+        })
+      );
+      const profileMap = new Map(
+        (profiles || []).map(p => [p.user_id, { username: p.username, avatar_url: signedMap.get(p.user_id) ?? null }])
+      );
+
+      return ((data || []) as Message[]).map(m => ({ ...m, sender: profileMap.get(m.sender_id) }));
+    },
+    enabled: !!userA && !!userB,
+    refetchInterval: 10000,
   });
 };
 
@@ -257,7 +338,12 @@ const ContentModerationPanel = () => {
   const { user } = useAuth();
   const { data: activeTask } = useActiveTask();
   const { data: reportedUserIds = [], isLoading: reportedUsersLoading, refetch: refetchReportedUsers } = useReportedUsers();
-  const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useRecentMessages(messageSearch);
+  const { data: conversations, isLoading: messagesLoading, refetch: refetchMessages } = useRecentConversations(messageSearch);
+  const [openConversation, setOpenConversation] = useState<Conversation | null>(null);
+  const { data: threadMessages, isLoading: threadLoading } = useConversationMessages(
+    openConversation?.userA.id,
+    openConversation?.userB.id,
+  );
   const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } = useProfilePhotos(reportedUserIds);
   const { data: albums, isLoading: albumsLoading, refetch: refetchAlbums } = useAlbums(reportedUserIds);
 
@@ -533,13 +619,13 @@ const ContentModerationPanel = () => {
           </ScrollArea>
         </TabsContent>
 
-        {/* Messages Tab */}
+        {/* Messages Tab — grouped conversations */}
         <TabsContent value="messages" className="space-y-4">
           <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher dans les messages..."
+                placeholder="Rechercher dans les conversations..."
                 value={messageSearch}
                 onChange={(e) => setMessageSearch(e.target.value)}
                 className="pl-9"
@@ -550,88 +636,65 @@ const ContentModerationPanel = () => {
             </Button>
           </div>
 
-          <ScrollArea className="h-[400px]">
+          <ScrollArea className="h-[500px]">
             {messagesLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 rounded-lg" />
+                  <Skeleton key={i} className="h-20 rounded-lg" />
                 ))}
               </div>
-            ) : messages?.length === 0 ? (
+            ) : !conversations || conversations.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Aucun message trouvé</p>
+                <p>Aucune conversation trouvée</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {messages?.map((msg) => (
-                  <div
-                    key={msg.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setSummaryItem({
-                      kind: 'message',
-                      id: msg.id,
-                      userId: msg.sender_id,
-                      username: msg.sender?.username,
-                      avatarUrl: msg.sender?.avatar_url ?? null,
-                      content: msg.content,
-                      messageType: msg.message_type,
-                      isPrivate: msg.is_private,
-                      createdAt: msg.created_at,
-                      deletedAt: msg.deleted_at,
-                    })}
-                    className={`p-3 rounded-lg border transition-colors cursor-pointer ${
-                      msg.deleted_at 
-                        ? 'border-orange-500/30 bg-orange-500/5' 
-                        : 'border-border bg-card hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={msg.sender?.avatar_url || ''} />
-                        <AvatarFallback>
-                          {msg.sender?.username?.charAt(0).toUpperCase() || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm">{msg.sender?.username || 'Inconnu'}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: fr })}
-                          </span>
-                          {msg.is_private && (
-                            <Badge variant="outline" className="text-xs">Privé</Badge>
-                          )}
-                          {msg.deleted_at && (
-                            <Badge variant="secondary" className="text-xs bg-orange-500/20 text-orange-500">
-                              Supprimé par l'utilisateur
-                            </Badge>
-                          )}
+                {conversations.map((conv) => {
+                  const last = conv.lastMessage;
+                  const lastSender = last.sender_id === conv.userA.id ? conv.userA : conv.userB;
+                  return (
+                    <div
+                      key={conv.key}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setOpenConversation(conv)}
+                      className="p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex -space-x-3 shrink-0">
+                          <Avatar className="w-9 h-9 border-2 border-background">
+                            <AvatarImage src={conv.userA.avatar_url || ''} />
+                            <AvatarFallback>{conv.userA.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                          </Avatar>
+                          <Avatar className="w-9 h-9 border-2 border-background">
+                            <AvatarImage src={conv.userB.avatar_url || ''} />
+                            <AvatarFallback>{conv.userB.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                          </Avatar>
                         </div>
-                        <p className={`text-sm mt-1 truncate ${msg.deleted_at ? 'text-orange-500/80 italic' : 'text-muted-foreground'}`}>
-                          {msg.content || `[${msg.message_type}]`}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm truncate">
+                              {conv.userA.username} ↔ {conv.userB.username}
+                            </span>
+                            <Badge variant="outline" className="text-[10px]">{conv.messageCount} msg</Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(last.created_at), { addSuffix: true, locale: fr })}
+                            </span>
+                          </div>
+                          <p className={`text-sm mt-1 truncate ${last.deleted_at ? 'text-orange-500/80 italic' : 'text-muted-foreground'}`}>
+                            <span className="font-medium">{lastSender.username}: </span>
+                            {last.content || `[${last.message_type}]`}
+                          </p>
+                        </div>
                       </div>
-                      {!msg.deleted_at && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); confirmDelete('message', msg.id, msg.content || 'message'); }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
         </TabsContent>
-
-        {/* Photos Tab */}
         <TabsContent value="photos" className="space-y-4">
           <div className="flex justify-between items-center">
             <p className="text-sm text-muted-foreground flex items-center gap-2">
@@ -851,6 +914,108 @@ const ContentModerationPanel = () => {
           else if (it.kind === 'album') confirmDelete('album', it.id, it.name);
         }}
       />
+
+      {/* Conversation Thread Dialog */}
+      <Dialog open={!!openConversation} onOpenChange={(open) => !open && setOpenConversation(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-4 border-b border-border">
+            <DialogTitle className="flex items-center gap-3 text-base">
+              {openConversation && (
+                <>
+                  <div className="flex -space-x-2">
+                    <Avatar className="w-8 h-8 border-2 border-background">
+                      <AvatarImage src={openConversation.userA.avatar_url || ''} />
+                      <AvatarFallback>{openConversation.userA.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                    </Avatar>
+                    <Avatar className="w-8 h-8 border-2 border-background">
+                      <AvatarImage src={openConversation.userB.avatar_url || ''} />
+                      <AvatarFallback>{openConversation.userB.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <span>
+                    {openConversation.userA.username} ↔ {openConversation.userB.username}
+                  </span>
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription className="sr-only">Fil de conversation complet</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="flex-1 p-4">
+            {threadLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 rounded-lg" />
+                ))}
+              </div>
+            ) : !threadMessages || threadMessages.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                Aucun message
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {threadMessages.map((msg) => {
+                  const isUserA = msg.sender_id === openConversation?.userA.id;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex gap-2 ${isUserA ? 'justify-start' : 'justify-end'}`}
+                    >
+                      {isUserA && (
+                        <Avatar className="w-7 h-7 shrink-0">
+                          <AvatarImage src={msg.sender?.avatar_url || ''} />
+                          <AvatarFallback>{msg.sender?.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div
+                        className={`group max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+                          msg.deleted_at
+                            ? 'bg-orange-500/10 border border-orange-500/30 italic text-orange-500/80'
+                            : isUserA
+                              ? 'bg-muted text-foreground'
+                              : 'bg-primary text-primary-foreground'
+                        }`}
+                      >
+                        <div className="text-[10px] font-medium opacity-70 mb-0.5">
+                          {msg.sender?.username || 'Inconnu'}
+                        </div>
+                        <div className="whitespace-pre-wrap break-words">
+                          {msg.content || `[${msg.message_type}]`}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] opacity-60">
+                            {format(new Date(msg.created_at), 'dd/MM HH:mm', { locale: fr })}
+                          </span>
+                          {msg.deleted_at && (
+                            <Badge variant="secondary" className="text-[9px] py-0 h-4">
+                              Supprimé
+                            </Badge>
+                          )}
+                          {!msg.deleted_at && (
+                            <button
+                              type="button"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => confirmDelete('message', msg.id, msg.content || 'message')}
+                              title="Supprimer le message"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {!isUserA && (
+                        <Avatar className="w-7 h-7 shrink-0">
+                          <AvatarImage src={msg.sender?.avatar_url || ''} />
+                          <AvatarFallback>{msg.sender?.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
