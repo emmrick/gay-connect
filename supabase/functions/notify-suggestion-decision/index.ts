@@ -133,7 +133,11 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, email_sent: !!email }),
+      JSON.stringify({
+        success: true,
+        push_sent: pushEnabled,
+        email_sent: !!email && emailEnabled,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
