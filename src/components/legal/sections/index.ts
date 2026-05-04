@@ -1,0 +1,10 @@
+export { default as CGUSection } from './CGUSection';
+export { default as PrivacySection } from './PrivacySection';
+export { default as CookiesSection } from './CookiesSection';
+export { default as DataRetentionSection } from './DataRetentionSection';
+export { default as PurgePolicySection } from './PurgePolicySection';
+export { default as AntiProstitutionSection } from './AntiProstitutionSection';
+export { default as CGVSection } from './CGVSection';
+export { default as RulesSection } from './RulesSection';
+export { default as ProtectionSection } from './ProtectionSection';
+export { default as MentionsLegalesSection } from './MentionsLegalesSection';
