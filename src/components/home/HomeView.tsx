@@ -119,6 +119,13 @@ const HomeView = ({
                   </span>
                 )}
               </TabsTrigger>
+              <TabsTrigger
+                value="carte"
+                className="gap-1 text-xs font-bold rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-accent/10 data-[state=active]:border data-[state=active]:border-primary/20 data-[state=active]:shadow-sm data-[state=active]:shadow-primary/10"
+              >
+                <MapIcon className="w-3.5 h-3.5" />
+                <span className="hidden min-[400px]:inline">Carte</span>
+              </TabsTrigger>
             </TabsList>
 
             <Popover open={filterOpen} onOpenChange={setFilterOpen}>
