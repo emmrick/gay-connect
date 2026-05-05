@@ -17,13 +17,14 @@ import FavoritesGrid from './FavoritesGrid';
 import AdOrInfoBanner from './AdOrInfoBanner';
 import VisitsTab from './VisitsTab';
 import ReactionsTab from './ReactionsTab';
+import MapTab from './MapTab';
 
 interface HomeViewProps {
   onViewProfile?: (userId: string) => void;
   onStartPrivateChat?: (userId: string) => void;
 }
 
-type HomeSection = 'accueil' | 'favorites' | 'visites' | 'reactions';
+type HomeSection = 'accueil' | 'favorites' | 'visites' | 'reactions' | 'carte';
 
 const HomeView = ({ 
   onViewProfile,
