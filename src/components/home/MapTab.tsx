@@ -134,7 +134,7 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
           <Marker
             key={p.user_id}
             position={[p.latitude, p.longitude]}
-            icon={buildAvatarIcon(p.avatar_url)}
+            icon={buildAvatarIcon(p.avatar_url, p.username, { isOnline: p.is_online })}
             eventHandlers={{
               click: () => onViewProfile?.(p.user_id),
             }}
