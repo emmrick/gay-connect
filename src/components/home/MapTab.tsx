@@ -39,12 +39,34 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
   const { latitude, longitude, loading, error, permissionState, requestLocation } = useGeolocation();
   const { data: profiles = [], isLoading } = useNearbyProfiles(latitude, longitude, 50);
 
+  const userIds = useMemo(() => profiles.map((p: any) => p.user_id), [profiles]);
+
+  const { data: coords = [] } = useQuery({
+    queryKey: ['nearby-profile-coords', userIds.join(',')],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id, latitude, longitude')
+        .in('user_id', userIds);
+      return data ?? [];
+    },
+    staleTime: 60000,
+  });
+
   const hasLocation = latitude != null && longitude != null;
 
-  const markers = useMemo(
-    () => profiles.filter((p: any) => p.latitude != null && p.longitude != null),
-    [profiles]
-  );
+  const markers = useMemo(() => {
+    const coordMap = new Map(coords.map((c: any) => [c.user_id, c]));
+    return profiles
+      .map((p: any) => {
+        const c = coordMap.get(p.user_id) as any;
+        return c?.latitude != null && c?.longitude != null
+          ? { ...p, latitude: c.latitude, longitude: c.longitude }
+          : null;
+      })
+      .filter(Boolean) as any[];
+  }, [profiles, coords]);
 
   if (!hasLocation) {
     return (
