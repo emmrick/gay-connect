@@ -158,6 +158,7 @@ export const usePrivateMessages = (otherUserId: string | null) => {
           event: 'UPDATE',
           schema: 'public',
           table: 'messages',
+          filter: 'is_private=eq.true',
         },
         (payload) => {
           const updatedMsg = payload.new as Message;
