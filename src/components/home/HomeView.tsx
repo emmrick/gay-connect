@@ -80,7 +80,7 @@ const HomeView = ({
           if (section === 'visites') markVisitsSeen();
         }}>
           <div className="flex items-center gap-2">
-            <TabsList className="flex-1 grid grid-cols-4 h-11 p-1 bg-card/80 backdrop-blur-xl border border-border/40 rounded-2xl">
+            <TabsList className="flex-1 grid grid-cols-5 h-11 p-1 bg-card/80 backdrop-blur-xl border border-border/40 rounded-2xl">
               <TabsTrigger
                 value="accueil"
                 className="gap-1 text-xs font-bold rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/15 data-[state=active]:to-accent/10 data-[state=active]:border data-[state=active]:border-primary/20 data-[state=active]:shadow-sm data-[state=active]:shadow-primary/10"
