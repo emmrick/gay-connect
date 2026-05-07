@@ -120,6 +120,18 @@ const HenryChat = () => {
     }
   }, [matches, matchIndex, shownIds]);
 
+  // Réhydratation depuis le serveur : merge shown_profile_ids persistés en BDD
+  // pour que l'exclusion survive à un nettoyage du sessionStorage / autre device.
+  useEffect(() => {
+    const serverShown = (conversation as any)?.shown_profile_ids;
+    if (Array.isArray(serverShown) && serverShown.length > 0) {
+      setShownIds((prev) => {
+        const merged = Array.from(new Set([...prev, ...serverShown]));
+        return merged.length === prev.length ? prev : merged;
+      });
+    }
+  }, [conversation]);
+
   const currentStep = (conversation?.current_step ?? 'greeting') as HenryStep;
   const stepDef = HENRY_FLOW[currentStep];
 
