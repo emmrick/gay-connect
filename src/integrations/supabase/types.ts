@@ -3891,6 +3891,33 @@ export type Database = {
           },
         ]
       }
+      suggestion_notification_log: {
+        Row: {
+          channel: string
+          id: string
+          sent_at: string
+          status: string
+          suggestion_id: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          id?: string
+          sent_at?: string
+          status: string
+          suggestion_id: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          id?: string
+          sent_at?: string
+          status?: string
+          suggestion_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       suggestion_votes: {
         Row: {
           created_at: string
