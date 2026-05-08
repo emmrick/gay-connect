@@ -66,6 +66,9 @@ serve(async (req) => {
 
     const isApproved = payload.status === "approved";
     const titleShort = (payload.title ?? "Votre proposition").slice(0, 80);
+    const APP_BASE_URL = Deno.env.get("APP_BASE_URL") ?? "https://gaysocial.fr";
+    const suggestionPath = `/profile?suggestion=${encodeURIComponent(payload.suggestion_id)}`;
+    const suggestionUrl = `${APP_BASE_URL}${suggestionPath}`;
 
     // Dedup / rate-limit window: 1h between notifications for the same suggestion+channel,
     // and never twice for the same (suggestion, status, channel) — enforced by unique index.
