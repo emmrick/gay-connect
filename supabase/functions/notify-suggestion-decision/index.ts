@@ -148,6 +148,7 @@ serve(async (req) => {
           pseudo,
           suggestionTitle: payload.title ?? undefined,
           adminNotes: payload.admin_notes ?? undefined,
+          suggestionUrl,
         };
         if (isApproved && payload.credits_awarded && payload.credits_awarded > 0) {
           templateData.creditsAwarded = payload.credits_awarded;
