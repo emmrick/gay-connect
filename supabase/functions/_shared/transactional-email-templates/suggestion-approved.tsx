@@ -11,6 +11,7 @@ interface SuggestionApprovedProps {
   suggestionTitle?: string
   creditsAwarded?: number
   adminNotes?: string
+  suggestionUrl?: string
 }
 
 const SuggestionApprovedEmail = ({
@@ -18,6 +19,7 @@ const SuggestionApprovedEmail = ({
   suggestionTitle,
   creditsAwarded,
   adminNotes,
+  suggestionUrl,
 }: SuggestionApprovedProps) => (
   <Html lang="fr" dir="ltr">
     <Head />
