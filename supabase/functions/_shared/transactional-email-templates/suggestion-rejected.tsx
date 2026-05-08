@@ -10,12 +10,14 @@ interface SuggestionRejectedProps {
   pseudo?: string
   suggestionTitle?: string
   adminNotes?: string
+  suggestionUrl?: string
 }
 
 const SuggestionRejectedEmail = ({
   pseudo,
   suggestionTitle,
   adminNotes,
+  suggestionUrl,
 }: SuggestionRejectedProps) => (
   <Html lang="fr" dir="ltr">
     <Head />
