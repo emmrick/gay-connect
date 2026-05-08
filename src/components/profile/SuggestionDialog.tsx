@@ -57,7 +57,7 @@ const MAX_FILES = 5;
 
 type ViewMode = 'form' | 'community' | 'history';
 
-const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
+const SuggestionDialog = ({ open, onOpenChange, initialSuggestionId }: SuggestionDialogProps) => {
   const { user } = useAuth();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +68,29 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
   const [attachments, setAttachments] = useState<AttachmentMeta[]>([]);
   const [uploading, setUploading] = useState(false);
   const [view, setView] = useState<ViewMode>('form');
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  // When opened with a target suggestion id (deep link from email/push notif),
+  // jump directly to "Mes idées" and highlight the row.
+  useEffect(() => {
+    if (open && initialSuggestionId) {
+      setView('history');
+      setHighlightedId(initialSuggestionId);
+      // Auto-fade highlight after a few seconds
+      const t = setTimeout(() => setHighlightedId(null), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [open, initialSuggestionId]);
+
+  // Scroll the highlighted suggestion into view once it's in the DOM
+  useEffect(() => {
+    if (!highlightedId || view !== 'history') return;
+    const id = window.setTimeout(() => {
+      const el = document.getElementById(`suggestion-row-${highlightedId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+    return () => window.clearTimeout(id);
+  }, [highlightedId, view, suggestions]);
 
   // Reset scroll on view switch so the user always lands at the top
   useEffect(() => {
