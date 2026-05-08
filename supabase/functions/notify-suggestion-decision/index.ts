@@ -66,6 +66,9 @@ serve(async (req) => {
 
     const isApproved = payload.status === "approved";
     const titleShort = (payload.title ?? "Votre proposition").slice(0, 80);
+    const APP_BASE_URL = Deno.env.get("APP_BASE_URL") ?? "https://gaysocial.fr";
+    const suggestionPath = `/profile?suggestion=${encodeURIComponent(payload.suggestion_id)}`;
+    const suggestionUrl = `${APP_BASE_URL}${suggestionPath}`;
 
     // Dedup / rate-limit window: 1h between notifications for the same suggestion+channel,
     // and never twice for the same (suggestion, status, channel) — enforced by unique index.
@@ -114,7 +117,7 @@ serve(async (req) => {
               ? `« ${titleShort} » — +${payload.credits_awarded} crédits crédités !`
               : `« ${titleShort} » a été approuvée. Merci !`
             : `« ${titleShort} » n'a pas été retenue cette fois-ci.`,
-          url: "/profile",
+          url: suggestionPath,
           tag: `suggestion-${payload.suggestion_id}`,
           notificationType: "system",
         };
@@ -145,6 +148,7 @@ serve(async (req) => {
           pseudo,
           suggestionTitle: payload.title ?? undefined,
           adminNotes: payload.admin_notes ?? undefined,
+          suggestionUrl,
         };
         if (isApproved && payload.credits_awarded && payload.credits_awarded > 0) {
           templateData.creditsAwarded = payload.credits_awarded;

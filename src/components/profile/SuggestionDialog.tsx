@@ -34,6 +34,7 @@ import CommunitySuggestions from './CommunitySuggestions';
 interface SuggestionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialSuggestionId?: string | null;
 }
 
 interface AttachmentMeta {
@@ -56,7 +57,7 @@ const MAX_FILES = 5;
 
 type ViewMode = 'form' | 'community' | 'history';
 
-const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
+const SuggestionDialog = ({ open, onOpenChange, initialSuggestionId }: SuggestionDialogProps) => {
   const { user } = useAuth();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +68,37 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
   const [attachments, setAttachments] = useState<AttachmentMeta[]>([]);
   const [uploading, setUploading] = useState(false);
   const [view, setView] = useState<ViewMode>('form');
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  // When opened with a target suggestion id (deep link from email/push notif),
+  // jump directly to "Mes idées" and highlight the row.
+  useEffect(() => {
+    if (open && initialSuggestionId) {
+      setView('history');
+      setHighlightedId(initialSuggestionId);
+      // Auto-fade highlight after a few seconds
+      const t = setTimeout(() => setHighlightedId(null), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [open, initialSuggestionId]);
+
+  // Scroll the highlighted suggestion into view once it's in the DOM.
+  // Polls briefly because the suggestions list is async-loaded.
+  useEffect(() => {
+    if (!highlightedId || view !== 'history') return;
+    let tries = 0;
+    const interval = window.setInterval(() => {
+      tries += 1;
+      const el = document.getElementById(`suggestion-row-${highlightedId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.clearInterval(interval);
+      } else if (tries > 25) {
+        window.clearInterval(interval);
+      }
+    }, 200);
+    return () => window.clearInterval(interval);
+  }, [highlightedId, view]);
 
   // Reset scroll on view switch so the user always lands at the top
   useEffect(() => {
@@ -516,7 +548,16 @@ const SuggestionDialog = ({ open, onOpenChange }: SuggestionDialogProps) => {
                     const Icon = cfg.icon;
                     const atts = (s.attachments as any as AttachmentMeta[]) ?? [];
                     return (
-                      <div key={s.id} className="rounded-2xl border border-border bg-card p-3.5 space-y-2">
+                      <div
+                        key={s.id}
+                        id={`suggestion-row-${s.id}`}
+                        className={cn(
+                          'rounded-2xl border bg-card p-3.5 space-y-2 transition-all',
+                          highlightedId === s.id
+                            ? 'border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/10'
+                            : 'border-border'
+                        )}
+                      >
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="font-bold text-sm flex-1 leading-snug">{s.title}</h4>
                           <Badge variant="outline" className={cn(cfg.className, 'flex-shrink-0 text-[10px] rounded-full')}>

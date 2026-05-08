@@ -11,6 +11,7 @@ interface SuggestionApprovedProps {
   suggestionTitle?: string
   creditsAwarded?: number
   adminNotes?: string
+  suggestionUrl?: string
 }
 
 const SuggestionApprovedEmail = ({
@@ -18,6 +19,7 @@ const SuggestionApprovedEmail = ({
   suggestionTitle,
   creditsAwarded,
   adminNotes,
+  suggestionUrl,
 }: SuggestionApprovedProps) => (
   <Html lang="fr" dir="ltr">
     <Head />
@@ -64,8 +66,8 @@ const SuggestionApprovedEmail = ({
         ) : null}
 
         <Section style={buttonSection}>
-          <Button style={primaryButton} href="https://gaysocial.fr">
-            Voir mes idées
+          <Button style={primaryButton} href={suggestionUrl ?? 'https://gaysocial.fr/profile'}>
+            {suggestionUrl ? 'Voir mon idée' : 'Voir mes idées'}
           </Button>
         </Section>
 
@@ -87,6 +89,7 @@ export const template = {
     pseudo: 'Maxime',
     suggestionTitle: 'Ajouter un mode sombre amélioré',
     creditsAwarded: 30,
+    suggestionUrl: 'https://gaysocial.fr/profile?suggestion=demo',
     adminNotes: 'Excellente idée, on l\'intègre dès la prochaine mise à jour !',
   },
 } satisfies TemplateEntry

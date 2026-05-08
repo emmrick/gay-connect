@@ -20,7 +20,7 @@ import ProfileInfoCards from './ProfileInfoCards';
 import ProfileStatsGrid from './ProfileStatsGrid';
 import SuggestionDialog from './SuggestionDialog';
 import { Lightbulb, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const POSITION_LABELS: Record<string, string> = {
   'actif': '🔝 Actif', 'passif': '🔽 Passif', 'versatile': '↕️ Versatile',
@@ -59,11 +59,13 @@ interface ProfileViewProps {
 const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onContactAdmin, onNavigateToChatbot, isAdmin, isModerator, openEditProfile, onEditProfileHandled }: ProfileViewProps) => {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: stats, isLoading: statsLoading } = useProfileStats();
   const { data: isAdminUser } = useIsAdmin();
   const { favorites } = useUserFavorites();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showSuggestionDialog, setShowSuggestionDialog] = useState(false);
+  const [targetSuggestionId, setTargetSuggestionId] = useState<string | null>(null);
   const featureFlags = useFeatureFlags();
 
   // Open edit dialog when triggered from notification redirect
@@ -73,6 +75,19 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
       onEditProfileHandled?.();
     }
   }, [openEditProfile, onEditProfileHandled]);
+
+  // Deep link from email/push notification: /profile?suggestion=<id>
+  useEffect(() => {
+    const sid = searchParams.get('suggestion');
+    if (sid) {
+      setTargetSuggestionId(sid);
+      setShowSuggestionDialog(true);
+      // Clean URL so refresh doesn't re-open
+      const next = new URLSearchParams(searchParams);
+      next.delete('suggestion');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   if (!profile) {
     return (
@@ -85,7 +100,14 @@ const ProfileView = ({ onSignOut, onNavigateToAdmin, onNavigateToCredits, onCont
   return (
     <div className="animate-fade-in pb-24 bg-background">
       <ProfileEditDialog open={showEditDialog} onOpenChange={setShowEditDialog} />
-      <SuggestionDialog open={showSuggestionDialog} onOpenChange={setShowSuggestionDialog} />
+      <SuggestionDialog
+        open={showSuggestionDialog}
+        onOpenChange={(o) => {
+          setShowSuggestionDialog(o);
+          if (!o) setTargetSuggestionId(null);
+        }}
+        initialSuggestionId={targetSuggestionId}
+      />
 
       {/* Hero Card */}
       <ProfileHeroCard

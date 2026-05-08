@@ -10,12 +10,14 @@ interface SuggestionRejectedProps {
   pseudo?: string
   suggestionTitle?: string
   adminNotes?: string
+  suggestionUrl?: string
 }
 
 const SuggestionRejectedEmail = ({
   pseudo,
   suggestionTitle,
   adminNotes,
+  suggestionUrl,
 }: SuggestionRejectedProps) => (
   <Html lang="fr" dir="ltr">
     <Head />
@@ -58,8 +60,8 @@ const SuggestionRejectedEmail = ({
         </Text>
 
         <Section style={buttonSection}>
-          <Button style={primaryButton} href="https://gaysocial.fr">
-            Proposer une nouvelle idée
+          <Button style={primaryButton} href={suggestionUrl ?? 'https://gaysocial.fr/profile'}>
+            {suggestionUrl ? 'Voir ma proposition' : 'Proposer une nouvelle idée'}
           </Button>
         </Section>
 
@@ -80,6 +82,7 @@ export const template = {
   previewData: {
     pseudo: 'Maxime',
     suggestionTitle: 'Ajouter un mode sombre amélioré',
+    suggestionUrl: 'https://gaysocial.fr/profile?suggestion=demo',
     adminNotes: 'Cette fonctionnalité existe déjà dans les paramètres d\'apparence.',
   },
 } satisfies TemplateEntry
