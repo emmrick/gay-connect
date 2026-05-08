@@ -67,8 +67,42 @@ serve(async (req) => {
     const isApproved = payload.status === "approved";
     const titleShort = (payload.title ?? "Votre proposition").slice(0, 80);
 
-    // 1. Push notification (best-effort, respects preference)
-    if (pushEnabled) {
+    // Dedup / rate-limit window: 1h between notifications for the same suggestion+channel,
+    // and never twice for the same (suggestion, status, channel) — enforced by unique index.
+    const RATE_LIMIT_MS = 60 * 60 * 1000;
+    const sinceIso = new Date(Date.now() - RATE_LIMIT_MS).toISOString();
+
+    const { data: recentLogs } = await admin
+      .from("suggestion_notification_log")
+      .select("channel, status, sent_at")
+      .eq("suggestion_id", payload.suggestion_id)
+      .gte("sent_at", sinceIso);
+
+    const alreadySent = (channel: "email" | "push") =>
+      (recentLogs ?? []).some(
+        (l: any) =>
+          l.channel === channel &&
+          (l.status === payload.status || // exact same decision: skip forever (unique idx)
+            true), // any decision in last 1h: skip (rate limit)
+      );
+
+    const logSent = async (channel: "email" | "push") => {
+      const { error } = await admin
+        .from("suggestion_notification_log")
+        .insert({
+          suggestion_id: payload.suggestion_id,
+          user_id: payload.user_id,
+          status: payload.status,
+          channel,
+        });
+      if (error) console.warn("[notify-suggestion-decision] log insert:", error.message);
+    };
+
+    let pushSent = false;
+    let emailSent = false;
+
+    // 1. Push notification (best-effort, respects preference + dedup)
+    if (pushEnabled && !alreadySent("push")) {
       try {
         const pushBody = {
           userId: payload.user_id,
@@ -93,13 +127,15 @@ serve(async (req) => {
           },
           body: JSON.stringify(pushBody),
         });
+        await logSent("push");
+        pushSent = true;
       } catch (e) {
         console.error("[notify-suggestion-decision] push error:", e);
       }
     }
 
-    // 2. Transactional email (best-effort, respects preference)
-    if (email && emailEnabled) {
+    // 2. Transactional email (best-effort, respects preference + dedup)
+    if (email && emailEnabled && !alreadySent("email")) {
       try {
         const templateName = isApproved
           ? "suggestion-approved"
@@ -127,6 +163,8 @@ serve(async (req) => {
             templateData,
           }),
         });
+        await logSent("email");
+        emailSent = true;
       } catch (e) {
         console.error("[notify-suggestion-decision] email error:", e);
       }
@@ -135,8 +173,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        push_sent: pushEnabled,
-        email_sent: !!email && emailEnabled,
+        push_sent: pushSent,
+        email_sent: emailSent,
+        deduped: {
+          push: pushEnabled && !pushSent,
+          email: !!email && emailEnabled && !emailSent,
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
