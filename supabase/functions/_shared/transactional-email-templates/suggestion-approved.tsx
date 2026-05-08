@@ -89,6 +89,7 @@ export const template = {
     pseudo: 'Maxime',
     suggestionTitle: 'Ajouter un mode sombre amélioré',
     creditsAwarded: 30,
+    suggestionUrl: 'https://gaysocial.fr/profile?suggestion=demo',
     adminNotes: 'Excellente idée, on l\'intègre dès la prochaine mise à jour !',
   },
 } satisfies TemplateEntry
