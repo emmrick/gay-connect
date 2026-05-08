@@ -548,7 +548,16 @@ const SuggestionDialog = ({ open, onOpenChange, initialSuggestionId }: Suggestio
                     const Icon = cfg.icon;
                     const atts = (s.attachments as any as AttachmentMeta[]) ?? [];
                     return (
-                      <div key={s.id} className="rounded-2xl border border-border bg-card p-3.5 space-y-2">
+                      <div
+                        key={s.id}
+                        id={`suggestion-row-${s.id}`}
+                        className={cn(
+                          'rounded-2xl border bg-card p-3.5 space-y-2 transition-all',
+                          highlightedId === s.id
+                            ? 'border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/10'
+                            : 'border-border'
+                        )}
+                      >
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="font-bold text-sm flex-1 leading-snug">{s.title}</h4>
                           <Badge variant="outline" className={cn(cfg.className, 'flex-shrink-0 text-[10px] rounded-full')}>
