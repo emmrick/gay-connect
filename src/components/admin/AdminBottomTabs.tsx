@@ -20,7 +20,7 @@ import {
   ListOrdered, Headphones, Star, IdCard, MessageSquare, Bot, Camera, Filter,
   BarChart3, UserCog, Activity, ShoppingCart, Euro, ArrowUpRight, PieChart,
   Bell, HelpCircle, FileImage, Sparkles, Rocket, Ticket, Megaphone, Coins,
-  Heart, Wrench, ToggleLeft, ShieldAlert,
+  Heart, Wrench, ToggleLeft, ShieldAlert, Radio, Lightbulb, Mail, Clock,
 } from 'lucide-react';
 
 interface AdminBottomTabsProps {
@@ -47,7 +47,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: 'home',       label: 'Accueil',    icon: Home,   sections: ['dashboard'], target: 'dashboard' },
-  { id: 'moderation', label: 'Modération', icon: Shield, sections: ['reports', 'moderation', 'ai-moderation', 'screenshot-sanctions', 'verification', 'pending-tasks', 'support', 'support-ratings'], target: 'reports' },
+  { id: 'moderation', label: 'Modération', icon: Shield, sections: ['reports', 'moderation', 'ai-moderation', 'screenshot-sanctions', 'verification', 'pending-tasks', 'support', 'support-ratings', 'live-content', 'suggestions'], target: 'reports' },
   { id: 'members',    label: 'Membres',    icon: Users,  sections: ['users', 'stats', 'moderators'], target: 'users' },
   { id: 'finances',   label: 'Finances',   icon: Wallet, sections: ['wallet', 'credits-surveillance', 'credit-purchases', 'rates', 'withdrawals', 'global'], target: 'wallet' },
   { id: 'more',       label: 'Plus',       icon: MoreHorizontal, sections: [], target: 'dashboard' },
@@ -64,6 +64,8 @@ interface MoreItem {
 }
 
 const MORE_ITEMS: MoreItem[] = [
+  { id: 'live-content',    label: 'Direct',       icon: Radio,       group: 'communication', permissionKey: 'can_manage_content' },
+  { id: 'suggestions',     label: 'Idées',        icon: Lightbulb,   group: 'communication', permissionKey: 'can_manage_content' },
   { id: 'broadcast',       label: 'Push',         icon: Bell,        group: 'communication', adminOnly: true, permissionKey: 'can_broadcast' },
   { id: 'popups',          label: 'Pop-ups',      icon: Bell,        group: 'communication', adminOnly: true, permissionKey: 'can_manage_popups' },
   { id: 'faq',             label: 'Aide',         icon: HelpCircle,  group: 'communication', adminOnly: true, permissionKey: 'can_manage_faq' },
@@ -78,6 +80,8 @@ const MORE_ITEMS: MoreItem[] = [
   { id: 'feature-toggles', label: 'Toggles',      icon: ToggleLeft,  group: 'config',        adminOnly: true },
   { id: 'error-logs',      label: 'Erreurs',      icon: Activity,    group: 'logs',          adminOnly: true, permissionKey: 'can_view_logs' },
   { id: 'security',        label: 'Sécurité',     icon: ShieldAlert, group: 'logs',          adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'emails',          label: 'E-mails',      icon: Mail,        group: 'logs',          adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'cron-logs',       label: 'Cron',         icon: Clock,       group: 'logs',          adminOnly: true, permissionKey: 'can_view_logs' },
 ];
 
 const GROUP_LABELS = {

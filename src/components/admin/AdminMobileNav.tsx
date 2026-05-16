@@ -4,7 +4,7 @@ import {
   MessageSquare, IdCard, Ticket, Coins, Bell,
   Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, ListOrdered, 
   Headphones, Star, HelpCircle, ArrowLeft, FileImage, Megaphone, Sparkles, ToggleLeft, Rocket,
-  ChevronLeft
+  ChevronLeft, Radio, Lightbulb, Mail, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,8 @@ const navItems: NavItem[] = [
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation', permissionKey: 'can_manage_content' },
   { id: 'ai-moderation', label: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
+  { id: 'live-content' as AdminSection, label: 'Direct', icon: Radio, group: 'moderation', permissionKey: 'can_manage_content' },
+  { id: 'suggestions' as AdminSection, label: 'Idées', icon: Lightbulb, group: 'moderation', permissionKey: 'can_manage_content' },
   { id: 'users', label: 'Membres', icon: Users, group: 'users', adminOnly: true, permissionKey: 'can_manage_users' },
   { id: 'stats', label: 'Stats', icon: BarChart3, group: 'users', adminOnly: true, permissionKey: 'can_view_stats' },
   { id: 'moderators', label: 'Équipe', icon: UserCog, group: 'users', adminOnly: true },
@@ -68,6 +70,8 @@ const navItems: NavItem[] = [
   { id: 'feature-toggles' as AdminSection, label: 'Toggles', icon: ToggleLeft, group: 'config', adminOnly: true },
   { id: 'error-logs', label: 'Erreurs', icon: Activity, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
   { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'emails' as AdminSection, label: 'E-mails', icon: Mail, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'cron-logs' as AdminSection, label: 'Cron', icon: Clock, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
 ];
 
 const groupConfig: Record<NavGroup, { label: string; emoji: string }> = {
