@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useAdmin';
 import { useBlockedUserContext } from '@/components/BlockedUserGuard';
@@ -53,7 +53,7 @@ const ProfilePage = () => {
         onNavigateToProfile={() => {}}
       />
       <ScrollArea className="flex-1 min-h-0">
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+        <Suspense fallback={null}>
           <ProfileView
             onSignOut={handleSignOut}
             onNavigateToAdmin={isRestricted ? undefined : () => navigate('/admin')}

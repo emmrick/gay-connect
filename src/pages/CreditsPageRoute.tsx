@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import UnifiedPageHeader from '@/components/layout/UnifiedPageHeader';
@@ -24,7 +23,7 @@ const CreditsPageRoute = () => {
         rightContent={<Suspense fallback={null}><ReferralDialog /></Suspense>}
       />
       <ScrollArea className="flex-1 min-h-0">
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+        <Suspense fallback={null}>
           <CreditsPage />
         </Suspense>
       </ScrollArea>

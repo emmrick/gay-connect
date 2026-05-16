@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePrivateConversations } from '@/hooks/usePrivateConversations';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
@@ -31,7 +30,7 @@ const SwipePageRoute = () => {
         onNavigateToCredits={() => navigate('/credits')}
         onNavigateToProfile={() => navigate('/profile')}
       />
-      <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+      <Suspense fallback={null}>
         <SwipePage onStartChat={handleStartChat} />
       </Suspense>
     </div>
