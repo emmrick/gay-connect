@@ -115,10 +115,8 @@ Deno.serve(async (req) => {
               const filePaths = files.map(f => `${userId}/${f.name}`)
               await supabase.storage.from(bucket).remove(filePaths)
             }
-            await logCronRun("purge-inactive-accounts", "success", { durationMs: Date.now() - __cronStart });
           }
   const __cronStart = Date.now(); catch (e) {
-    await logCronRun("purge-inactive-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
             // Bucket might not exist or no files, continue
           }
         }
@@ -220,6 +218,7 @@ Deno.serve(async (req) => {
       warnings_sent: warningsSent,
       errors: errors.length > 0 ? errors : undefined,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+
 
     await logCronRun("purge-inactive-accounts", "success", { durationMs: Date.now() - __cronStart });
 

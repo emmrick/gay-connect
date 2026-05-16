@@ -87,10 +87,8 @@ Deno.serve(async (req) => {
           deletedCount++
           console.log(`[RGPD Cleanup] Successfully cleaned up verification ${verification.id}`)
         }
-        await logCronRun("cleanup-expired-verifications", "success", { durationMs: Date.now() - __cronStart });
       }
   const __cronStart = Date.now(); catch (err) {
-    await logCronRun("cleanup-expired-verifications", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
         console.error(`[RGPD Cleanup] Error processing verification ${verification.id}:`, err)
         errorCount++
       }
@@ -150,6 +148,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
+
     await logCronRun("cleanup-expired-verifications", "success", { durationMs: Date.now() - __cronStart });
 
   } catch (error) {

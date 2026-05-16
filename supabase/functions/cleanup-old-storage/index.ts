@@ -133,12 +133,11 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: true, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-    await logCronRun("cleanup-old-storage", "success", { durationMs: Date.now() - __cronStart });
+
     await logCronRun("cleanup-old-storage", "success", { durationMs: Date.now() - __cronStart });
 
   } catch (error: unknown) {
     const __errMsg = (error instanceof Error) ? error.message : String(error);
-    await logCronRun("cleanup-old-storage", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     await logCronRun("cleanup-old-storage", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     console.error("Cleanup error:", error);
     const msg = error instanceof Error ? error.message : "Unknown error";

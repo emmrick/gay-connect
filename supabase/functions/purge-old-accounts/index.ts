@@ -103,10 +103,8 @@ Deno.serve(async (req) => {
           } else {
             purgedCount++
           }
-          await logCronRun("purge-old-accounts", "success", { durationMs: Date.now() - __cronStart });
         }
   const __cronStart = Date.now(); catch (e) {
-    await logCronRun("purge-old-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
           errors.push(`${user.user_id}: ${e.message}`)
         }
       }
@@ -148,6 +146,7 @@ Deno.serve(async (req) => {
       data_cleaned_tables: dataCleanedTables,
       errors: errors.length ? errors : undefined,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+
 
     await logCronRun("purge-old-accounts", "success", { durationMs: Date.now() - __cronStart });
 

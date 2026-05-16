@@ -146,12 +146,11 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: true, updates_count: updates.length }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-    await logCronRun("post-daily-updates", "success", { durationMs: Date.now() - __cronStart });
+
     await logCronRun("post-daily-updates", "success", { durationMs: Date.now() - __cronStart });
 
   } catch (error) {
     const __errMsg = (error instanceof Error) ? error.message : String(error);
-    await logCronRun("post-daily-updates", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     await logCronRun("post-daily-updates", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     console.error('Error posting daily updates:', error);
     return new Response(

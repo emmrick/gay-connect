@@ -102,9 +102,7 @@ Deno.serve(async (req) => {
             } else {
               await supabase.from(item.table).delete().eq(item.column, userId);
             }
-            await logCronRun("purge-deleted-accounts", "success", { durationMs: Date.now() - __cronStart });
           } catch (e) {
-    await logCronRun("purge-deleted-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
             // Continue with other tables even if one fails
             console.warn(`Warning cleaning ${item.table}: ${e}`);
           }
@@ -148,6 +146,7 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
     await logCronRun("purge-deleted-accounts", "success", { durationMs: Date.now() - __cronStart });
 
   } catch (e) {

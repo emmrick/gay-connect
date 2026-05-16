@@ -125,9 +125,7 @@ Deno.serve(async (req) => {
               notificationType: 'system',
             }),
           });
-          await logCronRun("check-expired-album-shares", "success", { durationMs: Date.now() - __cronStart });
         } catch (pushErr) {
-    await logCronRun("check-expired-album-shares", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
           console.error("Error sending push for album expiry:", pushErr);
         }
       }
@@ -155,6 +153,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
+
     await logCronRun("check-expired-album-shares", "success", { durationMs: Date.now() - __cronStart });
 
   } catch (error: unknown) {

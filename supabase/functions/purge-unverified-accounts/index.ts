@@ -100,10 +100,8 @@ Deno.serve(async (req) => {
                   }),
                 })
                 console.log(`[PURGE] Push notification sent to ${user.user_id} (J-${daysBefore})`)
-                await logCronRun("purge-unverified-accounts", "success", { durationMs: Date.now() - __cronStart });
               }
   const __cronStart = Date.now(); catch (pushErr) {
-    await logCronRun("purge-unverified-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
                 console.warn(`[PURGE] Failed to send push to ${user.user_id}:`, pushErr)
               }
             }
@@ -240,6 +238,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
+
     await logCronRun("purge-unverified-accounts", "success", { durationMs: Date.now() - __cronStart });
 
   } catch (error) {
