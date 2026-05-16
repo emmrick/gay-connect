@@ -4,7 +4,7 @@ import {
   MessageSquare, IdCard, Ticket, Coins, Bell,
   Activity, Bot, ShoppingCart, Camera, Heart, UserCog, Wrench, ListOrdered, 
   Headphones, Star, HelpCircle, ArrowLeft, FileImage, Megaphone, Sparkles, ToggleLeft, Rocket,
-  ChevronLeft
+  ChevronLeft, Radio, Lightbulb, Mail, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
