@@ -247,6 +247,7 @@ const AuthenticatedApp = () => {
                             <Route path="erreurs" element={<AdminErrorLogsPage />} />
                             <Route path="securite" element={<AdminSecurityPage />} />
                             <Route path="emails" element={<AdminEmailsPage />} />
+                            <Route path="cron" element={<AdminCronLogsPage />} />
                           </Route>
                           <Route path="/about" element={<Suspense fallback={<PageFallback />}><About /></Suspense>} />
                           <Route path="/legal" element={<Suspense fallback={<PageFallback />}><Legal /></Suspense>} />
