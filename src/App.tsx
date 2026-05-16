@@ -284,6 +284,7 @@ const AuthenticatedApp = () => {
                       <PromoPopup />
                       <OnboardingTour />
                       <GlobalMissionOverlay />
+                      <ActiveSupportBadge />
                       <DossierAccessPopup />
                       <ProfileSelectorModal />
                       <TweenUploadIndicator />
