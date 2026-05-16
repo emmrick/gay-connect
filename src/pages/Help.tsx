@@ -78,8 +78,17 @@ interface HelpProps { embedded?: boolean }
 const Help = ({ embedded = false }: HelpProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const resumeTicket = (location.state as any)?.resumeTicket as
+    | { id: string; status: string; assigned_to: string | null }
+    | undefined;
 
-  const [phase, setPhase] = useState<ChatPhase>(loadPhase);
+  const [phase, setPhase] = useState<ChatPhase>(() => {
+    if (resumeTicket) {
+      return resumeTicket.status === 'assigned' ? 'agent' : 'waiting_agent';
+    }
+    return loadPhase();
+  });
   const [messages, setMessages] = useState<ChatMessage[]>(loadMessages);
   const [currentNodeId, setCurrentNodeId] = useState<string>(loadCurrentNode);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
