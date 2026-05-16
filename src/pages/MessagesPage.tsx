@@ -87,7 +87,7 @@ const MessagesPage = () => {
       />
 
       <ScrollArea className="flex-1 min-h-0">
-        <Suspense fallback={<SuspenseFallback />}>
+        <Suspense fallback={null}>
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
