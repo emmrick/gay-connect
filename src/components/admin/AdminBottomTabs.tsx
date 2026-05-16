@@ -15,7 +15,6 @@ import { Home, Shield, Users, Wallet, MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { AdminSection, ModPermissions } from './AdminSidebar';
 import {
   ListOrdered, Headphones, Star, IdCard, MessageSquare, Bot, Camera, Filter,
@@ -184,8 +183,8 @@ const AdminBottomTabs = ({
       </nav>
 
       <Drawer open={moreOpen} onOpenChange={setMoreOpen}>
-        <DrawerContent className="max-h-[88vh]">
-          <DrawerHeader className="flex flex-row items-center justify-between border-b border-border/30 px-4 py-3">
+        <DrawerContent className="max-h-[88vh] flex flex-col">
+          <DrawerHeader className="flex-shrink-0 flex flex-row items-center justify-between border-b border-border/30 px-4 py-3">
             <DrawerTitle className="font-display text-base font-semibold">Plus d'options</DrawerTitle>
             <button
               onClick={() => setMoreOpen(false)}
@@ -195,7 +194,11 @@ const AdminBottomTabs = ({
               <X className="w-4 h-4" />
             </button>
           </DrawerHeader>
-          <ScrollArea className="flex-1">
+          <div
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+            data-vaul-no-drag
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             <div className="p-3 space-y-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
               {(Object.keys(GROUP_LABELS) as Array<keyof typeof GROUP_LABELS>).map(groupKey => {
                 const items = groupedMoreItems[groupKey];
@@ -231,7 +234,7 @@ const AdminBottomTabs = ({
                 );
               })}
             </div>
-          </ScrollArea>
+          </div>
         </DrawerContent>
       </Drawer>
     </>
