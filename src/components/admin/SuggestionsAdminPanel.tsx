@@ -12,7 +12,7 @@
  * Le trigger `trg_notify_suggestion_decision` envoie automatiquement la
  * notification au membre dès qu'on passe en `approved` ou `rejected`.
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -631,11 +631,17 @@ const AttachmentPreview = ({
   const isImage = attachment.type?.startsWith('image/');
   const [url, setUrl] = useState<string | null>(null);
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
     void supabase.storage
       .from('suggestion-attachments')
       .createSignedUrl(attachment.path, 3600)
-      .then(({ data }) => setUrl(data?.signedUrl ?? null));
+      .then(({ data }) => {
+        if (!cancelled) setUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [attachment.path]);
 
   if (isImage) {
