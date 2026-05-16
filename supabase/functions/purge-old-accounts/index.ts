@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
+  const __cronStart = Date.now();
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -104,7 +105,7 @@ Deno.serve(async (req) => {
             purgedCount++
           }
         }
-  const __cronStart = Date.now(); catch (e) {
+      } catch (e) {
           errors.push(`${user.user_id}: ${e.message}`)
         }
       }
