@@ -88,8 +88,7 @@ Deno.serve(async (req) => {
           deletedCount++
           console.log(`[RGPD Cleanup] Successfully cleaned up verification ${verification.id}`)
         }
-      }
-  } catch (err) {
+      } catch (err) {
         console.error(`[RGPD Cleanup] Error processing verification ${verification.id}:`, err)
         errorCount++
       }
