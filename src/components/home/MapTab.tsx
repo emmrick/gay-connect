@@ -71,34 +71,37 @@ const InvalidateOnMount = () => {
 const MapController = ({
   lat,
   lng,
-  bounds,
   onMapReady,
 }: {
   lat: number;
   lng: number;
-  bounds: L.LatLngBoundsExpression | null;
   onMapReady: (m: L.Map) => void;
 }) => {
   const map = useMap();
-  const fittedRef = useRef(false);
+  const centeredRef = useRef(false);
 
   useEffect(() => {
     onMapReady(map);
   }, [map, onMapReady]);
 
+  // Centre par défaut sur la position de l'utilisateur avec un rayon visible ~15 km.
   useEffect(() => {
-    if (bounds && !fittedRef.current) {
-      try {
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-        fittedRef.current = true;
-      } catch {
-        /* ignore */
-      }
+    if (centeredRef.current) return;
+    if (lat == null || lng == null) return;
+    try {
+      // 15 km de rayon autour de l'utilisateur → bounds carré ~30 km
+      const circle = L.latLng(lat, lng).toBounds(15000 * 2);
+      map.fitBounds(circle, { padding: [20, 20], maxZoom: 13 });
+      centeredRef.current = true;
+    } catch {
+      map.setView([lat, lng], 12);
+      centeredRef.current = true;
     }
-  }, [bounds, map]);
+  }, [lat, lng, map]);
 
   return null;
 };
+
 
 const MapTab = ({ onViewProfile }: MapTabProps) => {
   const { latitude, longitude, loading, error, permissionState, requestLocation } = useGeolocation();
@@ -159,17 +162,9 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
     };
   }, [markers, signedAvatars]);
 
-  const bounds = useMemo<L.LatLngBoundsExpression | null>(() => {
-    if (!hasLocation) return null;
-    const pts: [number, number][] = [[latitude!, longitude!]];
-    for (const m of markers) pts.push([m.latitude, m.longitude]);
-    if (pts.length < 2) return null;
-    return pts;
-  }, [hasLocation, latitude, longitude, markers]);
-
   const recenter = () => {
     if (mapRef.current && hasLocation) {
-      mapRef.current.setView([latitude!, longitude!], 14, { animate: true });
+      mapRef.current.setView([latitude!, longitude!], 13, { animate: true });
     }
   };
 
@@ -242,7 +237,7 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
         <MapController
           lat={latitude!}
           lng={longitude!}
-          bounds={bounds}
+          
           onMapReady={(m) => {
             mapRef.current = m;
           }}
