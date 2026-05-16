@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { logCronRun } from "../_shared/cron-logger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
+  const __cronStart = Date.now();
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -146,7 +148,12 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
+
+    await logCronRun("cleanup-expired-verifications", "success", { durationMs: Date.now() - __cronStart });
+
   } catch (error) {
+    const __errMsg = (error instanceof Error) ? error.message : String(error);
+    await logCronRun("cleanup-expired-verifications", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('[RGPD Cleanup] Fatal error:', errorMessage)
     return new Response(

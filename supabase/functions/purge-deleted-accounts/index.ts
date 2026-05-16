@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logCronRun } from "../_shared/cron-logger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  const __cronStart = Date.now();
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -144,7 +146,12 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
+    await logCronRun("purge-deleted-accounts", "success", { durationMs: Date.now() - __cronStart });
+
   } catch (e) {
+    const __errMsg = (e instanceof Error) ? e.message : String(e);
+    await logCronRun("purge-deleted-accounts", "error", { durationMs: Date.now() - __cronStart, errorMessage: __errMsg });
     console.error('Purge error:', e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
