@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import {
   Megaphone, Plus, Check, X, Pause, Play, Trash2, Eye, MousePointerClick,
   ExternalLink, Clock, AlertTriangle, Image as ImageIcon, Search, Filter,
-  Ticket, Loader2
+  Ticket, Loader2, Infinity as InfinityIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ interface Ad {
   starts_at: string | null;
   ends_at: string | null;
   is_active: boolean;
+  always_active?: boolean;
   created_at: string;
   updated_at: string;
   geo_targeting: string;
@@ -172,6 +173,26 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-ads'] });
       toast.success('Annonce mise à jour');
     },
+  });
+
+  const toggleAlwaysActive = useMutation({
+    mutationFn: async ({ id, always_active }: { id: string; always_active: boolean }) => {
+      const patch: any = { always_active };
+      // Si on active la diffusion continue, on réactive aussi l'annonce.
+      if (always_active) patch.is_active = true;
+      const { error } = await supabase.from('ads').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-ads'] });
+      setSelectedAd((prev) =>
+        prev && prev.id === vars.id
+          ? { ...prev, always_active: vars.always_active, is_active: vars.always_active ? true : prev.is_active }
+          : prev,
+      );
+      toast.success(vars.always_active ? 'Diffusion continue activée' : 'Diffusion continue désactivée');
+    },
+    onError: (e: any) => toast.error(e?.message || 'Erreur'),
   });
 
   const deleteAd = useMutation({
@@ -318,7 +339,12 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
                           <span className="font-medium">{(ad.spent_cents / 100).toFixed(2)}€</span>
                         </div>
                       </div>
-                      {!ad.is_active && ad.status === 'approved' && (
+                      {ad.always_active && (
+                        <Badge variant="outline" className="text-[10px] gap-1 border-primary/40 text-primary">
+                          <InfinityIcon className="w-3 h-3" /> Continue
+                        </Badge>
+                      )}
+                      {!ad.is_active && ad.status === 'approved' && !ad.always_active && (
                         <Badge variant="outline" className="text-[10px]">Inactive</Badge>
                       )}
                     </div>
@@ -517,15 +543,34 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
                     </>
                   )}
                   {selectedAd.status === 'approved' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5"
-                      onClick={() => toggleActive.mutate({ id: selectedAd.id, is_active: !selectedAd.is_active })}
-                    >
-                      {selectedAd.is_active ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                      {selectedAd.is_active ? 'Mettre en pause' : 'Réactiver'}
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => toggleActive.mutate({ id: selectedAd.id, is_active: !selectedAd.is_active })}
+                        disabled={!!selectedAd.always_active}
+                        title={selectedAd.always_active ? 'Diffusion continue activée — la pause est désactivée' : undefined}
+                      >
+                        {selectedAd.is_active ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                        {selectedAd.is_active ? 'Mettre en pause' : 'Réactiver'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={selectedAd.always_active ? 'default' : 'outline'}
+                        className="gap-1.5"
+                        onClick={() =>
+                          toggleAlwaysActive.mutate({
+                            id: selectedAd.id,
+                            always_active: !selectedAd.always_active,
+                          })
+                        }
+                        disabled={toggleAlwaysActive.isPending}
+                      >
+                        <InfinityIcon className="w-3.5 h-3.5" />
+                        {selectedAd.always_active ? 'Diffusion continue ✓' : 'Diffusion continue'}
+                      </Button>
+                    </>
                   )}
                   <Button
                     size="sm"

@@ -235,6 +235,7 @@ export type Database = {
         Row: {
           advertiser_email: string | null
           advertiser_name: string
+          always_active: boolean
           budget_cents: number | null
           clicks_count: number | null
           cost_per_click_cents: number | null
@@ -266,6 +267,7 @@ export type Database = {
         Insert: {
           advertiser_email?: string | null
           advertiser_name: string
+          always_active?: boolean
           budget_cents?: number | null
           clicks_count?: number | null
           cost_per_click_cents?: number | null
@@ -297,6 +299,7 @@ export type Database = {
         Update: {
           advertiser_email?: string | null
           advertiser_name?: string
+          always_active?: boolean
           budget_cents?: number | null
           clicks_count?: number | null
           cost_per_click_cents?: number | null
