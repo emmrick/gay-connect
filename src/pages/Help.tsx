@@ -3,7 +3,7 @@
  * Refonte complète : aucun appel IA, réponses 100 % cohérentes, style iMessage premium.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
