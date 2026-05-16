@@ -228,53 +228,14 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
   const onlineCount = allProfiles.filter((p) => !p.isCurrentUser && p.is_online).length;
 
   return (
-    <div className="space-y-4">
-      {/* En-tête : compteurs + actualiser */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Users className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <span className="text-sm font-bold text-foreground">
-              {totalCount} membre{totalCount > 1 ? 's' : ''}
-            </span>
-          </div>
-          {onlineCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-500/10 px-2.5 py-1 rounded-full font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              {onlineCount} en ligne
-            </span>
-          )}
+    <div className="space-y-3">
+      {onlineCount > 0 && (
+        <div className="flex justify-end">
+          <span className="inline-flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            {onlineCount} en ligne
+          </span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void handleRefresh()}
-          className="text-xs h-8 gap-1.5 rounded-xl hover:bg-primary/5 hover:text-primary"
-          disabled={isRefreshing}
-          aria-label="Actualiser ma position et recharger les profils"
-        >
-          <RefreshCw className={cn('w-3.5 h-3.5', isRefreshing && 'animate-spin')} />
-          Actualiser
-        </Button>
-      </div>
-
-      {/* Sélecteur de rayon */}
-      <RadiusSelector value={radius} onChange={setRadius} disabled={isRefreshing} />
-
-      {/* Bandeau confirmation géoloc */}
-      {hasGeoData && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/10"
-        >
-          <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-          <p className="text-xs text-muted-foreground">
-            Profils triés par proximité — {radius === 0 ? 'aucune limite de distance' : `dans un rayon de ${radius} km`}
-          </p>
-        </motion.div>
       )}
 
       {visibleProfiles.length > 0 ? (
@@ -301,30 +262,19 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16 rounded-2xl bg-card border border-border/30"
+          className="text-center py-14 rounded-2xl bg-card border border-border/30"
         >
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mx-auto mb-4">
-            <MapPin className="w-7 h-7 text-primary" />
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mx-auto mb-3">
+            <MapPin className="w-6 h-6 text-primary" />
           </div>
           <h3 className="font-bold text-foreground mb-1" style={{ fontFamily: 'Syne, sans-serif' }}>
             Aucun membre trouvé
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground px-6">
             {radius !== 0
-              ? 'Élargis le rayon de recherche pour découvrir plus de profils'
+              ? 'Élargis le rayon depuis le bouton distance en haut'
               : 'Aucun profil disponible pour le moment'}
           </p>
-          {radius !== 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setRadius(0)}
-              className="mt-4 rounded-xl border-primary/20 hover:bg-primary/5"
-            >
-              <Compass className="w-3.5 h-3.5 mr-2" />
-              Recherche illimitée
-            </Button>
-          )}
         </motion.div>
       )}
     </div>
