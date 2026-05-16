@@ -237,7 +237,7 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
         <MapController
           lat={latitude!}
           lng={longitude!}
-          bounds={bounds}
+          
           onMapReady={(m) => {
             mapRef.current = m;
           }}
