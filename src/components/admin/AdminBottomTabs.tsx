@@ -47,7 +47,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: 'home',       label: 'Accueil',    icon: Home,   sections: ['dashboard'], target: 'dashboard' },
-  { id: 'moderation', label: 'Modération', icon: Shield, sections: ['reports', 'moderation', 'ai-moderation', 'screenshot-sanctions', 'verification', 'pending-tasks', 'support', 'support-ratings'], target: 'reports' },
+  { id: 'moderation', label: 'Modération', icon: Shield, sections: ['reports', 'moderation', 'ai-moderation', 'screenshot-sanctions', 'verification', 'pending-tasks', 'support', 'support-ratings', 'live-content', 'suggestions'], target: 'reports' },
   { id: 'members',    label: 'Membres',    icon: Users,  sections: ['users', 'stats', 'moderators'], target: 'users' },
   { id: 'finances',   label: 'Finances',   icon: Wallet, sections: ['wallet', 'credits-surveillance', 'credit-purchases', 'rates', 'withdrawals', 'global'], target: 'wallet' },
   { id: 'more',       label: 'Plus',       icon: MoreHorizontal, sections: [], target: 'dashboard' },
