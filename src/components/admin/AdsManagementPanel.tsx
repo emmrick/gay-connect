@@ -538,15 +538,34 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
                     </>
                   )}
                   {selectedAd.status === 'approved' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5"
-                      onClick={() => toggleActive.mutate({ id: selectedAd.id, is_active: !selectedAd.is_active })}
-                    >
-                      {selectedAd.is_active ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                      {selectedAd.is_active ? 'Mettre en pause' : 'Réactiver'}
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => toggleActive.mutate({ id: selectedAd.id, is_active: !selectedAd.is_active })}
+                        disabled={!!selectedAd.always_active}
+                        title={selectedAd.always_active ? 'Diffusion continue activée — la pause est désactivée' : undefined}
+                      >
+                        {selectedAd.is_active ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                        {selectedAd.is_active ? 'Mettre en pause' : 'Réactiver'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={selectedAd.always_active ? 'default' : 'outline'}
+                        className="gap-1.5"
+                        onClick={() =>
+                          toggleAlwaysActive.mutate({
+                            id: selectedAd.id,
+                            always_active: !selectedAd.always_active,
+                          })
+                        }
+                        disabled={toggleAlwaysActive.isPending}
+                      >
+                        <InfinityIcon className="w-3.5 h-3.5" />
+                        {selectedAd.always_active ? 'Diffusion continue ✓' : 'Diffusion continue'}
+                      </Button>
+                    </>
                   )}
                   <Button
                     size="sm"
