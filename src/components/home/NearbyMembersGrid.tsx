@@ -1,25 +1,27 @@
 import { useEffect, useMemo, useState, useCallback, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Loader2, RefreshCw, Users, Compass } from 'lucide-react';
+import { MapPin, Loader2, RefreshCw, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
 import ProfileCard from './ProfileCard';
 import GeolocationGate from './GeolocationGate';
-import RadiusSelector, { type RadiusValue } from './RadiusSelector';
+import type { RadiusValue } from './RadiusSelector';
 
 interface NearbyMembersGridProps {
   onViewProfile: (userId: string) => void;
   onStartChat: (userId: string) => void;
   ageRange?: [number, number];
+  /** Rayon contrôlé par le parent (HomeView) */
+  radius: RadiusValue;
+  /** Incrémenté par le parent pour déclencher un refresh */
+  refreshToken?: number;
 }
 
 const PROFILES_PER_PAGE = 12;
-const DEFAULT_RADIUS: RadiusValue = 10;
-const RADIUS_STORAGE_KEY = 'gc_nearby_radius_km';
+
 
 const ProfileSkeleton = ({ index }: { index: number }) => (
   <div
