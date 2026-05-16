@@ -175,6 +175,26 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
     },
   });
 
+  const toggleAlwaysActive = useMutation({
+    mutationFn: async ({ id, always_active }: { id: string; always_active: boolean }) => {
+      const patch: any = { always_active };
+      // Si on active la diffusion continue, on réactive aussi l'annonce.
+      if (always_active) patch.is_active = true;
+      const { error } = await supabase.from('ads').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-ads'] });
+      setSelectedAd((prev) =>
+        prev && prev.id === vars.id
+          ? { ...prev, always_active: vars.always_active, is_active: vars.always_active ? true : prev.is_active }
+          : prev,
+      );
+      toast.success(vars.always_active ? 'Diffusion continue activée' : 'Diffusion continue désactivée');
+    },
+    onError: (e: any) => toast.error(e?.message || 'Erreur'),
+  });
+
   const deleteAd = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('ads').delete().eq('id', id);
