@@ -162,17 +162,9 @@ const MapTab = ({ onViewProfile }: MapTabProps) => {
     };
   }, [markers, signedAvatars]);
 
-  const bounds = useMemo<L.LatLngBoundsExpression | null>(() => {
-    if (!hasLocation) return null;
-    const pts: [number, number][] = [[latitude!, longitude!]];
-    for (const m of markers) pts.push([m.latitude, m.longitude]);
-    if (pts.length < 2) return null;
-    return pts;
-  }, [hasLocation, latitude, longitude, markers]);
-
   const recenter = () => {
     if (mapRef.current && hasLocation) {
-      mapRef.current.setView([latitude!, longitude!], 14, { animate: true });
+      mapRef.current.setView([latitude!, longitude!], 13, { animate: true });
     }
   };
 
