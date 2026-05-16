@@ -91,7 +91,9 @@ const Help = ({ embedded = false }: HelpProps) => {
   });
   const [messages, setMessages] = useState<ChatMessage[]>(loadMessages);
   const [currentNodeId, setCurrentNodeId] = useState<string>(loadCurrentNode);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
+    resumeTicket ? ({ id: resumeTicket.id, status: resumeTicket.status, assigned_to: resumeTicket.assigned_to } as SupportTicket) : null,
+  );
   const [agentInput, setAgentInput] = useState('');
   const [ratingEmoji, setRatingEmoji] = useState<string | null>(null);
   const [ratingComment, setRatingComment] = useState('');
