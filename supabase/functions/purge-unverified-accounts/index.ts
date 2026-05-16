@@ -101,8 +101,7 @@ Deno.serve(async (req) => {
                   }),
                 })
                 console.log(`[PURGE] Push notification sent to ${user.user_id} (J-${daysBefore})`)
-              }
-      } catch (pushErr) {
+              } catch (pushErr) {
                 console.warn(`[PURGE] Failed to send push to ${user.user_id}:`, pushErr)
               }
             }
