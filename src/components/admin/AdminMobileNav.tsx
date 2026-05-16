@@ -70,6 +70,8 @@ const navItems: NavItem[] = [
   { id: 'feature-toggles' as AdminSection, label: 'Toggles', icon: ToggleLeft, group: 'config', adminOnly: true },
   { id: 'error-logs', label: 'Erreurs', icon: Activity, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
   { id: 'security', label: 'Sécurité', icon: ShieldAlert, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'emails' as AdminSection, label: 'E-mails', icon: Mail, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
+  { id: 'cron-logs' as AdminSection, label: 'Cron', icon: Clock, group: 'logs', adminOnly: true, permissionKey: 'can_view_logs' },
 ];
 
 const groupConfig: Record<NavGroup, { label: string; emoji: string }> = {
