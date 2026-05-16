@@ -45,6 +45,8 @@ const navItems: NavItem[] = [
   { id: 'moderation', label: 'Contenu', icon: MessageSquare, group: 'moderation', permissionKey: 'can_manage_content' },
   { id: 'ai-moderation', label: 'IA', icon: Bot, group: 'moderation', permissionKey: 'can_ai_moderation' },
   { id: 'screenshot-sanctions', label: 'Captures', icon: Camera, group: 'moderation', permissionKey: 'can_screenshot_sanctions' },
+  { id: 'live-content' as AdminSection, label: 'Direct', icon: Radio, group: 'moderation', permissionKey: 'can_manage_content' },
+  { id: 'suggestions' as AdminSection, label: 'Idées', icon: Lightbulb, group: 'moderation', permissionKey: 'can_manage_content' },
   { id: 'users', label: 'Membres', icon: Users, group: 'users', adminOnly: true, permissionKey: 'can_manage_users' },
   { id: 'stats', label: 'Stats', icon: BarChart3, group: 'users', adminOnly: true, permissionKey: 'can_view_stats' },
   { id: 'moderators', label: 'Équipe', icon: UserCog, group: 'users', adminOnly: true },
