@@ -5304,6 +5304,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_profile_map_coords: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          latitude: number
+          longitude: number
+          user_id: string
+        }[]
+      }
       get_public_profiles:
         | {
             Args: { _region?: string }
