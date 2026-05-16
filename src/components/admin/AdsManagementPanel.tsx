@@ -45,6 +45,7 @@ interface Ad {
   starts_at: string | null;
   ends_at: string | null;
   is_active: boolean;
+  always_active?: boolean;
   created_at: string;
   updated_at: string;
   geo_targeting: string;
