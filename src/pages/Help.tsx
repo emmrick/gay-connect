@@ -458,28 +458,28 @@ const Help = ({ embedded = false }: HelpProps) => {
   }
 
   // Go back
+  // IMPORTANT : on conserve la session si le ticket est toujours actif
+  // (en attente, assigné, ou en attente client). L'utilisateur peut continuer
+  // à naviguer sur l'app puis revenir directement dans sa conversation.
+  // On ne réinitialise (et n'efface le localStorage) QUE s'il n'y a plus rien d'actif.
   const handleGoBack = async () => {
     const ticketToCancel = selectedTicket;
     const liveStatus = liveTicket?.status || ticketToCancel?.status;
-    if (ticketToCancel && liveStatus === 'open') {
-      try {
-        await supabase
-          .from('support_tickets' as any)
-          .update({ status: 'closed', closed_at: new Date().toISOString() } as any)
-          .eq('id', ticketToCancel.id);
-        await supabase
-          .from('moderation_tasks')
-          .update({ status: 'cancelled', completed_at: new Date().toISOString() } as any)
-          .eq('task_type', 'support_chat')
-          .eq('status', 'pending')
-          .contains('metadata', { ticket_id: ticketToCancel.id } as any);
-      } catch (err) {
-        console.error('[Help] cancel ticket error:', err);
-      }
-      setSelectedTicket(null);
-    } else if (!ticketToCancel || (liveStatus !== 'assigned' && liveStatus !== 'waiting_client')) {
-      setSelectedTicket(null);
+    const isActive =
+      liveStatus === 'open' ||
+      liveStatus === 'assigned' ||
+      liveStatus === 'waiting_client';
+
+    if (isActive) {
+      // Session vivante : on quitte la page sans rien casser.
+      // Le state (phase, messages, ticketId, waitStart) reste persisté en localStorage
+      // et sera repris automatiquement au prochain retour sur /help.
+      navigate('/home');
+      return;
     }
+
+    // Aucune conversation active → nettoyage complet
+    setSelectedTicket(null);
     resetChat();
     navigate('/home');
   };
