@@ -136,6 +136,14 @@ const PrivateChatInput = ({
               onClick={() => { setShowGiftDialog(true); setShowOptions(false); }}
             />
           )}
+          {onStartPhotoExchange && (
+            <ActionTile
+              icon={ImagePlus}
+              label="Échange photos"
+              tone="primary"
+              onClick={() => { onStartPhotoExchange(); setShowOptions(false); }}
+            />
+          )}
         </div>
       )}
 
