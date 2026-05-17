@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Clock, Loader2, ListOrdered, Euro, Lock, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Clock, Loader2, ListOrdered, Euro, Lock, RefreshCw, AlertTriangle, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,10 +12,19 @@ import {
   getTaskTypeLabel,
   formatCentsReward,
 } from '@/hooks/useModerationTaskQueue';
+import PhotoExchangeReviewDialog from '@/components/admin/PhotoExchangeReviewDialog';
 
 const PendingTasksPanel = () => {
   const { data: tasks, isLoading } = usePendingTasksHistory();
   const recycleTask = useRecycleTask();
+  const [reviewExchangeId, setReviewExchangeId] = useState<string | null>(null);
+
+  const openTask = (task: any) => {
+    if (task.task_type === 'photo_exchange_review') {
+      const exId = (task.metadata?.exchange_id as string) || task.target_entity_id;
+      if (exId) setReviewExchangeId(exId);
+    }
+  };
 
   if (isLoading) {
     return (
