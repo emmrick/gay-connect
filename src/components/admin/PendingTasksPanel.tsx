@@ -177,11 +177,21 @@ const PendingTasksPanel = () => {
                         </Badge>
                       )}
                     </div>
-                    <div className="pl-9 sm:pl-11">
+                    <div className="pl-9 sm:pl-11 flex flex-wrap gap-2">
+                      {task.task_type === 'photo_exchange_review' && (
+                        <Button
+                          size="sm"
+                          className="text-xs h-8 bg-fuchsia-600 hover:bg-fuchsia-700 text-white"
+                          onClick={() => openTask(task)}
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Vérifier les photos
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full text-xs sm:w-auto h-8"
+                        className="text-xs h-8"
                         disabled={recycleTask.isPending}
                         onClick={() => recycleTask.mutate(task.id)}
                       >
@@ -196,6 +206,12 @@ const PendingTasksPanel = () => {
           )}
         </ScrollArea>
       </div>
+
+      <PhotoExchangeReviewDialog
+        exchangeId={reviewExchangeId}
+        open={!!reviewExchangeId}
+        onOpenChange={(o) => !o && setReviewExchangeId(null)}
+      />
     </div>
   );
 };
