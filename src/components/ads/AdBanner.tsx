@@ -95,46 +95,72 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
   if (placement === 'sponsored_card') {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
-          "relative rounded-2xl border border-border/40 bg-card overflow-hidden shadow-sm",
+          "group relative rounded-3xl bg-card overflow-hidden",
+          "border border-border/30 shadow-[0_4px_20px_-4px_hsl(var(--foreground)/0.08)]",
+          "hover:shadow-[0_8px_32px_-6px_hsl(var(--primary)/0.18)] hover:border-primary/30",
+          "transition-all duration-500",
           className
         )}
       >
         <button
           onClick={() => setDismissed(true)}
-          className="absolute top-2.5 right-2.5 p-1 rounded-full bg-background/60 backdrop-blur-sm hover:bg-background/80 text-muted-foreground/60 hover:text-muted-foreground transition-colors z-10"
+          className="absolute top-2.5 right-2.5 z-20 w-7 h-7 rounded-full bg-background/70 backdrop-blur-md hover:bg-background/90 text-muted-foreground/70 hover:text-foreground transition-all flex items-center justify-center"
           aria-label="Masquer"
         >
           <X className="w-3.5 h-3.5" />
         </button>
+
+        {/* Sponsored badge floating */}
+        <span className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-foreground/80 bg-background/70 backdrop-blur-md px-2 py-1 rounded-full">
+          <Info className="w-2.5 h-2.5" />
+          Sponsorisé
+        </span>
+
         <button
           onClick={() => handleClick(ad.id, ad.link_url)}
-          className="w-full text-left"
+          className="w-full text-left block"
         >
           {ad.image_url && (
-            <img
-              src={ad.image_url}
-              alt=""
-              className="w-full h-36 object-cover"
-              loading="lazy"
-            />
+            <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+              <img
+                src={ad.image_url}
+                alt={ad.title}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                loading="lazy"
+              />
+              {/* Gradient overlay for text legibility on bottom */}
+              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
+              {/* Title overlay on image (Instagram-style) */}
+              <div className="absolute inset-x-0 bottom-0 p-3.5 space-y-1">
+                <p className="text-[11px] font-medium text-white/80 truncate">
+                  {ad.advertiser_name}
+                </p>
+                <p className="text-base font-bold text-white leading-tight line-clamp-2 drop-shadow-sm" style={{ fontFamily: 'Syne, sans-serif' }}>
+                  {ad.title}
+                </p>
+              </div>
+            </div>
           )}
-          <div className="p-3.5 space-y-1.5">
-            <p className="text-sm font-semibold text-foreground leading-tight">{ad.title}</p>
-            {ad.description && (
-              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{ad.description}</p>
-            )}
-            <div className="flex items-center justify-between pt-1">
-              <SponsoredLabel />
-              {ad.link_url && (
-                <span className="text-[11px] text-primary font-medium flex items-center gap-1">
-                  En savoir plus <ExternalLink className="w-3 h-3" />
-                </span>
+
+          <div className="p-3.5 flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              {ad.description && (
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                  {ad.description}
+                </p>
               )}
             </div>
+            {ad.link_url && (
+              <span className="flex-shrink-0 inline-flex items-center gap-1.5 text-xs font-bold text-primary-foreground bg-gradient-to-r from-primary to-primary/85 px-4 py-2 rounded-full shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-95 transition-all">
+                Découvrir
+                <ExternalLink className="w-3 h-3" />
+              </span>
+            )}
           </div>
         </button>
       </motion.div>
