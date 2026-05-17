@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getSignedAvatarUrls } from '@/hooks/useAvatarUrl';
 import ProfileCard from './ProfileCard';
 import GeolocationGate from './GeolocationGate';
+import AdBanner from '@/components/ads/AdBanner';
 import type { RadiusValue } from './RadiusSelector';
 
 interface NearbyMembersGridProps {
