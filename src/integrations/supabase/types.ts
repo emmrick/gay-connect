@@ -5711,6 +5711,15 @@ export type Database = {
         Args: { _referred_id: string; _referrer_id: string }
         Returns: Json
       }
+      process_suggestion_decision: {
+        Args: {
+          p_admin_notes?: string
+          p_credits_awarded?: number
+          p_status: string
+          p_suggestion_id: string
+        }
+        Returns: Json
+      }
       promote_to_moderator: {
         Args: { _permissions?: Json; _target_user_id: string }
         Returns: Json
