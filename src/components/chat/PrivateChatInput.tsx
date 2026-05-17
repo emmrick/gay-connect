@@ -34,6 +34,7 @@ const PrivateChatInput = ({
   onTyping,
   onFocus,
   onSendGift,
+  onStartPhotoExchange,
 }: PrivateChatInputProps) => {
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
