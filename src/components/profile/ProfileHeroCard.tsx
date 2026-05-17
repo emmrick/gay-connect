@@ -65,7 +65,7 @@ const ProfileHeroCard = ({ profile, isAdminUser, isModerator, isAdmin, positionL
         >
           <div className="flex gap-4 items-start">
             {/* Avatar — pops above the card */}
-            <div className="relative flex-shrink-0 -mt-16">
+            <div className="relative flex-shrink-0 -mt-14 self-start">
               <div className="p-[3px] rounded-2xl bg-gradient-to-br from-primary via-accent to-primary shadow-[0_6px_24px_hsl(var(--primary)/0.35)]">
                 <Avatar className="w-[92px] h-[92px] rounded-xl border-[3px] border-card">
                   <AvatarImage src={resolvedAvatar || undefined} className="object-cover rounded-xl" />
