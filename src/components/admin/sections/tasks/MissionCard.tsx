@@ -68,6 +68,7 @@ interface MissionCardProps {
   onToggleSelect?: (id: string) => void;
   onRecycle?: (id: string) => void;
   onViewTarget?: (userId: string) => void;
+  onOpenTask?: (task: any) => void;
   recycling?: boolean;
 }
 
@@ -78,6 +79,7 @@ const MissionCard = ({
   onToggleSelect,
   onRecycle,
   onViewTarget,
+  onOpenTask,
   recycling,
 }: MissionCardProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
