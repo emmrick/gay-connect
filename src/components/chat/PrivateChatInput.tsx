@@ -23,6 +23,7 @@ interface PrivateChatInputProps {
   onTyping?: (hasText: boolean) => void;
   onFocus?: () => void;
   onSendGift?: (amount: number) => void;
+  onStartPhotoExchange?: () => void;
 }
 
 const PrivateChatInput = ({
