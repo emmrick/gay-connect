@@ -71,6 +71,7 @@ const MissionsPanel = () => {
   const [slaFilter, setSlaFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'priority' | 'age' | 'reward' | 'refusals'>('priority');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [reviewExchangeId, setReviewExchangeId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
