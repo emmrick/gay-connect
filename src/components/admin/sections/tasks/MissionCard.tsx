@@ -199,6 +199,12 @@ const MissionCard = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
+          {onOpenTask && (task.task_type === 'photo_exchange_review') && (
+            <DropdownMenuItem onClick={() => onOpenTask(task)}>
+              <Eye className="w-3.5 h-3.5 mr-2" />
+              Vérifier les photos
+            </DropdownMenuItem>
+          )}
           {task.target_user_id && onViewTarget && (
             <DropdownMenuItem onClick={() => onViewTarget(task.target_user_id)}>
               <Eye className="w-3.5 h-3.5 mr-2" />
