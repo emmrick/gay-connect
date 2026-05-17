@@ -266,7 +266,9 @@ const HomeView = ({
           </TabsContent>
 
           <TabsContent value="carte" className="mt-2">
-            <MapTab onViewProfile={handleViewProfile} />
+            <SectionErrorBoundary label="La carte n'a pas pu se charger">
+              <MapTab onViewProfile={handleViewProfile} />
+            </SectionErrorBoundary>
           </TabsContent>
         </Tabs>
       </div>
