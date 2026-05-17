@@ -18,7 +18,7 @@ interface Ad {
   spent_cents?: number;
 }
 
-const AD_ROTATION_INTERVAL_MS = 30000;
+const AD_ROTATION_INTERVAL_MS = 60000;
 
 /** Full ad-free subscription details (expiry, plan, remaining time) */
 export const useAdFreeSubscription = () => {
@@ -89,6 +89,7 @@ export const useAds = (_placement?: string, limit = 10) => {
   });
 
   // Shuffle ads deterministically based on seed + page path
+  const prevFirstRef = useRef<string | null>(null);
   const shuffledAds = useMemo(() => {
     if (!ads || ads.length <= 1) return ads || [];
     const pageSeed = window.location.pathname.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -104,6 +105,11 @@ export const useAds = (_placement?: string, limit = 10) => {
       const j = Math.floor(seededRandom() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
+    // Avoid showing the same ad twice in a row after re-shuffle
+    if (prevFirstRef.current && arr[0]?.id === prevFirstRef.current && arr.length > 1) {
+      [arr[0], arr[1]] = [arr[1], arr[0]];
+    }
+    prevFirstRef.current = arr[0]?.id ?? null;
     return arr;
   }, [ads, shuffleSeed]);
 

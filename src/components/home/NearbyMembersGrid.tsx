@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getSignedAvatarUrls } from '@/hooks/useAvatarUrl';
 import ProfileCard from './ProfileCard';
 import GeolocationGate from './GeolocationGate';
+import AdBanner from '@/components/ads/AdBanner';
 import type { RadiusValue } from './RadiusSelector';
 
 interface NearbyMembersGridProps {
@@ -236,33 +237,41 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
 
   const visibleProfiles = allProfiles.slice(0, visibleCount);
   const hasMore = visibleCount < allProfiles.length;
-  const totalCount = allProfiles.length;
-  const onlineCount = allProfiles.filter((p) => !p.isCurrentUser && p.is_online).length;
+
+  // Découpe en chunks de 9 profils, intercale une pub entre chaque chunk
+  const PROFILES_PER_AD = 9;
+  const chunks: any[][] = [];
+  for (let i = 0; i < visibleProfiles.length; i += PROFILES_PER_AD) {
+    chunks.push(visibleProfiles.slice(i, i + PROFILES_PER_AD));
+  }
 
   return (
     <div className="space-y-3">
-      {onlineCount > 0 && (
-        <div className="flex justify-end">
-          <span className="inline-flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            {onlineCount} en ligne
-          </span>
-        </div>
-      )}
-
       {visibleProfiles.length > 0 ? (
         <>
-          <div className="grid grid-cols-3 gap-2">
-            {visibleProfiles.map((profile, index) => (
-              <ProfileCard
-                key={profile.id}
-                profile={profile}
-                index={index}
-                onViewProfile={onViewProfile}
-                onLike={onStartChat}
-              />
-            ))}
-          </div>
+          {chunks.map((chunk, chunkIdx) => (
+            <div key={`chunk-${chunkIdx}`} className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {chunk.map((profile, idx) => (
+                  <ProfileCard
+                    key={profile.id}
+                    profile={profile}
+                    index={chunkIdx * PROFILES_PER_AD + idx}
+                    onViewProfile={onViewProfile}
+                    onLike={onStartChat}
+                  />
+                ))}
+              </div>
+              {/* Pub après chaque bloc de 9 profils, sauf après le tout dernier si plus rien ne suit */}
+              {(chunkIdx < chunks.length - 1 || hasMore) && (
+                <AdBanner
+                  placement="sponsored_card"
+                  index={chunkIdx}
+                  className="my-1"
+                />
+              )}
+            </div>
+          ))}
 
           {hasMore && (
             <div ref={sentinelRef} className="flex justify-center py-4">
