@@ -25,22 +25,25 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
   // Always use offset-based pick so multiple banners on the same page show DISTINCT ads
   const ad = getAdByOffset(index);
 
-  // Track impression
+  // Track impression (per ad + placement so we can verify rotation diversity)
   useEffect(() => {
-    if (!ad?.id || !user?.id || impressionTracked.current.has(ad.id)) return;
-    impressionTracked.current.add(ad.id);
+    if (!ad?.id || !user?.id) return;
+    const key = `${ad.id}|${placement}`;
+    if (impressionTracked.current.has(key)) return;
+    impressionTracked.current.add(key);
     const track = async () => {
       try {
         await supabase.from('ad_impressions').insert({
           ad_id: ad.id,
           user_id: user.id,
           page_url: window.location.pathname,
+          placement,
         } as any);
         await supabase.rpc('increment_ad_impressions' as any, { _ad_id: ad.id });
       } catch {}
     };
     track();
-  }, [ad?.id, user?.id]);
+  }, [ad?.id, user?.id, placement]);
 
   // Reset dismissed on rotation
   useEffect(() => { setDismissed(false); }, [rotationIndex]);
