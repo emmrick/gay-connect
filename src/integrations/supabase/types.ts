@@ -5784,6 +5784,10 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: Json
       }
+      review_photo_exchange_photo: {
+        Args: { _decision: string; _photo_id: string; _reason?: string }
+        Returns: Json
+      }
       review_suggestion: {
         Args: {
           _admin_notes?: string

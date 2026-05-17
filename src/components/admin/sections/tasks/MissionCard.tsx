@@ -50,6 +50,7 @@ const TYPE_META: Record<string, { color: string; bg: string; icon: React.Compone
   promo_validation: { color: 'border-l-purple-500', bg: 'bg-purple-500/10', icon: Ticket },
   support_chat: { color: 'border-l-violet-500', bg: 'bg-violet-500/10', icon: Headphones },
   tween_review: { color: 'border-l-sky-500', bg: 'bg-sky-500/10', icon: Bird },
+  photo_exchange_review: { color: 'border-l-fuchsia-500', bg: 'bg-fuchsia-500/10', icon: ImageIcon },
   screenshot_investigation: { color: 'border-l-pink-500', bg: 'bg-pink-500/10', icon: Shield },
 };
 
@@ -67,6 +68,7 @@ interface MissionCardProps {
   onToggleSelect?: (id: string) => void;
   onRecycle?: (id: string) => void;
   onViewTarget?: (userId: string) => void;
+  onOpenTask?: (task: any) => void;
   recycling?: boolean;
 }
 
@@ -77,6 +79,7 @@ const MissionCard = ({
   onToggleSelect,
   onRecycle,
   onViewTarget,
+  onOpenTask,
   recycling,
 }: MissionCardProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -196,6 +199,12 @@ const MissionCard = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
+          {onOpenTask && (task.task_type === 'photo_exchange_review') && (
+            <DropdownMenuItem onClick={() => onOpenTask(task)}>
+              <Eye className="w-3.5 h-3.5 mr-2" />
+              Vérifier les photos
+            </DropdownMenuItem>
+          )}
           {task.target_user_id && onViewTarget && (
             <DropdownMenuItem onClick={() => onViewTarget(task.target_user_id)}>
               <Eye className="w-3.5 h-3.5 mr-2" />

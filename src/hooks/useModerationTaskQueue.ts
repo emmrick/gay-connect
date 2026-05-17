@@ -33,6 +33,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
   promo_validation: '🎟️ Validation code promo',
   support_chat: '🆘 Support utilisateur',
   tween_review: '🐦 Examen de Tween signalé',
+  photo_exchange_review: '🖼️ Échange de photos privé',
 };
 
 const TASK_TYPE_SECTIONS: Record<string, string> = {
@@ -46,6 +47,7 @@ const TASK_TYPE_SECTIONS: Record<string, string> = {
   promo_validation: 'promo',
   support_chat: 'support',
   tween_review: 'reports',
+  photo_exchange_review: 'moderation',
 };
 
 /** Get entity ID from task metadata for direct navigation */

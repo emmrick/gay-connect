@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SectionHeader, EmptyState, LoadingList, ErrorState } from '../_shared/AdminAtoms';
 import MissionCard from './MissionCard';
+import PhotoExchangeReviewDialog from '@/components/admin/PhotoExchangeReviewDialog';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -36,6 +37,7 @@ const TYPE_FILTERS = [
   { value: 'content_moderation', label: '📸 Contenu' },
   { value: 'screenshot_investigation', label: '🛡️ Screenshots' },
   { value: 'tween_review', label: '🐦 Tween' },
+  { value: 'photo_exchange_review', label: '🖼️ Échange photo' },
 ];
 
 const SLA_FILTERS = [
@@ -69,6 +71,7 @@ const MissionsPanel = () => {
   const [slaFilter, setSlaFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'priority' | 'age' | 'reward' | 'refusals'>('priority');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [reviewExchangeId, setReviewExchangeId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
@@ -367,6 +370,10 @@ const MissionsPanel = () => {
                 task={task}
                 onRecycle={(id) => recycleTask.mutate(id)}
                 onViewTarget={viewTarget}
+                onOpenTask={(t) => {
+                  const exId = (t.metadata?.exchange_id as string) || t.target_entity_id;
+                  if (exId) setReviewExchangeId(exId);
+                }}
                 recycling={recycleTask.isPending}
               />
             ))}
@@ -409,6 +416,10 @@ const MissionsPanel = () => {
                     onToggleSelect={toggleSelect}
                     onRecycle={(id) => recycleTask.mutate(id)}
                     onViewTarget={viewTarget}
+                    onOpenTask={(t) => {
+                      const exId = (t.metadata?.exchange_id as string) || t.target_entity_id;
+                      if (exId) setReviewExchangeId(exId);
+                    }}
                     recycling={recycleTask.isPending}
                   />
                 ))
@@ -417,6 +428,12 @@ const MissionsPanel = () => {
           </ScrollArea>
         </div>
       )}
+
+      <PhotoExchangeReviewDialog
+        exchangeId={reviewExchangeId}
+        open={!!reviewExchangeId}
+        onOpenChange={(o) => !o && setReviewExchangeId(null)}
+      />
     </div>
   );
 };

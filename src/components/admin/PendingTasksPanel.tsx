@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Clock, Loader2, ListOrdered, Euro, Lock, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Clock, Loader2, ListOrdered, Euro, Lock, RefreshCw, AlertTriangle, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,10 +12,19 @@ import {
   getTaskTypeLabel,
   formatCentsReward,
 } from '@/hooks/useModerationTaskQueue';
+import PhotoExchangeReviewDialog from '@/components/admin/PhotoExchangeReviewDialog';
 
 const PendingTasksPanel = () => {
   const { data: tasks, isLoading } = usePendingTasksHistory();
   const recycleTask = useRecycleTask();
+  const [reviewExchangeId, setReviewExchangeId] = useState<string | null>(null);
+
+  const openTask = (task: any) => {
+    if (task.task_type === 'photo_exchange_review') {
+      const exId = (task.metadata?.exchange_id as string) || task.target_entity_id;
+      if (exId) setReviewExchangeId(exId);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -167,11 +177,21 @@ const PendingTasksPanel = () => {
                         </Badge>
                       )}
                     </div>
-                    <div className="pl-9 sm:pl-11">
+                    <div className="pl-9 sm:pl-11 flex flex-wrap gap-2">
+                      {task.task_type === 'photo_exchange_review' && (
+                        <Button
+                          size="sm"
+                          className="text-xs h-8 bg-fuchsia-600 hover:bg-fuchsia-700 text-white"
+                          onClick={() => openTask(task)}
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Vérifier les photos
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full text-xs sm:w-auto h-8"
+                        className="text-xs h-8"
                         disabled={recycleTask.isPending}
                         onClick={() => recycleTask.mutate(task.id)}
                       >
@@ -186,6 +206,12 @@ const PendingTasksPanel = () => {
           )}
         </ScrollArea>
       </div>
+
+      <PhotoExchangeReviewDialog
+        exchangeId={reviewExchangeId}
+        open={!!reviewExchangeId}
+        onOpenChange={(o) => !o && setReviewExchangeId(null)}
+      />
     </div>
   );
 };
