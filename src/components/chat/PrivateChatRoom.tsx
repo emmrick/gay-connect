@@ -69,6 +69,25 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   const { isOtherTyping, startTyping, stopTyping } = usePrivateTypingIndicator(otherUserId);
   
   useActiveConversation(otherUserId, null);
+
+  // Photo exchange conversation id lookup
+  const { data: conversationId } = useQuery({
+    queryKey: ['private-conv-id', user?.id, otherUserId],
+    enabled: !!user?.id && !!otherUserId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('private_conversations')
+        .select('id')
+        .or(`and(user1_id.eq.${user!.id},user2_id.eq.${otherUserId}),and(user1_id.eq.${otherUserId},user2_id.eq.${user!.id})`)
+        .maybeSingle();
+      return data?.id ?? null;
+    },
+  });
+  const photoExchangeMutations = usePhotoExchangeMutations(conversationId);
+  const handleStartPhotoExchange = () => {
+    if (!conversationId) return;
+    photoExchangeMutations.createExchange.mutate(otherUserId);
+  };
   
   const { data: contactCheck } = useCanContactUser(otherUserId);
   const addException = useAddContactException();
