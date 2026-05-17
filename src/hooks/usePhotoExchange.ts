@@ -72,6 +72,13 @@ export const useActivePhotoExchange = (conversationId: string | null | undefined
       const exchange = (exchanges as any)?.[0] as PhotoExchange | undefined;
       if (!exchange) return null;
 
+      // Masquer côté UI les demandes en attente depuis plus de 30 min
+      // (le cron les annulera côté serveur dans les 5 min suivantes)
+      if (exchange.status === 'pending') {
+        const ageMs = Date.now() - new Date(exchange.created_at).getTime();
+        if (ageMs > 30 * 60 * 1000) return null;
+      }
+
       const { data: photos } = await supabase
         .from('photo_exchange_photos' as any)
         .select('*')
