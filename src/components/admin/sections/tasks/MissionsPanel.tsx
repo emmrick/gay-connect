@@ -25,7 +25,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SectionHeader, EmptyState, LoadingList, ErrorState } from '../_shared/AdminAtoms';
 import MissionCard from './MissionCard';
 import PhotoExchangeReviewDialog from '@/components/admin/PhotoExchangeReviewDialog';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
