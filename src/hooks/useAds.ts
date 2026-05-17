@@ -133,12 +133,10 @@ export const useAds = (_placement?: string, limit = 10) => {
 
   useEffect(() => {
     if (!shuffledAds || shuffledAds.length <= 1) return;
-    const timer = setInterval(() => {
-      setRotationIndex(prev => prev + 1);
-      // Re-shuffle on each full cycle
-      setShuffleSeed(Math.random());
-    }, AD_ROTATION_INTERVAL_MS);
-    return () => clearInterval(timer);
+    ensureSharedRotationTimer();
+    const listener = () => forceTick(t => t + 1);
+    _rotationListeners.add(listener);
+    return () => { _rotationListeners.delete(listener); };
   }, [shuffledAds?.length]);
 
   const currentAd = shuffledAds && shuffledAds.length > 0 ? shuffledAds[rotationIndex % shuffledAds.length] : null;
