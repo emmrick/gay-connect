@@ -21,6 +21,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import AdRotationStatsPanel from './AdRotationStatsPanel';
 
 interface Ad {
   id: string;
@@ -256,6 +257,8 @@ const AdsManagementPanel = ({ initialAdId }: { initialAdId?: string }) => {
           </CardContent>
         </Card>
       </div>
+
+      <AdRotationStatsPanel />
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-2">
