@@ -434,7 +434,11 @@ const SuggestionDetailDialog = ({
   isAdmin,
 }: DetailProps) => {
   const [notes, setNotes] = useState(suggestion.admin_notes ?? '');
-  const [credits, setCredits] = useState<number>(suggestion.credits_awarded ?? 0);
+  // Défaut : 30 crédits (montant annoncé à l'utilisateur lors de la soumission).
+  // Si l'idée a déjà une valeur enregistrée, on la réutilise.
+  const [credits, setCredits] = useState<number>(
+    suggestion.credits_awarded && suggestion.credits_awarded > 0 ? suggestion.credits_awarded : 30,
+  );
   const meta = STATUS_META[suggestion.status];
   const StatusIcon = meta.icon;
 
