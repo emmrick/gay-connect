@@ -20,6 +20,7 @@ import AdOrInfoBanner from './AdOrInfoBanner';
 import VisitsTab from './VisitsTab';
 import ReactionsTab from './ReactionsTab';
 import MapTab from './MapTab';
+import SectionErrorBoundary from '@/components/SectionErrorBoundary';
 import type { RadiusValue } from './RadiusSelector';
 
 interface HomeViewProps {
