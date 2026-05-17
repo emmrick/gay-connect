@@ -2875,6 +2875,94 @@ export type Database = {
         }
         Relationships: []
       }
+      photo_exchange_photos: {
+        Row: {
+          created_at: string
+          exchange_id: string
+          id: string
+          retry_count: number
+          review_reason: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exchange_id: string
+          id?: string
+          retry_count?: number
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exchange_id?: string
+          id?: string
+          retry_count?: number
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_exchange_photos_exchange_id_fkey"
+            columns: ["exchange_id"]
+            isOneToOne: false
+            referencedRelation: "photo_exchanges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_exchanges: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          initiator_id: string
+          recipient_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          initiator_id: string
+          recipient_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          initiator_id?: string
+          recipient_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_exchanges_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "private_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pinned_messages: {
         Row: {
           chat_room_id: string
@@ -5307,6 +5395,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_photo_exchange_signed_url: {
+        Args: { _photo_id: string }
+        Returns: string
+      }
       get_profile_map_coords: {
         Args: { _user_ids: string[] }
         Returns: {
@@ -5586,6 +5678,7 @@ export type Database = {
         Args: { _message_id: string; _user_id: string }
         Returns: boolean
       }
+      is_photo_exchange_staff: { Args: { _uid: string }; Returns: boolean }
       is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
       is_user_suspended: { Args: { _user_id: string }; Returns: boolean }
       is_user_suspended_or_blocked: {

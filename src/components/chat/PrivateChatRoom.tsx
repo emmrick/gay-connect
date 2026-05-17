@@ -23,6 +23,9 @@ import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import PrivateChatInput from './PrivateChatInput';
+import PhotoExchangePanel from './private/PhotoExchangePanel';
+import { useQuery } from '@tanstack/react-query';
+import { usePhotoExchangeMutations } from '@/hooks/usePhotoExchange';
 import ReportUserDialog from './ReportUserDialog';
 import BlockUserDialog from './BlockUserDialog';
 import AgeFilterBlockedDialog from './AgeFilterBlockedDialog';
@@ -66,6 +69,25 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
   const { isOtherTyping, startTyping, stopTyping } = usePrivateTypingIndicator(otherUserId);
   
   useActiveConversation(otherUserId, null);
+
+  // Photo exchange conversation id lookup
+  const { data: conversationId } = useQuery({
+    queryKey: ['private-conv-id', user?.id, otherUserId],
+    enabled: !!user?.id && !!otherUserId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('private_conversations')
+        .select('id')
+        .or(`and(user1_id.eq.${user!.id},user2_id.eq.${otherUserId}),and(user1_id.eq.${otherUserId},user2_id.eq.${user!.id})`)
+        .maybeSingle();
+      return data?.id ?? null;
+    },
+  });
+  const photoExchangeMutations = usePhotoExchangeMutations(conversationId);
+  const handleStartPhotoExchange = () => {
+    if (!conversationId) return;
+    photoExchangeMutations.createExchange.mutate(otherUserId);
+  };
   
   const { data: contactCheck } = useCanContactUser(otherUserId);
   const addException = useAddContactException();
@@ -508,6 +530,7 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
               }}
               onDismiss={dismissSmart}
             />
+            <PhotoExchangePanel conversationId={conversationId} otherUserId={otherUserId} />
             <PrivateChatInput
               onSendMessage={handleSendMessage}
               recipientId={otherUserId}
@@ -516,6 +539,7 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
               onFocus={handleInputFocus}
               onTyping={startTyping}
               onSendGift={handleSendGift}
+              onStartPhotoExchange={handleStartPhotoExchange}
             />
           </>
         )}

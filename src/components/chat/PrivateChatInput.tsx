@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Plus, FolderLock, Camera, Gift } from 'lucide-react';
+import { Send, Loader2, Plus, FolderLock, Camera, Gift, ImagePlus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SavedMessagesDialog from './SavedMessagesDialog';
 import ShareAlbumDialog from '@/components/albums/ShareAlbumDialog';
@@ -23,6 +23,7 @@ interface PrivateChatInputProps {
   onTyping?: (hasText: boolean) => void;
   onFocus?: () => void;
   onSendGift?: (amount: number) => void;
+  onStartPhotoExchange?: () => void;
 }
 
 const PrivateChatInput = ({
@@ -33,6 +34,7 @@ const PrivateChatInput = ({
   onTyping,
   onFocus,
   onSendGift,
+  onStartPhotoExchange,
 }: PrivateChatInputProps) => {
   const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
@@ -132,6 +134,14 @@ const PrivateChatInput = ({
               label="Cadeau"
               tone="orange"
               onClick={() => { setShowGiftDialog(true); setShowOptions(false); }}
+            />
+          )}
+          {onStartPhotoExchange && (
+            <ActionTile
+              icon={ImagePlus}
+              label="Échange photos"
+              tone="primary"
+              onClick={() => { onStartPhotoExchange(); setShowOptions(false); }}
             />
           )}
         </div>
