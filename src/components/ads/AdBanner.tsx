@@ -1,6 +1,6 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { ExternalLink, X, Info } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAds, useAdClick } from '@/hooks/useAds';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +15,7 @@ interface AdBannerProps {
 }
 
 const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps) => {
-  const { currentAd, isAdFree, rotationIndex, getAdByOffset } = useAds(placement);
+  const { isAdFree, rotationIndex, getAdByOffset } = useAds(placement);
   const handleClick = useAdClick();
   const { user } = useAuth();
   const { preferences, hasConsented } = useCookieConsent();
@@ -24,6 +24,18 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
 
   // Always use offset-based pick so multiple banners on the same page show DISTINCT ads
   const ad = getAdByOffset(index);
+
+  // Randomly pick one of the ad's images on each rotation (per-banner)
+  const displayedImage = useMemo(() => {
+    if (!ad) return null;
+    const pool = (ad.image_urls && ad.image_urls.length > 0)
+      ? ad.image_urls
+      : (ad.image_url ? [ad.image_url] : []);
+    if (pool.length === 0) return null;
+    if (pool.length === 1) return pool[0];
+    return pool[Math.floor(Math.random() * pool.length)];
+    // Re-pick whenever ad changes, rotation ticks, or this banner's offset changes
+  }, [ad?.id, rotationIndex, index]);
 
   // Track impression (per ad + placement so we can verify rotation diversity)
   useEffect(() => {
@@ -74,9 +86,9 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
           onClick={() => handleClick(ad.id, ad.link_url)}
           className="flex items-center gap-3 w-full text-left"
         >
-          {ad.image_url && (
+          {displayedImage && (
             <img
-              src={ad.image_url}
+              src={displayedImage}
               alt=""
               className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
               loading="lazy"
@@ -128,10 +140,10 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
           onClick={() => handleClick(ad.id, ad.link_url)}
           className="w-full text-left block"
         >
-          {ad.image_url && (
+          {displayedImage && (
             <div className="relative aspect-[4/5] overflow-hidden bg-muted">
               <img
-                src={ad.image_url}
+                src={displayedImage}
                 alt={ad.title}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                 loading="lazy"
@@ -192,9 +204,9 @@ const AdBanner = ({ placement = 'native', className, index = 0 }: AdBannerProps)
         onClick={() => handleClick(ad.id, ad.link_url)}
         className="flex items-start gap-3 w-full text-left"
       >
-        {ad.image_url && (
+        {displayedImage && (
           <img
-            src={ad.image_url}
+            src={displayedImage}
             alt=""
             className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
             loading="lazy"
