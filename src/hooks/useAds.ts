@@ -17,7 +17,52 @@ interface Ad {
   clicks_count: number;
   budget_cents?: number;
   spent_cents?: number;
+  geo_targeting?: string;
+  geo_postal_codes?: string[] | null;
 }
+
+/** Fetch the user's region code (department) for geo-targeted ad filtering */
+const useUserRegion = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['user-region-for-ads', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('region')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return (data?.region as string | null) || null;
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60_000,
+  });
+};
+
+/**
+ * Returns true if the ad should be visible for a user located in `userRegion`.
+ * - `national` ads: always visible
+ * - `local` / `regional` ads: at least one postal code must start with the user's
+ *   department code (e.g. user region "66" matches postal codes "66000", "66100"…)
+ * - Ads with geo targeting but no postal codes fall back to visible (admin will have
+ *   filled them; otherwise we don't want to silently hide everything).
+ */
+const adMatchesRegion = (ad: Ad, userRegion: string | null): boolean => {
+  const targeting = (ad.geo_targeting || 'national').toLowerCase();
+  if (targeting === 'national') return true;
+  const codes = ad.geo_postal_codes || [];
+  if (codes.length === 0) return true;
+  if (!userRegion) return false;
+  // Normalize: keep only leading digits (handles formats like "FR-IDF" → "")
+  const dept = userRegion.replace(/[^0-9]/g, '').slice(0, 3);
+  if (!dept) return false;
+  const dept2 = dept.slice(0, 2);
+  return codes.some((code) => {
+    const c = (code || '').trim();
+    return c.startsWith(dept) || c.startsWith(dept2);
+  });
+};
 
 const AD_ROTATION_INTERVAL_MS = 60000;
 
@@ -85,22 +130,25 @@ const ensureSharedRotationTimer = () => {
 export const useAds = (_placement?: string, limit = 10) => {
   const { user } = useAuth();
   const { data: isAdFree } = useAdFreeStatus();
+  const { data: userRegion } = useUserRegion();
   const [, forceTick] = useState(0);
   const rotationIndex = _sharedRotationIndex;
   const shuffleSeed = _sharedShuffleSeed;
 
   const { data: ads, ...rest } = useQuery({
-    queryKey: ['active-ads', limit],
+    queryKey: ['active-ads', limit, userRegion || 'no-region'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ads')
-        .select('id, title, description, image_url, image_urls, link_url, advertiser_name, advertiser_email, placement, impressions_count, clicks_count, budget_cents, spent_cents')
+        .select('id, title, description, image_url, image_urls, link_url, advertiser_name, advertiser_email, placement, impressions_count, clicks_count, budget_cents, spent_cents, geo_targeting, geo_postal_codes')
         .eq('status', 'approved')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
-      return ((data || []) as Ad[]).filter(ad => (ad.budget_cents || 0) > (ad.spent_cents || 0));
+      return ((data || []) as Ad[])
+        .filter((ad) => (ad.budget_cents || 0) > (ad.spent_cents || 0))
+        .filter((ad) => adMatchesRegion(ad, userRegion ?? null));
     },
     enabled: !isAdFree,
     staleTime: 30000,
