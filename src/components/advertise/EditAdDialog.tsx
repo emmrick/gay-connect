@@ -3,7 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Eye } from 'lucide-react';
 import AdImagesUpload from './AdImagesUpload';
+import { AdPreviewGrid } from '@/components/ads/AdPreview';
 
 interface EditAdDialogProps {
   ad: any;
@@ -19,6 +22,8 @@ const EditAdDialog = ({ ad, onClose, onSave }: EditAdDialogProps) => {
     : (ad.image_url ? [ad.image_url] : []);
   const [imageUrls, setImageUrls] = useState<string[]>(initialImages);
   const [linkUrl, setLinkUrl] = useState(ad.link_url || '');
+
+  const placement = (ad.placement as 'compact' | 'native' | 'sponsored_card') || 'native';
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -37,6 +42,25 @@ const EditAdDialog = ({ ad, onClose, onSave }: EditAdDialogProps) => {
           <div>
             <label className="text-xs font-medium">URL destination</label>
             <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
+          </div>
+
+          {/* Aperçu en direct */}
+          <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Eye className="w-3.5 h-3.5 text-primary" />
+              <h4 className="text-xs font-bold text-foreground">Aperçu en direct</h4>
+              <Badge variant="outline" className="text-[9px] ml-auto">
+                {imageUrls.length > 1 ? 'Rotation automatique' : 'Tel que vu par les utilisateurs'}
+              </Badge>
+            </div>
+            <AdPreviewGrid
+              selectedPlacements={[placement]}
+              title={title}
+              description={description}
+              imageUrl={imageUrls[0] || ''}
+              imageUrls={imageUrls}
+              hasLink={!!linkUrl}
+            />
           </div>
         </div>
         <DialogFooter>
