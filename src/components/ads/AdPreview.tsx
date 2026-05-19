@@ -1,4 +1,5 @@
-import { ExternalLink, Info } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ExternalLink, Info, Shuffle, Play, Pause, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AdPreviewProps {
@@ -105,11 +106,62 @@ interface AdPreviewGridProps {
   selectedPlacements: ('compact' | 'native' | 'sponsored_card')[];
   title: string;
   description?: string;
+  /** Legacy single image — used when imageUrls is empty */
   imageUrl?: string;
+  /** Full pool of visuals; preview will rotate through them randomly */
+  imageUrls?: string[];
   hasLink?: boolean;
+  /** Auto-rotation interval in ms (default 2500). 0 disables auto-rotation. */
+  rotationMs?: number;
 }
 
-export const AdPreviewGrid = ({ selectedPlacements, title, description, imageUrl, hasLink }: AdPreviewGridProps) => {
+/** Pick a random index different from `current` (when pool has 2+) */
+const pickNextIndex = (poolLength: number, current: number) => {
+  if (poolLength <= 1) return 0;
+  let next = current;
+  // try a few times to avoid the same picture twice in a row
+  for (let i = 0; i < 6 && next === current; i++) {
+    next = Math.floor(Math.random() * poolLength);
+  }
+  return next;
+};
+
+export const AdPreviewGrid = ({
+  selectedPlacements,
+  title,
+  description,
+  imageUrl,
+  imageUrls,
+  hasLink,
+  rotationMs = 2500,
+}: AdPreviewGridProps) => {
+  // Build the visual pool: prefer multi-image array, fall back to legacy single URL
+  const pool = useMemo(() => {
+    const arr = (imageUrls || []).filter(Boolean);
+    if (arr.length > 0) return arr;
+    return imageUrl ? [imageUrl] : [];
+  }, [imageUrls, imageUrl]);
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  // Reset when pool changes (e.g. user uploads/removes images)
+  useEffect(() => {
+    setActiveIndex((i) => (i < pool.length ? i : 0));
+  }, [pool.length]);
+
+  // Auto-rotate randomly
+  useEffect(() => {
+    if (paused || pool.length <= 1 || rotationMs <= 0) return;
+    const id = setInterval(() => {
+      setActiveIndex((cur) => pickNextIndex(pool.length, cur));
+    }, rotationMs);
+    return () => clearInterval(id);
+  }, [pool.length, paused, rotationMs]);
+
+  const currentImage = pool[activeIndex];
+  const handleNext = () => setActiveIndex((cur) => pickNextIndex(pool.length, cur));
+
   if (selectedPlacements.length === 0) {
     return (
       <p className="text-xs text-muted-foreground italic text-center py-4">
@@ -117,14 +169,72 @@ export const AdPreviewGrid = ({ selectedPlacements, title, description, imageUrl
       </p>
     );
   }
+
   return (
-    <div className="grid grid-cols-1 gap-3">
-      {selectedPlacements.map((p) => (
-        <div key={p} className="space-y-1.5">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{placementLabel[p]}</p>
-          <AdPreview placement={p} title={title} description={description} imageUrl={imageUrl} hasLink={hasLink} />
+    <div className="space-y-3">
+      {pool.length > 1 && (
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+            <Shuffle className="w-3 h-3" />
+            Rotation aléatoire — visuel {activeIndex + 1} / {pool.length}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setPaused((p) => !p)}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted px-2 py-1 rounded-md transition-colors"
+              aria-label={paused ? 'Reprendre la rotation' : 'Mettre en pause'}
+            >
+              {paused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+              {paused ? 'Lecture' : 'Pause'}
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted px-2 py-1 rounded-md transition-colors"
+            >
+              <SkipForward className="w-3 h-3" />
+              Suivant
+            </button>
+          </div>
         </div>
-      ))}
+      )}
+
+      <div className="grid grid-cols-1 gap-3">
+        {selectedPlacements.map((p) => (
+          <div key={p} className="space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{placementLabel[p]}</p>
+            <AdPreview
+              placement={p}
+              title={title}
+              description={description}
+              imageUrl={currentImage}
+              hasLink={hasLink}
+            />
+          </div>
+        ))}
+      </div>
+
+      {pool.length > 1 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          {pool.map((url, idx) => (
+            <button
+              type="button"
+              key={url + idx}
+              onClick={() => setActiveIndex(idx)}
+              className={cn(
+                'relative flex-shrink-0 w-12 h-12 rounded-md overflow-hidden border-2 transition-all',
+                idx === activeIndex
+                  ? 'border-primary ring-2 ring-primary/30 scale-105'
+                  : 'border-border/50 opacity-60 hover:opacity-100'
+              )}
+              aria-label={`Afficher le visuel ${idx + 1}`}
+            >
+              <img src={url} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
