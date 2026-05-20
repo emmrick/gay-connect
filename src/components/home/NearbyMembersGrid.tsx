@@ -130,15 +130,19 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
   const externalProfilesCount = allProfiles.filter((p) => !p.isCurrentUser).length;
   const isRefreshing = nearbyFetching;
 
-  // Pré-signe en lot toutes les URLs d'avatars dès que les profils arrivent
-  // → chaque ProfileCard trouve l'URL dans le cache et l'affiche immédiatement
+  // Pré-signe les avatars visibles + un petit buffer, par lot (un seul aller-retour
+  // au lieu de N appels séquentiels). Évite de signer inutilement 200 avatars d'un coup.
   useEffect(() => {
     if (!nearbyProfiles || nearbyProfiles.length === 0) return;
-    const urls = nearbyProfiles.map((p) => p.avatar_url).filter(Boolean) as string[];
+    const limit = Math.min(nearbyProfiles.length, visibleCount + PROFILES_PER_PAGE);
+    const urls = nearbyProfiles
+      .slice(0, limit)
+      .map((p) => p.avatar_url)
+      .filter(Boolean) as string[];
     if (urls.length > 0) {
       void getSignedAvatarUrls(urls);
     }
-  }, [nearbyProfiles]);
+  }, [nearbyProfiles, visibleCount]);
 
   const handleRefresh = useCallback(async () => {
     setVisibleCount(PROFILES_PER_PAGE);
