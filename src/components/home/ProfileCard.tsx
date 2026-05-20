@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Heart, Eye, Crown, CheckCircle2, Flame, Sparkles } from 'lucide-react';
@@ -45,6 +45,13 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const lastSeen = live.lastSeenText;
   const isNew = isNewUser(profile.created_at);
   const resolvedAvatar = useAvatarUrl(profile.avatar_url);
+
+  // Reset image state when the resolved URL changes (e.g. signed URL refresh)
+  // so a transient load error doesn't permanently hide the avatar.
+  useEffect(() => {
+    setImgLoaded(false);
+    setImgError(false);
+  }, [resolvedAvatar]);
 
   const handleClick = () => {
     navigate(`/profile/${profile.user_id}`);
