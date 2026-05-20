@@ -113,11 +113,11 @@ const AdvertiseLanding = ({
           <div className="grid sm:grid-cols-3 gap-4 text-xs text-muted-foreground">
             <div className="space-y-1">
               <p className="font-semibold text-foreground">CPC (Coût par clic)</p>
-              <p>0,01 € par clic. Vous ne payez que lorsqu'un utilisateur clique.</p>
+              <p>0,02 € par clic. Vous ne payez que lorsqu'un utilisateur clique.</p>
             </div>
             <div className="space-y-1">
-              <p className="font-semibold text-foreground">CPM (Coût pour 100 impressions)</p>
-              <p>0,01 € pour 100 affichages de votre annonce.</p>
+              <p className="font-semibold text-foreground">CPM (Coût pour 10 impressions)</p>
+              <p>0,01 € pour 10 affichages de votre annonce.</p>
             </div>
             <div className="space-y-1">
               <p className="font-semibold text-foreground">Budget minimum</p>
