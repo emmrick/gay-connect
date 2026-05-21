@@ -24,7 +24,8 @@ export type AdminSection =
   | 'swipe-stats' | 'credit-costs' | 'maintenance' | 'pending-tasks'
   | 'support' | 'support-ratings' | 'popups' | 'faq' | 'flyers'
   | 'promo-images' | 'error-logs' | 'security' | 'feature-toggles'
-  | 'site-updates' | 'ads' | 'live-content' | 'emails' | 'cron-logs' | 'suggestions';
+  | 'site-updates' | 'ads' | 'live-content' | 'emails' | 'cron-logs' | 'suggestions'
+  | 'performance';
 
 export interface ModPermissions {
   can_manage_users?: boolean | null;
