@@ -96,6 +96,7 @@ const AdminErrorLogsPage = lazy(() => import("./pages/admin/sections/ErrorLogsPa
 const AdminSecurityPage = lazy(() => import("./pages/admin/sections/SecurityPage"));
 const AdminEmailsPage = lazy(() => import("./pages/admin/sections/EmailsPage"));
 const AdminCronLogsPage = lazy(() => import("./pages/admin/sections/CronLogsPage"));
+const AdminPerformancePage = lazy(() => import("./pages/admin/sections/PerformancePage"));
 const About = lazy(() => import("./pages/About"));
 const Legal = lazy(() => import("./pages/Legal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
