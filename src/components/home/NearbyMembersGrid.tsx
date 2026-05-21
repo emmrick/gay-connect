@@ -11,6 +11,7 @@ import ProfileCard from './ProfileCard';
 import GeolocationGate from './GeolocationGate';
 import AdBanner from '@/components/ads/AdBanner';
 import type { RadiusValue } from './RadiusSelector';
+import { recordPerfMetric } from '@/lib/perfMetrics';
 
 interface NearbyMembersGridProps {
   onViewProfile: (userId: string) => void;
