@@ -2807,6 +2807,36 @@ export type Database = {
         }
         Relationships: []
       }
+      perf_metrics: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          id: number
+          metadata: Json | null
+          metric: string
+          page: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms: number
+          id?: number
+          metadata?: Json | null
+          metric: string
+          page: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          id?: number
+          metadata?: Json | null
+          metric?: string
+          page?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       personal_chatbot_nodes: {
         Row: {
           created_at: string
@@ -5400,6 +5430,13 @@ export type Database = {
           verified_members: number
         }[]
       }
+      get_error_summary: {
+        Args: { _since_minutes?: number }
+        Returns: {
+          by_source: Json
+          total: number
+        }[]
+      }
       get_estimated_wait_time: { Args: { _entity_id: string }; Returns: Json }
       get_exclusive_next_task: {
         Args: { _offer_ttl_seconds?: number; _user_id: string }
@@ -5458,6 +5495,28 @@ export type Database = {
       get_or_create_referral_code: {
         Args: { _user_id: string }
         Returns: string
+      }
+      get_perf_summary: {
+        Args: { _page?: string; _since_minutes?: number }
+        Returns: {
+          avg_ms: number
+          max_ms: number
+          metric: string
+          p50_ms: number
+          p95_ms: number
+          p99_ms: number
+          page: string
+          samples: number
+        }[]
+      }
+      get_perf_timeseries: {
+        Args: { _metric: string; _page: string; _since_minutes?: number }
+        Returns: {
+          avg_ms: number
+          bucket: string
+          p95_ms: number
+          samples: number
+        }[]
       }
       get_photo_exchange_signed_url: {
         Args: { _photo_id: string }
