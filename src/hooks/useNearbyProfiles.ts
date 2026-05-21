@@ -41,6 +41,7 @@ export const useNearbyProfiles = (
     queryKey: ['nearby-profiles-base', user?.id],
     queryFn: async (): Promise<NearbyProfile[]> => {
       if (!user) return [];
+      const t0 = performance.now();
 
       const { data, error } = await supabase
         .from('profiles')
@@ -50,6 +51,11 @@ export const useNearbyProfiles = (
         .order('is_online', { ascending: false })
         .order('last_seen', { ascending: false, nullsFirst: false })
         .limit(200);
+
+      recordPerfMetric('home', 'nearby_base_query', performance.now() - t0, {
+        ok: !error,
+        rows: data?.length ?? 0,
+      });
 
       if (error) throw error;
 
