@@ -46,7 +46,12 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const isOnline = live.showIndicator;
   const lastSeen = live.lastSeenText;
   const isNew = isNewUser(profile.created_at);
-  const resolvedAvatar = useAvatarUrl(profile.avatar_url);
+  // First 6 cards (above the fold) load eagerly; the rest wait until they
+  // approach the viewport before mounting the <img> and requesting a signed URL.
+  const eager = index < 6;
+  const { ref: cardRef, inView } = useInView<HTMLDivElement>({ rootMargin: '400px', skip: eager });
+  const shouldLoadAvatar = eager || inView;
+  const resolvedAvatar = useAvatarUrl(shouldLoadAvatar ? profile.avatar_url : null);
 
   // Reset image state when the resolved URL changes (e.g. signed URL refresh)
   // so a transient load error doesn't permanently hide the avatar.
@@ -54,6 +59,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
     setImgLoaded(false);
     setImgError(false);
   }, [resolvedAvatar]);
+
 
   const handleClick = () => {
     navigate(`/profile/${profile.user_id}`);
