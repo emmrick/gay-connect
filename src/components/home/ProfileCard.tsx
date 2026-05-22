@@ -75,6 +75,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.35, ease: 'easeOut' }}
@@ -92,7 +93,10 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
       >
         {/* Image */}
         <div className="absolute inset-0">
-          {resolvedAvatar && !imgError ? (
+          {!shouldLoadAvatar ? (
+            // Lightweight placeholder while card is far from viewport
+            <div className="absolute inset-0 bg-muted/60 animate-pulse" />
+          ) : resolvedAvatar && !imgError ? (
             <>
               {!imgLoaded && (
                 <div className="absolute inset-0 bg-muted animate-pulse" />
@@ -100,13 +104,13 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
               <img
                 src={resolvedAvatar}
                 alt={profile.username}
-                loading={index < 6 ? 'eager' : 'lazy'}
+                loading={eager ? 'eager' : 'lazy'}
                 fetchPriority={index < 4 ? 'high' : 'auto'}
                 decoding="async"
                 onLoad={() => setImgLoaded(true)}
                 onError={() => { setImgError(true); setImgLoaded(true); }}
                 className={cn(
-                  "w-full h-full object-cover transition-opacity duration-200",
+                  "w-full h-full object-cover transition-opacity duration-300",
                   imgLoaded ? "opacity-100" : "opacity-0"
                 )}
               />
@@ -119,6 +123,7 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
             </div>
           )}
         </div>
+
 
         {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
