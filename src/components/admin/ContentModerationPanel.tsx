@@ -326,6 +326,61 @@ const useAlbums = (reportedUserIds: string[]) => {
   });
 };
 
+const formatAdminMessage = (msg: { content: string | null; message_type: string }): { label: string | null; text: string } => {
+  const type = msg.message_type;
+  const content = msg.content || '';
+  const tryJSON = () => { try { return JSON.parse(content); } catch { return null; } };
+
+  if (type === 'album_share') {
+    const d = tryJSON();
+    const data = d?.shareId ? d : d?.data;
+    if (data) {
+      const expires = data.expiresAt ? format(new Date(data.expiresAt), 'dd/MM/yyyy HH:mm', { locale: fr }) : '—';
+      return { label: '📁 Album partagé', text: `Album : ${data.albumName || 'Sans nom'}\nExpire le ${expires}` };
+    }
+    return { label: '📁 Album partagé', text: '[Lien d\'album]' };
+  }
+  if (type === 'album_access_request') {
+    const d = tryJSON();
+    const names = Array.isArray(d?.albumNames) ? d.albumNames.join(', ') : (d?.albumName || '');
+    return { label: '🔓 Demande d\'accès album', text: names ? `Albums : ${names}` : '[Demande d\'accès]' };
+  }
+  if (type === 'credit_request') {
+    const d = tryJSON();
+    return { label: '💰 Demande de crédits', text: d?.amount ? `${d.amount} crédits demandés` : '[Demande de crédits]' };
+  }
+  if (type === 'credit_gift') {
+    const d = tryJSON();
+    return { label: '🎁 Cadeau de crédits', text: d?.amount ? `${d.amount} crédits offerts` : '[Cadeau de crédits]' };
+  }
+  if (type === 'image') {
+    return { label: '🖼️ Image', text: content.startsWith('http') ? content : '[Image éphémère]' };
+  }
+  if (type === 'video') {
+    return { label: '🎬 Vidéo', text: content.startsWith('http') ? content : '[Vidéo éphémère]' };
+  }
+  if (type === 'voice') {
+    return { label: '🎙️ Message vocal', text: '[Audio]' };
+  }
+  if (type === 'system_screenshot') {
+    return { label: '📸 Système — capture d\'écran', text: content || '[Capture détectée]' };
+  }
+  if (type === 'system_external_warning') {
+    return { label: '⚠️ Système — avertissement', text: content || '[Avertissement automatique]' };
+  }
+  if (type === 'poll') {
+    const d = tryJSON();
+    return { label: '📊 Sondage', text: d?.question || '[Sondage]' };
+  }
+  // Default text: if content is JSON, pretty print short
+  if (content.startsWith('{') || content.startsWith('[')) {
+    const d = tryJSON();
+    if (d) return { label: `[${type}]`, text: JSON.stringify(d, null, 2) };
+  }
+  return { label: null, text: content || `[${type}]` };
+};
+
+
 const ContentModerationPanel = () => {
   const [activeTab, setActiveTab] = useState('pending-photos');
   const [messageSearch, setMessageSearch] = useState('');
@@ -917,8 +972,8 @@ const ContentModerationPanel = () => {
 
       {/* Conversation Thread Dialog */}
       <Dialog open={!!openConversation} onOpenChange={(open) => !open && setOpenConversation(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="p-4 border-b border-border">
+        <DialogContent className="max-w-2xl w-[calc(100vw-1rem)] h-[85dvh] sm:h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b border-border shrink-0">
             <DialogTitle className="flex items-center gap-3 text-base">
               {openConversation && (
                 <>
@@ -932,7 +987,7 @@ const ContentModerationPanel = () => {
                       <AvatarFallback>{openConversation.userB.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
                     </Avatar>
                   </div>
-                  <span>
+                  <span className="truncate">
                     {openConversation.userA.username} ↔ {openConversation.userB.username}
                   </span>
                 </>
@@ -940,7 +995,8 @@ const ContentModerationPanel = () => {
             </DialogTitle>
             <DialogDescription className="sr-only">Fil de conversation complet</DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 p-4">
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="p-4">
             {threadLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -955,6 +1011,7 @@ const ContentModerationPanel = () => {
               <div className="space-y-2">
                 {threadMessages.map((msg) => {
                   const isUserA = msg.sender_id === openConversation?.userA.id;
+                  const formatted = formatAdminMessage(msg);
                   return (
                     <div
                       key={msg.id}
@@ -978,8 +1035,13 @@ const ContentModerationPanel = () => {
                         <div className="text-[10px] font-medium opacity-70 mb-0.5">
                           {msg.sender?.username || 'Inconnu'}
                         </div>
+                        {formatted.label && (
+                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                            {formatted.label}
+                          </div>
+                        )}
                         <div className="whitespace-pre-wrap break-words">
-                          {msg.content || `[${msg.message_type}]`}
+                          {formatted.text}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] opacity-60">
@@ -1013,6 +1075,7 @@ const ContentModerationPanel = () => {
                 })}
               </div>
             )}
+            </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
