@@ -5,7 +5,9 @@ import { MapPin, Heart, Eye, Crown, CheckCircle2, Flame, Sparkles } from 'lucide
 import { cn } from '@/lib/utils';
 import { useLivePresence } from '@/hooks/useLivePresence';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import { useInView } from '@/hooks/useInView';
 import { formatDistance } from '@/lib/formatDistance';
+
 
 interface ProfileCardProps {
   profile: {
