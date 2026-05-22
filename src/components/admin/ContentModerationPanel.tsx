@@ -917,8 +917,8 @@ const ContentModerationPanel = () => {
 
       {/* Conversation Thread Dialog */}
       <Dialog open={!!openConversation} onOpenChange={(open) => !open && setOpenConversation(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="p-4 border-b border-border">
+        <DialogContent className="max-w-2xl w-[calc(100vw-1rem)] h-[85dvh] sm:h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b border-border shrink-0">
             <DialogTitle className="flex items-center gap-3 text-base">
               {openConversation && (
                 <>
@@ -932,7 +932,7 @@ const ContentModerationPanel = () => {
                       <AvatarFallback>{openConversation.userB.username?.charAt(0).toUpperCase() || '?'}</AvatarFallback>
                     </Avatar>
                   </div>
-                  <span>
+                  <span className="truncate">
                     {openConversation.userA.username} ↔ {openConversation.userB.username}
                   </span>
                 </>
@@ -940,7 +940,8 @@ const ContentModerationPanel = () => {
             </DialogTitle>
             <DialogDescription className="sr-only">Fil de conversation complet</DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 p-4">
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="p-4">
             {threadLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -955,6 +956,7 @@ const ContentModerationPanel = () => {
               <div className="space-y-2">
                 {threadMessages.map((msg) => {
                   const isUserA = msg.sender_id === openConversation?.userA.id;
+                  const formatted = formatAdminMessage(msg);
                   return (
                     <div
                       key={msg.id}
@@ -978,8 +980,13 @@ const ContentModerationPanel = () => {
                         <div className="text-[10px] font-medium opacity-70 mb-0.5">
                           {msg.sender?.username || 'Inconnu'}
                         </div>
+                        {formatted.label && (
+                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                            {formatted.label}
+                          </div>
+                        )}
                         <div className="whitespace-pre-wrap break-words">
-                          {msg.content || `[${msg.message_type}]`}
+                          {formatted.text}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] opacity-60">
@@ -1013,6 +1020,7 @@ const ContentModerationPanel = () => {
                 })}
               </div>
             )}
+            </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
