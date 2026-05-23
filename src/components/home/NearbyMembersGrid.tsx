@@ -144,18 +144,32 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
   const externalProfilesCount = allProfiles.filter((p) => !p.isCurrentUser).length;
   const isRefreshing = nearbyFetching;
 
-  // Pré-signe les avatars visibles + un petit buffer, par lot (un seul aller-retour
-  // au lieu de N appels séquentiels). Évite de signer inutilement 200 avatars d'un coup.
+  // Pré-signe les avatars visibles + un buffer généreux (2 pages d'avance),
+  // par lot (un seul aller-retour). Warm aussi le cache HTTP du navigateur
+  // pour les avatars de la prochaine page afin qu'ils s'affichent instantanément
+  // dès qu'ils entrent dans le viewport.
   useEffect(() => {
     if (!nearbyProfiles || nearbyProfiles.length === 0) return;
-    const limit = Math.min(nearbyProfiles.length, visibleCount + PROFILES_PER_PAGE);
+    const limit = Math.min(nearbyProfiles.length, visibleCount + PROFILES_PER_PAGE * 2);
     const urls = nearbyProfiles
       .slice(0, limit)
       .map((p) => p.avatar_url)
       .filter(Boolean) as string[];
-    if (urls.length > 0) {
-      void getSignedAvatarUrls(urls);
-    }
+    if (urls.length === 0) return;
+    let cancelled = false;
+    void getSignedAvatarUrls(urls).then((signed) => {
+      if (cancelled) return;
+      // Warm the browser image cache for the lookahead window only
+      // (the visible ones are already being decoded by the cards themselves).
+      const warmFrom = Math.max(0, visibleCount - 3);
+      signed.slice(warmFrom).forEach((url) => {
+        if (!url) return;
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+      });
+    });
+    return () => { cancelled = true; };
   }, [nearbyProfiles, visibleCount]);
 
   const handleRefresh = useCallback(async () => {
