@@ -100,7 +100,10 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
 
   return (
     <motion.div
-      ref={cardRef}
+      ref={(el) => {
+        (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        (prefetchRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      }}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.35, ease: 'easeOut' }}
