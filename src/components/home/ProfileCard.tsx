@@ -46,12 +46,37 @@ const ProfileCard = memo(({ profile, index, onViewProfile, onLike }: ProfileCard
   const isOnline = live.showIndicator;
   const lastSeen = live.lastSeenText;
   const isNew = isNewUser(profile.created_at);
-  // First 6 cards (above the fold) load eagerly; the rest wait until they
-  // approach the viewport before mounting the <img> and requesting a signed URL.
+  // First 6 cards (above the fold) load eagerly. The rest use a two-stage
+  // gate: a wide "prefetch" window (~1200px) warms the signed URL and the
+  // browser image cache; a tighter "render" window (~400px) actually mounts
+  // the <img> so the byte stream is already in cache by then.
   const eager = index < 6;
-  const { ref: cardRef, inView } = useInView<HTMLDivElement>({ rootMargin: '400px', skip: eager });
-  const shouldLoadAvatar = eager || inView;
-  const resolvedAvatar = useAvatarUrl(shouldLoadAvatar ? profile.avatar_url : null);
+  const { ref: cardRef, inView: nearViewport } = useInView<HTMLDivElement>({
+    rootMargin: '400px',
+    skip: eager,
+  });
+  const { ref: prefetchRef, inView: prefetchInView } = useInView<HTMLDivElement>({
+    rootMargin: '1200px',
+    skip: eager,
+  });
+  const shouldPrefetch = eager || prefetchInView;
+  const shouldLoadAvatar = eager || nearViewport;
+  const resolvedAvatar = useAvatarUrl(shouldPrefetch ? profile.avatar_url : null);
+
+  // Warm the browser HTTP cache as soon as we enter the prefetch window,
+  // even before we render the <img>. By the time the card scrolls into the
+  // render window, the image is already decoded and shows instantly.
+  useEffect(() => {
+    if (!shouldPrefetch || !profile.avatar_url) return;
+    let cancelled = false;
+    void getSignedAvatarUrl(profile.avatar_url).then((url) => {
+      if (cancelled || !url) return;
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
+    });
+    return () => { cancelled = true; };
+  }, [shouldPrefetch, profile.avatar_url]);
 
   // Reset image state when the resolved URL changes (e.g. signed URL refresh)
   // so a transient load error doesn't permanently hide the avatar.
