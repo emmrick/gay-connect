@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyProfiles } from '@/hooks/useNearbyProfiles';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfilePhotos } from '@/hooks/useProfilePhotos';
 import { getSignedAvatarUrls } from '@/hooks/useAvatarUrl';
 import ProfileCard from './ProfileCard';
 import GeolocationGate from './GeolocationGate';
@@ -41,6 +42,13 @@ const ProfileSkeleton = ({ index }: { index: number }) => (
 
 const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refreshToken }: NearbyMembersGridProps) => {
   const { profile: currentUserProfile } = useAuth();
+  // Fallback: si l'utilisateur n'a pas d'avatar_url sur son profil mais a
+  // une photo primaire dans profile_photos, on l'utilise pour la carte "Toi".
+  const { photos: currentUserPhotos } = useProfilePhotos();
+  const currentUserAvatar = currentUserProfile?.avatar_url
+    ?? currentUserPhotos?.find((p) => p.is_primary)?.photo_url
+    ?? currentUserPhotos?.[0]?.photo_url
+    ?? null;
   const {
     latitude,
     longitude,
@@ -91,14 +99,14 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
   const [stableUser, setStableUser] = useState<any>(null);
   useEffect(() => {
     if (!currentUserProfile) return;
-    const key = `${currentUserProfile.user_id}|${currentUserProfile.avatar_url}|${currentUserProfile.username}`;
+    const key = `${currentUserProfile.user_id}|${currentUserAvatar}|${currentUserProfile.username}`;
     if (key !== prevKeyRef.current) {
       prevKeyRef.current = key;
       setStableUser({
         id: currentUserProfile.id,
         user_id: currentUserProfile.user_id,
         username: currentUserProfile.username,
-        avatar_url: currentUserProfile.avatar_url,
+        avatar_url: currentUserAvatar,
         age: currentUserProfile.age,
         is_online: currentUserProfile.is_online,
         last_seen: currentUserProfile.last_seen,
@@ -107,7 +115,7 @@ const NearbyMembersGrid = ({ onViewProfile, onStartChat, ageRange, radius, refre
         created_at: (currentUserProfile as any).created_at,
       });
     }
-  }, [currentUserProfile]);
+  }, [currentUserProfile, currentUserAvatar]);
 
   // Tri : profils avec distance d'abord (croissant), puis profils sans GPS en bas
   const sortedProfiles = useMemo(() => {
