@@ -192,7 +192,7 @@ const AuthenticatedLayout = () => {
 
         {/* Global Ad Banner */}
         {showGlobalAd && (
-          <div className="px-3 py-1 shrink-0">
+          <div className="global-ad-banner px-3 py-1 shrink-0" data-ad-placement="compact">
             <AdBanner placement="compact" />
           </div>
         )}
