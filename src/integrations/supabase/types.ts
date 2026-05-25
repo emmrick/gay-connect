@@ -3083,6 +3083,69 @@ export type Database = {
           },
         ]
       }
+      plan_now_auto_replies: {
+        Row: {
+          available_now: string | null
+          created_at: string
+          enabled: boolean
+          looking_for: string | null
+          photo_exchange: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_now?: string | null
+          created_at?: string
+          enabled?: boolean
+          looking_for?: string | null
+          photo_exchange?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_now?: string | null
+          created_at?: string
+          enabled?: boolean
+          looking_for?: string | null
+          photo_exchange?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plan_now_sessions: {
+        Row: {
+          created_at: string
+          credits_spent: number
+          expires_at: string
+          id: string
+          started_at: string
+          status: Database["public"]["Enums"]["plan_now_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_spent?: number
+          expires_at: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["plan_now_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_spent?: number
+          expires_at?: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["plan_now_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       poll_messages: {
         Row: {
           chat_room_id: string
@@ -5390,6 +5453,7 @@ export type Database = {
         Returns: number
       }
       ensure_chatbot_config: { Args: { _user_id: string }; Returns: undefined }
+      expire_plan_now_sessions: { Args: never; Returns: undefined }
       expire_stale_moderation_tasks: { Args: never; Returns: number }
       filter_suspended_or_blocked_users: {
         Args: { _user_ids: string[] }
@@ -5613,6 +5677,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      has_active_plan_now: { Args: { _user_id: string }; Returns: boolean }
       has_active_premium: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -5969,6 +6034,7 @@ export type Database = {
         | "withdrawal_management"
         | "promo_validation"
         | "support_chat"
+      plan_now_status: "active" | "expired" | "cancelled"
       report_reason:
         | "harassment"
         | "inappropriate_content"
@@ -6130,6 +6196,7 @@ export const Constants = {
         "promo_validation",
         "support_chat",
       ],
+      plan_now_status: ["active", "expired", "cancelled"],
       report_reason: [
         "harassment",
         "inappropriate_content",
