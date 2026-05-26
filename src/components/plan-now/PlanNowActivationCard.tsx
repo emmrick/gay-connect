@@ -16,8 +16,10 @@ const PlanNowActivationCard = () => {
   const { activeSession, isActive, activate, isActivating, cancel, isCancelling, cost, durationMinutes } =
     usePlanNowSession();
   const { label: countdown } = usePlanNowCountdown(activeSession?.expires_at);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
+    <>
     <Sheet>
       <SheetTrigger asChild>
         <motion.button
