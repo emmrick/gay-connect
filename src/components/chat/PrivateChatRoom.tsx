@@ -37,6 +37,7 @@ import PrivateTypingBubble from './private/PrivateTypingBubble';
 import PrivatePinnedBanner from './private/PrivatePinnedBanner';
 import PrivateMessageActionsSheet from './private/PrivateMessageActionsSheet';
 import SmartReplyChips from './private/SmartReplyChips';
+import PlanNowComposerBanner from '@/components/plan-now/PlanNowComposerBanner';
 import { useSmartReplies } from '@/hooks/useSmartReplies';
 import { cn } from '@/lib/utils';
 
@@ -521,6 +522,7 @@ const PrivateChatRoom = ({ otherUserId, onBack, autoOpenSnap, onSnapOpened }: Pr
           </div>
         ) : (
           <>
+            <PlanNowComposerBanner />
             <SmartReplyChips
               suggestions={smartSuggestions}
               isLoading={smartLoading}
