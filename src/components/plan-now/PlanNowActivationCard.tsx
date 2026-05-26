@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
-import { Zap, Coins, Clock } from 'lucide-react';
+import { Zap, Coins, Clock, Settings2 } from 'lucide-react';
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { usePlanNowSession, usePlanNowCountdown } from '@/hooks/usePlanNowSession';
+import PlanNowSettingsSheet from './PlanNowSettingsSheet';
 import { cn } from '@/lib/utils';
 
 /**
