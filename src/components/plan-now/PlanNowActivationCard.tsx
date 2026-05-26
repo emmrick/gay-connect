@@ -102,9 +102,19 @@ const PlanNowActivationCard = () => {
           <ul className="space-y-2 text-sm">
             <li className="flex gap-2"><span className="text-amber-500">⚡</span><span>Badge "Plan Now" visible sur ton profil et tes cartes.</span></li>
             <li className="flex gap-2"><span className="text-amber-500">🚀</span><span>Tu apparais en priorité dans les profils proches.</span></li>
-            <li className="flex gap-2"><span className="text-amber-500">🤖</span><span>Auto-réponses configurables aux questions fréquentes <em>(bientôt)</em>.</span></li>
+            <li className="flex gap-2"><span className="text-amber-500">🤖</span><span>Auto-réponses configurables aux questions fréquentes.</span></li>
             <li className="flex gap-2"><span className="text-amber-500">🔒</span><span>Échange d'albums sécurisé entre profils Plan Now <em>(bientôt)</em>.</span></li>
           </ul>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-amber-500/30 hover:bg-amber-500/10"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Settings2 className="w-4 h-4 mr-2" />
+            Configurer mes réponses automatiques
+          </Button>
 
           {isActive ? (
             <div className="space-y-3 pt-2">
