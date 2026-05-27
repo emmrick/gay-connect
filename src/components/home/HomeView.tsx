@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Star, SlidersHorizontal, Compass, Eye, Heart, Map as MapIcon, RefreshCw, Ruler, Check } from 'lucide-react';
+import { Star, SlidersHorizontal, Compass, Eye, Heart, Map as MapIcon, RefreshCw, Ruler, Check, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -20,6 +20,7 @@ import AdOrInfoBanner from './AdOrInfoBanner';
 import VisitsTab from './VisitsTab';
 import ReactionsTab from './ReactionsTab';
 import MapTab from './MapTab';
+import PlanNowTab from './PlanNowTab';
 import SectionErrorBoundary from '@/components/SectionErrorBoundary';
 import type { RadiusValue } from './RadiusSelector';
 
@@ -28,7 +29,7 @@ interface HomeViewProps {
   onStartPrivateChat?: (userId: string) => void;
 }
 
-type HomeSection = 'accueil' | 'favorites' | 'visites' | 'reactions' | 'carte';
+type HomeSection = 'accueil' | 'plan-now' | 'favorites' | 'visites' | 'reactions' | 'carte';
 
 const RADIUS_STORAGE_KEY = 'gc_nearby_radius_km';
 const DEFAULT_RADIUS: RadiusValue = 10;
@@ -122,11 +123,20 @@ const HomeView = ({
           if (section === 'visites') markVisitsSeen();
         }}>
           <div className="flex items-center gap-1.5">
-            <TabsList className="flex-1 grid grid-cols-5 h-9 p-0.5 bg-card/80 backdrop-blur-xl border border-border/40 rounded-xl">
+            <TabsList className={cn(
+              'flex-1 grid h-9 p-0.5 bg-card/80 backdrop-blur-xl border border-border/40 rounded-xl',
+              featureFlags.plan_now ? 'grid-cols-6' : 'grid-cols-5',
+            )}>
               <TabsTrigger value="accueil" className={tabTriggerClass}>
                 <Compass className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Proximité</span>
               </TabsTrigger>
+              {featureFlags.plan_now && (
+                <TabsTrigger value="plan-now" className={cn(tabTriggerClass, 'data-[state=active]:from-amber-500/20 data-[state=active]:to-orange-500/10 data-[state=active]:border-amber-500/30')}>
+                  <Zap className="w-3.5 h-3.5 text-amber-500 fill-current" />
+                  <span className="hidden min-[400px]:inline">Plan Now</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger value="favorites" className={tabTriggerClass}>
                 <Star className="w-3.5 h-3.5" />
                 <span className="hidden min-[400px]:inline">Favoris</span>
@@ -256,6 +266,12 @@ const HomeView = ({
           <TabsContent value="favorites" className="mt-2">
             <FavoritesGrid onStartChat={handleStartChat} />
           </TabsContent>
+
+          {featureFlags.plan_now && (
+            <TabsContent value="plan-now" className="mt-2">
+              <PlanNowTab onViewProfile={handleViewProfile} radius={radius} />
+            </TabsContent>
+          )}
 
           <TabsContent value="visites" className="mt-2">
             <VisitsTab onViewProfile={handleViewProfile} />

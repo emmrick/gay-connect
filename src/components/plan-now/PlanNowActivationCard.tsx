@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { usePlanNowSession, usePlanNowCountdown } from '@/hooks/usePlanNowSession';
+import { useFeatureFlags } from '@/hooks/useFeatureToggles';
 import PlanNowSettingsSheet from './PlanNowSettingsSheet';
 import { cn } from '@/lib/utils';
 
@@ -13,10 +14,13 @@ import { cn } from '@/lib/utils';
  * - Si actif : countdown live + bouton désactiver.
  */
 const PlanNowActivationCard = () => {
+  const flags = useFeatureFlags();
   const { activeSession, isActive, activate, isActivating, cancel, isCancelling, cost, durationMinutes } =
     usePlanNowSession();
   const { label: countdown } = usePlanNowCountdown(activeSession?.expires_at);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  if (!flags.plan_now) return null;
 
   return (
     <>
