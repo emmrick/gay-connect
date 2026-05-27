@@ -267,6 +267,12 @@ const HomeView = ({
             <FavoritesGrid onStartChat={handleStartChat} />
           </TabsContent>
 
+          {featureFlags.plan_now && (
+            <TabsContent value="plan-now" className="mt-2">
+              <PlanNowTab onViewProfile={handleViewProfile} radius={radius} />
+            </TabsContent>
+          )}
+
           <TabsContent value="visites" className="mt-2">
             <VisitsTab onViewProfile={handleViewProfile} />
           </TabsContent>
