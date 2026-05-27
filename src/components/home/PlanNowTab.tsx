@@ -15,11 +15,10 @@ import type { RadiusValue } from './RadiusSelector';
 
 interface Props {
   onViewProfile: (userId: string) => void;
-  onStartChat: (userId: string) => void;
   radius: RadiusValue;
 }
 
-const PlanNowTab = ({ onViewProfile, onStartChat, radius }: Props) => {
+const PlanNowTab = ({ onViewProfile, radius }: Props) => {
   const { latitude, longitude, loading, error, requestLocation, permissionState } = useGeolocation();
   const maxDistanceKm = radius === 0 ? 100000 : radius;
   const { data: nearbyProfiles, isLoading } = useNearbyProfiles(latitude, longitude, maxDistanceKm);
