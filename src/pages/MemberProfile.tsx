@@ -32,6 +32,7 @@ import MemberProfileAlbumsSection from '@/components/albums/MemberProfileAlbumsS
 import AlbumPreviewBlocks from '@/components/albums/AlbumPreviewBlocks';
 import { useAlbums } from '@/hooks/useAlbums';
 import type { AlbumSlide } from '@/components/chat/ProfilePhotoCarousel';
+import PlanNowAlbumExchangeButton from '@/components/plan-now/PlanNowAlbumExchangeButton';
 import MemberTweenSection from '@/components/tween/MemberTweenSection';
 
 const POSITION_LABELS: Record<string, string> = {
@@ -495,7 +496,10 @@ const MemberProfile = () => {
 
             {/* Albums */}
             {userId && (
-              <section id="albums-section">
+              <section id="albums-section" className="space-y-2">
+                <div className="flex justify-end">
+                  <PlanNowAlbumExchangeButton otherUserId={userId} otherUsername={profile.username} />
+                </div>
                 <MemberProfileAlbumsSection profileUserId={userId} profileUsername={profile.username} onStartChat={handleStartChat} />
               </section>
             )}
