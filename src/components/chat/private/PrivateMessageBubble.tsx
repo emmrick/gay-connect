@@ -230,9 +230,17 @@ const PrivateMessageBubble = ({
                 isOwn={isOwn}
               />
             );
+          })() : isBetaInterest ? (() => {
+            let betaData: { email?: string; amount?: number; createdAt?: string } = {};
+            try { betaData = JSON.parse(message.content || '{}'); } catch {}
+            return (
+              <BetaInterestMessage
+                email={betaData.email || ''}
+                amount={betaData.amount || 0}
+                createdAt={betaData.createdAt || message.created_at}
+              />
+            );
           })() : isRegularMedia ? (
-            (() => null)()
-          ) : isRegularMedia ? (
             <RegularMediaMessage
               mediaUrl={message.content!}
               mediaType={message.message_type as 'image' | 'video'}
