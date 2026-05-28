@@ -52,6 +52,7 @@ const PrivateMessageBubble = ({
   const isAlbumAccessRequest = message.message_type === 'album_access_request';
   const isCreditRequest = message.message_type === 'credit_request';
   const isCreditGift = message.message_type === 'credit_gift';
+  const isBetaInterest = message.message_type === 'beta_interest';
   const isSystemScreenshot = message.message_type === 'system_screenshot';
   const isSystemExternalWarning = message.message_type === 'system_external_warning';
 
