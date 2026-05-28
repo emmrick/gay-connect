@@ -34,6 +34,7 @@ import { PageFallback } from "@/components/loading/LazyPageLoader";
 import InvestigationNoticeDialog from "@/components/moderation/InvestigationNoticeDialog";
 import ForcedSupportChat from "@/components/moderation/ForcedSupportChat";
 import PromoPopup from "@/components/popups/PromoPopup";
+import BetaInvitePopup from "@/components/popups/BetaInvitePopup";
 import GlobalMissionOverlay from "@/components/moderation/GlobalMissionOverlay";
 import ActiveSupportBadge from "@/components/support/ActiveSupportBadge";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
@@ -114,6 +115,7 @@ const Security = lazy(() => import("./pages/Security"));
 const Community = lazy(() => import("./pages/Community"));
 const TweenPublicPage = lazy(() => import("./pages/Tween"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const BetaProgram = lazy(() => import("./pages/BetaProgram"));
 
 // Authenticated pages — keep-alive pages (HomePage, MessagesPage, ProfilePage,
 // CreditsPageRoute, TweenPageRoute, SwipePageRoute, HelpPageRoute) sont importées
@@ -271,6 +273,7 @@ const AuthenticatedApp = () => {
                           <Route path="/communaute" element={<Suspense fallback={<PageFallback />}><Community /></Suspense>} />
                           <Route path="/tween-public" element={<Suspense fallback={<PageFallback />}><TweenPublicPage /></Suspense>} />
                           <Route path="/unsubscribe" element={<Suspense fallback={<PageFallback />}><Unsubscribe /></Suspense>} />
+                          <Route path="/beta" element={<Suspense fallback={<PageFallback />}><BetaProgram /></Suspense>} />
 
                           {/* Redirections legacy (anciennes URL référencées par moteurs / liens externes) */}
                           <Route path="/mentions-legales" element={<Navigate to="/legal" replace />} />
@@ -288,6 +291,7 @@ const AuthenticatedApp = () => {
                       <InvestigationNoticeDialog />
                       <ForcedSupportChat />
                       <PromoPopup />
+                      <BetaInvitePopup />
                       <OnboardingTour />
                       <GlobalMissionOverlay />
                       <ActiveSupportBadge />

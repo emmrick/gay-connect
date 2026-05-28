@@ -691,6 +691,33 @@ export type Database = {
           },
         ]
       }
+      beta_interest_submissions: {
+        Row: {
+          created_at: string
+          donation_amount: number
+          email: string
+          id: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          donation_amount: number
+          email: string
+          id?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          donation_amount?: number
+          email?: string
+          id?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       birthday_gifts: {
         Row: {
           amount: number

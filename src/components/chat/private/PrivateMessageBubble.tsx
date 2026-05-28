@@ -13,6 +13,7 @@ import SharedAlbumMessage from '../SharedAlbumMessage';
 import AlbumAccessRequestMessage from '../AlbumAccessRequestMessage';
 import CreditRequestMessage from '../CreditRequestMessage';
 import GiftMessage from '../GiftMessage';
+import BetaInterestMessage from '../BetaInterestMessage';
 import { cn } from '@/lib/utils';
 
 interface PrivateMessageBubbleProps {
@@ -51,6 +52,7 @@ const PrivateMessageBubble = ({
   const isAlbumAccessRequest = message.message_type === 'album_access_request';
   const isCreditRequest = message.message_type === 'credit_request';
   const isCreditGift = message.message_type === 'credit_gift';
+  const isBetaInterest = message.message_type === 'beta_interest';
   const isSystemScreenshot = message.message_type === 'system_screenshot';
   const isSystemExternalWarning = message.message_type === 'system_external_warning';
 
@@ -226,6 +228,16 @@ const PrivateMessageBubble = ({
                 senderName={message.senderUsername}
                 recipientName={otherUserProfile?.username || ''}
                 isOwn={isOwn}
+              />
+            );
+          })() : isBetaInterest ? (() => {
+            let betaData: { email?: string; amount?: number; createdAt?: string } = {};
+            try { betaData = JSON.parse(message.content || '{}'); } catch {}
+            return (
+              <BetaInterestMessage
+                email={betaData.email || ''}
+                amount={betaData.amount || 0}
+                createdAt={betaData.createdAt || message.created_at}
               />
             );
           })() : isRegularMedia ? (

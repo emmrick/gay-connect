@@ -123,6 +123,7 @@ const PrivateChatList = ({ onSelectConversation, selectedUserId, showArchived = 
     if (message_type === 'album_share') return '📁 Album partagé';
     if (message_type === 'album_access_request') return '🔒 Demande d\'accès album';
     if (message_type === 'credit_gift') return '🎁 Cadeau de crédits';
+    if (message_type === 'beta_interest') return '🧪 Inscription bêta';
     if (content && content.length > 45) return content.substring(0, 45) + '…';
     return content || 'Nouvelle conversation';
   };
