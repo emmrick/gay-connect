@@ -17,7 +17,7 @@ import SEOHead from '@/components/seo/SEOHead';
 
 const schema = z.object({
   email: z.string().trim().email({ message: 'Adresse e-mail invalide' }).max(255),
-  amount: z.number().min(15, { message: 'Don minimum de 15 €' }).max(30, { message: 'Don maximum de 30 €' }),
+  amount: z.number().min(15, { message: 'Don minimum de 15 €' }).max(50, { message: 'Don maximum de 50 €' }),
 });
 
 const perks = [
@@ -133,7 +133,7 @@ const BetaProgram = () => {
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Pour participer au programme de test, nous demandons un don compris entre
-            <strong className="text-foreground"> 15 € et 30 €</strong> afin de soutenir le développement
+            <strong className="text-foreground"> 15 € et 50 €</strong> afin de soutenir le développement
             et l'évolution de Gay Social.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -236,13 +236,13 @@ const BetaProgram = () => {
                 <Slider
                   value={[amount]}
                   min={15}
-                  max={30}
+                  max={50}
                   step={1}
                   onValueChange={(v) => setAmount(v[0])}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>15 €</span>
-                  <span>30 €</span>
+                  <span>50 €</span>
                 </div>
               </div>
 
