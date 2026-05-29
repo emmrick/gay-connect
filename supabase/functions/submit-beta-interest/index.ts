@@ -38,9 +38,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
-    if (!Number.isFinite(amount) || amount < 15 || amount > 30) {
+    if (!Number.isFinite(amount) || amount < 15 || amount > 50) {
       return new Response(
-        JSON.stringify({ error: "Le montant du don doit être compris entre 15 € et 30 €." }),
+        JSON.stringify({ error: "Le montant du don doit être compris entre 15 € et 50 €." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
