@@ -1,3 +1,11 @@
 import CronLogsPanel from '@/components/admin/CronLogsPanel';
-const CronLogsPage = () => <CronLogsPanel />;
+import CronSchedulesPanel from '@/components/admin/CronSchedulesPanel';
+
+const CronLogsPage = () => (
+  <>
+    <CronSchedulesPanel />
+    <CronLogsPanel />
+  </>
+);
+
 export default CronLogsPage;
