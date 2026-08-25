@@ -1355,6 +1355,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_schedule_config: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          job_name: string
+          last_synced_at: string | null
+          schedule: string
+          sync_error: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          job_name: string
+          last_synced_at?: string | null
+          schedule: string
+          sync_error?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          job_name?: string
+          last_synced_at?: string | null
+          schedule?: string
+          sync_error?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dossier_access_requests: {
         Row: {
           created_at: string
@@ -6225,6 +6261,7 @@ export type Database = {
         Args: { _task_id: string; _user_id: string }
         Returns: Json
       }
+      resync_all_cron_schedules: { Args: never; Returns: number }
       review_photo_exchange_photo: {
         Args: { _decision: string; _photo_id: string; _reason?: string }
         Returns: Json
